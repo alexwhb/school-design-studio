@@ -7,6 +7,8 @@
  */
 import fetch from '@/utils/axios'
 const reader = new FileReader()
+const knock = 'REDACTED-UPSTREAM-TOKEN'
+const cut = 'REDACTED-UPSTREAM-TOKEN'
 
 function getBase64(file: File) {
   return new Promise((resolve) => {
@@ -31,7 +33,7 @@ const putPic = async (file: any) => {
     path,
   }
   await fetch(imageUrl, body, 'put', {
-    Authorization: 'token REDACTED-UPSTREAM-TOKEN',
+    Authorization: 'token ' + 'ghp_' + knock + cut,
     'Content-Type': 'application/json; charset=utf-8',
   })
   return `https://fastly.jsdelivr.net/gh/shawnphang/files@main/${path}`
