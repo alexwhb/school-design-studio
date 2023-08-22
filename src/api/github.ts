@@ -3,13 +3,12 @@
  * @Date: 2023-07-13 17:01:37
  * @Description: github api
  * @LastEditors: ShawnPhang <site: book.palxp.com>
- * @LastEditTime: 2023-07-14 00:01:05
+ * @LastEditTime: 2023-08-10 10:33:59
  */
 import fetch from '@/utils/axios'
-const reader = new FileReader()
-const knock = 'REDACTED-UPSTREAM-TOKEN'
-const cut = 'REDACTED-UPSTREAM-TOKEN'
+const cutToken = 'REDACTED-UPSTREAM-TOKEN'
 
+const reader = new FileReader()
 function getBase64(file: File) {
   return new Promise((resolve) => {
     reader.onload = function (event: any) {
@@ -21,22 +20,17 @@ function getBase64(file: File) {
 }
 
 const putPic = async (file: any) => {
-  const content = typeof file === 'string' ? file : await getBase64(file)
   const repo = 'shawnphang/files'
   const d = new Date()
+  const content = typeof file === 'string' ? file : await getBase64(file)
   const path = `${d.getFullYear()}/${d.getMonth()}/${d.getTime()}${file.name?.split('.').pop() || '.png'}`
   const imageUrl = 'https://api.github.com/repos/' + repo + '/contents/' + path
-  const body = {
-    branch: 'main',
-    message: 'upload',
-    content,
-    path,
-  }
-  await fetch(imageUrl, body, 'put', {
-    Authorization: 'token ' + 'ghp_' + knock + cut,
+  const body = { branch: 'main', message: 'upload', content, path }
+  const res = await fetch(imageUrl, body, 'put', {
+    Authorization: `token ${cutToken}REDACTED-UPSTREAM-TOKEN`,
     'Content-Type': 'application/json; charset=utf-8',
   })
-  return `https://fastly.jsdelivr.net/gh/shawnphang/files@main/${path}`
+  return res?.content?.download_url || `https://fastly.jsdelivr.net/gh/shawnphang/files@main/${path}`
 }
 
 export default { putPic }
