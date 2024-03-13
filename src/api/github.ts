@@ -11,15 +11,15 @@ const cutToken = 'REDACTED-UPSTREAM-TOKEN'
 const reader = new FileReader()
 function getBase64(file: File) {
   return new Promise((resolve) => {
-    reader.onload = function (event: any) {
-      const fileContent = event.target.result
-      resolve(fileContent.split(',')[1])
+    reader.onload = function (event) {
+      const fileContent = event.target && event.target.result
+      resolve((fileContent as string).split(',')[1])
     }
     reader.readAsDataURL(file)
   })
 }
 
-const putPic = async (file: any) => {
+const putPic = async (file: File) => {
   const repo = 'shawnphang/files'
   const d = new Date()
   const content = typeof file === 'string' ? file : await getBase64(file)
