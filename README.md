@@ -80,7 +80,7 @@ docker build -t heimanba/poster-api -f ./docker/api/Dockerfile ./service
 
 开源不易，别忘了给本项目点个 **Star** ~ 您的支持是对开源作者最大的鼓励 :heart:
 
-[![Star History Chart](https://api.star-history.com/svg?repos=palxiao/poster-design&type=Date)](https://star-history.com/#palxiao/poster-design&Date)
+[![Star History Chart](https://api.star-history.com/chart?repos=palxiao/poster-design&type=date&legend=top-left&sealed_token=9jTOGHY5QQTM4AMJnl_kl2k_gpBHryAWKtzE0LxROivWVyq_NkxYrv90TUQ1rimbI60wmvUcFLzJ3Rbk3fcaduZP9kK1VWymajOMXjGZva0czGEn8lYtgehwqDB7Zhw_ibK7YGCPD9F6-gb-2UKc0MRzVuyCBqQSfAeXx8wLFwT8AANF2LjR9-hGzFuI)](https://www.star-history.com/?repos=palxiao%2Fposter-design&type=date&legend=top-left)
 
 每一个 Star 都是我不断前进的动力 :heart:
 
