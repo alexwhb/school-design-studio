@@ -370,10 +370,13 @@ const openSet = async () => {
     // asked for category 12 upstream, which is not a list this build ships, so
     // the picker came up empty and the only way to an effect was to build the
     // layers by hand.
+    // One page, sized past the list rather than to it: the picker is a grid
+    // with no paging of its own, so anything past the page size is a preset
+    // nobody can reach.
     const { list } = await api.home.getCompList({
       cate: 'text',
       type: 1,
-      pageSize: 30,
+      pageSize: 200,
     })
     state.list = list
     froze_font_effect_list = list
