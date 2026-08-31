@@ -219,10 +219,18 @@ async function load(cb: () => void) {
   state.title = title
   controlStore.setShowMoveable(false) // Clear the previous selection box
   if (type == 1) {
-    // 加载文字组合组件
+    // A saved element. Grouped ones arrive as an array with a w-group
+    // container; a single styled text box arrives as one bare widget. The
+    // panel already handles both, but this path always called addGroup, so
+    // opening a single-widget element by URL threw and rendered nothing.
     dPage.value.width = width
     dPage.value.height = height
-    widgetStore.addGroup(data)
+    if (Array.isArray(data)) {
+      widgetStore.addGroup(data)
+    } else {
+      data.text && (data.text = decodeURIComponent(data.text))
+      widgetStore.addWidget(data)
+    }
   } else {
     if (Array.isArray(data)) {
       widgetStore.dLayouts = data

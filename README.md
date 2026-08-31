@@ -46,11 +46,13 @@ If the app is served some other way with no backend at all, it degrades rather
 than erroring: the panels show empty states and one informational line is
 logged.
 
-**The two sample templates are the upstream demo content** — Chinese-language
-phone posters at 1242×2208. They are useful for checking that loading and
-applying a template works, and useless to a school. Replacing them is a content
-job: a template is just a JSON file in `service/src/mock/templates/` plus an
-entry in `list.json`.
+See **[CONTENT.md](CONTENT.md)** for how to add your own shapes, stickers,
+masks, photos and templates.
+
+**The bundled templates, stickers and element groups are upstream demo
+content.** The wording is English now, but they are drawn in a style that will
+not suit most Western schools, and the two templates are Chinese phone posters
+at 1242×2208. Expect to replace them.
 
 ## What changed from upstream
 
