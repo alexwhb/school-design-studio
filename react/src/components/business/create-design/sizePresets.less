@@ -1,0 +1,26 @@
+.pre-list {
+  margin: 1rem 0;
+  height: 245px;
+  overflow-y: auto;
+  .item {
+    padding: 10px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    color: @ink;
+    .icon {
+      margin-right: 0.2rem;
+    }
+    .info {
+      margin-left: 0.4rem;
+      font-size: 12px;
+      color: @ink-4;
+    }
+  }
+  .item:hover {
+    background-color: @surface-2;
+  }
+  .item.is-on {
+    background-color: @accent-a25;
+  }
+}

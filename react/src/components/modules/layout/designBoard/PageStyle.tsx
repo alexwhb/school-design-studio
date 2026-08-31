@@ -13,8 +13,7 @@ import { DeleteIcon, DownloadIcon } from '@/components/ui/icons'
 import Uploader, { type TUploadDoneData } from '@/components/common/Uploader/Uploader'
 import Tabs from '@/packages/color-picker/comps/Tabs'
 import ColorSelect, { type colorChangeData } from '@/components/modules/settings/ColorSelect'
-import CreateDesign, { type CreateDesignHandle } from '@/components/business/create-design/CreateDesign'
-import SizeEditor from '@/components/business/create-design/SizeEditor'
+import ResizeDesign, { type ResizeDesignHandle } from '@/components/business/resize-design/ResizeDesign'
 import BgImgListWrap from '@/components/modules/panel/wrap/BgImgListWrap'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
 import type { TPageState } from '@/store/types'
@@ -29,7 +28,7 @@ export default function PageStyle() {
   const [activeNames, setActiveNames] = useState<string[]>(['1', '2', '3', '4'])
   const [mode, setMode] = useState('Colour')
   const [showBgLib, setShowBgLib] = useState(false)
-  const sizeEditRef = useRef<CreateDesignHandle | null>(null)
+  const sizeEditRef = useRef<ResizeDesignHandle | null>(null)
   const localTempBG = useRef<string | null>(null)
 
   useEffect(() => {
@@ -103,15 +102,14 @@ export default function PageStyle() {
       ) : (
         <Collapse value={activeNames} onChange={setActiveNames}>
           <CollapseItem name="1" title="Page size">
-            <SizeEditor
-              params={canvasState.dPage}
-              onChange={(next) => {
-                updatePageData({ key: 'width', value: next.width })
-                updatePageData({ key: 'height', value: next.height })
-              }}
-            >
-              <i onClick={openSizeEdit} className="icon sd-edit" />
-            </SizeEditor>
+            <div className="page-size">
+              <span className="page-size__value">
+                {Math.round(active.width)} × {Math.round(active.height)} px
+              </span>
+              <Button plain size="small" onClick={openSizeEdit}>
+                Resize…
+              </Button>
+            </div>
           </CollapseItem>
           <CollapseItem name="2" title="Background">
             <Button style={{ width: '100%', margin: '0 0 1rem 0' }} type="primary" link onClick={() => setShowBgLib(true)}>
@@ -176,7 +174,7 @@ export default function PageStyle() {
           </CollapseItem>
         </Collapse>
       )}
-      <CreateDesign ref={sizeEditRef} params={canvasState.dPage} />
+      <ResizeDesign ref={sizeEditRef} />
     </div>
   )
 }

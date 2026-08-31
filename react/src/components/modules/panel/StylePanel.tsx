@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
 import IconItemSelect, { type TIconItemSelectData } from '../settings/IconItemSelect'
+import AnimateWrap from '../settings/AnimateSelect/AnimateWrap'
 import Button from '@/components/ui/Button'
 import { widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
@@ -17,7 +18,10 @@ export default function StylePanel() {
   const [showGroupCombined, setShowGroupCombined] = useState(false)
   const snap = useSnapshot(widgetState)
   const activeType = snap.dActiveElement?.type
+  const activeUuid = snap.dActiveElement?.uuid
   const selectCount = snap.dSelectWidgets.length
+  /** The page has no entrance of its own; everything drawn on it does. */
+  const animatable = !!activeType && activeType !== 'page'
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -64,8 +68,17 @@ export default function StylePanel() {
           <IconItemSelect label="" data={alignIconList} onFinish={alignAction} />
         </div>
         {StyleComp ? (
-          <div style={{ display: showGroupCombined ? 'none' : undefined }}>
+          // `display: contents` rather than a plain box: every style panel is
+          // `height: 100%`, and a percentage height resolves against the nearest
+          // box — an ordinary wrapper here silently collapses all of them to
+          // their content height.
+          <div style={{ display: showGroupCombined ? 'none' : 'contents' }}>
             <StyleComp />
+          </div>
+        ) : null}
+        {animatable ? (
+          <div className="animate-slot" style={{ display: showGroupCombined ? 'none' : undefined }}>
+            <AnimateWrap key={activeUuid} widget={widgetState.dActiveElement as TdWidgetData} />
           </div>
         ) : null}
       </div>

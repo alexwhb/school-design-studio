@@ -12,6 +12,7 @@ import { setCropUuid, setShowRotatable } from '@/store/control'
 import { setUpdateRect } from '@/store/force'
 import { updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
 import type { TGetImageListResult } from '@/api/material'
+import type { LocalUpload } from '@/common/methods/localUploads'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
@@ -116,9 +117,9 @@ export default function WImageStyle() {
       })
   }
 
-  function cutImageDone(url: string) {
+  function cutImageDone(saved: LocalUpload) {
     setTimeout(() => {
-      finish('imgUrl', url)
+      finish('imgUrl', saved.url)
     }, 300)
   }
 

@@ -1,0 +1,19 @@
+.slide {
+  position: relative;
+  overflow: hidden;
+
+  &__page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+}
+
+// Holding an element off screen must not depend on where the class lands, so
+// this one is global — it is set on a widget component's own root.
+.ds-anim-pending {
+  opacity: 0;
+}

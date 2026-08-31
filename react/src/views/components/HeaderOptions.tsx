@@ -2,13 +2,13 @@ import { forwardRef, useImperativeHandle, useRef, useState, type ReactNode } fro
 import { useSnapshot } from 'valtio'
 import api from '@/api'
 import _config from '@/config'
-import _dl from '@/common/methods/download'
 import downloadBlob from '@/common/methods/download/downloadBlob'
+import { withPageRenderer } from '@/common/methods/export/renderPage'
+import { dataUrlToBlob, safeFileName } from '@/common/methods/export/utils'
 import useNotification from '@/common/methods/notification'
 import { useFontStore } from '@/common/methods/fonts'
 import { readQuery, replaceQuery } from '@/common/hooks/useRouteQuery'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
-import CreateCover, { type CreateCoverHandle } from '@/components/business/save-download/CreateCover'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { canvasState, userState, widgetState } from '@/store/state'
@@ -22,7 +22,9 @@ import './headerOptions.less'
 
 export type HeaderOptionsHandle = {
   getTitle: () => string
-  download: () => Promise<void>
+  /** Puts a name back in the box — used when a saved design is restored. */
+  setTitle: (title: string) => void
+  download: (scale?: number) => Promise<void>
   save: (hasCover?: boolean) => Promise<void>
   saveTemp: () => Promise<void>
   stateChange: (e: boolean) => Promise<void>
@@ -33,11 +35,13 @@ type Props = {
   isContinue: boolean
   onContinueChange: (value: boolean) => void
   onChange: (data: { downloadPercent: number; downloadText: string; downloadMsg?: string }) => void
+  /** The design's name is part of what autosave keeps, so a rename is a change. */
+  onTitleChange?: () => void
   children?: ReactNode
 }
 
 const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOptions(
-  { isContinue, onContinueChange, onChange, children },
+  { isContinue, onContinueChange, onChange, onTitleChange, children },
   ref,
 ) {
   const mode = useEditorMode()
@@ -46,9 +50,6 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
   const titleRef = useRef('')
   titleRef.current = title
   const loadingRef = useRef(false)
-  const continueRef = useRef(isContinue)
-  continueRef.current = isContinue
-  const canvasImage = useRef<CreateCoverHandle | null>(null)
 
   async function save() {
     await saveTemp()
@@ -63,6 +64,8 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
       if (widgetState.dWidgets[0].type === 'w-group') {
         const group = widgetState.dWidgets.shift()
         if (!group) return
+        // A page carries no `record`, so the type allows it to be missing.
+        if (!group.record) return
         group.record.width = 0
         group.record.height = 0
         widgetState.dWidgets.push(group)
@@ -98,64 +101,51 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
     stat != 0 && useNotification('Saved', 'Your template has been updated')
   }
 
-  async function download() {
+  /**
+   * Exports the current page as a PNG.
+   *
+   * Everything is drawn in the browser, by the same renderer the PowerPoint
+   * export uses. Upstream sent designs containing an SVG shape, a masked image,
+   * a QR code or text effects to a Puppeteer screenshot service instead — a
+   * backend this fork does not run, so those exports came back as whatever the
+   * web server answered `/api/screenshots` with: a 1KB HTML page saved under a
+   * .png name.
+   */
+  async function download(scale = 1) {
     if (loadingRef.current === true) {
       useNotification('Export in progress', 'Another export is already running. Please wait.')
       return
     }
     loadingRef.current = true
     onContinueChange(true)
-    onChange({ downloadPercent: 1, downloadText: 'Saving…' })
-    const currentRecord = canvasState.dCurrentPage
-    const backEndCapture: boolean = checkDownloadPoster(widgetState.dLayouts[currentRecord])
-    const fileName = `${titleRef.current || 'Untitled design'}.png`
-    if (!backEndCapture) {
-      const result = await canvasImage.current?.createPoster()
-      result?.blob && downloadBlob(result.blob, fileName)
-      onChange({ downloadPercent: 100, downloadText: 'Your design has been downloaded' })
-      loadingRef.current = false
-    }
-    await save()
-    const { id, tempid } = readQuery()
-    if (!id && !tempid) {
-      onChange({ downloadPercent: 0, downloadText: 'Please wait…' })
-      useNotification('Could not save', 'Pick a template first, then try again.', { type: 'error' })
-      loadingRef.current = false
-      return
-    }
-    if (backEndCapture) {
-      const { width, height } = canvasState.dPage
-      onContinueChange(true)
-      onChange({ downloadPercent: 1, downloadText: 'Preparing your design...' })
-      let timerCount = 0
-      const animation = setInterval(() => {
-        if (continueRef.current && timerCount < 75) {
-          timerCount += RandomNumber(1, 10)
-          onChange({ downloadPercent: 1 + timerCount, downloadText: 'Building the image' })
-        } else {
-          clearInterval(animation)
-        }
-      }, 800)
-      await _dl.downloadImg(
-        api.home.download({ id, tempid, width, height, index: canvasState.dCurrentPage }) + '&r=' + Math.random(),
-        (progress: number, xhr: any) => {
-          if (continueRef.current) {
-            clearInterval(animation)
-            progress >= timerCount && onChange({ downloadPercent: Number(progress.toFixed(0)), downloadText: 'Generating the image' })
-          } else {
-            xhr.abort()
-            loadingRef.current = false
-          }
-        },
-        fileName,
-      )
-      onChange({ downloadPercent: 100, downloadText: 'Your design has been downloaded', downloadMsg: '' })
-      loadingRef.current = false
-    }
-  }
+    onChange({ downloadPercent: 5, downloadText: 'Preparing your design…' })
 
-  function RandomNumber(min: number, max: number) {
-    return Math.ceil(Math.random() * (max - min)) + min
+    try {
+      const dataUrl = await withPageRenderer((renderer) => {
+        onChange({ downloadPercent: 35, downloadText: 'Drawing the page' })
+        return renderer.renderPage(canvasState.dCurrentPage, scale)
+      })
+      if (!dataUrl) throw new Error('The page could not be drawn.')
+
+      onChange({ downloadPercent: 90, downloadText: 'Saving the image' })
+      downloadBlob(dataUrlToBlob(dataUrl), safeFileName(titleRef.current, 'png'))
+      onChange({ downloadPercent: 100, downloadText: 'Your design has been downloaded', downloadMsg: '' })
+    } catch (e: any) {
+      console.error('[export] image export failed', e)
+      onChange({ downloadPercent: 0, downloadText: '' })
+      useNotification('Could not export', e?.message || 'Sorry, that export did not work. Please try again.', { type: 'error' })
+      return
+    } finally {
+      loadingRef.current = false
+    }
+
+    // The file is already on disk, so a failure to save the template must not
+    // read as a failed export.
+    try {
+      await save()
+    } catch (e) {
+      console.warn('[export] could not save the design after exporting', e)
+    }
   }
 
   async function load(cb: () => void) {
@@ -216,24 +206,24 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
     managerEdit(true)
   }
 
-  function checkDownloadPoster({ layers }: any) {
-    let backEndCapture = false
-    for (let i = 0; i < layers.length; i++) {
-      const { type, mask, textEffects } = layers[i]
-      if ((type === 'w-image' && mask) || type === 'w-svg' || type === 'w-qrcode' || (textEffects && textEffects.length > 0)) {
-        backEndCapture = true
-        break
-      }
-    }
-    return backEndCapture
-  }
-
-  useImperativeHandle(ref, () => ({ getTitle: () => titleRef.current, download, save, saveTemp, stateChange, load }), [mode])
+  useImperativeHandle(
+    ref,
+    () => ({ getTitle: () => titleRef.current, setTitle: (next: string) => setTitle(next || ''), download, save, saveTemp, stateChange, load }),
+    [mode],
+  )
 
   return (
     <>
       <div className="top-title">
-        <Input value={title} placeholder="Untitled design" wrapperClassName="input-wrap" onChange={setTitle} />
+        <Input
+          value={title}
+          placeholder="Untitled design"
+          wrapperClassName="input-wrap"
+          onChange={(next: string) => {
+            setTitle(next)
+            onTitleChange?.()
+          }}
+        />
       </div>
       <div className="top-icon-wrap">
         {tempEditing ? (
@@ -254,7 +244,6 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
         <div className="top-nav-divider" />
         {children}
       </div>
-      <CreateCover ref={canvasImage} />
     </>
   )
 })

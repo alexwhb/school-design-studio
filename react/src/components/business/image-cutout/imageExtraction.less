@@ -1,0 +1,93 @@
+// The eraser's own dialog. Scoped, because `.board-container` and
+// `.matting-board` are as generic as class names get.
+.ds-image-extraction {
+  .el-dialog__body {
+    padding: 0 !important;
+  }
+  .el-dialog__header {
+    padding: 10px 35px;
+  }
+  .tool-wrap {
+    display: flex;
+    align-items: center;
+  }
+  .brushes {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-left: 35px;
+  }
+  .brush {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: @ink-2;
+    font-size: @text-base;
+    input {
+      accent-color: @accent;
+      margin: 0;
+      cursor: pointer;
+    }
+    &.is-on {
+      color: @ink;
+    }
+  }
+  .slider-wrap {
+    margin-left: 35px;
+    width: 240px;
+  }
+
+  .board-container {
+    // position: fixed;
+    top: 50px;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    min-width: 800px;
+    min-height: 600px;
+    display: flex;
+
+    .matting-board,
+    .result-board {
+      flex: 1 50%;
+      border: 1px solid #c3c7c9;
+      background: #e3e7e9;
+      background-image: linear-gradient(45deg, #f6fafc 25%, transparent 0), linear-gradient(45deg, transparent 75%, #f6fafc 0), linear-gradient(45deg, #f6fafc 25%, transparent 0), linear-gradient(45deg, transparent 75%, #f6fafc 0);
+      background-position: 0 0, 12px 12px, 12px 12px, 24px 24px;
+      background-size: 24px 24px;
+    }
+
+    .matting-wrapper {
+      position: relative;
+      flex: 1 1;
+    }
+
+    .matting-board,
+    .result-board {
+      width: 100%;
+      height: 100%;
+    }
+
+    .matting-board {
+      cursor: none;
+    }
+
+    .result-board {
+      cursor: grab;
+    }
+
+    .matting-cursor {
+      /** 穿透画笔，触发画布点击事件 */
+      pointer-events: none;
+      display: none;
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+  }
+}

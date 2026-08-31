@@ -12,8 +12,7 @@ import App from './App'
 
 initStandaloneTheme()
 
-cssLoader(_config.ICONFONT_EXTRA)
-cssLoader(_config.ICONFONT_URL)
+cssLoader(_config.BASE_URL + _config.ICONFONT_URL)
 
 createRoot(document.getElementById('app')!).render(
   <StrictMode>

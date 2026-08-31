@@ -162,7 +162,7 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
     const active = widgetState.dActiveElement
     if (active?.uuid === params.uuid) {
       const record = active.record
-      if (widgetRef.current) {
+      if (record && widgetRef.current) {
         record.width = widgetRef.current.offsetWidth
         record.height = widgetRef.current.offsetHeight
       }

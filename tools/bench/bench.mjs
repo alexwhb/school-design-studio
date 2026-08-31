@@ -8,7 +8,9 @@ const TARGETS = [
 ]
 
 const RUNS = Number(process.env.BENCH_RUNS || 5)
-const OUT = path.resolve(process.cwd(), 'test-results/bench')
+// Not under test-results/: Playwright empties that directory at the start of
+// every run, which would take the baseline with it.
+const OUT = path.resolve(process.cwd(), 'bench-results')
 
 function stats(values) {
   const sorted = values.slice().sort((a, b) => a - b)
@@ -174,6 +176,53 @@ async function benchPageSwitch(page) {
   return Date.now() - started
 }
 
+/**
+ * Opening the presenter and stepping through it.
+ *
+ * The slides are the design drawn again at another size, so this is the one
+ * thing that renders a whole page from scratch on a keystroke.
+ */
+async function benchPresent(page) {
+  // The page-switch benchmark ran first and left a two-page design behind.
+  const openStarted = Date.now()
+  await page.getByRole('button', { name: 'Present' }).click()
+  await page.waitForSelector('.present .slide', { timeout: 20_000 })
+  const openMs = Date.now() - openStarted
+
+  const stepStarted = Date.now()
+  for (let i = 0; i < 6; i++) {
+    await page.keyboard.press(i % 2 === 0 ? 'ArrowRight' : 'ArrowLeft')
+    await page.waitForTimeout(90)
+  }
+  const stepMs = Date.now() - stepStarted
+
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(400)
+  return { openMs, stepMs }
+}
+
+/** Reflowing a page full of artwork onto a different shape. */
+async function benchResize(page) {
+  await page.getByText('File', { exact: true }).click()
+  await page.waitForTimeout(300)
+  await page.getByText('Resize design\u2026', { exact: true }).click()
+  await page.waitForTimeout(600)
+  const boxes = page.locator('.el-dialog .number-input2 input')
+  await boxes.nth(0).fill('1275')
+  await boxes.nth(0).blur()
+  await page.waitForTimeout(250)
+  await boxes.nth(1).fill('1650')
+  await boxes.nth(1).blur()
+  await page.waitForTimeout(250)
+
+  const started = Date.now()
+  await page.getByRole('button', { name: 'Resize', exact: true }).click()
+  await page.waitForFunction(() => document.getElementById('page-design-canvas')?.style.width === '1275px', undefined, {
+    timeout: 20_000,
+  })
+  return Date.now() - started
+}
+
 async function run() {
   fs.mkdirSync(OUT, { recursive: true })
   const browser = await chromium.launch()
@@ -189,6 +238,8 @@ async function run() {
     const drag = []
     const zoom = []
     const pageSwitch = []
+    const present = []
+    const resize = []
 
     for (let i = 0; i < RUNS; i++) {
       const page = await newPage(browser, target.url)
@@ -198,6 +249,8 @@ async function run() {
       const zoomResult = await benchZoom(page)
       zoomResult && zoom.push(zoomResult)
       pageSwitch.push(await benchPageSwitch(page))
+      resize.push(await benchResize(page))
+      present.push(await benchPresent(page))
       await page.close()
     }
 
@@ -211,6 +264,9 @@ async function run() {
       zoomP95FrameMs: stats(zoom.map((d) => d.p95FrameMs)),
       zoomLongFrames: stats(zoom.map((d) => d.longFrames)),
       pageSwitchMs: stats(pageSwitch),
+      resizeDesignMs: stats(resize),
+      presentOpenMs: stats(present.map((p) => p.openMs)),
+      presentStepMs: stats(present.map((p) => p.stepMs)),
     }
   }
 

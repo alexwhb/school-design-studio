@@ -34,7 +34,7 @@ export default function DownloadProgress({ percent, text = '', cancelText = '', 
               <span style={{ marginLeft: '0.4rem' }}>Download in the background</span>
             </div>
           ) : (
-            <CloseIcon className="backstage" width={20} height={20} />
+            <CloseIcon className="backstage" width={20} height={20} onClick={cancel} />
           )}
         </div>
         <div className="text">{text}</div>
@@ -52,8 +52,14 @@ export default function DownloadProgress({ percent, text = '', cancelText = '', 
         ) : null}
         <div className="text info">{msg}</div>
         {percent >= 100 ? (
-          <div className="success">
-            <img src="https://store.palxp.cn/Celebration.png" alt="" />
+          <div className="success" aria-hidden="true">
+            {/* Drawn here rather than fetched: this used to hotlink a PNG from
+                the upstream project's asset host, so the one moment the app says
+                "done" depended on a third-party CDN being up. */}
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="24" cy="24" r="21" opacity="0.25" />
+              <path d="M14 24.5 21 31.5 34 17.5" />
+            </svg>
           </div>
         ) : null}
       </div>

@@ -15,6 +15,35 @@
     display: flex;
     align-items: center;
   }
+  .pages {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  // A page is its thumbnail plus its name, so the two move together on a drag.
+  .page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+
+    &__name {
+      max-width: 72px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: @text-xs;
+      font-weight: 400;
+      color: @ink-4;
+    }
+    &.is-current &__name {
+      color: @ink-2;
+    }
+  }
+  .is-dragging {
+    opacity: 0.4;
+  }
 
   .item-box,
   .item-add {
@@ -28,11 +57,11 @@
     border: 1px solid @line;
     transition: border-color 0.12s ease, box-shadow 0.12s ease;
   }
-  .item-box:hover .sd-quxiao {
+  .item-box:hover .page-menu {
     opacity: 1;
   }
 
-  .sd-quxiao,
+  .page-menu,
   .item-idx {
     position: absolute;
     z-index: 1;
@@ -51,7 +80,7 @@
     background: @surface;
     box-shadow: 0 0 0 1px @line;
   }
-  .sd-quxiao {
+  .page-menu {
     opacity: 0;
     font-size: 10px;
     width: 16px;
@@ -64,8 +93,8 @@
     top: 3px;
     transition: color 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
     &:hover {
-      color: @danger;
-      border-color: @danger;
+      color: @accent;
+      border-color: @accent;
     }
   }
 
@@ -76,6 +105,7 @@
     justify-content: center;
     color: @ink-4;
     background: @surface-2;
+    flex-shrink: 0;
     .icon-add {
       font-size: 18px;
     }
@@ -84,24 +114,33 @@
       border-color: @accent-border;
       background: @accent-soft;
     }
+    &.is-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      &:hover {
+        color: @ink-4;
+        border-color: @line;
+        background: @surface-2;
+      }
+    }
   }
 
   .item-default:hover {
     border-color: @line-strong;
   }
+  // Selected page: a ring in the accent colour, not a heavy glow.
   .item-select {
     border-color: @accent;
     box-shadow: 0 0 0 2px @accent-a25;
   }
-  .item-box:first-of-type,
-  .item-box:first-child {
+  .page:first-child .item-box {
     margin-left: 0;
   }
 }
 
 .unfold {
   width: calc(100% - 155px);
-  height: 90px;
+  height: 112px;
   .wrap {
     padding: 8px 10px;
     height: 100%;
@@ -133,9 +172,13 @@
   }
 }
 
+// The pill grows with the page name rather than spilling out of its own border,
+// and a name long enough to crowd the canvas is cut with an ellipsis.
 .fold {
   cursor: pointer;
-  width: 150px;
+  width: max-content;
+  min-width: 130px;
+  max-width: min(320px, 100%);
   text-align: center;
   height: 34px;
   margin-bottom: 12px;
@@ -151,6 +194,7 @@
   .icon {
     margin-left: 6px;
     font-size: 11px;
+    flex-shrink: 0;
   }
   .btn {
     padding: 0 14px;
@@ -161,6 +205,11 @@
     height: 100%;
     white-space: nowrap;
     border-radius: @radius;
+    overflow: hidden;
+    &__label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     &:hover {
       background: @surface-2;
     }

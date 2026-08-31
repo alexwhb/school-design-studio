@@ -349,6 +349,13 @@ async function deletePage(position: number) {
     background: @surface;
     box-shadow: 0 0 0 1px @line;
   }
+  // Element Plus wraps a dropdown trigger in a positioned <div> of its own,
+  // which would otherwise become this button's containing block and put it
+  // outside the thumbnail — over the collapse chevron, where it cannot be
+  // clicked at all.
+  .item-box :deep(.el-dropdown) {
+    position: static;
+  }
   .page-menu {
     opacity: 0;
     font-size: 10px;

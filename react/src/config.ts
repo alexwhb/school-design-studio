@@ -12,10 +12,10 @@ const config = {
   COPYRIGHT: 'Based on poster-design by ShawnPhang (MIT)',
   API_URL: prefix.DESIGN_API_URL || '',
   SCREEN_URL: isDev ? 'http://localhost:7001' : '',
-  IMG_URL: 'https://store.palxp.cn/',
-  ICONFONT_URL: '//at.alicdn.com/t/font_2717063_ypy8vprc3b.css?display=swap',
-  ICONFONT_EXTRA: '//at.alicdn.com/t/c/font_3228074_xojoer6zhp.css',
-  QINIUYUN_PLUGIN: 'https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/qiniu-js/2.5.5/qiniu.min.js',
+  // The toolbar's icon fonts, served from public/ rather than a CDN. They are
+  // in the critical path — when that CDN was unreachable every button in the
+  // app rendered as a blank square. Refresh with `npm run fetch-iconfont`.
+  ICONFONT_URL: 'iconfont/iconfont.css',
   supportSubFont: false,
 }
 

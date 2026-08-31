@@ -1,0 +1,221 @@
+.animate-card {
+  width: 100%;
+
+  .el-card__header {
+    padding: 12px 16px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .title {
+      font-size: @text-base;
+      color: @ink;
+      font-weight: 500;
+    }
+
+    .current {
+      flex: 1;
+      font-size: @text-sm;
+      color: @ink-3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .button {
+      flex-shrink: 0;
+    }
+  }
+
+  .body__hint {
+    margin: 0 0 12px;
+    font-size: @text-sm;
+    color: @ink-3;
+    line-height: 1.45;
+  }
+
+  .body__label {
+    .section-label();
+    margin: 14px 0 6px;
+  }
+
+  .starts {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .starts__item {
+    appearance: none;
+    text-align: left;
+    border: 1px solid @line;
+    background: @surface;
+    border-radius: @radius-sm;
+    padding: 6px 9px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    transition: border-color 0.12s ease, background-color 0.12s ease;
+
+    &:hover {
+      background: @surface-2;
+    }
+
+    &.starts__item--on {
+      border-color: @accent-border;
+      background: @accent-soft;
+    }
+  }
+
+  .starts__name {
+    font-size: @text-sm;
+    color: @ink;
+  }
+
+  .starts__hint {
+    font-size: @text-xs;
+    color: @ink-3;
+    line-height: 1.35;
+  }
+
+  .body__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .body__play {
+    flex: 1;
+  }
+}
+
+// The picker lives in a popover portalled out of the panel, so its styles
+// cannot hang off .animate-card.
+.animate-popper {
+  max-height: 62vh;
+  overflow-y: auto;
+
+  .picker__intro {
+    margin: 0 0 10px;
+    font-size: @text-xs;
+    color: @ink-3;
+  }
+
+  .picker__none {
+    appearance: none;
+    width: 100%;
+    text-align: left;
+    border: 1px solid @line;
+    background: @surface;
+    border-radius: @radius-sm;
+    padding: 7px 10px;
+    font-size: @text-sm;
+    color: @ink-2;
+    cursor: pointer;
+
+    &:hover {
+      background: @surface-2;
+    }
+
+    &.picker__none--on {
+      border-color: @accent-border;
+      background: @accent-soft;
+      color: @ink;
+    }
+  }
+
+  .picker__group {
+    .section-label();
+    margin: 14px 0 6px;
+  }
+
+  .picker__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .tile {
+    appearance: none;
+    border: 1px solid @line;
+    background: @surface;
+    border-radius: @radius;
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    transition: border-color 0.12s ease, background-color 0.12s ease;
+
+    &:hover {
+      border-color: @line-strong;
+      background: @surface-2;
+    }
+
+    &.tile--on {
+      border-color: @accent-border;
+      background: @accent-soft;
+    }
+  }
+
+  // The stage clips, so anything that flies in from outside reads as arriving
+  // from off the slide rather than appearing out of the panel background.
+  .tile__stage {
+    display: block;
+    position: relative;
+    height: 52px;
+    overflow: hidden;
+    background: @surface-3;
+    border-bottom: 1px solid @line-soft;
+  }
+
+  .tile__mock {
+    position: absolute;
+    left: 14%;
+    top: 22%;
+    width: 72%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .tile__bar {
+    display: block;
+    height: 7px;
+    border-radius: 2px;
+    background: @accent;
+  }
+
+  .tile__line {
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    background: @ink-4;
+  }
+
+  .tile__line--short {
+    width: 62%;
+  }
+
+  .tile__name {
+    display: block;
+    padding: 5px 6px 6px;
+    font-size: @text-xs;
+    color: @ink-2;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tile--on .tile__name {
+    color: @ink;
+    font-weight: 500;
+  }
+}

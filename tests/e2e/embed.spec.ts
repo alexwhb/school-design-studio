@@ -70,6 +70,31 @@ test.describe('embedded in a host app', () => {
     expect(stray, `unscoped selectors: ${stray.slice(0, 10).join(' | ')}`).toEqual([])
   })
 
+  test('the scoping leaves keyframes alone, so animations still run', async ({ page }) => {
+    const keyframes = await page.evaluate(() => {
+      let blocks = 0
+      let broken = 0
+      for (const sheet of Array.from(document.styleSheets)) {
+        let rules: CSSRuleList
+        try {
+          rules = sheet.cssRules
+        } catch {
+          continue
+        }
+        for (const rule of Array.from(rules)) {
+          if (!(rule instanceof CSSKeyframesRule)) continue
+          blocks += 1
+          // A step prefixed with a class does not parse, so the block comes
+          // back empty and whatever depended on it never moves.
+          if (rule.cssRules.length === 0) broken += 1
+        }
+      }
+      return { blocks, broken }
+    })
+    expect(keyframes.blocks, 'the editor ships keyframes').toBeGreaterThan(10)
+    expect(keyframes.broken, 'every keyframes block still has its steps').toBe(0)
+  })
+
   test('follows the host between light and dark', async ({ page }) => {
     const surface = () =>
       page.evaluate(() => getComputedStyle(document.querySelector('.ds-root')!).getPropertyValue('--ds-surface').trim())
@@ -111,5 +136,43 @@ test.describe('embedded in a host app', () => {
     await page.waitForTimeout(300)
     const after = await widget.first().evaluate((el) => (el as HTMLElement).style.left)
     expect(Number.parseFloat(after)).toBeCloseTo(Number.parseFloat(before) + 1, 1)
+  })
+
+  test('the toolbar icons are drawn from the bundled font, not boxes', async ({ page }) => {
+    const family = await page.locator('.ds-root .iconfont').first().evaluate((el) => getComputedStyle(el).fontFamily)
+    expect(family).toContain('iconfont')
+    const loaded = await page.evaluate(() => document.fonts.check('16px iconfont'))
+    expect(loaded, 'the icon font is available without the host serving it').toBe(true)
+  })
+
+  test('presenting takes over the whole window, not just the editor box', async ({ page }) => {
+    await page.locator('.ds-root').getByRole('button', { name: 'Present' }).click()
+    await page.waitForTimeout(1200)
+
+    const stage = page.locator('.present')
+    await expect(stage).toBeVisible()
+    // Inside the editor's root, so it keeps its styles, but covering the viewport.
+    const box = await stage.boundingBox()
+    const viewport = page.viewportSize()!
+    expect(Math.round(box!.width)).toBe(viewport.width)
+    expect(Math.round(box!.height)).toBe(viewport.height)
+    await expect(page.locator('.ds-root .present')).toHaveCount(1)
+
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(500)
+    await expect(page.locator('.present')).toHaveCount(0)
+  })
+
+  test('the resize dialog opens inside the editor and is styled', async ({ page }) => {
+    await page.locator('.ds-root').getByText('File', { exact: true }).click()
+    await page.waitForTimeout(400)
+    await page.locator('.ds-root').getByText('Resize design\u2026', { exact: true }).click()
+    await page.waitForTimeout(700)
+
+    const dialog = page.locator('.ds-root .ds-resize-design')
+    await expect(dialog).toBeVisible()
+    const background = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(background).not.toBe('rgba(0, 0, 0, 0)')
+    await expect(dialog.locator('.choice')).toHaveCount(3)
   })
 })

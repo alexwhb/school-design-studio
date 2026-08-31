@@ -20,6 +20,7 @@ export default function Helper({ onSelect, children }: { onSelect: (name: string
   return (
     <Dropdown
       placement="bottom-start"
+      size="large"
       maxHeight="70vh"
       menuClassName="ds-helper-menu"
       open={open}

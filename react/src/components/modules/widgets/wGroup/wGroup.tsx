@@ -40,13 +40,14 @@ function WGroup({ params, parent, id, className, child, children, ...rest }: Wid
     const active = widgetState.dActiveElement
     if (active?.uuid === params.uuid) {
       const record = active.record
-      if (record?.width <= 0) {
+      if (!record) return
+      if (record.width <= 0) {
         touchend()
       }
-      ratio.current = tempScale || (params.width || 0) / record?.width
+      ratio.current = tempScale || (params.width || 0) / record.width
 
       if (ratio.current != 1) {
-        if (record?.width != 0) {
+        if (record.width != 0) {
           for (let i = widgetState.dWidgets.length - 1; i >= 0; --i) {
             const w = widgetState.dWidgets[i]
             if (w.parent === params.uuid) {
@@ -112,6 +113,7 @@ function WGroup({ params, parent, id, className, child, children, ...rest }: Wid
       if (!active) return
       if (active.uuid === params.uuid) {
         const record = active.record
+        if (!record) return
         record.width = widgetRef.current?.offsetWidth
         record.height = widgetRef.current?.offsetHeight
         active.width = widgetRef.current?.offsetWidth as number

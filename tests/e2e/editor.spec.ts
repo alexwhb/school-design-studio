@@ -1,5 +1,17 @@
 import { expect, test } from '@playwright/test'
-import { WIDGET, addText, openEditor, selectFirstWidget, widgetBox, widgetCount } from './helpers'
+import {
+  WIDGET,
+  addText,
+  expandPageStrip,
+  openEditor,
+  openPageMenu,
+  openResizeDialog,
+  pageCanvas,
+  selectFirstWidget,
+  setResizeSize,
+  widgetBox,
+  widgetCount,
+} from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
@@ -141,18 +153,16 @@ test('the layers tab lists what is on the page', async ({ page }) => {
   expect(names.map((n) => n.trim())).toEqual(['Add a little bit of body text', 'Add a heading'])
 })
 
-test('changing the page width resizes the canvas and refits the zoom', async ({ page }) => {
-  const before = await page.evaluate(() => document.getElementById('page-design-canvas')!.style.transform)
-  const width = page.locator('#page-style .number-input2 input').first()
-  await width.fill('900')
-  await width.blur()
-  await page.waitForTimeout(700)
-  const after = await page.evaluate(() => ({
-    width: document.getElementById('page-design-canvas')!.style.width,
-    transform: document.getElementById('page-design-canvas')!.style.transform,
-  }))
+test('resizing the design changes the canvas and refits the zoom', async ({ page }) => {
+  const before = await pageCanvas(page)
+  await openResizeDialog(page)
+  await setResizeSize(page, 900, 1200)
+  await page.getByRole('button', { name: 'Resize', exact: true }).click()
+  await page.waitForTimeout(900)
+  const after = await pageCanvas(page)
   expect(after.width).toBe('900px')
-  expect(after.transform).not.toBe(before)
+  expect(after.height).toBe('1200px')
+  expect(after.transform).not.toBe(before.transform)
 })
 
 test('adds and switches pages from the artboard strip', async ({ page }) => {

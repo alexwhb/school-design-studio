@@ -3,11 +3,13 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 // @ts-expect-error -- plain ESM, no types
 import scopeCss from './tools/build/scope-css.mjs'
+// @ts-expect-error -- plain ESM, no types; see tools/build/inline-iconfont.mjs
+import inlineIconfont from './tools/build/inline-iconfont.mjs'
 
 const resolve = (...data: string[]) => path.resolve(__dirname, ...data)
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), inlineIconfont(resolve('public/iconfont/iconfont.css'))],
   resolve: {
     alias: {
       '@': resolve('react/src'),

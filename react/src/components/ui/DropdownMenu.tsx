@@ -10,6 +10,8 @@ export type DropdownProps = {
   hideOnClick?: boolean
   maxHeight?: string
   menuClassName?: string
+  /** Element Plus sizes the menu, not the trigger: `large` gives taller items. */
+  size?: 'large' | 'default' | 'small'
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -28,22 +30,33 @@ export function DropdownItem({
   closeOnSelect?: boolean
 }) {
   return (
-    <li className={cx('el-dropdown-menu__item', { 'el-dropdown-menu__item--divided': !!divided, 'is-disabled': !!disabled })}>
-      <div
-        className="ds-dropdown-item-inner"
-        onClick={(e) => {
-          if (disabled) return
-          if (!closeOnSelect) e.preventDefault()
+    <>
+      {/* Element Plus draws a divider as its own empty <li>, not as a border on
+          the item, and the two are not the same height. */}
+      {divided ? <li className="el-dropdown-menu__item--divided" /> : null}
+      {/*
+        Radix's own Item, so choosing something closes the menu and the arrow
+        keys work. It also owns the modal layer: a menu left open holds
+        `pointer-events: none` on the body, and whatever opens next — a dialog,
+        a confirmation — cannot be clicked.
+      */}
+      <DropdownPrimitive.Item
+        asChild
+        disabled={disabled}
+        onSelect={(event) => {
+          if (!closeOnSelect) event.preventDefault()
           onSelect?.()
         }}
       >
-        {children}
-      </div>
-    </li>
+        <li className={cx('el-dropdown-menu__item', { 'is-disabled': !!disabled })}>
+          <div className="ds-dropdown-item-inner">{children}</div>
+        </li>
+      </DropdownPrimitive.Item>
+    </>
   )
 }
 
-export default function Dropdown({ children, menu, placement = 'bottom-start', maxHeight, menuClassName, open, onOpenChange }: DropdownProps) {
+export default function Dropdown({ children, menu, placement = 'bottom-start', maxHeight, menuClassName, size, open, onOpenChange }: DropdownProps) {
   const [internalOpen, setInternalOpen] = useState(false)
   const isOpen = open ?? internalOpen
   const setOpen = (next: boolean) => {
@@ -61,11 +74,18 @@ export default function Dropdown({ children, menu, placement = 'bottom-start', m
         <DropdownPrimitive.Content
           side={side}
           align={align}
-          sideOffset={8}
-          className="el-popper is-light el-dropdown__popper ds-popper"
+          sideOffset={12}
+          className="el-popper is-pure is-light el-dropdown__popper ds-popper"
           style={maxHeight ? { maxHeight, overflowY: 'auto' } : undefined}
+          // A React portal still bubbles its events up the React tree, so
+          // without this a click on a menu item also runs the click handler of
+          // whatever the menu was declared inside — selecting "Duplicate" on a
+          // page's menu would also select that page.
+          onClick={(event) => event.stopPropagation()}
         >
-          <ul className={cx('el-dropdown-menu', menuClassName || '')}>{menu}</ul>
+          <ul className={cx('el-dropdown-menu', size && size !== 'default' ? `el-dropdown-menu--${size}` : '', menuClassName || '')}>
+            {menu}
+          </ul>
           <DropdownPrimitive.Arrow asChild width={10} height={10}>
             <span className="el-popper__arrow" />
           </DropdownPrimitive.Arrow>

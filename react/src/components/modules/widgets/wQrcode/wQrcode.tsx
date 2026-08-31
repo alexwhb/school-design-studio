@@ -46,7 +46,7 @@ function WQrcode({ params, parent, id, className, child, ...rest }: WidgetProps)
     const active = widgetState.dActiveElement
     if (active?.uuid === params.uuid) {
       const record = active.record
-      if (!widgetRef.current) return
+      if (!record || !widgetRef.current) return
       record.width = widgetRef.current.offsetWidth
       record.height = widgetRef.current.offsetHeight
     }

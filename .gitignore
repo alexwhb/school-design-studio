@@ -32,4 +32,5 @@ pnpm-debug.log*
 dist-react
 dist-embed
 test-results
+bench-results
 playwright-report

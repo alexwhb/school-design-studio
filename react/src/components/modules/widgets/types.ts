@@ -18,4 +18,6 @@ export type WidgetProps = {
   'data-title'?: string
   'data-type'?: string
   'data-uuid'?: string
+  /** Set by the presenter, so it can find this element to play its entrance. */
+  'data-anim'?: string
 }

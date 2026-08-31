@@ -1,4 +1,15 @@
+/*
+ * Element Plus positions its own poppers, so `.el-popper` carries
+ * `position: absolute`. Radix positions this one instead, from a fixed wrapper
+ * it expects the content to fill — left absolute, the content is taken out of
+ * that wrapper's flow, measures as nothing, and every collision adjustment is
+ * made against a zero-size box. A menu near the right edge of the window then
+ * opens off the side of it.
+ *
+ * Relative rather than static: the arrow is absolutely positioned against this.
+ */
 .ds-popper {
+  position: relative;
   z-index: 2000;
 }
 .ds-popper .el-popper__arrow {

@@ -11,6 +11,15 @@ const DARK = '.ds-root.ds-dark'
 
 const SKIP_AT_RULES = new Set(['keyframes', 'font-face', 'import', 'charset', 'namespace', 'property', 'counter-style'])
 
+/**
+ * `-webkit-keyframes` is still `keyframes`. Element Plus ships the prefixed
+ * form, and prefixing `0%` with a class turns the whole block into a parse
+ * error — which is how an embedded spinner stops spinning.
+ */
+function atRuleName(name) {
+  return name.toLowerCase().replace(/^-\w+-/, '')
+}
+
 function prefixSelector(selector) {
   const trimmed = selector.trim()
   if (!trimmed) return trimmed
@@ -31,7 +40,7 @@ export default function scopeCss() {
     postcssPlugin: 'design-studio-scope',
     Rule(rule) {
       const parent = rule.parent
-      if (parent && parent.type === 'atrule' && SKIP_AT_RULES.has(parent.name.toLowerCase())) return
+      if (parent && parent.type === 'atrule' && SKIP_AT_RULES.has(atRuleName(parent.name))) return
       if (rule.__dsScoped) return
       rule.__dsScoped = true
       rule.selectors = rule.selectors.map(prefixSelector)

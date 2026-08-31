@@ -46,7 +46,7 @@ const WidgetPanel = forwardRef<WidgetPanelHandle>(function WidgetPanel(_props, r
               onClick={() => clickClassify(index)}
             >
               <div className="icon-box">
-                <i className={cx('iconfont', 'icon', item.icon)} style={item.style} />
+                <i className={cx('iconfont', 'rail-icon', item.icon)} style={item.style} />
               </div>
               <p>{item.name}</p>
             </li>
@@ -68,7 +68,7 @@ const WidgetPanel = forwardRef<WidgetPanelHandle>(function WidgetPanel(_props, r
       <div className="side-wrap" style={{ display: active ? undefined : 'none' }}>
         <Tooltip content="Hide panel" placement="right" showAfter={300}>
           <div className="pack__up" onClick={() => setActive(false)}>
-            <i className="iconfont icon-arrow" />
+            <i className="iconfont icon-right" />
           </div>
         </Tooltip>
       </div>

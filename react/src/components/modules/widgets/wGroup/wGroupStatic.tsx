@@ -1,10 +1,12 @@
 import { memo } from 'react'
 import type { WidgetProps } from '../types'
 
-function WGroupStatic({ params, parent, children }: WidgetProps) {
+function WGroupStatic({ params, parent, children, className, ...rest }: WidgetProps) {
   const p = params as any
   return (
     <div
+      {...rest}
+      className={className}
       style={{
         position: 'absolute',
         left: (p.left || 0) - (parent?.left || 0) + 'px',

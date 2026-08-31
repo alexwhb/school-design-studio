@@ -22,6 +22,12 @@ export function getWidgets() {
 
 export function updateWidgetData({ uuid, key, value }: TUpdateWidgetPayload) {
   const widget = widgetState.dWidgets.find((item) => item.uuid === uuid)
+  // Clearing an optional setting should leave no trace in the saved design,
+  // rather than an empty object every later reader has to allow for.
+  if (widget && value === null) {
+    delete widget[key]
+    return
+  }
   if (widget && widget[key] !== value) {
     switch (key) {
       case 'left':

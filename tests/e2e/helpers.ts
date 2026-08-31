@@ -50,3 +50,44 @@ export async function widgetBox(page: Page, index = 0) {
     [WIDGET, index] as const,
   )
 }
+
+/**
+ * Through the File menu, which works whatever is selected — the panel's own
+ * Resize button is only on screen when the page itself is.
+ */
+export async function openResizeDialog(page: Page) {
+  await page.getByText('File', { exact: true }).click()
+  await page.waitForTimeout(300)
+  await page.getByText('Resize design\u2026', { exact: true }).click()
+  await page.waitForTimeout(700)
+}
+
+export async function setResizeSize(page: Page, width: number, height: number) {
+  const boxes = page.locator('.el-dialog .number-input2 input')
+  await boxes.nth(0).fill(String(width))
+  await boxes.nth(0).blur()
+  await page.waitForTimeout(300)
+  await boxes.nth(1).fill(String(height))
+  await boxes.nth(1).blur()
+  await page.waitForTimeout(300)
+}
+
+export async function expandPageStrip(page: Page) {
+  await page.locator('.artboards .btn').click()
+  await page.locator('.artboards .list').waitFor()
+  await page.waitForTimeout(600)
+}
+
+export async function openPageMenu(page: Page, index = 0) {
+  await page.locator('.artboards .item-box').nth(index).hover()
+  await page.waitForTimeout(200)
+  await page.locator('.artboards .page-menu').nth(index).click({ force: true })
+  await page.waitForTimeout(500)
+}
+
+export function pageCanvas(page: Page) {
+  return page.evaluate(() => {
+    const el = document.getElementById('page-design-canvas')!
+    return { width: el.style.width, height: el.style.height, transform: el.style.transform }
+  })
+}

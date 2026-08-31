@@ -8,6 +8,14 @@ type Case = {
   route: string
   theme: 'dark' | 'light'
   prepareStep?: (page: import('@playwright/test').Page) => Promise<void>
+  /**
+   * Shoot one element instead of the viewport.
+   *
+   * For anything that floats over the editor — a dialog, a menu, the presenter —
+   * the whole viewport drags in the panel behind it, where a lazily loaded
+   * template thumbnail landing a frame apart is noise rather than a difference.
+   */
+  target?: string
 }
 
 const cases: Case[] = [
@@ -124,6 +132,77 @@ const cases: Case[] = [
     },
   },
   {
+    name: 'resize-dialog-dark',
+    route: '/home',
+    theme: 'dark',
+    target: '.el-dialog',
+    prepareStep: async (page) => {
+      await page.locator('#page-style').getByText('Resize…', { exact: true }).click()
+      await page.waitForTimeout(900)
+    },
+  },
+  {
+    name: 'animate-card-dark',
+    route: '/home',
+    theme: 'dark',
+    target: '.el-popper.animate-popper, .animate-popper',
+    prepareStep: async (page) => {
+      await page.getByText('Text', { exact: true }).click()
+      await page.waitForTimeout(400)
+      await page.getByText('Heading', { exact: true }).click()
+      await page.waitForTimeout(900)
+      await page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first().click({ position: { x: 20, y: 10 } })
+      await page.waitForTimeout(700)
+      await page.locator('.animate-card').getByText('Choose', { exact: true }).click()
+      await page.waitForTimeout(2200)
+    },
+  },
+  {
+    name: 'animate-card-chosen-dark',
+    route: '/home',
+    theme: 'dark',
+    prepareStep: async (page) => {
+      await page.getByText('Text', { exact: true }).click()
+      await page.waitForTimeout(400)
+      await page.getByText('Heading', { exact: true }).click()
+      await page.waitForTimeout(900)
+      await page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first().click({ position: { x: 20, y: 10 } })
+      await page.waitForTimeout(700)
+      await page.locator('.animate-card').getByText('Choose', { exact: true }).click()
+      await page.waitForTimeout(1600)
+      await page.locator('.picker__grid .tile', { hasText: 'Rise' }).first().click()
+      await page.waitForTimeout(2200)
+    },
+  },
+  {
+    name: 'pages-strip-dark',
+    route: '/home',
+    theme: 'dark',
+    prepareStep: async (page) => {
+      await page.getByText('Text', { exact: true }).click()
+      await page.waitForTimeout(400)
+      await page.getByText('Heading', { exact: true }).click()
+      await page.waitForTimeout(900)
+      await page.locator('.artboards .btn').click()
+      await page.waitForTimeout(600)
+      await page.locator('.artboards .item-add').click()
+      await page.waitForTimeout(1200)
+    },
+  },
+  {
+    name: 'present-mode-dark',
+    route: '/home',
+    theme: 'dark',
+    target: '.present__stage',
+    prepareStep: async (page) => {
+      await page.waitForTimeout(1200)
+      await page.locator('.img-water-fall .img-box').first().click()
+      await page.waitForTimeout(2600)
+      await page.getByRole('button', { name: 'Present' }).click()
+      await page.waitForTimeout(2600)
+    },
+  },
+  {
     name: 'panel-uploads-dark',
     route: '/home',
     theme: 'dark',
@@ -147,8 +226,11 @@ for (const item of cases) {
       await item.prepareStep(reactPage)
     }
 
-    const vueShot = await vuePage.screenshot({ animations: 'disabled' })
-    const reactShot = await reactPage.screenshot({ animations: 'disabled' })
+    const shoot = (page: import('@playwright/test').Page) =>
+      item.target ? page.locator(item.target).first().screenshot({ animations: 'disabled' }) : page.screenshot({ animations: 'disabled' })
+
+    const vueShot = await shoot(vuePage)
+    const reactShot = await shoot(reactPage)
 
     const result = compare(item.name, vueShot, reactShot)
     await vuePage.close()

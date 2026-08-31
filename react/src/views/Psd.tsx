@@ -7,6 +7,7 @@ import StylePanel from '@/components/modules/panel/StylePanel'
 import ProgressLoading from '@/components/common/ProgressLoading/ProgressLoading'
 import Uploader from '@/components/common/Uploader/Uploader'
 import Button from '@/components/ui/Button'
+import { UploadFilledIcon } from '@/components/ui/icons'
 import useLoading from '@/common/methods/loading'
 import { readQuery } from '@/common/hooks/useRouteQuery'
 import { handleKeydowm, handleKeyup } from '@/mixins/shortcuts'
@@ -120,10 +121,6 @@ export default function Psd() {
     window.open(`${window.location.protocol + '//' + window.location.host}/home?id=${id}`)
   }
 
-  function jump2word() {
-    window.open('https://kdocs.cn/l/clmBsIkhve8d')
-  }
-
   const shelterWidth = (canvas.dPage.width * canvas.dZoom) / 100 + 'px'
   const shelterHeight = (canvas.dPage.height * canvas.dZoom) / 100 + 'px'
 
@@ -136,11 +133,7 @@ export default function Psd() {
               PSD import
             </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <Button plain type="primary" onClick={jump2word}>
-              PSD guidelines
-            </Button>
-          </div>
+          <div style={{ flex: 1 }} />
           {isDone ? <Button onClick={clear}>Clear template</Button> : null}
           <div className="v-tips">
             <UploadTemplate isDone={isDone} onChange={optionsChange} />
@@ -155,12 +148,13 @@ export default function Psd() {
           ) : (
             <Uploader hold drag accept=".psd" className="uploader" onLoad={selectFile}>
               <div className="uploader__box">
-                <img
-                  style={{ marginRight: '1rem' }}
-                  src="https://cdn.dancf.com/design/svg/icon_psdimport.37e6f23e.svg"
-                  alt="upload"
-                />{' '}
-                Drop a file here or choose one PSD 文件
+                <UploadFilledIcon style={{ width: 48, height: 48, marginRight: '1rem' }} />
+                <div className="uploader__copy">
+                  <span>Drop a PSD file here, or choose one</span>
+                  <span className="uploader__hint">
+                    Text, pictures and shapes arrive as separate layers. Effects, masks and adjustment layers are flattened.
+                  </span>
+                </div>
               </div>
             </Uploader>
           )}

@@ -8,6 +8,7 @@ export type ShortcutInstance = {
   save: () => void
   zoomAdd: () => void
   zoomSub: () => void
+  present?: () => void
 }
 
 export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) {
@@ -24,6 +25,10 @@ export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) 
       break
     case 90:
       undo(e.shiftKey)
+      break
+    case 13:
+      e.preventDefault()
+      _this.present?.()
       break
     case 83:
       e.preventDefault()

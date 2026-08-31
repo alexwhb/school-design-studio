@@ -6,7 +6,8 @@ import { updateWidgetData } from '@/store/widget/widget'
 import { fontMinWithDraw } from '@/utils/widgets/loadFontRule'
 import { cx } from '@/utils/dom'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
-import getGradientOrImg from './getGradientOrImg'
+import useSpellcheck from '@/common/hooks/useSpellcheck'
+import effectStyle from './effectStyle'
 import type { WidgetProps } from '../types'
 import './wText.less'
 
@@ -14,6 +15,8 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   const p = useSnapshot(params) as any
   const mode = useEditorMode()
   const isDraw = mode === 'draw'
+  /** Editor-wide preference; see common/hooks/useSpellcheck.ts. */
+  const { enabled: spellcheck } = useSpellcheck()
 
   const [loading, setLoading] = useState(false)
   const [editable, setEditable] = useState(false)
@@ -81,9 +84,10 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     const active = widgetState.dActiveElement
     if (active && active.uuid === String(params.uuid)) {
       const record = active.record
+      if (!record) return
       record.width = el.offsetWidth
       record.height = el.offsetHeight
-      record.minWidth = params.fontSize
+      record.minWidth = params.fontSize as number
       record.minHeight = (params.fontSize as number) * (params as any).lineHeight
       writingText()
     }
@@ -156,18 +160,7 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
         ? p.textEffects.map((ef: any, efi: number) => (
             <div
               key={efi + 'effect'}
-              style={{
-                fontFamily,
-                color: ef.filling && ef.filling.enable && ef.filling.type === 0 ? ef.filling.color : 'transparent',
-                WebkitTextStroke: ef.stroke && ef.stroke.enable ? `${ef.stroke.width}px ${ef.stroke.color}` : undefined,
-                textShadow:
-                  ef.shadow && ef.shadow.enable
-                    ? `${ef.shadow.offsetX}px ${ef.shadow.offsetY}px ${ef.shadow.blur}px ${ef.shadow.color}`
-                    : undefined,
-                backgroundImage: ef.filling && ef.filling.enable ? (ef.filling.type === 0 ? undefined : getGradientOrImg(ef)) : undefined,
-                WebkitBackgroundClip: ef.filling && ef.filling.enable ? (ef.filling.type === 0 ? undefined : 'text') : undefined,
-                transform: ef.offset && ef.offset.enable ? `translate(${ef.offset.x}px, ${ef.offset.y}px)` : undefined,
-              }}
+              style={{ fontFamily, ...effectStyle(ef) }}
               className="edit-text effect-text"
               spellCheck={false}
               dangerouslySetInnerHTML={{ __html: p.text ?? '' }}
@@ -178,7 +171,7 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
         ref={editWrapRef}
         style={{ fontFamily }}
         className="edit-text"
-        spellCheck={false}
+        spellCheck={spellcheck}
         contentEditable={editable ? 'plaintext-only' : false}
         suppressContentEditableWarning
         onInput={() => writingText()}

@@ -8,6 +8,7 @@ import WTextStatic from './wText/wTextStatic'
 import WImageStatic from './wImage/wImageStatic'
 import WSvgStatic from './wSvg/wSvgStatic'
 import WGroupStatic from './wGroup/wGroupStatic'
+import WQrcodeStatic from './wQrcode/wQrcodeStatic'
 import type { WidgetProps } from './types'
 
 export const widgetComponents: Record<string, ComponentType<WidgetProps>> = {
@@ -23,5 +24,5 @@ export const staticWidgetComponents: Record<string, ComponentType<WidgetProps>> 
   'w-image': WImageStatic,
   'w-svg': WSvgStatic,
   'w-group': WGroupStatic,
-  'w-qrcode': WImageStatic,
+  'w-qrcode': WQrcodeStatic,
 }

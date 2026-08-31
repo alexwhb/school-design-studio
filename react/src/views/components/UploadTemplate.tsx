@@ -5,7 +5,6 @@ import useNotification from '@/common/methods/notification'
 import { useFontStore } from '@/common/methods/fonts'
 import { readQuery, replaceQuery } from '@/common/hooks/useRouteQuery'
 import Button from '@/components/ui/Button'
-import CreateCover, { type CreateCoverHandle } from '@/components/business/save-download/CreateCover'
 import { canvasState, widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import type { TdWidgetData } from '@/store/types'
@@ -23,7 +22,6 @@ type Props = {
 }
 
 export default function UploadTemplate({ isDone, onChange }: Props) {
-  const canvasImage = useRef<CreateCoverHandle | null>(null)
   const started = useRef(false)
   if (!started.current) {
     started.current = true
@@ -45,6 +43,7 @@ export default function UploadTemplate({ isDone, onChange }: Props) {
       if (widgetState.dWidgets[0].type === 'w-group') {
         const group = widgetState.dWidgets.shift()
         if (!group) return
+        if (!group.record) return
         group.record.width = 0
         group.record.height = 0
         widgetState.dWidgets.push(group)
@@ -118,7 +117,6 @@ export default function UploadTemplate({ isDone, onChange }: Props) {
           <b>Upload template</b>
         </Button>
       ) : null}
-      <CreateCover ref={canvasImage} />
     </>
   )
 }

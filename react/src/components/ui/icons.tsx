@@ -1,4 +1,12 @@
-type IconProps = { className?: string; width?: number | string; height?: number | string }
+import type React from 'react'
+
+type IconProps = {
+  className?: string
+  width?: number | string
+  height?: number | string
+  style?: React.CSSProperties
+  onClick?: React.MouseEventHandler<SVGSVGElement>
+}
 
 export function ArrowRightIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (
@@ -11,9 +19,9 @@ export function ArrowRightIcon({ className, width = '1em', height = '1em' }: Ico
   )
 }
 
-export function CloseIcon({ className, width = '1em', height = '1em' }: IconProps) {
+export function CloseIcon({ className, width = '1em', height = '1em', onClick }: IconProps) {
   return (
-    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+    <svg className={className} width={width} height={height} onClick={onClick} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
       <path
         fill="currentColor"
         d="M764.288 214.592 512 466.88 259.712 214.592a31.936 31.936 0 0 0-45.12 45.12L466.752 512 214.528 764.224a31.936 31.936 0 1 0 45.12 45.184L512 557.184l252.288 252.288a31.936 31.936 0 0 0 45.12-45.12L557.12 512.064l252.288-252.352a31.936 31.936 0 1 0-45.12-45.184z"
@@ -50,6 +58,28 @@ export function ArrowUpIcon({ className, width = '1em', height = '1em' }: IconPr
       <path
         fill="currentColor"
         d="m488.832 344.32-339.84 356.672a32 32 0 0 0 0 44.16l.384.384a29.44 29.44 0 0 0 42.688 0l320-335.872 319.872 335.872a29.44 29.44 0 0 0 42.688 0l.384-.384a32 32 0 0 0 0-44.16L535.168 344.32a32 32 0 0 0-46.336 0z"
+      />
+    </svg>
+  )
+}
+
+export function CheckIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="currentColor"
+        d="M406.656 706.944 195.84 496.256a32 32 0 1 0-45.248 45.248l256 256 512-512a32 32 0 0 0-45.248-45.248L406.592 706.944z"
+      />
+    </svg>
+  )
+}
+
+export function UploadFilledIcon({ className, width = '1em', height = '1em', style }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} style={style} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="currentColor"
+        d="M544 864V672h128L512 480 352 672h128v192H320v-1.6c-5.376.32-10.496 1.6-16 1.6A240 240 0 0 1 64 624c0-123.136 93.12-223.488 212.608-237.248A239.808 239.808 0 0 1 512 192a239.872 239.872 0 0 1 235.456 194.752c119.488 13.76 212.48 114.112 212.48 237.248a240 240 0 0 1-240 240c-5.376 0-10.56-1.28-16-1.6v1.6z"
       />
     </svg>
   )

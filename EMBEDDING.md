@@ -19,7 +19,6 @@ import 'design-studio/style.css'
 | `homeUrl`       | `'/'`    | Where the app name in the toolbar links back to.                              |
 | `appName`       | `'Design Studio'` | Name shown in the toolbar.                                          |
 | `theme`         | `'host'` | `host` follows the `dark` class on `<html>`; `light`/`dark` pin it.           |
-| `loadIconFonts` | `true`   | Loads the two iconfont stylesheets. Turn off if the host already serves them. |
 | `config`        | —        | Anything else from `react/src/config.ts`.                                     |
 
 ## Building it
@@ -88,6 +87,11 @@ Import `design-studio/style.css` once, from `app/root.tsx`.
 
 ### Three things the host has to serve
 
+The toolbar's icon font is not one of them: it is inside `design-studio.css`, as
+a data URL. A stylesheet fetched at runtime never goes through the build, so its
+`.iconfont` and hundred-odd `.icon-*` rules would have landed on the host
+unscoped.
+
 1. **`/design/*`** — the read-only content endpoints (templates, elements,
    photos). `server/content-library.mjs` in this repo is a drop-in Express
    handler; point `apiUrl` elsewhere if the planner proxies them.
@@ -98,6 +102,23 @@ Import `design-studio/style.css` once, from `app/root.tsx`.
    itself if `window.Snap` is missing.
 
 Copy `public/` from this repo into the planner's `public/`.
+
+### What it keeps, and where
+
+Everything the editor saves lives in the browser, in one IndexedDB database
+called `design-studio`: uploaded pictures in `uploads`, the design being worked
+on in `designs`. Two consequences worth knowing before this goes near a real
+school:
+
+- It is per-origin and per-browser. A teacher who starts a poster on the
+  staffroom machine will not find it on their laptop, and clearing site data
+  loses it.
+- It is the seam for the planner's own storage. `localUploads.ts` and
+  `localDesigns.ts` are four functions each; swap their bodies for calls to the
+  planner's API and nothing else has to change.
+
+The design is written two seconds after the last edit, and again when the tab is
+hidden. On a blank canvas the editor offers the last one back.
 
 ### Sizing
 

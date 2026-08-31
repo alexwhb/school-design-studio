@@ -6,7 +6,7 @@
  * every export. See public/fonts/LICENSES.md for the licence of each family.
  */
 
-export type TFontKind = 'sans' | 'serif' | 'display' | 'handwriting'
+export type TFontKind = 'sans' | 'serif' | 'display' | 'mono' | 'handwriting'
 
 export type TFontItem = {
   id: number
@@ -25,6 +25,7 @@ export const FONT_GROUPS: Record<TFontKind, string> = {
   sans: 'Sans serif',
   serif: 'Serif',
   display: 'Display',
+  mono: 'Monospace',
   handwriting: 'Handwriting',
 }
 
@@ -52,6 +53,12 @@ const fonts: TFontItem[] = [
   { id: 18, oid: 0, value: 'Source Serif 4', alias: 'Source Serif', kind: 'serif', url: '/fonts/source-serif-4-400-700.woff2', preview: '' },
   { id: 19, oid: 0, value: 'Caveat', alias: 'Caveat', kind: 'handwriting', url: '/fonts/caveat-400-700.woff2', preview: '' },
   { id: 20, oid: 0, value: 'Pacifico', alias: 'Pacifico', kind: 'handwriting', url: '/fonts/pacifico-400.woff2', preview: '' },
+  { id: 21, oid: 0, value: 'Space Grotesk', alias: 'Space Grotesk', kind: 'sans', url: '/fonts/space-grotesk-400-700.woff2', preview: '' },
+  { id: 22, oid: 0, value: 'Karla', alias: 'Karla', kind: 'sans', url: '/fonts/karla-400-700.woff2', preview: '' },
+  { id: 23, oid: 0, value: 'Spectral', alias: 'Spectral', kind: 'serif', url: '/fonts/spectral-400.woff2', preview: '' },
+  { id: 24, oid: 0, value: 'DM Serif Display', alias: 'DM Serif Display', kind: 'serif', url: '/fonts/dm-serif-display-400.woff2', preview: '' },
+  { id: 25, oid: 0, value: 'IBM Plex Mono', alias: 'IBM Plex Mono', kind: 'mono', url: '/fonts/ibm-plex-mono-400.woff2', preview: '' },
+  { id: 26, oid: 0, value: 'JetBrains Mono', alias: 'JetBrains Mono', kind: 'mono', url: '/fonts/jetbrains-mono-400-700.woff2', preview: '' },
 ]
 
 export default fonts

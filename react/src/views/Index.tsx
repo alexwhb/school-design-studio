@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import _config from '@/config'
 import Moveable from '@/components/business/moveable/Moveable'
@@ -11,16 +11,21 @@ import WidgetPanel, { type WidgetPanelHandle } from '@/components/modules/panel/
 import StylePanel from '@/components/modules/panel/StylePanel'
 import DownloadProgress from '@/components/common/ProgressLoading/DownloadProgress'
 import CreateDesign, { type CreateDesignHandle } from '@/components/business/create-design/CreateDesign'
+import ResizeDesign, { type ResizeDesignHandle } from '@/components/business/resize-design/ResizeDesign'
+import PresentMode, { type PresentModeHandle } from '@/components/business/presentation/PresentMode'
 import Tour, { type TourHandle } from './components/Tour'
 import HeaderOptions, { type HeaderOptionsHandle } from './components/HeaderOptions'
 import ExportMenu from './components/ExportMenu'
 import Folder from './components/Folder'
 import Helper from './components/Helper'
 import Tooltip from '@/components/ui/Tooltip'
+import Button from '@/components/ui/Button'
 import useHistory from '@/common/hooks/history'
+import useAutosave from '@/common/hooks/autosave'
 import { handleKeydowm, handleKeyup } from '@/mixins/shortcuts'
 import { wGroupSetting } from '@/components/modules/widgets/wGroup/groupSetting'
 import { canvasState, historyState } from '@/store/state'
+import { readQuery } from '@/common/hooks/useRouteQuery'
 import { initGroupJson } from '@/store/group'
 import { handleHistory } from '@/store/history'
 import { selectWidget } from '@/store/widget/select'
@@ -44,19 +49,29 @@ export default function Index() {
   const zoomControlRef = useRef<ZoomControlHandle | null>(null)
   const widgetPanelRef = useRef<WidgetPanelHandle | null>(null)
   const createDesignRef = useRef<CreateDesignHandle | null>(null)
+  const resizeDesignRef = useRef<ResizeDesignHandle | null>(null)
+  const presentRef = useRef<PresentModeHandle | null>(null)
+  const loaded = useRef(false)
   const tourRef = useRef<TourHandle | null>(null)
   const step1Ref = useRef<HTMLDivElement | null>(null)
   const step2Ref = useRef<HTMLDivElement | null>(null)
   const step3Ref = useRef<HTMLDivElement | null>(null)
   const step4Ref = useRef<HTMLDivElement | null>(null)
 
+  const autosave = useAutosave({
+    getTitle: () => optionsRef.current?.getTitle() || '',
+    setTitle: (title: string) => optionsRef.current?.setTitle(title),
+  })
+
+  const presentShortcut = useMemo(() => (navigator.userAgent.includes('Mac') ? '\u2318 + Enter' : 'Ctrl + Enter'), [])
+
   const undoable = history.dHistoryParams.stackPointer >= 0
   const redoable = !(history.dHistoryParams.stackPointer === history.dHistoryStack.changes.length - 1)
 
   useEffect(() => {
     const beforeUnload = function (e: BeforeUnloadEvent): any {
-      if (historyState.dHistoryStack.changes.length > 0) {
-        const confirmationMessage = 'Your changes are not saved automatically.'
+      if (autosave.isDirty()) {
+        const confirmationMessage = 'Your most recent changes have not been saved yet.'
         e.returnValue = confirmationMessage
         return confirmationMessage
       }
@@ -66,7 +81,7 @@ export default function Index() {
     return () => {
       if (!_config.isDev) window.removeEventListener('beforeunload', beforeUnload)
     }
-  }, [])
+  }, [autosave])
 
   useEffect(() => {
     initGroupJson(JSON.stringify(wGroupSetting))
@@ -78,18 +93,29 @@ export default function Index() {
     window.addEventListener('scroll', fixTopBarScroll)
 
     const instanceFn = {
-      save: () => optionsRef.current?.save(),
+      save: () => void autosave.saveNow(),
       zoomAdd: () => zoomControlRef.current?.add(),
       zoomSub: () => zoomControlRef.current?.sub(),
+      present: () => presentRef.current?.open(),
     }
     const onKeyDown = handleKeydowm(instanceFn)
     const onKeyUp = handleKeyup()
     document.addEventListener('keydown', onKeyDown, false)
     document.addEventListener('keyup', onKeyUp, false)
 
-    optionsRef.current?.load(() => {
-      selectWidget({ uuid: '-1' })
-    })
+    // Loading a design mutates the store and may ask a question, so it happens
+    // once — StrictMode runs effects twice in development.
+    if (!loaded.current) {
+      loaded.current = true
+      optionsRef.current?.load(async () => {
+        selectWidget({ uuid: '-1' })
+        // Offer the last design back, but only on a blank canvas: arriving with
+        // an id or a template id is a request for that design, and asking about
+        // a different one would be an interruption. Watching starts either way.
+        const { id, tempid } = readQuery()
+        await autosave.restoreThenWatch(!id && !tempid)
+      })
+    }
 
     return () => {
       window.removeEventListener('scroll', fixTopBarScroll)
@@ -97,7 +123,7 @@ export default function Index() {
       document.removeEventListener('keyup', onKeyUp, false)
       document.oncontextmenu = null
     }
-  }, [])
+  }, [autosave])
 
   function jump2home() {
     window.location.href = _config.HOME_URL
@@ -128,10 +154,13 @@ export default function Index() {
 
   const fns: Record<string, (params?: any) => void> = {
     openTour: () => tourRef.current?.open(),
-    save: () => optionsRef.current?.save(),
-    download: () => optionsRef.current?.download(),
+    save: () => void autosave.saveNow(),
+    // The export menu passes the chosen quality; the File menu has no such
+    // choice and leaves it to the default.
+    download: (scale?: number) => optionsRef.current?.download(scale),
     changeLineGuides: () => setShowLineGuides((prev) => !prev),
     newDesign: () => createDesignRef.current?.open(),
+    resizeDesign: () => resizeDesignRef.current?.open(),
   }
 
   const dealWith = (fnName: string, params?: any) => {
@@ -149,7 +178,7 @@ export default function Index() {
             <div className="name" onClick={jump2home}>
               {_config.APP_NAME}
             </div>
-            <Folder onSelect={dealWith}>
+            <Folder onSelect={dealWith} showGuides={showLineGuides}>
               <div className="operation-item" ref={step1Ref}>
                 <i className="icon sd-wenjian" /> <span className="text">File</span>
               </div>
@@ -173,7 +202,21 @@ export default function Index() {
               </Tooltip>
             </div>
           </div>
-          <HeaderOptions ref={optionsRef} isContinue={isContinue} onContinueChange={setIsContinue} onChange={optionsChange}>
+          <HeaderOptions
+            ref={optionsRef}
+            isContinue={isContinue}
+            onContinueChange={setIsContinue}
+            onChange={optionsChange}
+            onTitleChange={autosave.schedule}
+          >
+            <Tooltip content={`Show these pages full screen (${presentShortcut})`} placement="bottom" showAfter={400}>
+              <Button className="present-btn" onClick={() => presentRef.current?.open()}>
+                <svg className="present-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 5.4v13.2L18.4 12z" />
+                </svg>
+                Present
+              </Button>
+            </Tooltip>
             <div ref={step4Ref}>
               <ExportMenu getTitle={getDesignTitle} onSelect={dealWith} onProgress={optionsChange} />
             </div>
@@ -209,6 +252,8 @@ export default function Index() {
       />
       <Tour ref={tourRef} steps={[step1Ref, step2Ref, step3Ref, step4Ref]} />
       <CreateDesign ref={createDesignRef} />
+      <ResizeDesign ref={resizeDesignRef} />
+      <PresentMode ref={presentRef} />
     </div>
   )
 }

@@ -43,6 +43,9 @@ export function dResize({ x, y, dirs }: TdResizePayload) {
   const resizeWH = widgetState.dResizeWH
   let parent: any = page
   if (!target) return
+  // Only elements carry a record, and only elements can be resized.
+  const record = target.record
+  if (!record) return
   if (target.parent !== '-1') {
     const tmp = widgetState.dWidgets.find((item) => item.uuid === target.parent)
     if (tmp) {
@@ -63,31 +66,31 @@ export function dResize({ x, y, dirs }: TdResizePayload) {
       case 'top': {
         const t = widgetXY.y + Math.floor((dy * 100) / canvasState.dZoom)
         top = Math.max(t, 0)
-        top = Math.min(widgetXY.y + resizeWH.height - target.record.minHeight, top)
+        top = Math.min(widgetXY.y + resizeWH.height - record.minHeight, top)
         target.height += target.top - top
-        target.height = Math.max(target.height, target.record.minHeight)
+        target.height = Math.max(target.height, record.minHeight)
         target.top = top
         break
       }
       case 'bottom':
         top = Math.floor((dy * 100) / canvasState.dZoom)
         target.height = resizeWH.height + top
-        target.height = Math.max(target.height, target.record.minHeight)
+        target.height = Math.max(target.height, record.minHeight)
         target.height = Math.min(target.height, page.height - target.top)
         break
       case 'left': {
         const tLeft = widgetXY.x + Math.floor((dx * 100) / canvasState.dZoom)
         left = Math.max(tLeft, 0)
         target.width += target.left - left
-        target.width = Math.max(target.width, target.record.minWidth)
-        left = Math.min(widgetXY.x + resizeWH.width - target.record.minWidth, left)
+        target.width = Math.max(target.width, record.minWidth)
+        left = Math.min(widgetXY.x + resizeWH.width - record.minWidth, left)
         target.left = left
         break
       }
       case 'right':
         left = Math.floor((dx * 100) / canvasState.dZoom)
         target.width = resizeWH.width + left
-        target.width = Math.max(target.width, target.record.minWidth)
+        target.width = Math.max(target.width, record.minWidth)
         target.width = Math.min(target.width, page.width - target.left)
         break
     }

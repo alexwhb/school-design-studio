@@ -1,0 +1,90 @@
+.ds-resize-design {
+  .block {
+    & + .block {
+      margin-top: 18px;
+    }
+    &__title {
+      margin: 0 0 8px;
+      color: @ink-3;
+      font-size: @text-sm;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  .size-row {
+    margin-bottom: 6px;
+  }
+
+  .from-to {
+    margin: 0;
+    color: @ink-3;
+    font-size: @text-sm;
+    .arrow {
+      font-size: 10px;
+      margin: 0 4px;
+    }
+  }
+
+  // The strategy list and the scope buttons are the same control at two widths,
+  // so they share the selected treatment: a hairline that becomes the accent.
+  .choice {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid @line;
+    border-radius: @radius;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+    & + .choice {
+      margin-top: 6px;
+    }
+    &:hover {
+      border-color: @accent;
+    }
+    &.is-on {
+      border-color: @accent;
+      background: @accent-a25;
+    }
+    &__name {
+      color: @ink;
+      font-size: @text-base;
+      font-weight: 500;
+    }
+    &__hint {
+      color: @ink-3;
+      font-size: @text-sm;
+      line-height: 1.35;
+    }
+  }
+
+  .scopes {
+    display: flex;
+    gap: 6px;
+  }
+  .scope {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid @line;
+    border-radius: @radius;
+    background: transparent;
+    color: @ink-2;
+    font-family: inherit;
+    font-size: @text-base;
+    cursor: pointer;
+    &:hover {
+      border-color: @accent;
+      color: @ink;
+    }
+    &.is-on {
+      border-color: @accent;
+      background: @accent-a25;
+      color: @ink;
+    }
+  }
+}

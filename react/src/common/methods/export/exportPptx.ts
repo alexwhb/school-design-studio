@@ -36,14 +36,14 @@ export type PptxOptions = {
 const NATIVE_TYPES = new Set(['w-text', 'w-image'])
 
 /**
- * Text with an outline, a gradient fill or a shadow relies on CSS the .pptx
- * format has no equivalent for, so those get rasterised instead of being
+ * Text with an outline, a gradient fill, a shadow or a lean relies on CSS the
+ * .pptx format has no equivalent for, so those get rasterised instead of being
  * flattened into plain text that would look wrong.
  */
 function hasUnsupportedTextEffects(widget: TdWidgetData): boolean {
   const effects = (widget as any).textEffects
   if (!Array.isArray(effects) || effects.length === 0) return false
-  return effects.some((e: any) => e?.stroke?.enable || e?.shadow?.enable || (e?.filling?.enable && e.filling.type !== 0))
+  return effects.some((e: any) => e?.stroke?.enable || e?.shadow?.enable || e?.skew?.enable || e?.offset?.enable || (e?.filling?.enable && Number(e.filling.type) !== 0))
 }
 
 function needsRaster(widget: TdWidgetData): boolean {

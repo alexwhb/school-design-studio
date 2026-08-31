@@ -38,8 +38,8 @@ export function realCombined() {
 
       left = Math.min(left, widget.left)
       top = Math.min(top, widget.top)
-      right = Math.max(right, Number(widget.width || widget.record.width) + Number(widget.left))
-      bottom = Math.max(bottom, Number(widget.height || widget.record.height) + Number(widget.top))
+      right = Math.max(right, Number(widget.width || widget.record?.width || 0) + Number(widget.left))
+      bottom = Math.max(bottom, Number(widget.height || widget.record?.height || 0) + Number(widget.top))
     }
 
     group.left = Number(left)

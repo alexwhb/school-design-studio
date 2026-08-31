@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cx } from '@/utils/dom'
 
 export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & {
@@ -13,22 +13,18 @@ export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> 
   children?: ReactNode
 }
 
-export default function Button({
-  type = 'default',
-  nativeType = 'button',
-  plain,
-  text,
-  link,
-  round,
-  circle,
-  size,
-  className,
-  children,
-  ...rest
-}: ButtonProps) {
+/**
+ * Ref-forwarding, because Radix's `asChild` triggers — tooltips, dropdowns,
+ * popovers — clone the child and hand it a ref to position against.
+ */
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { type = 'default', nativeType = 'button', plain, text, link, round, circle, size, className, children, ...rest },
+  ref,
+) {
   return (
     <button
       {...rest}
+      ref={ref}
       type={nativeType}
       className={cx(
         'el-button',
@@ -48,4 +44,6 @@ export default function Button({
       <span>{children}</span>
     </button>
   )
-}
+})
+
+export default Button

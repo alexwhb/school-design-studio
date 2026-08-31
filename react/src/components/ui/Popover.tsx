@@ -50,6 +50,9 @@ export default function Popover({
           onOpenAutoFocus={(e) => e.preventDefault()}
           className={cx('el-popover', 'el-popper', 'is-light', 'ds-popper', popperClass || '')}
           style={{ width: width === 'auto' || width === undefined ? 'auto' : typeof width === 'number' ? `${width}px` : width }}
+          // See DropdownMenu: a React portal bubbles through the React tree, so
+          // a click in here would otherwise also reach whatever declared it.
+          onClick={(event) => event.stopPropagation()}
         >
           {content}
           <PopoverPrimitive.Arrow asChild width={10} height={10}>
