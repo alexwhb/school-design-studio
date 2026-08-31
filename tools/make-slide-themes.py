@@ -1610,6 +1610,11 @@ BUILDERS = [
     pastel_year_ahead,
 ]
 
+# The category the Templates panel files this pack under — one chip for the
+# whole set, since a theme is only worth picking once and then followed through
+# all five layouts. The slugs are named in templates/cates.json.
+CATE = 'slide-theme'
+
 
 # -------------------------------------------------------------------- write --
 
@@ -1653,7 +1658,8 @@ def apply():
             json.dump(record, handle, ensure_ascii=False)
         entries.append({
             'id': template_id, 'cover': f'/covers/template-{template_id}.png',
-            'title': title, 'width': W, 'height': H, 'state': 1, 'pack': PACK,
+            'title': title, 'width': W, 'height': H, 'state': 1,
+            'cate': CATE, 'pack': PACK,
         })
         overflow = max((layer['top'] + layer['height'] for layer in layers), default=0)
         flag = '  <- runs past the page' if overflow > H else ''

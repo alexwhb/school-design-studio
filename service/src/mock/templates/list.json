@@ -6,6 +6,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "poster",
     "pack": "school-events"
   },
   {
@@ -15,6 +16,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "flyer",
     "pack": "school-events"
   },
   {
@@ -24,6 +26,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "flyer",
     "pack": "school-events"
   },
   {
@@ -33,6 +36,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "poster",
     "pack": "school-events"
   },
   {
@@ -42,6 +46,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "flyer",
     "pack": "school-events"
   },
   {
@@ -51,6 +56,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "poster",
     "pack": "school-events"
   },
   {
@@ -60,6 +66,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "poster",
     "pack": "school-events"
   },
   {
@@ -69,6 +76,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "flyer",
     "pack": "school-events"
   },
   {
@@ -78,6 +86,7 @@
     "width": 1650,
     "height": 1275,
     "state": 1,
+    "cate": "award",
     "pack": "school-events"
   },
   {
@@ -87,6 +96,7 @@
     "width": 1650,
     "height": 1275,
     "state": 1,
+    "cate": "sign",
     "pack": "school-events"
   },
   {
@@ -96,6 +106,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -105,6 +116,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -114,6 +126,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -123,6 +136,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -132,6 +146,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -141,6 +156,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -150,6 +166,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -159,6 +176,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -168,6 +186,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -177,6 +196,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -186,6 +206,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -195,6 +216,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -204,6 +226,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -213,6 +236,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide",
     "pack": "school-events"
   },
   {
@@ -222,6 +246,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "flyer",
     "pack": "school-events"
   },
   {
@@ -231,6 +256,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "poster",
     "pack": "school-events"
   },
   {
@@ -240,6 +266,7 @@
     "width": 1275,
     "height": 1650,
     "state": 1,
+    "cate": "flyer",
     "pack": "school-events"
   },
   {
@@ -249,6 +276,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -258,6 +286,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -267,6 +296,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -276,6 +306,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -285,6 +316,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -294,6 +326,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -303,6 +336,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -312,6 +346,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -321,6 +356,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -330,6 +366,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -339,6 +376,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -348,6 +386,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -357,6 +396,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -366,6 +406,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -375,6 +416,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -384,6 +426,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -393,6 +436,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -402,6 +446,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -411,6 +456,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -420,6 +466,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -429,6 +476,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -438,6 +486,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -447,6 +496,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -456,6 +506,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   },
   {
@@ -465,6 +516,7 @@
     "width": 1920,
     "height": 1080,
     "state": 1,
+    "cate": "slide-theme",
     "pack": "slide-themes"
   }
 ]

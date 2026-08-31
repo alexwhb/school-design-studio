@@ -14,6 +14,7 @@ service/src/mock/
     photos/1..3.json  Photos, when there is no Unsplash key
   templates/
     list.json         what appears in the Templates panel
+    cates.json        the category chips above it
     101..127.json     the school pack (see below)
   components/
     list/text.json    Text > Text with effects, and the effect presets
@@ -168,10 +169,42 @@ URL-encoded, because every path that loads them decodes.)
 Then add to `templates/list.json`:
 
 ```json
-{ "id": 3, "cover": "/covers/newsletter.png", "title": "Newsletter header", "width": 1275, "height": 1650, "state": 1 }
+{ "id": 3, "cover": "/covers/newsletter.png", "title": "Newsletter header", "width": 1275, "height": 1650, "state": 1, "cate": "flyer" }
 ```
 
 `cover` is the thumbnail. Put it in `public/` and reference it by path.
+
+### Categories
+
+The chips above the Templates panel — All, Posters, Flyers, Slides, Slide
+themes, Awards, Signs — come from `templates/cates.json`, which is only names
+and order:
+
+```json
+{ "id": "flyer", "name": "Flyers" }
+```
+
+A record's `cate` is one of those ids. Two rules follow from how the panel
+builds the row, and neither needs you to edit both files in lockstep:
+
+- **A category with no templates gets no chip.** So removing a pack takes its
+  chips with it rather than leaving ones that lead nowhere.
+- **A `cate` this file does not name still gets a chip**, labelled with the
+  slug itself. Adding `"cate": "menu"` to a record puts a "Menu" chip in the
+  row; naming it here is how you give it a better label and a place in the
+  order.
+
+A record with no `cate` appears under All and nowhere else.
+
+Both generators set the field, so the categories survive a rebuild: the school
+pack carries one per builder in its `BUILDERS` list, and the slide themes share
+a single `CATE` at the top of `make-slide-themes.py`. Adding a template by hand
+means setting `cate` yourself.
+
+Searching stays inside the selected chip. That is the opposite of the Elements
+panel, which searches its whole library whatever row you are on — there the
+rows live in a dropdown, so a scoped search would hide results for no visible
+reason, while here the chip doing the scoping is on screen.
 
 ### The school pack
 
@@ -188,7 +221,8 @@ Editing a layout means editing the builder function for it and re-running,
 which is a good deal less painful than hand-editing a JSON string.
 
 They are ids 101–127 and every record carries `"pack": "school-events"`, which
-is what `--remove` keys on, so removing them cannot touch anything else.
+is what `--remove` keys on, so removing them cannot touch anything else. Each
+also carries a `cate`, set alongside its builder in the `BUILDERS` list.
 Covers need the app running (`npm run dev` or `npm start`) because there is no
 way to render a page outside the editor — pass a different base URL as the
 first argument if you are not on port 4173, and any ids after it to re-shoot
@@ -246,6 +280,11 @@ They are five decks of five rather than twenty-five separate layouts. Each deck
 the year in numbers, results, facilities, and the year ahead. A school picks a
 theme and gets five slides that already agree with each other, which is the
 thing that is tedious to do by hand.
+
+All twenty-five sit under one **Slide themes** chip, set by `CATE` near the top
+of the script. One chip rather than five is the bet that a theme is picked once
+and then followed through all five layouts; splitting it per theme is a matter
+of making `CATE` a per-builder field the way the school pack does it.
 
 The layouts are denser than the school pack's: real tables, four-up figures,
 two-column body copy, and a ruled placeholder where a photograph goes. Three

@@ -11,6 +11,7 @@ type IGetTempListParam = {
   search: string
   page: number
   pageSize: number
+  /** A category slug, or '' for every template. */
   cate: number | string
 }
 export type IGetTempListData = {
@@ -69,15 +70,17 @@ export const getTempDetail = (params: TGetTempDetail) => fetch<TTempDetail>('des
 type TGetCategoriesParams = {
   type?: number
 }
+/**
+ * A template category — one chip above the Templates panel. `id` is the slug
+ * carried by each record in `templates/list.json`; the server only answers
+ * with categories that have something filed under them.
+ */
 export type TGetCategoriesData = {
-  id: number
+  id: string
   name: string
-  pid: number
-  type: number
 }
-type TgetCategoriesResult = TCommResResult<TGetCategoriesData>
 
-export const getCategories = (params: TGetCategoriesParams) => fetch<TgetCategoriesResult[]>('design/cate', params, 'get')
+export const getCategories = (params: TGetCategoriesParams = {}) => fetch<TGetCategoriesData[]>('design/cate', params, 'get')
 
 
 // Save template
