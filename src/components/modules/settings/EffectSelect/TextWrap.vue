@@ -6,15 +6,23 @@
  * @LastEditTime: 2024-03-11 01:43:21
 -->
 <template>
-  <el-card class="box-card" shadow="hover" :body-style="{ padding: '20px' }">
-    <template #header>
-      <div class="card-header">
+  <!--
+    Text effects is one section of the settings panel, not a card sitting on
+    top of it: the same left edge, the same uppercase heading and the same
+    label-above-control rhythm as Size and position or Letter spacing. The old
+    el-card wrapper put a bordered box inside a bordered panel, and the effect
+    layers put a third box inside that.
+  -->
+  <div class="effects">
+    <div class="effects__head">
+      <span class="effects__title">Text effects</span>
+      <div class="effects__head-right">
         <div
           class="effect-preview"
           :style="{
             position: 'relative',
-            width: '27px',
-            fontSize: '27px',
+            width: '22px',
+            fontSize: '22px',
             color: data.color,
             fontWeight: data.fontWeight,
             fontStyle: data.fontStyle,
@@ -39,7 +47,6 @@
           </div>
           A
         </div>
-        <span class="title">Text effects</span>
         <el-popover :visible="state.visiable" placement="left" :width="220" trigger="click">
           <div class="select__box">
             <div class="select__box__select-item" @click="selectEffect()">None</div>
@@ -48,64 +55,91 @@
             </div>
           </div>
           <template #reference>
-            <el-button class="button" link @click="openSet">{{ state.visiable ? 'Cancel' : 'Choose' }}</el-button>
+            <el-button class="effects__choose" link @click="openSet">{{ state.visiable ? 'Cancel' : 'Choose' }}</el-button>
           </template>
         </el-popover>
       </div>
-    </template>
+    </div>
+
     <!-- filling 描边 stroke 阴影 shadow -->
-    <div v-show="state.layers && state.layers.length > 0" class="text item"><span style="width: 65px">Intensity</span> <el-slider v-model="state.strength" show-input :maxValue="100" input-size="small" :show-input-controls="false" @input="strengthChange"> </el-slider></div>
-    <el-collapse-item>
-      <template #title>
-        <b>Advanced</b>
-      </template>
-      <div class="line"></div>
-      <div style="display: flex; justify-content: space-between">
-        <el-button
-          class="add-layer" size="small" type="primary" link
-          @click="addLayer">
-           + Add effect
-        </el-button>
-        <el-button
-          v-show="state.layers && state.layers.length > 0" class="add-layer" size="small"
-          type="primary" link @click="state.unfold = !state.unfold">
+    <number-slider v-show="state.layers && state.layers.length > 0" v-model="state.strength" class="effects__intensity" label="Intensity" :minValue="0" :maxValue="100" />
+
+    <el-collapse-item class="advanced">
+      <template #title>Advanced</template>
+      <div class="advanced__actions">
+        <el-button class="advanced__action" size="small" type="primary" link @click="addLayer"> + Add effect </el-button>
+        <el-button v-show="state.layers && state.layers.length > 0" class="advanced__action" size="small" type="primary" link @click="state.unfold = !state.unfold">
           {{ state.unfold ? 'Collapse all' : 'Expand all' }}
         </el-button>
       </div>
-      <div class="line"></div>
-      <draggable v-model="state.layers" handle=".sd-yidong" item-key="uuid" v-bind="dragOptions">
+      <draggable v-model="state.layers" handle=".sd-yidong" item-key="uuid" v-bind="dragOptions" class="layers">
         <template #item="{ element, index }">
-          <div class="feature__grab-wrap">
+          <div class="layer">
             <div class="layer__title">
-              <i class="icon sd-yidong" /><span style="font-size: 12px"><b>Effect</b> {{ index + 1 }}</span>
+              <i class="icon sd-yidong" />
+              <span class="layer__name">Effect {{ index + 1 }}</span>
               <i class="icon sd-delete" @click="removeLayer(index)" />
             </div>
-            <div v-if="element.filling && [0, 2, '0', '2'].includes(element.filling.type)" v-show="state.unfold" class="feature__item">
-              <el-checkbox v-model="element.filling.enable" label="Fill" class="feature__header" />
-              <color-select v-model="element.filling.color" width="28px" :modes="['Solid', 'Gradient']" label="" @change="colorChange($event, element.filling)" />
-            </div>
-            <div v-if="element.stroke" v-show="state.unfold" class="feature__item">
-              <el-checkbox v-model="element.stroke.enable" label="Outline" class="feature__header" />
-              <el-input-number v-model="element.stroke.width" style="width: 65px; margin-right: 0.5rem" :min="0" size="small" controls-position="right" />
-              <color-select v-model="element.stroke.color" width="28px" label="" @finish="(value) => finish('color', value)" />
-            </div>
-            <div v-if="element.offset" v-show="state.unfold" class="feature__item">
-              <el-checkbox v-model="element.offset.enable" label="Offset" class="feature__header" />
-              <numberInput v-model="element.offset.x" style="width: 49.5px; margin-right: 2px" prepend="x" type="simple" />
-              <numberInput v-model="element.offset.y" style="width: 49.5px" prepend="y" type="simple" />
-            </div>
-            <div v-if="element.shadow" v-show="state.unfold" class="feature__item">
-              <el-checkbox v-model="element.shadow.enable" label="Shadow" class="feature__header" />
-              <numberInput v-model="element.shadow.blur" prepend="blur" :minValue="0" style="width: 30px; margin-right: 2px" type="simple" />
-              <numberInput v-model="element.shadow.offsetX" prepend="x" style="width: 30px; margin-right: 2px" type="simple" />
-              <numberInput v-model="element.shadow.offsetY" prepend="y" style="width: 30px; margin-right: 0.5rem" type="simple" />
-              <color-select v-model="element.shadow.color" width="28px" label="" @finish="(value) => finish('color', value)" />
+            <div v-show="state.unfold" class="layer__body">
+              <div v-if="element.filling && [0, 2, '0', '2'].includes(element.filling.type)" class="feature" :class="{ 'feature--off': !element.filling.enable }">
+                <div class="feature__row">
+                  <el-checkbox v-model="element.filling.enable" label="Fill" class="feature__toggle" />
+                  <color-select v-model="element.filling.color" width="32px" :modes="['Solid', 'Gradient']" label="" class="feature__swatch" @change="colorChange($event, element.filling)" />
+                </div>
+              </div>
+              <div v-if="element.stroke" class="feature" :class="{ 'feature--off': !element.stroke.enable }">
+                <div class="feature__row">
+                  <el-checkbox v-model="element.stroke.enable" label="Outline" class="feature__toggle" />
+                  <color-select v-model="element.stroke.color" width="32px" label="" class="feature__swatch" @finish="(value) => finish('color', value)" />
+                </div>
+                <div class="feature__fields">
+                  <label class="field">
+                    <span class="field__label">Width</span>
+                    <numberInput v-model="element.stroke.width" class="field__input" :minValue="0" type="simple" />
+                  </label>
+                </div>
+              </div>
+              <div v-if="element.offset" class="feature" :class="{ 'feature--off': !element.offset.enable }">
+                <div class="feature__row">
+                  <el-checkbox v-model="element.offset.enable" label="Offset" class="feature__toggle" />
+                </div>
+                <div class="feature__fields">
+                  <label class="field">
+                    <span class="field__label">X</span>
+                    <numberInput v-model="element.offset.x" class="field__input" type="simple" />
+                  </label>
+                  <label class="field">
+                    <span class="field__label">Y</span>
+                    <numberInput v-model="element.offset.y" class="field__input" type="simple" />
+                  </label>
+                </div>
+              </div>
+              <div v-if="element.shadow" class="feature" :class="{ 'feature--off': !element.shadow.enable }">
+                <div class="feature__row">
+                  <el-checkbox v-model="element.shadow.enable" label="Shadow" class="feature__toggle" />
+                  <color-select v-model="element.shadow.color" width="32px" label="" class="feature__swatch" @finish="(value) => finish('color', value)" />
+                </div>
+                <div class="feature__fields">
+                  <label class="field field--full">
+                    <span class="field__label">Blur</span>
+                    <numberInput v-model="element.shadow.blur" class="field__input" :minValue="0" type="simple" />
+                  </label>
+                  <label class="field">
+                    <span class="field__label">X</span>
+                    <numberInput v-model="element.shadow.offsetX" class="field__input" type="simple" />
+                  </label>
+                  <label class="field">
+                    <span class="field__label">Y</span>
+                    <numberInput v-model="element.shadow.offsetY" class="field__input" type="simple" />
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </template>
       </draggable>
     </el-collapse-item>
-  </el-card>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -113,8 +147,9 @@ import {
   reactive, watch, onMounted, nextTick, computed
 } from 'vue'
 import colorSelect from '../colorSelect.vue'
-import { ElInputNumber, ElCheckbox } from 'element-plus'
+import { ElCheckbox } from 'element-plus'
 import numberInput from '../numberInput.vue'
+import numberSlider from '../numberSlider.vue'
 import draggable from 'vuedraggable'
 import api from '@/api'
 import getGradientOrImg from '../../widgets/wText/getGradientOrImg'
@@ -180,6 +215,13 @@ onMounted(async () => {
     .reverse()
   rawData = JSON.parse(JSON.stringify(state.layers))
 })
+
+// numberSlider only writes the value, so the rescale hangs off the value
+// instead of a slider event.
+watch(
+  () => state.strength,
+  () => strengthChange(state.strength),
+)
 
 watch(
   () => state.layers,
@@ -290,79 +332,70 @@ defineExpose({
 </script>
 
 <style lang="less" scoped>
-:deep(.el-input-group__prepend) {
-  padding: 0 8px;
+// The panel is narrow and every control here is small, so the only thing
+// holding it together is rhythm: one left edge for everything, a feature's
+// toggle and colour on one line, its numbers on an indented line below, and
+// plain space — not borders — separating the parts.
+:deep(.el-collapse-item__header),
+:deep(.el-collapse-item__wrap),
+:deep(.el-collapse-item__content) {
+  border-bottom: none;
+  // Element Plus fills collapse headers and content with its own surface
+  // colour, which in the dark theme paints a lighter slab across the section.
+  background: transparent;
 }
-:deep(.el-input-number__decrease) {
-  width: 18px;
+// "Advanced" sits inside the Text effects section, so it reads as a sub
+// disclosure rather than competing with the section heading above it.
+:deep(.el-collapse-item__header) {
+  height: 36px;
+  line-height: 36px;
+  font-size: @text-base;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: @ink-2;
 }
-:deep(.el-input-number__increase) {
-  width: 18px;
+:deep(.el-checkbox) {
+  height: auto;
 }
-:deep(.el-input-number.is-controls-right .el-input__wrapper) {
-  padding-right: 32px;
-}
-:deep(.el-input-group__prepend) {
-  background: @surface;
+:deep(.el-checkbox__label) {
+  font-size: @text-base;
+  color: @ink-2;
+  padding-left: 10px;
 }
 :deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
   color: @ink;
 }
-:deep(.el-collapse-item__header) {
-  border-bottom: none;
-}
-:deep(.el-collapse-item__wrap) {
-  border-bottom: none;
-}
-.feature {
-  &__item {
+
+.effects {
+  width: 100%;
+  &__head {
     display: flex;
     align-items: center;
-    margin-top: 6px;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 28px;
   }
-  &__header {
-    font-size: 14px;
-    flex: 1;
-    padding: 12px 0 2px 0;
-    color: @ink;
+  &__title {
+    .section-label();
   }
-  &__header:first-of-type {
-    padding: 0 0 2px 0;
+  &__head-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
-  &__grab-wrap {
-    position: relative;
-    padding: 10px 0;
-  }
-  &__grab-wrap:first-of-type {
-    padding-top: 0;
-  }
-  &__grab-wrap:last-of-type {
-    padding-bottom: 0;
-  }
-  &__wrap {
-    position: relative;
-    padding-top: 32px;
-  }
-  &__wrap::after {
-    position: absolute;
-    content: '';
-    height: 1px;
-    width: 100%;
-    background: @line;
-    top: 16px;
-  }
-  &__wrap:first-of-type {
+  &__choose {
+    font-size: @text-base;
+    height: auto;
     padding: 0;
+    color: @ink-2;
+    &:hover {
+      color: @accent;
+    }
   }
-  &__wrap:first-of-type::after {
-    height: 0;
+  &__intensity {
+    margin-top: 10px;
   }
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 // The sample glyph is drawn in the text's own colour — usually black, because
@@ -372,43 +405,141 @@ defineExpose({
 // Vue writes that inline.
 .effect-preview {
   background: #ffffff;
-  border-radius: 3px;
+  border-radius: 4px;
   box-shadow: 0 0 0 1px @line;
+  line-height: 22px;
+  text-align: center;
+  flex: none;
 }
 
-.text {
-  font-size: 14px;
+.advanced {
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  &__action {
+    font-size: @text-sm;
+    height: auto;
+    padding: 4px 0;
+  }
 }
 
-.item {
-  margin: 0 0 12px 0;
+.layers {
+  display: flex;
+  flex-direction: column;
+}
+
+// Layers are separated by a hairline and by space, not by a box each — a
+// bordered card per effect inside an already bordered panel is what made this
+// read as heavy.
+.layer {
+  padding: 12px 0 4px;
+  & + & {
+    border-top: 1px solid @line-soft;
+  }
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 22px;
+  }
+  &__name {
+    flex: 1;
+    font-size: @text-sm;
+    font-weight: 600;
+    color: @ink-2;
+  }
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 12px;
+  }
+  .icon {
+    font-size: 14px;
+    color: @ink-3;
+    cursor: pointer;
+  }
+  .sd-yidong {
+    cursor: grab !important;
+  }
+  .icon:hover {
+    color: @ink;
+  }
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 28px;
+  }
+  &__toggle {
+    flex: 1;
+    min-width: 0;
+  }
+  &__swatch {
+    flex: none;
+  }
+  // An unticked effect still shows its values, just quietly — the row stays
+  // readable and clickable, it simply stops competing for attention.
+  &--off &__fields,
+  &--off &__swatch {
+    opacity: 0.55;
+  }
+  &__fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding-left: 26px;
+  }
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
+  gap: 8px;
+  &__label {
+    flex: none;
+    font-size: @text-xs;
+    color: @ink-3;
+  }
+  // Three fields on one line squeezes the boxes down to a couple of digits, so
+  // a wider label like "Blur" takes a line of its own and the pair below keeps
+  // the same half-and-half rhythm as Offset.
+  &--full {
+    flex: 1 1 100%;
+  }
+  &__input {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
-.box-card {
-  width: 100%;
-}
-
-.demo {
-  font-size: 27px;
-  color: @accent-on;
-  outline: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-.title {
-  font-size: 14px;
-  font-weight: 600;
+:deep(.small-input) {
+  height: 28px;
+  text-align: center;
   color: @ink;
+  background: transparent;
+  box-shadow: 0 0 0 1px @line inset;
+  border-radius: @radius-sm;
+  &:focus {
+    box-shadow: 0 0 0 1px @accent inset;
+  }
 }
+
 .select__box {
   display: flex;
   flex-wrap: wrap;
-  // height: 60px;
   &__select-item {
     cursor: pointer;
     position: relative;
@@ -423,35 +554,15 @@ defineExpose({
   }
 }
 
-.layer {
-  &__title {
-    display: flex;
-    align-items: center;
-    span {
-      flex: 1;
-    }
-    .sd-yidong {
-      cursor: grab !important;
-      margin-right: 6px;
-    }
-    .icon {
-      // display: none;
-      cursor: pointer;
-    }
-    .icon:hover {
-      transform: scale(1.1);
-      color: @active-text-color;
-    }
-  }
-  // &__title:hover > .icon {
-  //   display: block;
-  // }
-}
-
-.add-layer {
-  // margin-top: 12px;
-  margin-bottom: 10px;
-  // width: 100%;
+.demo {
+  font-size: 22px;
+  color: @accent-on;
+  outline: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 // dragable
@@ -472,10 +583,5 @@ defineExpose({
 .ghost {
   opacity: 0.3;
   background: @main-color;
-}
-.line {
-  margin-top: 8px;
-  height: 18px;
-  border-top: 1px solid @line;
 }
 </style>
