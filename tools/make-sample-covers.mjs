@@ -51,17 +51,29 @@ const page = await browser.newPage({
 await page.goto(`${BASE}/home`, { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(3000)
 
-/** Width of a string as the browser will actually draw it. */
+/**
+ * Width of a string as the browser will actually draw it.
+ *
+ * A widget's text can hold newlines — the canvas renders it with `pre-wrap`,
+ * so those are real line breaks — and the longest line is what has to fit,
+ * not the whole string run together.
+ */
 const measureText = (page, text, family, size, weight) =>
 	page.evaluate(
 		async ({ text, family, size, weight }) => {
 			await document.fonts.load(`${weight} ${size}px "${family}"`)
 			const ctx = document.createElement('canvas').getContext('2d')
 			ctx.font = `${weight} ${size}px "${family}", sans-serif`
-			return ctx.measureText(text).width
+			return Math.max(
+				...text.split('\n').map((line) => ctx.measureText(line).width),
+			)
 		},
 		{ text, family, size, weight },
 	)
+
+/** Characters in the longest line — the number of letter-spacing gaps. */
+const longestLine = (text) =>
+	Math.max(...text.split('\n').map((line) => line.length))
 
 for (const id of SAMPLES) {
 	const file = path.join(DETAIL, `${id}.json`)
@@ -78,15 +90,29 @@ for (const id of SAMPLES) {
 			const text = decodeURIComponent(widget.text || '')
 			if (!text) continue
 			const family = widget.fontClass?.value || 'Inter'
-			const width = await measureText(
+			const measured = await measureText(
 				page,
 				text,
 				family,
 				widget.fontSize,
 				widget.fontWeight || 400,
 			)
-			if (width <= widget.width) continue
-			const scaled = Math.floor(widget.fontSize * (widget.width / width) * 0.97)
+			// measureText draws the glyphs and nothing else. The editor adds
+			// (fontSize * letterSpacing / 100) to every gap, which on a tracked
+			// line like "FAMILIES WELCOME" is most of its width.
+			const run =
+				measured +
+				((widget.fontSize * (widget.letterSpacing || 0)) / 100) *
+					Math.max(longestLine(text) - 1, 0)
+			// A vertical run grows down the box, not across it, so it is the
+			// height that has to hold it. Measuring it against the width would
+			// compare a line of type to the thickness of the column it is set
+			// in and shrink it to nothing.
+			const limit = String(widget.writingMode || '').startsWith('vertical')
+				? widget.height
+				: widget.width
+			if (!limit || run <= limit) continue
+			const scaled = Math.floor(widget.fontSize * (limit / run) * 0.97)
 			console.log(`  fit ${id}: "${text}" ${widget.fontSize} -> ${scaled}px`)
 			widget.fontSize = scaled
 			changed = true
@@ -113,11 +139,16 @@ for (const id of SAMPLES) {
 	// the result — the lettering centred horizontally, and pushed down far
 	// enough that a glow or a lean above it still has page to fall on. Pass two
 	// crops to the page, so room that is not on the page is room that is lost.
-	const gaps = Math.max(text.length - 1, 0)
+	const gaps = Math.max(longestLine(text) - 1, 0)
 	const spacing = ((data.fontSize * (data.letterSpacing || 0)) / 100) * gaps
-	const lineBox = data.fontSize * (data.lineHeight || 1.2)
+	// The box has to hold every line the preset is set on, not just the first.
+	const lineBox = data.fontSize * (data.lineHeight || 1.2) * text.split('\n').length
+	// A preset with a background colour is a plate its words sit on, and the
+	// editor has no padding to set. The vertical air comes from the preset's
+	// own line height; the sides are bought here.
+	const sidePad = data.backgroundColor ? Math.round(data.fontSize * 0.5) : 0
 
-	data.width = Math.ceil(measured + spacing + data.fontSize * 0.1)
+	data.width = Math.ceil(measured + spacing + sidePad * 2 + data.fontSize * 0.1)
 	const bleed = effectBleed(data)
 	data.width = Math.ceil(data.width + bleed.x * 2)
 	data.height = Math.ceil(lineBox)

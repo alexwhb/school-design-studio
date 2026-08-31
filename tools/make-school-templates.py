@@ -3,7 +3,8 @@
 
 The gallery ships with two placeholder templates from upstream. This adds a
 dozen real ones — posters, a certificate, a door sign and two slides — laid out
-for a US school on Letter paper and 16:9 slides.
+for a US school on Letter paper and 16:9 slides. Each is filed under a category
+so the Templates panel can offer them as chips rather than one long scroll.
 
 Everything is drawn from assets already in the repo, so the pack adds no new
 licensing exposure:
@@ -912,12 +913,38 @@ def field_trip():
 # Order is what the gallery shows, and the id is FIRST_ID plus the position, so
 # new entries go on the end: reordering this list would renumber every template
 # after the change and orphan the covers already shot for them.
+#
+# The second item is the category the Templates panel files it under — one of
+# the slugs named in templates/cates.json. A builder with no category still
+# appears in the gallery, but only under "All".
 BUILDERS = [
-    field_day, open_house, conferences, book_fair, picture_day, spring_concert,
-    science_fair, bake_sale, certificate, welcome_sign, slide_title, slide_content,
-    slide_section, slide_agenda, slide_number, slide_quote, slide_two_columns,
-    slide_timeline, slide_photo, slide_three_numbers, slide_next_steps, slide_team,
-    slide_dates, slide_closing, volunteer_signup, spirit_week, field_trip,
+    (field_day, 'poster'),
+    (open_house, 'flyer'),
+    (conferences, 'flyer'),
+    (book_fair, 'poster'),
+    (picture_day, 'flyer'),
+    (spring_concert, 'poster'),
+    (science_fair, 'poster'),
+    (bake_sale, 'flyer'),
+    (certificate, 'award'),
+    (welcome_sign, 'sign'),
+    (slide_title, 'slide'),
+    (slide_content, 'slide'),
+    (slide_section, 'slide'),
+    (slide_agenda, 'slide'),
+    (slide_number, 'slide'),
+    (slide_quote, 'slide'),
+    (slide_two_columns, 'slide'),
+    (slide_timeline, 'slide'),
+    (slide_photo, 'slide'),
+    (slide_three_numbers, 'slide'),
+    (slide_next_steps, 'slide'),
+    (slide_team, 'slide'),
+    (slide_dates, 'slide'),
+    (slide_closing, 'slide'),
+    (volunteer_signup, 'flyer'),
+    (spirit_week, 'poster'),
+    (field_trip, 'flyer'),
 ]
 
 
@@ -953,7 +980,7 @@ def apply():
             handle.write(open(LIST, encoding='utf-8').read())
 
     entries = []
-    for offset, build in enumerate(BUILDERS):
+    for offset, (build, cate) in enumerate(BUILDERS):
         template_id = FIRST_ID + offset
         title, (width, height), background, layers = build()
         data = [{'global': page(title, width, height, background), 'layers': layers}]
@@ -965,7 +992,8 @@ def apply():
             json.dump(record, handle, ensure_ascii=False)
         entries.append({
             'id': template_id, 'cover': f'/covers/template-{template_id}.png',
-            'title': title, 'width': width, 'height': height, 'state': 1, 'pack': PACK,
+            'title': title, 'width': width, 'height': height, 'state': 1,
+            'cate': cate, 'pack': PACK,
         })
         print(f'  {template_id}.json  {title:<30} {width}x{height}  {len(layers)} layers')
 

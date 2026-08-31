@@ -1,22 +1,22 @@
 <!--
-  The "Animation" card in the settings panel.
+  Animation is one section of the settings panel, not a card sitting on top of
+  it: the same left edge, the same uppercase heading and the same
+  label-above-control rhythm as Size and position or Text effects. An el-card
+  here put a bordered box inside a bordered panel, and the three start options
+  put a third box inside that.
 
-  Mounted once in stylePanel.vue rather than per widget type, so every kind of
-  element — text, photo, shape, QR code, group — can be animated without each
-  style component having to opt in.
-
-  Picking a preset writes an `animation` object onto the widget; picking "None"
-  clears the field entirely rather than leaving an empty one behind. Nothing here
-  changes how the element looks on the canvas at rest, which is what keeps the
-  PNG and PowerPoint exports untouched by any of this.
+  It sits at the top of the panel because at the bottom it fell below the fold
+  on a full text element — an element's entrance is no more buried a property
+  than its colour, and nobody scrolls looking for something they do not know is
+  there. Unset it costs one line.
 -->
 <template>
-  <el-card class="animate-card" shadow="hover" :body-style="{ padding: current ? '14px 16px 16px' : 0 }">
-    <template #header>
-      <div class="card-header">
-        <span class="title">Animation</span>
-        <span class="current">{{ current ? current.name : 'None' }}</span>
-        <el-popover :visible="pickerOpen" placement="bottom-end" :width="332" trigger="click" popper-class="animate-popper">
+  <div class="animate">
+    <div class="animate__head">
+      <span class="animate__title">Animation</span>
+      <div class="animate__head-right">
+        <span class="animate__current">{{ current ? current.name : 'None' }}</span>
+        <el-popover :visible="pickerOpen" placement="left-start" :width="332" trigger="click" popper-class="animate-popper">
           <div class="picker">
             <p class="picker__intro">Hover a style to watch it play.</p>
             <button type="button" :class="['picker__none', { 'picker__none--on': !current }]" @click="choose(null)">No animation</button>
@@ -35,44 +35,43 @@
             </template>
           </div>
           <template #reference>
-            <el-button class="button" link @click="togglePicker">{{ pickerOpen ? 'Cancel' : 'Choose' }}</el-button>
+            <el-button class="animate__choose" link @click="togglePicker">{{ pickerOpen ? 'Cancel' : 'Choose' }}</el-button>
           </template>
         </el-popover>
       </div>
-    </template>
+    </div>
 
-    <div v-if="current" class="body">
-      <p class="body__hint">{{ current.hint }}</p>
+    <div v-if="current" class="animate__body">
+      <p class="animate__hint">{{ current.hint }}</p>
 
-      <number-slider v-model="speed" label="Speed (seconds)" :step="0.05" :minValue="0.15" :maxValue="3" @finish="commitSpeed" />
-      <number-slider v-model="wait" label="Wait first (seconds)" :step="0.05" :minValue="0" :maxValue="5" @finish="commitWait" />
-
-      <p class="body__label">Starts</p>
-      <div class="starts">
-        <button
-          v-for="option in START_OPTIONS"
-          :key="option.value"
-          type="button"
-          :class="['starts__item', { 'starts__item--on': animation?.start === option.value }]"
-          @click="commitStart(option.value)"
-        >
-          <span class="starts__name">{{ option.name }}</span>
-          <span class="starts__hint">{{ option.hint }}</span>
-        </button>
+      <div class="animate__sliders">
+        <number-slider v-model="speed" label="Speed" :step="0.05" :minValue="0.15" :maxValue="3" @finish="commitSpeed" />
+        <number-slider v-model="wait" label="Delay" :step="0.05" :minValue="0" :maxValue="5" @finish="commitWait" />
       </div>
 
-      <div class="body__actions">
-        <el-button class="body__play" plain type="primary" @click="previewOnCanvas">Play on canvas</el-button>
-        <el-button class="body__clear" link @click="choose(null)">Remove</el-button>
+      <value-select
+        v-model="startLabel"
+        label="Starts"
+        :data="START_LABELS"
+        :readonly="true"
+        inputWidth="100%"
+        @finish="commitStart"
+      />
+      <p class="animate__note">{{ startHint }}</p>
+
+      <div class="animate__actions">
+        <el-button class="animate__action" link @click="previewOnCanvas">Play on canvas</el-button>
+        <el-button class="animate__action" link @click="choose(null)">Remove</el-button>
       </div>
     </div>
-  </el-card>
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { computed, ref, watch, nextTick, onBeforeUnmount } from 'vue'
-import { ElCard, ElPopover } from 'element-plus'
+import { ElPopover } from 'element-plus'
 import numberSlider from '../numberSlider.vue'
+import valueSelect from '../valueSelect.vue'
 import presetTile from './PresetTile.vue'
 import { useWidgetStore } from '@/store'
 import type { TdWidgetData } from '@/store/design/widget'
@@ -87,15 +86,25 @@ type TProps = {
 const props = defineProps<TProps>()
 const widgetStore = useWidgetStore()
 
-const START_OPTIONS: { value: TWidgetAnimation['start']; name: string; hint: string }[] = [
-  { value: 'after', name: 'After the one before', hint: 'Waits its turn, giving a cascade' },
-  { value: 'with', name: 'At the same time', hint: 'Moves together with the element before it' },
-  { value: 'click', name: 'On click', hint: 'Holds until you advance the slide' },
+/**
+ * The running order, in the panel's own vocabulary. A dropdown rather than three
+ * stacked buttons: it is one choice out of three, which is what every other
+ * choice in this panel looks like, and the reading of it goes on the line below.
+ */
+const STARTS: { value: TWidgetAnimation['start']; label: string; hint: string }[] = [
+  { value: 'after', label: 'After the one before', hint: 'Waits its turn, giving a cascade' },
+  { value: 'with', label: 'At the same time', hint: 'Moves in with the element before it' },
+  { value: 'click', label: 'On click', hint: 'Holds until you advance the slide' },
 ]
+const START_LABELS = STARTS.map((option) => option.label)
 
 const pickerOpen = ref(false)
 const animation = computed<TWidgetAnimation | undefined>(() => props.widget?.animation)
 const current = computed(() => getPreset(animation.value?.preset))
+
+const startOption = computed(() => STARTS.find((option) => option.value === animation.value?.start) || STARTS[0])
+const startLabel = computed(() => startOption.value.label)
+const startHint = computed(() => startOption.value.hint)
 
 // The sliders work in seconds because that is how anyone talks about the pace of
 // a slide; the stored value stays in milliseconds, which is what plays it.
@@ -127,6 +136,7 @@ function togglePicker() {
  * moving at once is noise; the same fifteen arriving in a wave is a contents
  * page for the whole set, and it costs the user nothing to watch.
  */
+let introTimers: number[] = []
 async function introduceTiles() {
   await nextTick()
   clearIntro()
@@ -140,7 +150,6 @@ async function introduceTiles() {
   }
 }
 
-let introTimers: number[] = []
 function clearIntro() {
   introTimers.forEach((timer) => window.clearTimeout(timer))
   introTimers = []
@@ -165,11 +174,7 @@ function choose(id: string | null) {
   if (!preset) return
   // Keep the pace and running order the user already set; only swap the movement.
   const existing = animation.value
-  write(
-    existing
-      ? { ...existing, preset: preset.id }
-      : defaultAnimationFor(preset),
-  )
+  write(existing ? { ...existing, preset: preset.id } : defaultAnimationFor(preset))
   nextTick(previewOnCanvas)
 }
 
@@ -184,9 +189,11 @@ function commitWait(value: number | number[]) {
   write({ ...animation.value, delay: Math.round(Number(value) * 1000) })
 }
 
-function commitStart(start: TWidgetAnimation['start']) {
+function commitStart(label: Record<string, any> | string | number) {
   if (!animation.value) return
-  write({ ...animation.value, start })
+  const option = STARTS.find((item) => item.label === label)
+  if (!option) return
+  write({ ...animation.value, start: option.value })
 }
 
 /**
@@ -213,27 +220,29 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="less" scoped>
-.animate-card {
+.animate {
   width: 100%;
 
-  :deep(.el-card__header) {
-    padding: 12px 16px;
-  }
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  .title {
-    font-size: @text-base;
-    color: @ink;
-    font-weight: 500;
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 28px;
   }
 
-  .current {
-    flex: 1;
+  &__title {
+    .section-label();
+  }
+
+  &__head-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  &__current {
     font-size: @text-sm;
     color: @ink-3;
     white-space: nowrap;
@@ -241,72 +250,61 @@ onBeforeUnmount(() => {
     text-overflow: ellipsis;
   }
 
-  .button {
-    flex-shrink: 0;
-  }
-}
+  &__choose {
+    font-size: @text-base;
+    height: auto;
+    padding: 0;
+    flex: none;
+    color: @ink-2;
 
-.body__hint {
-  margin: 0 0 12px;
-  font-size: @text-sm;
-  color: @ink-3;
-  line-height: 1.45;
-}
-
-.body__label {
-  .section-label();
-  margin: 14px 0 6px;
-}
-
-.starts {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.starts__item {
-  appearance: none;
-  text-align: left;
-  border: 1px solid @line;
-  background: @surface;
-  border-radius: @radius-sm;
-  padding: 6px 9px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  transition: border-color 0.12s ease, background-color 0.12s ease;
-
-  &:hover {
-    background: @surface-2;
+    &:hover {
+      color: @accent;
+    }
   }
 
-  &.starts__item--on {
-    border-color: @accent-border;
-    background: @accent-soft;
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
   }
-}
 
-.starts__name {
-  font-size: @text-sm;
-  color: @ink;
-}
+  &__hint,
+  &__note {
+    margin: 0;
+    font-size: @text-xs;
+    color: @ink-3;
+    line-height: 1.4;
+  }
 
-.starts__hint {
-  font-size: @text-xs;
-  color: @ink-3;
-  line-height: 1.35;
-}
+  // The reading of the running order belongs to the control above it, so it
+  // sits tight under the select rather than floating between two controls.
+  &__note {
+    margin-top: -8px;
+  }
 
-.body__actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 14px;
-}
+  &__sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
 
-.body__play {
-  flex: 1;
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__action {
+    font-size: @text-sm;
+    height: auto;
+    padding: 4px 0;
+    color: @ink-2;
+
+    &:hover {
+      color: @accent;
+    }
+  }
 }
 </style>
 

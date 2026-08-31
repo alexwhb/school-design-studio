@@ -9,15 +9,17 @@
         <el-button plain type="primary" class="gounp__btn" @click="handleCombine">Group</el-button>
         <icon-item-select label="" :data="iconList" @finish="alignAction" />
       </div>
-      <component :is="dActiveElement?.type + '-style'" v-show="!showGroupCombined" v-if="dActiveElement?.type" />
       <!--
-        Animation sits here rather than inside each w*Style component so that
-        every element type gets it from one place. The page itself is not an
-        element and has nothing to animate, so it is excluded.
+        Animation is mounted here rather than inside each w*Style component so
+        that every element type gets it from one place, and it goes above them
+        so that it is on screen: below a full text element's own settings it
+        landed past the bottom of the panel. The page is not an element and has
+        no entrance, so it is excluded.
       -->
       <div v-if="animatable" v-show="!showGroupCombined" class="animate-slot">
         <animate-wrap :widget="dActiveElement as TdWidgetData" :key="dActiveElement?.uuid" />
       </div>
+      <component :is="dActiveElement?.type + '-style'" v-show="!showGroupCombined" v-if="dActiveElement?.type" />
     </div>
     <div v-show="activeTab === 1" class="layer-wrap">
       <layer-list :data="dWidgets" @change="layerChange" />
@@ -94,10 +96,12 @@ function layerChange(newLayer: TdWidgetData[]) {
 </script>
 
 <style lang="less" scoped>
-// The animation card is the one control that is not part of a widget's own
-// style component, so it carries its own gutter.
+// The panel already sets the gutter every section shares, so this only owns the
+// space and the rule that mark it off from the element's own settings below.
 .animate-slot {
-  padding: 12px 10px 20px;
+  padding: 8px 0 14px;
+  border-bottom: 1px solid @line-soft;
+  margin-bottom: 6px;
 }
 
 #style-panel {

@@ -14,11 +14,12 @@ service/src/mock/
     photos/1..3.json  Photos, when there is no Unsplash key
   templates/
     list.json         what appears in the Templates panel
+    cates.json        the category chips above it
     101..127.json     the school pack (see below)
   components/
     list/text.json    Text > Text with effects, and the effect presets
     list/comp.json    Text > Sample element groups
-    detail/1..13.json the elements themselves
+    detail/1..117.json  the elements themselves
 ```
 
 After editing, run `npm run build` if you are serving the production build.
@@ -168,10 +169,42 @@ URL-encoded, because every path that loads them decodes.)
 Then add to `templates/list.json`:
 
 ```json
-{ "id": 3, "cover": "/covers/newsletter.png", "title": "Newsletter header", "width": 1275, "height": 1650, "state": 1 }
+{ "id": 3, "cover": "/covers/newsletter.png", "title": "Newsletter header", "width": 1275, "height": 1650, "state": 1, "cate": "flyer" }
 ```
 
 `cover` is the thumbnail. Put it in `public/` and reference it by path.
+
+### Categories
+
+The chips above the Templates panel — All, Posters, Flyers, Slides, Slide
+themes, Awards, Signs — come from `templates/cates.json`, which is only names
+and order:
+
+```json
+{ "id": "flyer", "name": "Flyers" }
+```
+
+A record's `cate` is one of those ids. Two rules follow from how the panel
+builds the row, and neither needs you to edit both files in lockstep:
+
+- **A category with no templates gets no chip.** So removing a pack takes its
+  chips with it rather than leaving ones that lead nowhere.
+- **A `cate` this file does not name still gets a chip**, labelled with the
+  slug itself. Adding `"cate": "menu"` to a record puts a "Menu" chip in the
+  row; naming it here is how you give it a better label and a place in the
+  order.
+
+A record with no `cate` appears under All and nowhere else.
+
+Both generators set the field, so the categories survive a rebuild: the school
+pack carries one per builder in its `BUILDERS` list, and the slide themes share
+a single `CATE` at the top of `make-slide-themes.py`. Adding a template by hand
+means setting `cate` yourself.
+
+Searching stays inside the selected chip. That is the opposite of the Elements
+panel, which searches its whole library whatever row you are on — there the
+rows live in a dropdown, so a scoped search would hide results for no visible
+reason, while here the chip doing the scoping is on screen.
 
 ### The school pack
 
@@ -188,7 +221,8 @@ Editing a layout means editing the builder function for it and re-running,
 which is a good deal less painful than hand-editing a JSON string.
 
 They are ids 101–127 and every record carries `"pack": "school-events"`, which
-is what `--remove` keys on, so removing them cannot touch anything else.
+is what `--remove` keys on, so removing them cannot touch anything else. Each
+also carries a `cate`, set alongside its builder in the `BUILDERS` list.
 Covers need the app running (`npm run dev` or `npm start`) because there is no
 way to render a page outside the editor — pass a different base URL as the
 first argument if you are not on port 4173, and any ids after it to re-shoot
@@ -247,6 +281,11 @@ the year in numbers, results, facilities, and the year ahead. A school picks a
 theme and gets five slides that already agree with each other, which is the
 thing that is tedious to do by hand.
 
+All twenty-five sit under one **Slide themes** chip, set by `CATE` near the top
+of the script. One chip rather than five is the bet that a theme is picked once
+and then followed through all five layouts; splitting it per theme is a matter
+of making `CATE` a per-builder field the way the school pack does it.
+
 The layouts are denser than the school pack's: real tables, four-up figures,
 two-column body copy, and a ruled placeholder where a photograph goes. Three
 things follow from that.
@@ -288,10 +327,12 @@ the real font and writes the box back, then screenshots it on transparency. It
 has to run after any edit, because a sample whose box was sized for the old
 wording clips the new one.
 
+There are forty-three lettering presets and seventy-four grouped lockups.
+
 ### What a text preset is
 
-Ten of the samples are one text widget carrying a `textEffects` array, and they
-are used two different ways:
+Every entry in **Text with effects** is one text widget carrying a
+`textEffects` array, and they are used two different ways:
 
 - picking one in the **Text panel** drops the whole thing on the page — wording,
   font, size and effect;
@@ -324,8 +365,42 @@ Three things worth knowing before you add one:
   parsed detail file, so a grouped sample has nothing for it to apply.
 - **The step in an extrude has to be one pixel.** At three the diagonals come
   out visibly stepped; depth comes from the number of layers instead.
-- **A stroke or a gradient fill does not survive PNG export.** Both are drawn
-  with CSS that html2canvas has no renderer for (`-webkit-text-stroke`,
-  `background-clip: text`), so an outlined heading exports as a flat one.
-  Shadows and offsets do survive. The .pptx export is aware of this and
-  rasterises text carrying any effect rather than writing it as editable text.
+- **A stroke, a gradient or an image fill does not survive PNG export.** All
+  three are drawn with CSS that html2canvas has no renderer for
+  (`-webkit-text-stroke`, `background-clip: text`), so an outlined heading
+  exports as a flat one. Shadows and offsets do survive. The .pptx export is
+  aware of this and rasterises text carrying any effect rather than writing it
+  as editable text.
+
+Beyond the stack, three things a single text widget can still carry:
+
+- **A background colour**, which paints the whole box. Neon glow, Chalkboard
+  hand, Engraved plate and Debossed on navy are type on a plate. There is no
+  padding property, so they buy their vertical air with a generous
+  `lineHeight`, and the cover pass pads the sides.
+- **A `text-decoration` shorthand**, written straight into the element's inline
+  style. `underline #E1A731ff 18px` gives Thick underline a weight and colour
+  the underline button cannot set, and `underline wavy` is where Wavy underline
+  comes from. The .pptx export only matches the bare string `underline`, so it
+  drops the rule.
+- **A tiling image fill**, for a pattern a gradient cannot describe. A
+  background repeats by default, so a one-cell SVG tile is enough — that is
+  Dotted fill, Checker fill and Comic halftone. The settings panel only offers
+  a colour swatch for flat and gradient fills, so a layer filled this way
+  cannot be recoloured there; it is used only where the pattern *is* the
+  preset.
+
+### Where the line between the two sections falls
+
+Not quite where you might expect. A stack styles the whole run at once, so
+anything wanting a second styled run, per-letter rotation, a rule, or a shape
+behind the words is a **group** however much it reads as lettering — Arched,
+Ransom letters, Mixed weight, Stacked words, Knockout slab and Pill highlight
+are all in Sample element groups for that reason.
+
+A group is a list of widgets with a `w-group` container last. Its size is
+measured off its children rather than written down: the panel centres a group
+on the page using that box, so a container disagreeing with the artwork inside
+drops the group off-centre. Every part is its own widget and every shape keeps
+its palette in `colors`, so a school can change a colour or a line of copy
+without rebuilding the artwork.

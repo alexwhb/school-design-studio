@@ -255,6 +255,45 @@ function paged(all, query) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Template categories                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The chips above the Templates panel.
+ *
+ * Names and order come from `templates/cates.json`, but only categories that
+ * actually have a template are returned — otherwise removing the school pack
+ * (`make-school-templates.py --remove`) would leave five chips over an empty
+ * gallery. A template filed under a category the file does not name still gets
+ * a chip, labelled with its own slug, so nothing ends up reachable only under
+ * "All".
+ */
+function templateCates() {
+  const templates = readMock('templates/list.json') || []
+  const used = new Set(templates.map((item) => item.cate).filter(Boolean))
+  const named = readMock('templates/cates.json') || []
+  const listed = named.filter((cate) => used.has(cate.id))
+  const unlisted = [...used]
+    .filter((id) => !named.some((cate) => cate.id === id))
+    .map((id) => ({ id, name: id.charAt(0).toUpperCase() + id.slice(1) }))
+  return [...listed, ...unlisted]
+}
+
+/**
+ * One page of templates, narrowed to a category when a chip is selected.
+ *
+ * Searching stays inside the selected category rather than escaping to the
+ * whole gallery, which the Elements panel does — there the rows are hidden in
+ * a dropdown, so scoping the search silently would strand results, whereas
+ * here the selected chip is on screen next to the empty result.
+ */
+function pagedTemplates(query) {
+  const cate = (query.get('cate') || '').trim()
+  const all = readMock('templates/list.json') || []
+  return paged(cate ? all.filter((item) => item.cate === cate) : all, query)
+}
+
+/* -------------------------------------------------------------------------- */
 /* Element search                                                             */
 /* -------------------------------------------------------------------------- */
 
@@ -338,10 +377,10 @@ export async function contentLibrary(pathname, query) {
 
   switch (pathname) {
     case '/design/cate':
-      return readMock('cates.json')
+      return templateCates()
     case '/design/list':
       // type=1 is the element/text component list, anything else is templates
-      return paged(readMock(type === '1' ? `components/list/${cate}.json` : 'templates/list.json'), query)
+      return type === '1' ? paged(readMock(`components/list/${cate}.json`), query) : pagedTemplates(query)
     case '/design/temp':
       return readMock(type === '1' ? `components/detail/${id}.json` : `templates/${id}.json`)
     case '/design/material': {

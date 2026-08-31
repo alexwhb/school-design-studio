@@ -26,57 +26,321 @@
   {
     "id": 7,
     "cover": "/covers/sample-7.png",
-    "title": "Gradient fill",
-    "width": 872,
-    "height": 326,
+    "title": "Deep extrude",
+    "width": 721,
+    "height": 374,
     "state": 1
   },
   {
     "id": 8,
     "cover": "/covers/sample-8.png",
-    "title": "3D extrude",
-    "width": 808,
-    "height": 374,
+    "title": "Long shadow",
+    "width": 833,
+    "height": 410,
     "state": 1
   },
   {
     "id": 9,
     "cover": "/covers/sample-9.png",
     "title": "Hollow outline",
-    "width": 692,
+    "width": 938,
     "height": 342,
     "state": 1
   },
   {
     "id": 10,
     "cover": "/covers/sample-10.png",
-    "title": "Sticker cut-out",
-    "width": 794,
-    "height": 422,
+    "title": "Double outline",
+    "width": 900,
+    "height": 370,
     "state": 1
   },
   {
     "id": 11,
     "cover": "/covers/sample-11.png",
-    "title": "Cast shadow",
-    "width": 824,
-    "height": 326,
+    "title": "Marker highlight",
+    "width": 1156,
+    "height": 412,
     "state": 1
   },
   {
     "id": 12,
     "cover": "/covers/sample-12.png",
-    "title": "Double outline",
-    "width": 822,
-    "height": 378,
+    "title": "Letterpress",
+    "width": 970,
+    "height": 344,
     "state": 1
   },
   {
     "id": 13,
     "cover": "/covers/sample-13.png",
     "title": "Neon glow",
-    "width": 965,
-    "height": 427,
+    "width": 1201,
+    "height": 612,
+    "state": 1
+  },
+  {
+    "id": 14,
+    "cover": "/covers/sample-14.png",
+    "title": "Two-tone split",
+    "width": 749,
+    "height": 326,
+    "state": 1
+  },
+  {
+    "id": 15,
+    "cover": "/covers/sample-15.png",
+    "title": "Varsity block",
+    "width": 846,
+    "height": 390,
+    "state": 1
+  },
+  {
+    "id": 16,
+    "cover": "/covers/sample-16.png",
+    "title": "Warm gradient fill",
+    "width": 925,
+    "height": 350,
+    "state": 1
+  },
+  {
+    "id": 17,
+    "cover": "/covers/sample-17.png",
+    "title": "Stripe fill",
+    "width": 694,
+    "height": 326,
+    "state": 1
+  },
+  {
+    "id": 18,
+    "cover": "/covers/sample-18.png",
+    "title": "Sticker cut-out",
+    "width": 1019,
+    "height": 469,
+    "state": 1
+  },
+  {
+    "id": 19,
+    "cover": "/covers/sample-19.png",
+    "title": "Speed skew",
+    "width": 830,
+    "height": 326,
+    "state": 1
+  },
+  {
+    "id": 20,
+    "cover": "/covers/sample-20.png",
+    "title": "Bubble drop",
+    "width": 880,
+    "height": 391,
+    "state": 1
+  },
+  {
+    "id": 21,
+    "cover": "/covers/sample-21.png",
+    "title": "Chalkboard hand",
+    "width": 1034,
+    "height": 483,
+    "state": 1
+  },
+  {
+    "id": 22,
+    "cover": "/covers/sample-22.png",
+    "title": "Engraved plate",
+    "width": 1109,
+    "height": 422,
+    "state": 1
+  },
+  {
+    "id": 23,
+    "cover": "/covers/sample-23.png",
+    "title": "Triple echo",
+    "width": 769,
+    "height": 374,
+    "state": 1
+  },
+  {
+    "id": 24,
+    "cover": "/covers/sample-24.png",
+    "title": "Lifted serif",
+    "width": 972,
+    "height": 522,
+    "state": 1
+  },
+  {
+    "id": 25,
+    "cover": "/covers/sample-25.png",
+    "title": "Split offset",
+    "width": 655,
+    "height": 350,
+    "state": 1
+  },
+  {
+    "id": 26,
+    "cover": "/covers/sample-26.png",
+    "title": "Thick underline",
+    "width": 777,
+    "height": 307,
+    "state": 1
+  },
+  {
+    "id": 56,
+    "cover": "/covers/sample-56.png",
+    "title": "Ghost stack",
+    "width": 735,
+    "height": 396,
+    "state": 1
+  },
+  {
+    "id": 57,
+    "cover": "/covers/sample-57.png",
+    "title": "Fade fill",
+    "width": 896,
+    "height": 326,
+    "state": 1
+  },
+  {
+    "id": 58,
+    "cover": "/covers/sample-58.png",
+    "title": "Retro three-band",
+    "width": 934,
+    "height": 344,
+    "state": 1
+  },
+  {
+    "id": 59,
+    "cover": "/covers/sample-59.png",
+    "title": "Soft aura",
+    "width": 1300,
+    "height": 567,
+    "state": 1
+  },
+  {
+    "id": 60,
+    "cover": "/covers/sample-60.png",
+    "title": "Formal small caps",
+    "width": 1119,
+    "height": 294,
+    "state": 1
+  },
+  {
+    "id": 61,
+    "cover": "/covers/sample-61.png",
+    "title": "Reverse extrude",
+    "width": 628,
+    "height": 374,
+    "state": 1
+  },
+  {
+    "id": 62,
+    "cover": "/covers/sample-62.png",
+    "title": "Photo-safe white",
+    "width": 1119,
+    "height": 514,
+    "state": 1
+  },
+  {
+    "id": 63,
+    "cover": "/covers/sample-63.png",
+    "title": "Wavy underline",
+    "width": 791,
+    "height": 328,
+    "state": 1
+  },
+  {
+    "id": 64,
+    "cover": "/covers/sample-64.png",
+    "title": "Dotted fill",
+    "width": 605,
+    "height": 334,
+    "state": 1
+  },
+  {
+    "id": 65,
+    "cover": "/covers/sample-65.png",
+    "title": "Checker fill",
+    "width": 866,
+    "height": 326,
+    "state": 1
+  },
+  {
+    "id": 66,
+    "cover": "/covers/sample-66.png",
+    "title": "Debossed on navy",
+    "width": 851,
+    "height": 424,
+    "state": 1
+  },
+  {
+    "id": 67,
+    "cover": "/covers/sample-67.png",
+    "title": "Poster tight-set",
+    "width": 686,
+    "height": 430,
+    "state": 1
+  },
+  {
+    "id": 68,
+    "cover": "/covers/sample-68.png",
+    "title": "Stepped echo",
+    "width": 765,
+    "height": 510,
+    "state": 1
+  },
+  {
+    "id": 69,
+    "cover": "/covers/sample-69.png",
+    "title": "Coloured blur cast",
+    "width": 926,
+    "height": 518,
+    "state": 1
+  },
+  {
+    "id": 70,
+    "cover": "/covers/sample-70.png",
+    "title": "Outline glow",
+    "width": 790,
+    "height": 412,
+    "state": 1
+  },
+  {
+    "id": 71,
+    "cover": "/covers/sample-71.png",
+    "title": "Hand outline",
+    "width": 783,
+    "height": 375,
+    "state": 1
+  },
+  {
+    "id": 72,
+    "cover": "/covers/sample-72.png",
+    "title": "Italic cast",
+    "width": 613,
+    "height": 386,
+    "state": 1
+  },
+  {
+    "id": 73,
+    "cover": "/covers/sample-73.png",
+    "title": "Comic halftone",
+    "width": 743,
+    "height": 337,
+    "state": 1
+  },
+  {
+    "id": 116,
+    "cover": "/covers/sample-116.png",
+    "title": "Gradient fill",
+    "width": 872,
+    "height": 326,
+    "state": 1
+  },
+  {
+    "id": 117,
+    "cover": "/covers/sample-117.png",
+    "title": "Cast shadow",
+    "width": 824,
+    "height": 326,
     "state": 1
   }
 ]

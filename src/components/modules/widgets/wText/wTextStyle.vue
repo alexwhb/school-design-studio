@@ -65,6 +65,7 @@ import effectWrap from '../../settings/EffectSelect/TextWrap.vue'
 import { useFontStore } from '@/common/methods/fonts'
 import { FONT_GROUPS } from '@/assets/data/FontsData'
 import { wTextSetting, TwTextData } from './wTextSetting'
+import recolorEffects from './recolorEffects'
 import { storeToRefs } from 'pinia'
 import { useControlStore, useForceStore, useWidgetStore } from '@/store'
 import { TUpdateWidgetPayload } from '@/store/design/widget/actions/widget'
@@ -154,6 +155,7 @@ function changeValue() {
   if (dMoving.value) {
     return
   }
+  followTextColor()
   // TODO 修改数值
   for (let key in state.innerElement) {
     const itemKey = key as keyof TwTextData
@@ -167,6 +169,26 @@ function changeValue() {
       })
     }
   }
+}
+
+/**
+ * A text effect is painted in the text's own colour, so the colour swatch has
+ * to carry the stack with it — the fill layer sits on top of the plain text
+ * and would otherwise go on showing the old colour, which reads as the swatch
+ * doing nothing at all. See recolorEffects.ts for which parts follow.
+ *
+ * The widget still holds the colour being replaced, which is why changeValue
+ * calls this before writing the new one through.
+ */
+function followTextColor() {
+  const active = dActiveElement.value as Record<string, any> | undefined
+  const effects = state.innerElement.textEffects
+  if (!effects?.length) return
+  // change() is throttled, so the panel can still be holding the widget that
+  // was selected a moment ago. Recolouring then would write one widget's stack
+  // onto another.
+  if (!active || active.uuid !== state.innerElement.uuid) return
+  state.innerElement.textEffects = recolorEffects(effects, active.color, state.innerElement.color)
 }
 
 function selectTextEffect({ key, value, style }: any) {

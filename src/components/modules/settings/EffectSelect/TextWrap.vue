@@ -34,13 +34,7 @@
           <div
             v-for="(ef, efi) in modelValue"
             :key="efi + 'effect'"
-            :style="{
-              color: ef.filling && ef.filling.enable && ef.filling.type === 0 ? ef.filling.color : 'transparent',
-              WebkitTextStroke: ef.stroke && ef.stroke.enable ? `${ef.stroke.width / coefficient}px ${ef.stroke.color}` : '',
-              textShadow: ef.shadow && ef.shadow.enable ? `${ef.shadow.offsetX / coefficient}px ${ef.shadow.offsetY / coefficient}px ${ef.shadow.blur / coefficient}px ${ef.shadow.color}` : undefined,
-              backgroundImage: ef.filling && ef.filling.enable ? (ef.filling.type === 0 ? undefined : getGradientOrImg(ef)) : undefined,
-              WebkitBackgroundClip: ef.filling && ef.filling.enable ? (ef.filling.type === 0 ? undefined : 'text') : undefined,
-            }"
+            :style="effectStyle(ef, 1 / coefficient)"
             class="demo"
           >
             A
@@ -84,7 +78,7 @@
               <div v-if="element.filling && [0, 2, '0', '2'].includes(element.filling.type)" class="feature" :class="{ 'feature--off': !element.filling.enable }">
                 <div class="feature__row">
                   <el-checkbox v-model="element.filling.enable" label="Fill" class="feature__toggle" />
-                  <color-select v-model="element.filling.color" width="32px" :modes="['Solid', 'Gradient']" label="" class="feature__swatch" @change="colorChange($event, element.filling)" />
+                  <color-select :modelValue="fillValue(element.filling)" width="32px" :modes="['Solid', 'Gradient']" label="" class="feature__swatch" @update:modelValue="(value) => (element.filling.color = value)" @change="colorChange($event, element.filling)" />
                 </div>
               </div>
               <div v-if="element.stroke" class="feature" :class="{ 'feature--off': !element.stroke.enable }">
@@ -111,6 +105,21 @@
                   <label class="field">
                     <span class="field__label">Y</span>
                     <numberInput v-model="element.offset.y" class="field__input" type="simple" />
+                  </label>
+                </div>
+              </div>
+              <div v-if="element.skew" class="feature" :class="{ 'feature--off': !element.skew.enable }">
+                <div class="feature__row">
+                  <el-checkbox v-model="element.skew.enable" label="Skew" class="feature__toggle" />
+                </div>
+                <div class="feature__fields">
+                  <label class="field">
+                    <span class="field__label">X</span>
+                    <numberInput v-model="element.skew.x" class="field__input" :minValue="-89" :maxValue="89" type="simple" />
+                  </label>
+                  <label class="field">
+                    <span class="field__label">Y</span>
+                    <numberInput v-model="element.skew.y" class="field__input" :minValue="-89" :maxValue="89" type="simple" />
                   </label>
                 </div>
               </div>
@@ -152,6 +161,7 @@ import numberInput from '../numberInput.vue'
 import numberSlider from '../numberSlider.vue'
 import draggable from 'vuedraggable'
 import api from '@/api'
+import effectStyle from '../../widgets/wText/effectStyle'
 import getGradientOrImg from '../../widgets/wText/getGradientOrImg'
 import { TGetCompListResult } from '@/api/home'
 
@@ -165,6 +175,7 @@ type TProps = {
 
 type TEmits = {
   (event: 'update:modelValue', data: Record<string, any>[]): void
+  (event: 'select', data: { key: string; value: string }): void
 }
 
 type TState = {
@@ -200,21 +211,57 @@ const dragOptions = {
 const coefficient = computed(() => Math.round(160 / 27))
 let rawData: Record<string, any>[] = [] // Initial values, used when changing intensity
 
+/**
+ * Every feature a layer can carry. A preset only stores the parts it uses, and
+ * an absent part means an absent control — pick the hard-shadow preset and
+ * there would be no way to lean it, because it was saved before Skew existed.
+ * Filling in the blanks on load is what keeps every layer fully editable.
+ */
+const emptyLayer = () => ({
+  filling: { enable: false, type: 0, color: '#000000ff' },
+  stroke: { enable: false, width: 0, color: '#000000ff', type: 'outer' },
+  offset: { enable: false, x: 0, y: 0 },
+  skew: { enable: false, x: 0, y: 0 },
+  shadow: { enable: false, color: '#000000ff', offsetX: 0, offsetY: 0, blur: 0, opacity: 0 },
+})
+
+/** One stored layer, with anything it does not carry filled in and a drag key. */
+const asLayer = (stored: Record<string, any>) => ({ ...emptyLayer(), ...stored, uuid: String(Math.random()) })
+
+/**
+ * The stack as it last passed between this panel and the widget. The settings
+ * panel is one instance that is handed a different widget rather than rebuilt,
+ * so the layers cannot be read once on mount — click a plain text widget after
+ * an effect one and it would still be offering the previous widget's layers to
+ * edit. This is what tells a stack arriving from outside apart from the echo
+ * of one this panel just sent out.
+ */
+let exchanged = ''
+
+/** Loads a stack into the editable layer list, topmost layer first. */
+const load = (effects?: unknown) => {
+  const stack = Array.isArray(effects) ? effects : []
+  exchanged = JSON.stringify(stack)
+  state.layers = JSON.parse(exchanged).map(asLayer).reverse()
+  rawData = JSON.parse(JSON.stringify(state.layers))
+  state.strength = 50
+}
+
 onMounted(async () => {
   await nextTick()
-  // console.log(props.data)
-  if (!props.data.textEffects) {
-    return
-  }
-  const clone = JSON.parse(JSON.stringify(props.data.textEffects)) || []
-  state.layers = clone
-    .map((x: any) => {
-      x.uuid = String(Math.random())
-      return x
-    })
-    .reverse()
-  rawData = JSON.parse(JSON.stringify(state.layers))
+  load(props.modelValue)
 })
+
+// Recolouring the text rewrites the stack, and so does picking a different
+// widget; either way the layer controls have to show what is actually there.
+watch(
+  () => props.modelValue,
+  (v) => {
+    if (JSON.stringify(Array.isArray(v) ? v : []) === exchanged) return
+    load(v)
+  },
+  { deep: true },
+)
 
 // numberSlider only writes the value, so the rescale hangs off the value
 // instead of a slider event.
@@ -230,7 +277,11 @@ watch(
       delete x.uuid
       return x
     })
-    emit('update:modelValue', newEffect.reverse())
+    newEffect.reverse()
+    const stack = JSON.stringify(newEffect)
+    if (stack === exchanged) return
+    exchanged = stack
+    emit('update:modelValue', newEffect)
   },
   { deep: true },
 )
@@ -240,13 +291,14 @@ const selectEffect = async (id?: number) => {
   state.visiable = false
   if (id) {
     const { data } = await api.home.getTempDetail({ id, type: 1 })
-    state.layers = JSON.parse(data)
-      .textEffects.map((x: Record<string, any>) => {
-        x.uuid = String(Math.random())
-        return x
-      })
-      .reverse()
-  } else state.layers = []
+    const preset = JSON.parse(data)
+    load(preset.textEffects)
+    // A preset is a stack plus the colour it was drawn around, and the plain
+    // text still paints under the stack — so the hollow one is only hollow if
+    // the text below it goes transparent too. Without this it would come out
+    // as black letters inside a red outline.
+    preset.color && emit('select', { key: 'color', value: preset.color })
+  } else load([])
 }
 
 // 删除效果层
@@ -257,15 +309,21 @@ const removeLayer = (i: number) => {
 
 // 添加效果层
 const addLayer = () => {
-  const filling = { enable: false, type: 0, color: '#000000ff' }
-  const stroke = { enable: false, width: 0, color: '#000000ff', type: 'outer' }
-  const offset = { enable: false, x: 0, y: 0 }
-  const shadow = { enable: false, color: '#000000ff', offsetX: 0, offsetY: 0, blur: 0, opacity: 0 }
-  state.layers.unshift({ filling, stroke, shadow, offset, uuid: String(Math.random()) })
+  state.layers.unshift(asLayer({}))
   rawData = JSON.parse(JSON.stringify(state.layers))
 }
 
 const finish = (type?: string, value?: string) => {}
+
+/**
+ * What the swatch opens on. The picker decides its own mode by parsing this
+ * value, so handing it the flat colour of a gradient fill starts it in Solid —
+ * and the change it reports on the way in then flattens the very fill it was
+ * opened to show. Handing it the gradient instead starts it in the right mode
+ * and the round trip leaves the fill alone.
+ */
+const fillValue = (filling: Record<string, any>) =>
+  filling && Number(filling.type) === 2 && filling.gradient?.stops?.length ? getGradientOrImg({ filling }) : filling?.color
 
 const colorChange = (e: Record<string, any>, item: Record<string, any>) => {
   const modeStr: Record<string, number> = {
@@ -293,11 +351,13 @@ const colorChange = (e: Record<string, any>, item: Record<string, any>) => {
     const strengthChange = (x: any) => {
       const effectScale = 1 + (x - 50) / 50
       state.layers.forEach((item: any, index) => {
-        if (item.stroke) {
-          item.stroke.width = rawData[index].stroke.width * effectScale
+        const raw = rawData[index]
+        if (!raw) return
+        if (item.stroke && raw.stroke) {
+          item.stroke.width = raw.stroke.width * effectScale
         }
-        if (item.shadow) {
-          item.shadow.blur = rawData[index].shadow.blur * effectScale
+        if (item.shadow && raw.shadow) {
+          item.shadow.blur = raw.shadow.blur * effectScale
         }
       })
     }
@@ -306,10 +366,17 @@ const colorChange = (e: Record<string, any>, item: Record<string, any>) => {
 const openSet = async () => {
   state.visiable = !state.visiable
   if (froze_font_effect_list.length <= 0) {
+    // The same presets the Text panel offers under "Text with effects". This
+    // asked for category 12 upstream, which is not a list this build ships, so
+    // the picker came up empty and the only way to an effect was to build the
+    // layers by hand.
+    // One page, sized past the list rather than to it: the picker is a grid
+    // with no paging of its own, so anything past the page size is a preset
+    // nobody can reach.
     const { list } = await api.home.getCompList({
-      cate: 12,
+      cate: 'text',
       type: 1,
-      pageSize: 30,
+      pageSize: 200,
     })
     state.list = list
     froze_font_effect_list = list
@@ -327,7 +394,8 @@ defineExpose({
   strengthChange,
   openSet,
   colorChange,
-  getGradientOrImg,
+  effectStyle,
+  fillValue,
 })
 </script>
 
