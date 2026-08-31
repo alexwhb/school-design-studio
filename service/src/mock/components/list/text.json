@@ -2,25 +2,25 @@
   {
     "id": 1,
     "cover": "/covers/sample-1.png",
-    "title": "Outlined",
-    "width": 862,
-    "height": 264,
+    "title": "Varsity outline",
+    "width": 733,
+    "height": 281,
     "state": 1
   },
   {
     "id": 2,
     "cover": "/covers/sample-2.png",
-    "title": "Glow",
-    "width": 955,
-    "height": 264,
+    "title": "Hard shadow",
+    "width": 985,
+    "height": 231,
     "state": 1
   },
   {
     "id": 3,
     "cover": "/covers/sample-3.png",
-    "title": "Shadowed",
-    "width": 854,
-    "height": 264,
+    "title": "Soft shadow",
+    "width": 777,
+    "height": 221,
     "state": 1
   }
 ]

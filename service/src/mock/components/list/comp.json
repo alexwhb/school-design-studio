@@ -2,25 +2,25 @@
   {
     "id": 4,
     "cover": "/covers/sample-4.png",
-    "title": "Heading with a note",
-    "width": 763.5,
-    "height": 436.41,
+    "title": "Ribbon banner",
+    "width": 900,
+    "height": 230,
     "state": 1
   },
   {
     "id": 5,
     "cover": "/covers/sample-5.png",
-    "title": "Heading with a date",
-    "width": 794,
-    "height": 500,
+    "title": "Award badge",
+    "width": 420,
+    "height": 420,
     "state": 1
   },
   {
     "id": 6,
     "cover": "/covers/sample-6.png",
-    "title": "Bold heading",
-    "width": 766.43,
-    "height": 366.5,
+    "title": "Event card",
+    "width": 820,
+    "height": 340,
     "state": 1
   }
 ]
