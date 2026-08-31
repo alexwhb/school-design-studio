@@ -3,6 +3,11 @@
 The editor is a React component. It mounts into a `<div>` in the host app — no
 iframe, no second React root, no separate bundle to keep in step.
 
+Two things it does that reach past its own box, both deliberate: presentation
+mode takes over the viewport (it is still inside `.ds-root`, so it keeps its
+styles), and exporting writes a file through the browser's download. Everything
+else stays inside the container it was given.
+
 ## What you get
 
 ```tsx
