@@ -1,0 +1,59 @@
+@bar-color: @line-strong;
+
+.page-resize {
+  pointer-events: none;
+  position: absolute;
+  z-index: 10;
+  .resize__bar {
+    pointer-events: auto;
+    position: absolute;
+    &-left {
+      left: -14px;
+    }
+    &-right {
+      right: -14px;
+    }
+    &-left,
+    &-right {
+      cursor: ew-resize;
+      width: 10px;
+      height: 24px;
+      top: 50%;
+      transform: translateY(-12px);
+    }
+    &-left:after,
+    &-right:after {
+      position: absolute;
+      content: '';
+      left: 3px;
+      width: 4px;
+      height: 24px;
+      border-radius: 12px;
+      background: @bar-color;
+    }
+    &-top {
+      top: -14px;
+    }
+    &-bottom {
+      bottom: -12px;
+    }
+    &-top,
+    &-bottom {
+      cursor: ns-resize;
+      width: 24px;
+      height: 10px;
+      left: 50%;
+      transform: translateX(-12px);
+    }
+    &-top:after,
+    &-bottom:after {
+      position: absolute;
+      content: '';
+      top: 4px;
+      width: 24px;
+      height: 4px;
+      border-radius: 12px;
+      background: @bar-color;
+    }
+  }
+}

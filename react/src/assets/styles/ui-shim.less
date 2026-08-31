@@ -1,0 +1,66 @@
+.ds-popper {
+  z-index: 2000;
+}
+.ds-popper .el-popper__arrow {
+  height: 10px;
+  width: 10px;
+  position: absolute;
+  z-index: -1;
+}
+.ds-popper .el-popper__arrow::before {
+  content: ' ';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  box-sizing: border-box;
+  z-index: -1;
+}
+.ds-popper[data-side='top'] .el-popper__arrow {
+  bottom: 0;
+}
+.ds-popper[data-side='bottom'] .el-popper__arrow {
+  top: -10px;
+}
+.ds-popper[data-side='left'] .el-popper__arrow {
+  right: 0;
+}
+.ds-popper[data-side='right'] .el-popper__arrow {
+  left: -10px;
+}
+.ds-popper.is-dark .el-popper__arrow::before {
+  background: var(--el-text-color-primary);
+  border: 1px solid var(--el-text-color-primary);
+}
+.ds-popper.is-light .el-popper__arrow::before {
+  background: var(--el-bg-color-overlay);
+  border: 1px solid var(--el-border-color-light);
+}
+
+.el-dropdown-menu__item .ds-dropdown-item-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.el-dropdown-menu__item.is-disabled .ds-dropdown-item-inner {
+  cursor: not-allowed;
+}
+
+.ds-message-container,
+.ds-notification-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2100;
+}
+.ds-message-container > .el-message {
+  pointer-events: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.ds-notification-container > .el-notification {
+  pointer-events: auto;
+  top: 16px;
+  right: 16px;
+  position: fixed;
+}

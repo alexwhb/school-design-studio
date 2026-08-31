@@ -1,0 +1,56 @@
+.icon-item-select {
+  width: 100%;
+  .label {
+    margin-right: 10px;
+    color: @ink-2;
+    font-size: @text-base;
+  }
+  .list {
+    line-height: 1;
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+
+    .list-item {
+      color: @ink-2;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      margin: 0;
+      height: 26px;
+      border-radius: @radius-sm;
+      transition: background-color 0.12s ease, color 0.12s ease;
+
+      i {
+        font-size: 17px;
+      }
+      &:hover {
+        background-color: @surface-2;
+        color: @ink;
+      }
+    }
+
+    .list-item.active {
+      color: @accent;
+      background-color: @accent-soft;
+    }
+  }
+}
+
+.icon-item-select .flex {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+}
+
+.icon-item-select .btn__bar {
+  margin-bottom: 12px;
+  padding: 3px;
+  background: @surface;
+  border: 1px solid @line;
+  border-radius: @radius;
+  height: 34px;
+  gap: 2px;
+}

@@ -29,3 +29,7 @@ pnpm-debug.log*
 
 # local env files
 .env
+dist-react
+dist-embed
+test-results
+playwright-report

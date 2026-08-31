@@ -1,0 +1,23 @@
+#main {
+  overflow: auto;
+  position: relative;
+}
+#page-design {
+  scrollbar-width: none;
+  min-height: 100%;
+  overflow: auto;
+  position: relative;
+  .out-page {
+    margin: 0 auto;
+    position: relative;
+    .design-canvas {
+      outline: 1px solid transparent;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      box-shadow: @shadow-page;
+      margin: 0 auto;
+      position: relative;
+    }
+  }
+}

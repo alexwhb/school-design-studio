@@ -1,0 +1,28 @@
+.menu-bg {
+  height: 100%;
+  position: absolute;
+  width: 100%;
+  z-index: 99999;
+  .menu-list {
+    background-color: @popover;
+    box-shadow: @shadow-pop;
+    padding: 5px;
+    position: absolute;
+    width: 120px;
+    .menu-item {
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 5px 15px;
+      width: 100%;
+      &:hover {
+        background-color: @surface-2;
+      }
+    }
+    .menu-item.disable-menu {
+      background-color: @popover;
+      color: @ink-4;
+      cursor: not-allowed;
+    }
+  }
+}

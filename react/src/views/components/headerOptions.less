@@ -1,0 +1,48 @@
+.top-title {
+  flex: 1;
+  min-width: 0;
+  padding-left: 10px;
+
+  .input-wrap {
+    width: 100%;
+    max-width: 320px;
+
+    .el-input__wrapper {
+      background: transparent;
+      box-shadow: none;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    input {
+      color: @ink;
+      font-size: @text-md;
+      font-weight: 500;
+      &::placeholder {
+        color: @ink-4;
+        font-weight: 400;
+      }
+    }
+    &:hover .el-input__wrapper {
+      background: @surface-2;
+    }
+    .el-input__wrapper.is-focus {
+      background: @surface;
+      box-shadow: 0 0 0 1px @accent inset;
+    }
+  }
+}
+
+.top-icon-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: @topbar-height;
+  flex-shrink: 0;
+}
+
+.top-icon-wrap .top-nav-divider {
+  width: 0;
+  height: 0;
+  margin: 0;
+  background: none;
+}

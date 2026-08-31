@@ -1,0 +1,117 @@
+.value-select-list {
+  min-width: 10px !important;
+  padding: 5px !important;
+}
+
+.value-select {
+  line-height: 1.15;
+  width: 80px;
+  .input-label {
+    user-select: none;
+    line-height: 20px;
+    padding: 0 0 6px;
+    font-size: @text-base;
+    color: @ink-2;
+  }
+  .input-unit {
+    font-size: 14px;
+    margin-right: 5px;
+    line-height: 30px;
+    color: @ink-3;
+  }
+  .input-wrap {
+    border-radius: @radius;
+    border: 1px solid @line;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 80px;
+    background: @surface;
+    height: 34px;
+    transition: border-color 0.12s ease;
+    &:hover {
+      border-color: @line-strong;
+    }
+    .preview {
+      overflow: hidden;
+    }
+    .real-input {
+      background: transparent;
+      border-radius: 3px;
+      border: 0px;
+      font-size: @text-base;
+      color: @ink;
+      height: 32px;
+      outline: none;
+      padding: 6px;
+      text-align: center;
+      width: 100%;
+    }
+    .real-input.disable {
+      color: @ink-2;
+      cursor: not-allowed;
+    }
+    .op-btn {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      .icon-down1 {
+        font-size: 18px;
+        margin-right: 6px;
+        color: @ink-4;
+        line-height: 32px;
+      }
+    }
+  }
+  .input-wrap.active {
+    border-color: @accent;
+  }
+}
+
+.list-ul {
+  max-height: 300px;
+  overflow-y: auto;
+  li {
+    display: flex;
+    align-items: center;
+    color: @ink;
+    cursor: pointer;
+    font-size: 15px;
+    overflow: hidden;
+    padding: 7px 10px;
+    border-radius: @radius-sm;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &:hover {
+      background-color: @surface-2;
+    }
+  }
+  li.active {
+    color: @accent;
+    background-color: @accent-soft;
+  }
+  .preview {
+    height: 1.6em;
+  }
+}
+
+.tabs-wrap {
+  width: 300px;
+
+  .el-tabs__header {
+    margin-bottom: 6px;
+  }
+  .el-tabs__item {
+    font-size: @text-sm;
+    padding: 0 10px;
+    height: 34px;
+    color: @ink-3;
+    &.is-active {
+      color: @accent;
+    }
+  }
+  .el-tabs__nav-wrap::after {
+    height: 1px;
+    background-color: @line;
+  }
+}

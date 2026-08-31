@@ -1,0 +1,28 @@
+#number-slider {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  .slider-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+
+    .label {
+      user-select: none;
+      color: @ink-2;
+      font-size: @text-base;
+    }
+    .value {
+      color: @ink-3;
+      font-size: @text-sm;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .el-slider {
+    margin-top: 2px;
+    width: 100%;
+  }
+}

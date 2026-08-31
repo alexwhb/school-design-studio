@@ -1,0 +1,5 @@
+export { default as DesignStudio } from './DesignStudio'
+export type { DesignStudioProps } from './DesignStudio'
+export { configure } from './config'
+export type { DesignStudioConfig } from './config'
+export type { EditorMode } from './common/hooks/useEditorMode'

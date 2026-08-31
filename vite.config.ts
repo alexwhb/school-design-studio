@@ -38,6 +38,7 @@ function contentLibraryPlugin() {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  cacheDir: resolve('node_modules/.vite-vue'),
   // base: '/web',
   plugins: [
     vue(),
@@ -88,6 +89,8 @@ export default defineConfig({
     }),
   },
   server: {
+    port: 5174,
+    strictPort: true,
     hmr: { overlay: false },
     host: '127.0.0.1'
     // proxy: {

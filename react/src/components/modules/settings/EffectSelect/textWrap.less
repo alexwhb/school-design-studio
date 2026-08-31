@@ -1,0 +1,220 @@
+.effects {
+  width: 100%;
+
+  .el-collapse-item__header,
+  .el-collapse-item__wrap,
+  .el-collapse-item__content {
+    border-bottom: none;
+    background: transparent;
+  }
+  .el-collapse-item__header {
+    height: 36px;
+    line-height: 36px;
+    font-size: @text-base;
+    font-weight: 500;
+    letter-spacing: normal;
+    text-transform: none;
+    color: @ink-2;
+  }
+  .el-checkbox {
+    height: auto;
+  }
+  .el-checkbox__label {
+    font-size: @text-base;
+    color: @ink-2;
+    padding-left: 10px;
+  }
+  .el-checkbox__input.is-checked + .el-checkbox__label {
+    color: @ink;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 28px;
+  }
+  &__title {
+    .section-label();
+  }
+  &__head-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  & &__choose {
+    font-size: @text-base;
+    height: auto;
+    padding: 0;
+    color: @ink-2;
+    &:hover {
+      color: @accent;
+    }
+  }
+  &__intensity {
+    margin-top: 10px;
+  }
+
+  .effect-preview {
+    background: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px @line;
+    line-height: 22px;
+    text-align: center;
+    flex: none;
+  }
+
+  .advanced {
+    &__actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    & &__action {
+      font-size: @text-sm;
+      height: auto;
+      padding: 4px 0;
+    }
+  }
+
+  .layers {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .layer {
+    padding: 12px 0 4px;
+    & + & {
+      border-top: 1px solid @line-soft;
+    }
+    &__title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 22px;
+    }
+    &__name {
+      flex: 1;
+      font-size: @text-sm;
+      font-weight: 600;
+      color: @ink-2;
+    }
+    &__body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 12px;
+    }
+    .icon {
+      font-size: 14px;
+      color: @ink-3;
+      cursor: pointer;
+    }
+    .sd-yidong {
+      cursor: grab !important;
+    }
+    .icon:hover {
+      color: @ink;
+    }
+  }
+
+  .feature {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    &__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 28px;
+    }
+    &__toggle {
+      flex: 1;
+      min-width: 0;
+    }
+    &__swatch {
+      flex: none;
+    }
+    &--off &__fields,
+    &--off &__swatch {
+      opacity: 0.55;
+    }
+    &__fields {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding-left: 26px;
+    }
+  }
+
+  .field {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    &__label {
+      flex: none;
+      font-size: @text-xs;
+      color: @ink-3;
+    }
+    &--full {
+      flex: 1 1 100%;
+    }
+    &__input {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .small-input {
+    height: 28px;
+    text-align: center;
+    color: @ink;
+    background: transparent;
+    box-shadow: 0 0 0 1px @line inset;
+    border-radius: @radius-sm;
+    &:focus {
+      box-shadow: 0 0 0 1px @accent inset;
+    }
+  }
+}
+
+.select__box {
+  display: flex;
+  flex-wrap: wrap;
+  &__select-item {
+    cursor: pointer;
+    position: relative;
+    height: 40px;
+    width: 33%;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+  }
+  &__select-item:hover {
+    background: @surface-2;
+  }
+}
+
+.effects .demo {
+  font-size: 22px;
+  color: @accent-on;
+  outline: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.effects .choose {
+  border: 1px dashed @accent-border !important;
+}
+.effects .ghost {
+  opacity: 0.3;
+  background: @main-color;
+}

@@ -1,0 +1,12 @@
+import { chromium } from '@playwright/test'
+const browser = await chromium.launch()
+const page = await browser.newPage()
+page.on('console', (m) => console.log('CONSOLE', m.type(), m.text()))
+page.on('pageerror', (e) => console.log('PAGEERROR', e.message))
+page.on('requestfailed', (r) => console.log('REQFAIL', r.url(), r.failure()?.errorText))
+page.on('response', async (r) => { if (r.status() >= 400) console.log('HTTP', r.status(), r.url()) })
+await page.goto(process.argv[2] || 'http://127.0.0.1:5273/home')
+await page.waitForTimeout(6000)
+console.log('nodes', await page.evaluate(() => document.querySelectorAll('*').length))
+console.log((await page.content()).slice(0, 1500))
+await browser.close()

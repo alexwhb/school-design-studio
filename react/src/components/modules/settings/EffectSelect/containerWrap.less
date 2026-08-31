@@ -1,0 +1,43 @@
+.box-card {
+  margin-top: 24px;
+  width: 100%;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .title {
+    font-size: 14px;
+    font-weight: 600;
+    color: @ink;
+  }
+}
+
+.select__box {
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 220px;
+  overflow-y: auto;
+  &__select-item {
+    cursor: pointer;
+    position: relative;
+    height: 80px;
+    width: 50%;
+    margin: 4px 0;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+  }
+  &__select-item:hover {
+    background: @surface-2;
+  }
+}
+.select__box ::-webkit-scrollbar {
+  display: none;
+}
+.box__header {
+  width: 100%;
+  text-align: center;
+  padding-bottom: 12px;
+}

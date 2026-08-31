@@ -1,0 +1,44 @@
+.ds-helper-menu {
+  .el-divider--horizontal {
+    margin: 12px 0;
+  }
+  .menu-item {
+    width: 170px;
+  }
+  .help-list {
+    user-select: none;
+    .back {
+      margin-top: 4px;
+      cursor: pointer;
+      display: flex;
+      padding: 8px 16px 0 6px;
+      .icon-box {
+        display: inline-block;
+        transform: rotate(180deg);
+      }
+    }
+    .item {
+      width: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      margin-bottom: 0;
+      color: @ink-2;
+      white-space: nowrap;
+      .title {
+        color: @ink;
+        font-size: 14px;
+        font-weight: 400;
+      }
+      .instruct {
+        padding: 7px 8px;
+        margin-left: 14px;
+        color: @ink;
+        background: @surface-2;
+        border-radius: 8px;
+      }
+    }
+  }
+
+}

@@ -1,0 +1,62 @@
+import * as PopoverPrimitive from '@radix-ui/react-popover'
+import { useState, type ReactNode } from 'react'
+import { cx } from '@/utils/dom'
+import { getPortalContainer } from '@/common/hooks/appRoot'
+
+export type PopoverProps = {
+  content: ReactNode
+  placement?: string
+  width?: number | string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  trigger?: 'click' | 'hover'
+  popperClass?: string
+  children: ReactNode
+}
+
+function splitPlacement(placement: string): { side: 'top' | 'bottom' | 'left' | 'right'; align: 'start' | 'center' | 'end' } {
+  const [rawSide, rawAlign] = placement.split('-')
+  const side = (['top', 'bottom', 'left', 'right'].includes(rawSide) ? rawSide : 'bottom') as 'top' | 'bottom' | 'left' | 'right'
+  const align = rawAlign === 'start' ? 'start' : rawAlign === 'end' ? 'end' : 'center'
+  return { side, align }
+}
+
+export default function Popover({
+  content,
+  placement = 'bottom',
+  width,
+  open,
+  onOpenChange,
+  popperClass,
+  children,
+}: PopoverProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isOpen = open ?? internalOpen
+  const setOpen = (next: boolean) => {
+    if (open === undefined) setInternalOpen(next)
+    onOpenChange?.(next)
+  }
+  const { side, align } = splitPlacement(placement)
+
+  return (
+    <PopoverPrimitive.Root open={isOpen} onOpenChange={setOpen}>
+      <PopoverPrimitive.Trigger asChild>{children}</PopoverPrimitive.Trigger>
+      <PopoverPrimitive.Portal container={getPortalContainer()}>
+        <PopoverPrimitive.Content
+          side={side}
+          align={align}
+          sideOffset={8}
+          collisionPadding={8}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          className={cx('el-popover', 'el-popper', 'is-light', 'ds-popper', popperClass || '')}
+          style={{ width: width === 'auto' || width === undefined ? 'auto' : typeof width === 'number' ? `${width}px` : width }}
+        >
+          {content}
+          <PopoverPrimitive.Arrow asChild width={10} height={10}>
+            <span className="el-popper__arrow" />
+          </PopoverPrimitive.Arrow>
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
+  )
+}

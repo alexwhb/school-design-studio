@@ -1,0 +1,59 @@
+.img__box.mask {
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-position: center;
+}
+
+.img__box {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  img {
+    display: block;
+  }
+}
+.target {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.svg__edit__wrap {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.edit__model {
+  opacity: 0.2;
+  width: 100%;
+  height: 100%;
+}
+.drop {
+  &__mask {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  &__btn {
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px dashed #ffffff;
+    border-radius: 12px;
+    padding: 2rem;
+  }
+}
+
+.slider__bar {
+  position: absolute;
+  z-index: 999;
+  right: 0;
+  top: -80px;
+  transform: scale(1.5);
+}

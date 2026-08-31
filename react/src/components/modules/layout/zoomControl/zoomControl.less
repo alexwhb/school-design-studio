@@ -1,0 +1,108 @@
+#zoom-control {
+  bottom: 12px;
+  position: absolute;
+  right: @style-panel-width + 12px;
+  z-index: 1000;
+
+  .zoom-control-wrap {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 34px;
+    background: @surface;
+    border: 1px solid @line;
+    border-radius: @radius;
+    overflow: hidden;
+
+    .zoom-icon {
+      align-items: center;
+      color: @ink-2;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      width: 32px;
+      height: 100%;
+      font-size: 13px;
+      &:hover {
+        background-color: @surface-2;
+        color: @ink;
+      }
+    }
+
+    .disable {
+      color: @ink-4;
+      &:hover {
+        background-color: transparent;
+        color: @ink-4;
+        cursor: not-allowed;
+      }
+    }
+
+    .zoom-text {
+      user-select: none;
+      align-items: center;
+      color: @ink-2;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      min-width: 104px;
+      padding: 0 10px;
+      height: 100%;
+      font-size: @text-base;
+      font-weight: 500;
+      white-space: nowrap;
+      border-left: 1px solid @line;
+      border-right: 1px solid @line;
+      &:hover {
+        background-color: @surface-2;
+        color: @ink;
+      }
+    }
+    .zoom-text-active {
+      background-color: @surface-2;
+      color: @ink;
+    }
+  }
+
+  .zoom-selecter {
+    background-color: @surface;
+    border: 1px solid @line;
+    border-radius: @radius;
+    box-shadow: @shadow-pop;
+    color: @ink-2;
+    position: absolute;
+    top: -8px;
+    transform: translateY(-100%);
+    width: 100%;
+    padding: 4px;
+    z-index: 1000;
+
+    .zoom-item {
+      align-items: center;
+      border-radius: @radius-sm;
+      cursor: pointer;
+      display: flex;
+      font-size: @text-base;
+      height: 30px;
+      padding: 0 8px;
+      width: 100%;
+      white-space: nowrap;
+
+      span {
+        flex: 1;
+      }
+      i {
+        font-size: 12px;
+        color: @accent;
+      }
+      &:hover {
+        background-color: @surface-2;
+        color: @ink;
+      }
+    }
+    .zoom-item-active {
+      color: @accent;
+      font-weight: 500;
+    }
+  }
+}
