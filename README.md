@@ -1,11 +1,46 @@
-# Design Studio
+# School Design Studio
 
 A drag-and-drop design editor for schools — posters, flyers, newsletters,
 certificates and slides — that exports to PNG and **PowerPoint**.
 
-This is a fork of [palxiao/poster-design](https://github.com/palxiao/poster-design)
-(MIT), rewritten for an English-speaking, non-technical audience. The original
-is an excellent editor; it was just built for a Chinese market.
+Open it in a browser and you get a canvas, a page-size picker and panels down
+the left for templates, text, elements, photos and uploads. Drag things on,
+type over them, and export a print-ready PNG or an editable `.pptx` deck. There
+is no sign-up and no server to stand up: `npm install && npm start` is the whole
+setup, and the bundled content library ships in the repository as JSON.
+
+## Where this came from
+
+This is a fork of **[palxiao/poster-design](https://github.com/palxiao/poster-design)**
+by [palxiao](https://github.com/palxiao), released under the MIT licence. The
+original is an excellent editor — the canvas engine, the widget model, the
+history stack and the export pipeline are all theirs, and this fork keeps them.
+
+What it was not built for is an English-speaking school office. Upstream targets
+a Chinese market: the interface, code comments, font list, page-size presets and
+sample content are all Chinese, uploads post to a CDN this project has no
+account for, and the demo content is styled for e-commerce rather than a school
+noticeboard. This fork translates the interface, swaps the fonts and page sizes,
+replaces the content library, adds a dark theme and PowerPoint export, and makes
+uploads work without a backend. [What changed from upstream](#what-changed-from-upstream)
+lists all of it.
+
+It was written as an experiment for **School Planner** (<https://synthed.co>), a
+school planning app, with a view to embedding it there — see
+[Using it inside School Planner](#using-it-inside-school-planner). It runs
+perfectly well on its own, which is why it lives in its own repository.
+
+## What is in here
+
+| Path | What it is |
+| --- | --- |
+| `src/` | The editor — Vue 3, Pinia, TypeScript, built with Vite |
+| `public/` | Bundled fonts, stickers, masks and template thumbnails |
+| `service/src/mock/` | The content library: templates, elements and photos, as plain JSON |
+| `server/`, `serve.mjs` | A small Node server that answers the read-only content lookups so no backend is needed |
+| `service/` | Upstream's full Express backend, kept for saving designs (optional, not required to run) |
+| `packages/` | Upstream sub-packages — the colour picker and the background-removal tool |
+| `tools/` | Scripts that generated the fonts, stickers and templates in this fork ([details](#developer-tooling)) |
 
 ## Run it
 
@@ -114,9 +149,15 @@ at 1242×2208. Expect to replace them.
 ## What changed from upstream
 
 **Language.** Every user-visible string is English, written for teachers and
-office staff rather than designers. Most code comments were translated too. Two
-Chinese literals survive on purpose: `psd/index.ts` matches the Photoshop layer
-name `背景`, which is data inside a `.psd` file rather than UI text.
+office staff rather than designers. One Chinese literal survives on purpose:
+`psd/index.ts` matches the Photoshop layer name `背景`, which is data inside a
+`.psd` file rather than interface text.
+
+Comments are a different matter. The interface layer was translated as it was
+rewritten, but upstream's Chinese comments remain throughout `packages/`,
+`service/` and much of `src/` — a few hundred short trailing notes. They are
+comments only; nothing a user sees goes through them. Translating them is a
+standing chore rather than a blocker.
 
 **Fonts.** The Chinese font list is replaced with 20 open-licence English
 families (SIL OFL / Apache 2.0), bundled in `public/fonts` instead of loaded
@@ -210,6 +251,11 @@ src/views/components/ExportMenu.vue   the toolbar button
 
 ## Using it inside School Planner
 
+School Planner (<https://synthed.co>) is the app this fork was built for — a
+school planning tool for events, tasks and staff assignments. It is a separate,
+closed-source codebase, so nothing here depends on it; this section is a record
+of how the two would be joined, and of what a real deployment still needs.
+
 School Planner is React Router 7; this is Vue 3. The two do not share a runtime,
 so the practical options are:
 
@@ -242,16 +288,36 @@ Either way, the things a real deployment still needs:
 
 ## Developer tooling
 
-`experimental/tools/` holds the scripts used to build this fork:
+`tools/` holds the scripts that produced the content in this fork. None of them
+run during a build — the output is committed — but they are how you regenerate
+or extend it. Run them from the repository root. The `.mjs` scripts need Node
+20+ and the `.py` scripts need Python 3.9+; the screenshot scripts additionally
+need Puppeteer and a running server.
 
 | Script | Purpose |
 | --- | --- |
-| `fetch-fonts.mjs` | Downloads the font set and regenerates `fonts.css` |
-| `apply-i18n.py` + `i18n-map.json` | The translation pass |
+| `fetch-fonts.mjs` + `font-list.json` | Downloads the 20 bundled font families from Google Fonts and regenerates `public/fonts/fonts.css` |
+| `apply-i18n.py` + `i18n-map.json` | The translation pass — replaces Chinese source strings with English across the tree |
+| `add-content.mjs` | Imports a folder of your own SVGs or PNGs into Elements (shapes, stickers or masks) and rewrites the manifest |
+| `make-stickers.py` | Draws the bundled school sticker set as SVG and rewrites `png.json` |
+| `make-school-templates.py` | Generates the school template pack (`--remove` takes it back out) |
+| `make-template-covers.mjs` | Screenshots each template to produce its gallery thumbnail |
+| `make-samples.py`, `englishify-samples.py`, `make-sample-covers.mjs` | Build and re-render the sample element groups shown under Text |
 | `test-export.mjs` | End-to-end check: drives the editor, exports, unzips the `.pptx` and asserts the slide contents |
-| `shot.mjs`, `shot-state.mjs` | Screenshot helpers |
+| `shot.mjs`, `shot-state.mjs`, `screenshots.mjs` | Screenshot helpers used while working on the interface |
+
+[CONTENT.md](CONTENT.md) documents what each content type expects and walks
+through adding your own.
 
 ## Licence
 
-MIT, as upstream. The original copyright notice is kept in `LICENSE`. Bundled
-fonts carry their own licences, recorded in `public/fonts/LICENSES.md`.
+MIT, the same as upstream, and the original copyright notice is kept intact in
+[`LICENSE`](LICENSE) (upstream's Chinese-language copy is kept as
+[`LICENSE-ZH`](LICENSE-ZH)). Credit for the editor itself belongs to
+[palxiao/poster-design](https://github.com/palxiao/poster-design).
+
+Bundled fonts carry their own licences — all SIL OFL or Apache 2.0 — recorded in
+`public/fonts/LICENSES.md`. Sample photographs and their licences are listed in
+`service/src/mock/materials/LICENSES.md`. Photos fetched through the Photos
+panel at runtime come from Unsplash under the
+[Unsplash licence](https://unsplash.com/license).

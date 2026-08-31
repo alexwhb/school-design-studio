@@ -24,20 +24,22 @@ service/src/mock/
 After editing, run `npm run build` if you are serving the production build.
 In `npm run dev` the changes appear on reload.
 
-> **The `../tools/` scripts are not in this repository.** They sit one level up,
-> in the parent working tree, and are not tracked there either — so a fresh
-> clone of this fork will not have them and the commands below will not run.
-> The JSON they write *is* committed, so the content library works regardless;
-> what you lose without the scripts is the documented way to regenerate it.
+The commands below live in [`tools/`](tools) at the root of this repository, so
+they run straight out of a fresh clone. The JSON they write is committed too, so
+the content library works whether or not you ever run them — the scripts are the
+documented way to *regenerate* it, not a build step.
+
+The `.mjs` scripts need Node 20+; the `.py` scripts need Python 3.9+ and nothing
+else. Run both from the repository root.
 
 ## Shapes, stickers and masks
 
 Use the helper rather than writing JSON by hand:
 
 ```bash
-node ../tools/add-content.mjs shapes   ~/my-svgs      # Elements > Shapes
-node ../tools/add-content.mjs stickers ~/my-pngs      # Elements > Stickers
-node ../tools/add-content.mjs masks    ~/my-masks     # Elements > Masks
+node tools/add-content.mjs shapes   ~/my-svgs      # Elements > Shapes
+node tools/add-content.mjs stickers ~/my-pngs      # Elements > Stickers
+node tools/add-content.mjs masks    ~/my-masks     # Elements > Masks
 ```
 
 It reads every file in the folder, works out the dimensions, and appends to the
@@ -82,8 +84,8 @@ The thirty in the panel — apple, bus, trophy, clipboard, lab flask — are
 generated rather than drawn by hand or sourced:
 
 ```bash
-python3 ../tools/make-stickers.py          # write the SVGs and rewrite png.json
-python3 ../tools/make-stickers.py --list   # just name what it would write
+python3 tools/make-stickers.py          # write the SVGs and rewrite png.json
+python3 tools/make-stickers.py --list   # just name what it would write
 ```
 
 Editing one means editing its builder function and re-running. Each is a
@@ -177,9 +179,9 @@ Twelve templates — posters, a certificate, a door sign and two slides — are
 generated rather than hand-written:
 
 ```bash
-python3 ../tools/make-school-templates.py      # write them
-node ../tools/make-template-covers.mjs         # then shoot the thumbnails
-python3 ../tools/make-school-templates.py --remove   # or take them back out
+python3 tools/make-school-templates.py      # write them
+node tools/make-template-covers.mjs         # then shoot the thumbnails
+python3 tools/make-school-templates.py --remove   # or take them back out
 ```
 
 Editing a layout means editing the builder function for it and re-running,

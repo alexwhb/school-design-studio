@@ -1,0 +1,202 @@
+[
+	{
+		"id": 1,
+		"oid": 0,
+		"value": "Inter",
+		"alias": "Inter",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/inter-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 2,
+		"oid": 0,
+		"value": "Roboto",
+		"alias": "Roboto",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/roboto-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 3,
+		"oid": 0,
+		"value": "Open Sans",
+		"alias": "Open Sans",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/open-sans-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 4,
+		"oid": 0,
+		"value": "Lato",
+		"alias": "Lato",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/lato-400.woff2",
+		"bold": true
+	},
+	{
+		"id": 5,
+		"oid": 0,
+		"value": "Montserrat",
+		"alias": "Montserrat",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/montserrat-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 6,
+		"oid": 0,
+		"value": "Poppins",
+		"alias": "Poppins",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/poppins-400.woff2",
+		"bold": true
+	},
+	{
+		"id": 7,
+		"oid": 0,
+		"value": "Nunito",
+		"alias": "Nunito",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/nunito-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 8,
+		"oid": 0,
+		"value": "Quicksand",
+		"alias": "Quicksand",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/quicksand-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 9,
+		"oid": 0,
+		"value": "Archivo",
+		"alias": "Archivo",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/archivo-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 10,
+		"oid": 0,
+		"value": "Oswald",
+		"alias": "Oswald",
+		"kind": "display",
+		"preview": "",
+		"url": "/fonts/oswald-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 11,
+		"oid": 0,
+		"value": "Anton",
+		"alias": "Anton",
+		"kind": "display",
+		"preview": "",
+		"url": "/fonts/anton-400.woff2",
+		"bold": false
+	},
+	{
+		"id": 12,
+		"oid": 0,
+		"value": "Bebas Neue",
+		"alias": "Bebas Neue",
+		"kind": "display",
+		"preview": "",
+		"url": "/fonts/bebas-neue-400.woff2",
+		"bold": false
+	},
+	{
+		"id": 13,
+		"oid": 0,
+		"value": "Fredoka",
+		"alias": "Fredoka",
+		"kind": "display",
+		"preview": "",
+		"url": "/fonts/fredoka-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 14,
+		"oid": 0,
+		"value": "Merriweather",
+		"alias": "Merriweather",
+		"kind": "serif",
+		"preview": "",
+		"url": "/fonts/merriweather-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 15,
+		"oid": 0,
+		"value": "Playfair Display",
+		"alias": "Playfair Display",
+		"kind": "serif",
+		"preview": "",
+		"url": "/fonts/playfair-display-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 16,
+		"oid": 0,
+		"value": "Lora",
+		"alias": "Lora",
+		"kind": "serif",
+		"preview": "",
+		"url": "/fonts/lora-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 17,
+		"oid": 0,
+		"value": "Libre Baskerville",
+		"alias": "Libre Baskerville",
+		"kind": "serif",
+		"preview": "",
+		"url": "/fonts/libre-baskerville-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 18,
+		"oid": 0,
+		"value": "Source Serif 4",
+		"alias": "Source Serif",
+		"kind": "serif",
+		"preview": "",
+		"url": "/fonts/source-serif-4-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 19,
+		"oid": 0,
+		"value": "Caveat",
+		"alias": "Caveat",
+		"kind": "handwriting",
+		"preview": "",
+		"url": "/fonts/caveat-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 20,
+		"oid": 0,
+		"value": "Pacifico",
+		"alias": "Pacifico",
+		"kind": "handwriting",
+		"preview": "",
+		"url": "/fonts/pacifico-400.woff2",
+		"bold": false
+	}
+]

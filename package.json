@@ -12,7 +12,7 @@
     "prepared": "npm i && cd service && PUPPETEER_DOWNLOAD_BASE_URL=https://cdn.npmmirror.com/binaries/chrome-for-testing npm i",
     "v-build": "cross-env NODE_ENV=production && vite build",
     "v-build-hard": "cross-env NODE_ENV=production vue-tsc --noEmit && vite build",
-    "fetch-fonts": "node ../tools/fetch-fonts.mjs"
+    "fetch-fonts": "node tools/fetch-fonts.mjs"
   },
   "dependencies": {
     "@palxp/color-picker": "workspace:*",
