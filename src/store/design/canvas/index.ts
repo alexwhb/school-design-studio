@@ -52,7 +52,7 @@ const CanvasStore = defineStore<"canvasStore", TCanvasState, {}, TStoreAction>("
       this.dScreen.height = height
     },
     /** 修改标尺线 */
-    updateGuidelines(lines: TGuidelinesData) {
+    updateGuidelines(lines: Partial<TGuidelinesData>) {
       this.guidelines = { ...this.guidelines, ...lines }
     },
     /** 强制重绘画布 */

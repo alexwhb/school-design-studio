@@ -41,6 +41,43 @@
     }
   }
 
+  // Alignment guides. A line that appears mid-drag is saying "this edge is
+  // level with that one", which is a different thing from the selection box —
+  // so it is a different colour, as it is in Adobe XD.
+  //
+  // The casing is what makes it readable on artwork rather than on a white
+  // page: a magenta line over a magenta photograph is nothing, but a magenta
+  // line with a pale hairline either side is always one or the other. The
+  // spread is squashed a little by the scale() Moveable puts on these, which
+  // is why the core still reads as the thicker of the two.
+  .moveable-line.moveable-guideline,
+  .moveable-line.moveable-gap {
+    background: @snap-line;
+    box-shadow: 0 0 0 1px @guide-casing;
+  }
+  // Dashed lines mark inner bounds. A casing cannot follow the dashes — it
+  // traces the box — so these keep the colour and go without.
+  .moveable-line.moveable-dashed {
+    background: transparent;
+    box-shadow: none;
+    &.moveable-horizontal {
+      border-top-color: @snap-line;
+    }
+    &.moveable-vertical {
+      border-left-color: @snap-line;
+    }
+  }
+  // The px figure on a gap or a snap distance. Coloured text has the same
+  // problem the line does, so it is a chip rather than bare glyphs.
+  .moveable-size-value {
+    background: @snap-line;
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: @radius-sm;
+    font-size: @text-xs;
+    line-height: 1.5;
+  }
+
   // 旋转按钮
   .moveable-rotation {
     height: 35px;
