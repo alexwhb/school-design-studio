@@ -17,7 +17,7 @@
       <i class="icon sd-AI_zhineng" />
       <div class="text"><span>Remove background</span> <span class="desc">Upload a picture and remove its background</span></div>
     </div>
-    <imageCutout ref="imageCutoutRef" />
+    <imageCutout ref="imageCutoutRef" @done="cutOutDone" />
   </div>
 </template>
 
@@ -32,6 +32,8 @@ import { useRoute } from 'vue-router'
 import imageCutout from '@/components/business/image-cutout'
 // import { useSetupMapGetters } from '@/common/hooks/mapGetters'
 import { wQrcodeSetting } from '../../widgets/wQrcode/wQrcodeSetting'
+import wImageSetting from '../../widgets/wImage/wImageSetting'
+import type { LocalUpload } from '@/common/methods/localUploads'
 import { storeToRefs } from 'pinia'
 import { useControlStore, useCanvasStore, useWidgetStore } from '@/store'
 
@@ -80,6 +82,27 @@ function addQrcode() {
 function openImageCutout() {
   if (!imageCutoutRef.value) return
   imageCutoutRef.value.open()
+}
+
+/**
+ * Puts the finished cut-out on the page.
+ *
+ * Opened from a picture already on the page, the dialog replaces that picture
+ * and this never runs. Opened from here there is nothing to replace, and
+ * downloading a file only to upload it again is not what anyone wants.
+ */
+function cutOutDone(saved: LocalUpload) {
+  controlStore.setShowMoveable(false)
+  const setting = JSON.parse(JSON.stringify(wImageSetting))
+  const { width: pW, height: pH } = dPage.value
+  // Fit it inside the page rather than dropping a 2400px photo on an A4 poster.
+  const scale = Math.min(1, (pW * 0.6) / saved.width, (pH * 0.6) / saved.height)
+  setting.width = Math.round(saved.width * scale)
+  setting.height = Math.round(saved.height * scale)
+  setting.imgUrl = saved.url
+  setting.left = pW / 2 - setting.width / 2
+  setting.top = pH / 2 - setting.height / 2
+  widgetStore.addWidget(setting)
 }
 </script>
 

@@ -1,39 +1,44 @@
 <!--
- * @Author: ShawnPhang
- * @Date: 2024-03-03 19:00:00
- * @Description: 裁剪组件
- * @LastEditors: ShawnPhang <https://m.palxp.cn>
- * @Date: 2024-03-03 19:00:00
+  Remove background.
+
+  Upstream shipped this as a demo: whichever file you picked was thrown away and
+  a stock photo was loaded from an image host instead, then a second stock photo
+  stood in for the result. The matting service behind it is not ours to call, so
+  the work is done here instead, by the brush-based eraser in
+  packages/image-extraction. Nothing leaves the browser, and the result lands in
+  the Uploads panel like every other picture.
 -->
 <template>
-  <el-dialog v-model="state.show" title="AI Remove background (demo)" align-center width="650" @close="handleClose">
-    <uploader v-if="!state.rawImage" :hold="true" :drag="true" :multiple="true" class="uploader" @load="handleUploaderLoad">
+  <el-dialog v-model="state.show" title="Remove background" align-center width="650" @close="handleClose">
+    <uploader v-if="!state.rawImage" :hold="true" :drag="true" class="uploader" @load="handleUploaderLoad">
       <div class="uploader__box">
         <upload-filled style="width: 64px; height: 64px" />
-        <!-- <div class="el-upload__text">Drop a file here or choose one<em>Upload image</em></div> -->
-        <div class="el-upload__text">Automatic background removal needs the backend service running.</div>
+        <div class="el-upload__text">Choose a picture, then brush away the parts you don't want.</div>
       </div>
-      <div class="el-upload__tip el-upload__text"><em>Upload any image to try the eraser and touch-up tools.</em></div>
+      <div class="el-upload__tip el-upload__text"><em>It stays on this computer. Nothing is uploaded.</em></div>
     </uploader>
-    <el-progress v-if="!state.cutImage && state.progressText" :percentage="state.progress">
-      <el-button text>
-        {{ state.progressText }} <span v-show="state.progress">{{ state.progress }}%</span>
-      </el-button>
-    </el-progress>
-    <div class="content">
-      <div v-show="state.rawImage" v-loading="!state.cutImage" :style="{ width: state.offsetWidth ? state.offsetWidth + 'px' : '100%' }" class="scan-effect transparent-bg">
-        <img ref="raw" :style="{ 'clip-path': 'inset(0 0 0 ' + state.percent + '%)' }" :src="state.rawImage" alt="" />
+
+    <div v-else class="content">
+      <div :style="{ width: state.offsetWidth ? state.offsetWidth + 'px' : '100%' }" class="scan-effect transparent-bg">
+        <img ref="raw" :style="{ clipPath: state.cutImage ? `inset(0 0 0 ${state.percent}%)` : undefined }" :src="state.rawImage" alt="" @load="measure" />
         <img v-show="state.cutImage" :src="state.cutImage" alt="Result" @mousemove="mousemove" />
         <div v-show="state.cutImage" :style="{ left: state.percent + '%' }" class="scan-line"></div>
       </div>
+      <p v-if="state.cutImage" class="hint">Move the pointer across the picture to compare it with the original.</p>
     </div>
 
     <template #footer>
       <span class="dialog-footer">
-        <el-button v-show="state.cutImage && state.toolModel" @click="clear">Start over</el-button>
-        <el-button v-show="state.cutImage" type="primary" plain @click="edit">Edit</el-button>
-        <el-button v-show="state.cutImage && state.toolModel" type="primary" @click="download">Download</el-button>
-        <el-button v-show="state.cutImage && !state.toolModel" v-loading="state.loading" type="primary" @click="cutDone"> {{ state.loading ? 'Uploading…' : 'Background removed' }} </el-button>
+        <template v-if="state.cutImage">
+          <el-button v-show="state.toolModel" @click="clear">Start over</el-button>
+          <el-button plain @click="openEraser">Edit again</el-button>
+          <el-button v-show="state.toolModel" @click="download">Download</el-button>
+          <el-button type="primary" :loading="state.loading" @click="cutDone">{{ state.loading ? 'Saving…' : 'Use this picture' }}</el-button>
+        </template>
+        <template v-else-if="state.rawImage">
+          <el-button v-show="state.toolModel" @click="clear">Choose another</el-button>
+          <el-button type="primary" @click="openEraser">Erase background</el-button>
+        </template>
       </span>
     </template>
     <ImageExtraction ref="matting" />
@@ -42,24 +47,24 @@
 
 <script lang="ts" setup>
 import { reactive, nextTick, ref } from 'vue'
-import { ElProgress } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
 import uploader from '@/components/common/Uploader/index.vue'
 import _dl from '@/common/methods/download'
 import ImageExtraction from '../ImageExtraction/index.vue'
-import { selectImageFile, uploadCutPhotoToCloud } from './method'
+import { saveCutOut } from './method'
 import { useControlStore } from '@/store'
+import type { LocalUpload } from '@/common/methods/localUploads'
 
 export type TImageCutoutState = {
-    show: boolean;
-    rawImage: string;
-    cutImage: string;
-    offsetWidth: number;
-    percent: number;
-    progress: number;
-    progressText: string;
-    toolModel: boolean;
-    loading: boolean;
+  show: boolean
+  rawImage: string
+  cutImage: string
+  offsetWidth: number
+  percent: number
+  /** True when opened from the Tools panel, false when opened from a picture already on the page. */
+  toolModel: boolean
+  loading: boolean
 }
 
 const controlStore = useControlStore()
@@ -69,48 +74,53 @@ const state = reactive<TImageCutoutState>({
   cutImage: '',
   offsetWidth: 0,
   percent: 0,
-  progress: 0,
-  progressText: '',
   toolModel: true,
   loading: false,
 })
 
-let fileName: string = 'unknow'
-let isRuning: boolean = false
+let fileName = 'cut-out.png'
+let isRunning = false
+/** The eraser opens itself once per picture, but not again after a Start over. */
+let opened = false
 
 const emits = defineEmits<{
-  (event: "done", data: string): void
+  (event: 'done', data: LocalUpload): void
 }>()
 
-const raw = ref(null)
+const raw = ref<HTMLImageElement | null>(null)
 const matting = ref<typeof ImageExtraction | null>(null)
 
-const open = (file: File) => {
+const open = (file?: File) => {
   clear()
-  state.loading = false
   state.show = true
+  // Opened from a picture on the page: that picture is the subject, so there is
+  // nothing to choose and the result replaces it rather than being downloaded.
+  state.toolModel = !file
   controlStore.setShowMoveable(false)
   nextTick(() => {
-    if (file) {
-      state.toolModel = false // Hide the download and clear buttons while editing
-      handleUploaderLoad(file)
-    }
+    file && handleUploaderLoad(file)
   })
 }
 
-defineExpose({
-  open
-})
+defineExpose({ open })
 
 const handleUploaderLoad = (file: File) => {
-  selectImageFile(state as TImageCutoutState, raw, file, (result, name) => {
-    fileName = name
-    // TODO: 模拟演示
-    // const resultImage = 'https://pic.imgdb.cn/item/6522253ec458853aefb0b013.webp' // URL.createObjectURL(result)
-    const resultImage = 'https://s2.loli.net/2024/08/16/fSxD9wlpiu3IKJv.png'
-    state.rawImage && (state.cutImage = resultImage)
-    requestAnimationFrame(run)
-  })
+  state.rawImage && URL.revokeObjectURL(state.rawImage)
+  // An object URL, not a data URL: this only has to outlive the dialog, the
+  // eraser reads it back with fetch(), and base64 would double a phone photo
+  // in memory for no gain. The result is what gets stored.
+  state.rawImage = URL.createObjectURL(file)
+  fileName = file.name || fileName
+  opened = false
+}
+
+/** Sizes the comparison box to the picture as laid out, so both layers line up. */
+const measure = () => {
+  state.offsetWidth = raw.value?.offsetWidth || 0
+  if (!opened) {
+    opened = true
+    openEraser()
+  }
 }
 
 const handleClose = () => {
@@ -118,7 +128,7 @@ const handleClose = () => {
 }
 
 const mousemove = (e: MouseEvent) => {
-  !isRuning && (state.percent = (e.offsetX / (e.target as any).width) * 100)
+  !isRunning && (state.percent = (e.offsetX / (e.target as HTMLImageElement).width) * 100)
 }
 
 const download = () => {
@@ -126,36 +136,48 @@ const download = () => {
 }
 
 const clear = () => {
-  URL.revokeObjectURL(state.rawImage)
+  state.rawImage && URL.revokeObjectURL(state.rawImage)
   state.rawImage = ''
   state.cutImage = ''
   state.percent = 0
   state.offsetWidth = 0
+  state.loading = false
+  opened = false
 }
 
+/** Sweeps the reveal across once so it is obvious what changed. */
 const run = () => {
   state.percent += 1
-  isRuning = true
-  state.percent < 100 ? requestAnimationFrame(run) : (isRuning = false)
+  isRunning = true
+  state.percent < 100 ? requestAnimationFrame(run) : (isRunning = false)
 }
 
 const cutDone = async () => {
   state.loading = true
-  const url = await uploadCutPhotoToCloud(state.cutImage)
-  emits('done', url)
+  const saved = await saveCutOut(state.cutImage)
+  state.loading = false
+  if (!saved) {
+    ElMessage.error('That picture could not be saved. Please try again.')
+    return
+  }
+  emits('done', saved)
   state.show = false
   handleClose()
 }
 
-const edit = () => {
+const openEraser = () => {
   if (!matting.value) return
-  matting.value.open(state.rawImage, state.cutImage, (base64: string) => {
+  // The eraser masks whatever is opaque in the second picture, so handing it the
+  // original as its own starting mask means "everything is kept" — which is the
+  // right place to start erasing from. After one pass it re-opens on the result,
+  // so a second go touches up rather than starting again.
+  matting.value.open(state.rawImage, state.cutImage || state.rawImage, (base64: string) => {
+    if (!base64) return
     state.cutImage = base64
     state.percent = 0
     requestAnimationFrame(run)
   })
 }
-
 </script>
 
 <style lang="less" scoped>
@@ -171,14 +193,20 @@ const edit = () => {
 .content {
   position: relative;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+}
+.hint {
+  margin: 12px 0 0;
+  color: @ink-3;
+  font-size: @text-sm;
 }
 .scan-effect {
   position: relative;
   height: 50vh;
   overflow: hidden;
   img {
-    // width: 100%;
     height: 100%;
     object-fit: contain;
     position: absolute;
@@ -191,13 +219,6 @@ const edit = () => {
   width: 1.5px;
   height: 100%;
   background: rgba(255, 255, 255, 0.7);
-  // background-image: linear-gradient(to top, transparent, rgba(255, 255, 255, 0.7), transparent);
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
 }
-
-.progress {
-  width: 100%;
-}
 </style>
-
-
