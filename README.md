@@ -160,7 +160,7 @@ rewritten, but upstream's Chinese comments remain throughout `packages/`,
 comments only; nothing a user sees goes through them. Translating them is a
 standing chore rather than a blocker.
 
-**Fonts.** The Chinese font list is replaced with 20 open-licence English
+**Fonts.** The Chinese font list is replaced with 26 open-licence English
 families (SIL OFL / Apache 2.0), bundled in `public/fonts` instead of loaded
 from a CDN. That means they work offline and render identically in the editor
 and in every export. Google serves most of them as a single variable file, so
@@ -338,12 +338,13 @@ need Puppeteer and a running server.
 
 | Script | Purpose |
 | --- | --- |
-| `fetch-fonts.mjs` + `font-list.json` | Downloads the 20 bundled font families from Google Fonts and regenerates `public/fonts/fonts.css` |
+| `fetch-fonts.mjs` + `font-list.json` | Downloads the 26 bundled font families from Google Fonts and regenerates `public/fonts/fonts.css` |
 | `apply-i18n.py` + `i18n-map.json` | The translation pass — replaces Chinese source strings with English across the tree |
 | `add-content.mjs` | Imports a folder of your own SVGs or PNGs into Elements (shapes, stickers or masks) and rewrites the manifest |
 | `make-stickers.py` | Draws the bundled school sticker set as SVG and rewrites `png.json` |
 | `make-school-templates.py` | Generates the school template pack (`--remove` takes it back out) |
-| `make-template-covers.mjs` | Screenshots each template to produce its gallery thumbnail |
+| `make-slide-themes.py` | Generates the five themed slide decks (`--remove` takes them back out) |
+| `make-template-covers.mjs` | Screenshots each template to produce its gallery thumbnail (`--pack=` narrows it to one pack) |
 | `make-samples.py`, `englishify-samples.py`, `make-sample-covers.mjs` | Build and re-render the sample element groups shown under Text |
 | `test-export.mjs` | End-to-end check: drives the editor, exports, unzips the `.pptx` and asserts the slide contents |
 | `shot.mjs`, `shot-state.mjs`, `screenshots.mjs` | Screenshot helpers used while working on the interface |

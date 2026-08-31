@@ -199,10 +199,50 @@ bundled Google Fonts under the OFL, and there are no photographs and no remote
 URLs. Layouts are original; the copy is placeholder text for a school to
 overwrite.
 
-The gallery holds the pack and nothing else. The two upstream demo templates
-that used to ship — Chinese-language phone posters, ids 1 and 2, with covers
-hotlinked from an image host that was often unreachable — have been removed,
-along with the two images under `mock/assets/` that only they referenced.
+The two upstream demo templates that used to ship — Chinese-language phone
+posters, ids 1 and 2, with covers hotlinked from an image host that was often
+unreachable — have been removed, along with the two images under `mock/assets/`
+that only they referenced. The gallery is the two generated packs and nothing
+else, so removing both leaves the Templates panel empty rather than falling
+back to demo content.
 
-That makes the pack the whole gallery, so `--remove` now leaves the Templates
-panel empty rather than falling back to demo content.
+### The slide themes
+
+Twenty-five more slides, ids 201–225, marked `"pack": "slide-themes"`:
+
+```bash
+python3 tools/make-slide-themes.py                       # write them
+node tools/make-template-covers.mjs --pack=slide-themes  # then shoot the thumbnails
+python3 tools/make-slide-themes.py --remove              # or take them back out
+```
+
+They are five decks of five rather than twenty-five separate layouts. Each deck
+— Editorial, Swiss, Academic, Dark, Pastel — covers the same evening: a cover,
+the year in numbers, results, facilities, and the year ahead. A school picks a
+theme and gets five slides that already agree with each other, which is the
+thing that is tedious to do by hand.
+
+The layouts are denser than the school pack's: real tables, four-up figures,
+two-column body copy, and a ruled placeholder where a photograph goes. Three
+things follow from that.
+
+- **Heights come from a wrap estimate**, not from the browser. `text()` counts
+  the lines a string will take at its width and sizes the box to fit, so
+  rewriting the copy moves what is underneath it only if you rebuild. The
+  estimate is deliberately generous: over-guessing leaves a gap, under-guessing
+  overlaps the next thing down. `ADVANCE` holds the per-family character width
+  it works from.
+- **Per cents are written `&#37;`.** Template text has to be free of a literal
+  `%` (see above) and these slides are full of test scores, so `text()` swaps
+  it for the entity. Both exports read the text back through the DOM, so it
+  comes out as `%` in the .pptx and the .png alike.
+- **The tables are drawn, not laid out.** Each column is a text box on a shared
+  right edge with a rule under the row, and `head_boxes()` widens the headers
+  leftward so "DISTRICT" fits over "67&#37;" without colliding with the column
+  before it.
+
+The pack needs six fonts the school pack does not — Space Grotesk, Karla,
+Spectral, DM Serif Display, IBM Plex Mono and JetBrains Mono. They are bundled
+like the rest (`npm run fetch-fonts`, all SIL OFL) and appear in the text
+panel, the last two under a new Monospace group.
+

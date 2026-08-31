@@ -106,5 +106,230 @@
     "height": 1080,
     "state": 1,
     "pack": "school-events"
+  },
+  {
+    "id": 201,
+    "cover": "/covers/template-201.png",
+    "title": "Editorial slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 202,
+    "cover": "/covers/template-202.png",
+    "title": "Editorial slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 203,
+    "cover": "/covers/template-203.png",
+    "title": "Editorial slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 204,
+    "cover": "/covers/template-204.png",
+    "title": "Editorial slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 205,
+    "cover": "/covers/template-205.png",
+    "title": "Editorial slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 206,
+    "cover": "/covers/template-206.png",
+    "title": "Swiss slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 207,
+    "cover": "/covers/template-207.png",
+    "title": "Swiss slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 208,
+    "cover": "/covers/template-208.png",
+    "title": "Swiss slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 209,
+    "cover": "/covers/template-209.png",
+    "title": "Swiss slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 210,
+    "cover": "/covers/template-210.png",
+    "title": "Swiss slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 211,
+    "cover": "/covers/template-211.png",
+    "title": "Academic slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 212,
+    "cover": "/covers/template-212.png",
+    "title": "Academic slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 213,
+    "cover": "/covers/template-213.png",
+    "title": "Academic slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 214,
+    "cover": "/covers/template-214.png",
+    "title": "Academic slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 215,
+    "cover": "/covers/template-215.png",
+    "title": "Academic slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 216,
+    "cover": "/covers/template-216.png",
+    "title": "Dark slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 217,
+    "cover": "/covers/template-217.png",
+    "title": "Dark slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 218,
+    "cover": "/covers/template-218.png",
+    "title": "Dark slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 219,
+    "cover": "/covers/template-219.png",
+    "title": "Dark slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 220,
+    "cover": "/covers/template-220.png",
+    "title": "Dark slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 221,
+    "cover": "/covers/template-221.png",
+    "title": "Pastel slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 222,
+    "cover": "/covers/template-222.png",
+    "title": "Pastel slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 223,
+    "cover": "/covers/template-223.png",
+    "title": "Pastel slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 224,
+    "cover": "/covers/template-224.png",
+    "title": "Pastel slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
+  },
+  {
+    "id": 225,
+    "cover": "/covers/template-225.png",
+    "title": "Pastel slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "slide-themes"
   }
 ]
