@@ -22,14 +22,21 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, type PropType } from 'vue'
 import { ElDropdown, ElDropdownItem, ElDropdownMenu } from 'element-plus'
 import useConfirm from '@/common/methods/confirm'
+
+/** One entry in a card's ... menu: what it is called, and what it does. */
+type TEditOption = {
+  name: string
+  fn: (data: any) => void
+}
 
 export default defineComponent({
   components: { ElDropdown, ElDropdownItem, ElDropdownMenu },
   props: {
     options: {
+      type: Array as PropType<TEditOption[]>,
       default: () => [],
     },
     data: {},

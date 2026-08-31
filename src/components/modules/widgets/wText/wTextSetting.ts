@@ -1,4 +1,5 @@
 import { StyleValue } from "vue"
+import { type TTextEffect } from './effectStyle'
 
 export type TwTextData = {
   name: string
@@ -25,7 +26,7 @@ export type TwTextData = {
   textDecoration: string
   color: string
   textAlign: StyleProperty.TextAlign
-  textAlignLast: StyleProperty.TextAlign
+  textAlignLast?: StyleProperty.TextAlign
   text: string
   opacity: number
   backgroundColor: string
@@ -37,30 +38,9 @@ export type TwTextData = {
     minHeight: number
     dir: string
   },
-  textEffects?: {
-    filling: {
-      enable: boolean
-      type: number
-      color: string
-    }
-    stroke: {
-      enable: boolean
-      width: number
-      color: string
-    }
-    shadow: {
-      enable: boolean
-      offsetY: number
-      offsetX: number
-      blur: number
-      color: string
-    }
-    offset: {
-      enable: boolean
-      x: number
-      y: number
-    }
-  }[]
+  // Every layer is a partial: a preset stores only the features it uses, and
+  // the panel fills the rest in when you open it. See effectStyle.ts.
+  textEffects?: TTextEffect[]
   width?: number
   height?: number
   degree?: number

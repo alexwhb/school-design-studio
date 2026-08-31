@@ -48,6 +48,12 @@ const FAMILIES = [
 	['Source Serif 4', 'Source Serif 4', 'Source Serif', [400, 700], 'serif'],
 	['Caveat', 'Caveat', 'Caveat', [400, 700], 'handwriting'],
 	['Pacifico', 'Pacifico', 'Pacifico', [400], 'handwriting'],
+	['Space Grotesk', 'Space Grotesk', 'Space Grotesk', [400, 700], 'sans'],
+	['Karla', 'Karla', 'Karla', [400, 700], 'sans'],
+	['Spectral', 'Spectral', 'Spectral', [400, 700], 'serif'],
+	['DM Serif Display', 'DM Serif Display', 'DM Serif Display', [400], 'serif'],
+	['IBM Plex Mono', 'IBM Plex Mono', 'IBM Plex Mono', [400, 700], 'mono'],
+	['JetBrains Mono', 'JetBrains Mono', 'JetBrains Mono', [400, 700], 'mono'],
 ]
 
 const slug = (s) =>

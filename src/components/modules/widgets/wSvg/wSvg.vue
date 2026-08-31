@@ -255,6 +255,7 @@ function color2obj() {
 function updateRecord() {
   if (dActiveElement.value?.uuid === props.params.uuid) {
     let record = dActiveElement.value.record
+    if (!record) return
     if (widgetRef.value) {
       record.width = widgetRef.value.offsetWidth
       record.height = widgetRef.value.offsetHeight

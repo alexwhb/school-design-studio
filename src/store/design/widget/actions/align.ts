@@ -24,7 +24,9 @@ export function updateAlign(store: TWidgetStore, { align, uuid, group }: TUpdate
 
   const widgets = store.dWidgets
   const target = uuid ? widgets.find((item: any) => item.uuid === uuid) : store.dActiveElement
-  let parent = group || pageStore.dPage
+  // The page stands in as the parent when an element is aligned against the
+  // page itself. A page has no record, hence the optional reads below.
+  let parent: TdWidgetData = group || pageStore.dPage
 
   if (!target) return
 
@@ -35,8 +37,8 @@ export function updateAlign(store: TWidgetStore, { align, uuid, group }: TUpdate
 
   let left = target.left
   let top = target.top
-  let pw = parent.record.width || parent.width
-  let ph = parent.record.height || parent.height
+  let pw = parent.record?.width || parent.width
+  let ph = parent.record?.height || parent.height
 
   if (parent.uuid === '-1') {
     pw = parent.width

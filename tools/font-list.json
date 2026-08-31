@@ -198,5 +198,65 @@
 		"preview": "",
 		"url": "/fonts/pacifico-400.woff2",
 		"bold": false
+	},
+	{
+		"id": 21,
+		"oid": 0,
+		"value": "Space Grotesk",
+		"alias": "Space Grotesk",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/space-grotesk-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 22,
+		"oid": 0,
+		"value": "Karla",
+		"alias": "Karla",
+		"kind": "sans",
+		"preview": "",
+		"url": "/fonts/karla-400-700.woff2",
+		"bold": false
+	},
+	{
+		"id": 23,
+		"oid": 0,
+		"value": "Spectral",
+		"alias": "Spectral",
+		"kind": "serif",
+		"preview": "",
+		"url": "/fonts/spectral-400.woff2",
+		"bold": true
+	},
+	{
+		"id": 24,
+		"oid": 0,
+		"value": "DM Serif Display",
+		"alias": "DM Serif Display",
+		"kind": "serif",
+		"preview": "",
+		"url": "/fonts/dm-serif-display-400.woff2",
+		"bold": false
+	},
+	{
+		"id": 25,
+		"oid": 0,
+		"value": "IBM Plex Mono",
+		"alias": "IBM Plex Mono",
+		"kind": "mono",
+		"preview": "",
+		"url": "/fonts/ibm-plex-mono-400.woff2",
+		"bold": true
+	},
+	{
+		"id": 26,
+		"oid": 0,
+		"value": "JetBrains Mono",
+		"alias": "JetBrains Mono",
+		"kind": "mono",
+		"preview": "",
+		"url": "/fonts/jetbrains-mono-400-700.woff2",
+		"bold": false
 	}
 ]

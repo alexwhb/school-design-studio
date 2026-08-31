@@ -27,15 +27,7 @@
       <div
         v-for="(ef, efi) in params.textEffects"
         :key="efi + 'effect'"
-        :style="{
-          fontFamily: `'${params.fontClass.value}'`,
-          color: ef.filling && ef.filling.enable && ef.filling.type === 0 ? ef.filling.color : 'transparent',
-          WebkitTextStroke: ef.stroke && ef.stroke.enable ? `${ef.stroke.width}px ${ef.stroke.color}` : undefined,
-          textShadow: ef.shadow && ef.shadow.enable ? `${ef.shadow.offsetX}px ${ef.shadow.offsetY}px ${ef.shadow.blur}px ${ef.shadow.color}` : undefined,
-          backgroundImage: ef.filling && ef.filling.enable ? (ef.filling.type === 0 ? undefined : getGradientOrImg(ef)) : undefined,
-          WebkitBackgroundClip: ef.filling && ef.filling.enable ? (ef.filling.type === 0 ? undefined : 'text') : undefined,
-          transform: ef.offset && ef.offset.enable ? `translate(${ef.offset.x}px, ${ef.offset.y}px)` : undefined,
-        }"
+        :style="{ fontFamily: `'${params.fontClass.value}'`, ...effectStyle(ef) }"
         class="edit-text effect-text"
         spellcheck="false"
         v-html="params.text"
@@ -50,7 +42,7 @@
 
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue'
-import getGradientOrImg from './getGradientOrImg'
+import effectStyle from './effectStyle'
 import { wTextSetting } from './wTextSetting'
 
 export type TwTextParams = {
@@ -78,7 +70,7 @@ onMounted(() => {
 })
 
 defineExpose({
-  getGradientOrImg,
+  effectStyle,
   widget,
 })
 </script>

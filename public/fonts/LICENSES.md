@@ -31,6 +31,12 @@ properly instead of being faked by the browser.
 | Source Serif 4 | SIL Open Font License 1.1 |
 | Caveat | SIL Open Font License 1.1 |
 | Pacifico | SIL Open Font License 1.1 |
+| Space Grotesk | SIL Open Font License 1.1 |
+| Karla | SIL Open Font License 1.1 |
+| Spectral | SIL Open Font License 1.1 |
+| DM Serif Display | SIL Open Font License 1.1 |
+| IBM Plex Mono | SIL Open Font License 1.1 |
+| JetBrains Mono | SIL Open Font License 1.1 |
 
 Full licence texts: <https://openfontlicense.org> and
 <https://www.apache.org/licenses/LICENSE-2.0>.

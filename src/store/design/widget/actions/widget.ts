@@ -16,12 +16,19 @@ type TUpdateWidgetKey = keyof TdWidgetData
 export type TUpdateWidgetPayload = {
   uuid: string
   key: TUpdateWidgetKey
-  value: number | string | boolean | Record<string, any>
+  /** `null` removes the field, which is how an optional setting is cleared. */
+  value: number | string | boolean | Record<string, any> | null
 }
 
 /** 更新组件数据 */
 export function updateWidgetData(store: TWidgetStore, { uuid, key, value }: TUpdateWidgetPayload) {
   const widget = store.dWidgets.find((item) => item.uuid === uuid)
+  // Clearing an optional setting should leave no trace in the saved design,
+  // rather than an empty object every later reader has to allow for.
+  if (widget && value === null) {
+    delete widget[key]
+    return
+  }
   if (widget && widget[key] !== value) {
     switch (key) {
       case 'width':

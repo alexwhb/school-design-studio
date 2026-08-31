@@ -262,7 +262,7 @@ function changeStyleIconList() {
   for (let i = 0; i < state.styleIconList2.length; i++) {
     let key = state.styleIconList2[i].key
     state.styleIconList2[i].select = false
-    if (['textAlign', 'textAlignLast'].includes(key || '') && state.innerElement[key] === state.styleIconList2[i].value) {
+    if (['textAlign', 'textAlignLast'].includes(key || '') && (state.innerElement as Record<string, any>)[key || ''] === state.styleIconList2[i].value) {
       state.styleIconList2[i].select = true
       continue
     }

@@ -1,76 +1,49 @@
 <!--
- * @Author: ShawnPhang
- * @Date: 2024-04-09 11:24:57
- * @Description: 创建/编辑Page size
- * @LastEditors: ShawnPhang <https://m.palxp.cn>
- * @LastEditTime: 2024-04-16 17:11:59
+  Starting a new design.
+
+  Only that. This dialog used to double as the page-size editor for an existing
+  design, with a checkbox deciding whether the artwork moved with it — but that
+  only ever resized the page you were looking at, which quietly left a
+  multi-page design with pages of different sizes. Resizing something that
+  already exists is its own question, and it is asked in resize-design/.
 -->
 <template>
   <div>
-    <el-dialog v-model="dialogVisible" center destroy-on-close :align-center="false" :title="params ? 'Page size' : 'New blank design'" width="380" draggable>
-      <!-- <el-divider content-position="left">自定义尺寸</el-divider> -->
-      <el-checkbox v-if="params" v-model="isAdaptive" label="Resize and reposition everything to fit" size="large" />
-      <sizeEditor :params="page" :class="params ? 'editor-mode' : 'add-mode'">
-        <el-button @click="finish" plain size="large" type="primary">{{ params ? 'Apply' : 'Create' }}</el-button>
+    <el-dialog v-model="dialogVisible" center destroy-on-close :align-center="false" title="New blank design" width="380" draggable>
+      <sizeEditor :params="page" class="add-mode">
+        <el-button @click="finish" plain size="large" type="primary">Create</el-button>
       </sizeEditor>
       <el-divider content-position="left">Common sizes</el-divider>
-      <ul class="pre-list">
-        <li @click="applySize(s)" class="item" v-for="(s, si) in sizes" :key="'s' + si">
-          <i :class="['icon', s.icon]" /> {{ s.name }} <span class="info">{{ s.width }} × {{ s.height }} px</span>
-        </li>
-      </ul>
-      <!-- <template #footer>
-        <el-button type="primary" @click="dialogVisible = false"> Confirm </el-button>
-      </template> -->
+      <sizePresets :width="page.width" :height="page.height" @pick="applySize" />
     </el-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, Ref } from 'vue'
-import { ElCheckbox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import sizeEditor from './sizeEditor.vue'
-import sizes from '@/assets/data/PageSizeData'
-import { useWidgetStore, useControlStore } from '@/store';
+import sizePresets from './sizePresets.vue'
+import { useControlStore } from '@/store'
 
 const router = useRouter()
 const controlStore = useControlStore()
-const widgetStore = useWidgetStore()
-const props = withDefaults(
-  defineProps<{
-    params?: any
-  }>(),
-  {
-    params: undefined,
-  },
-)
 const dialogVisible: Ref<boolean> = ref(false)
-const isAdaptive: Ref<boolean> = ref(true)
-const page: any = ref({ width: 100, height: 100 })
+const page = ref({ width: 1275, height: 1650 })
 
-const applySize = ({ width, height }: any) => {
+const applySize = ({ width, height }: { width: number; height: number }) => {
   page.value.width = width
   page.value.height = height
 }
 
 const open = () => {
   controlStore.setShowMoveable(false) // Clear the previous selection box
-  if (props.params) {
-    page.value.width = props.params.width
-    page.value.height = props.params.height
-  }
   dialogVisible.value = true
 }
 
 function finish() {
   const { width, height } = page.value
-  if (props.params) {
-    const lastPageData = JSON.parse(JSON.stringify(props.params))
-    props.params.width = width
-    props.params.height = height
-    isAdaptive.value && widgetStore.autoResizeAll(lastPageData)
-  } else window.open(router.resolve(`/home?mode=create&w_h=${width}*${height}`).href, '_blank')
+  window.open(router.resolve(`/home?mode=create&w_h=${width}*${height}`).href, '_blank')
 }
 
 defineExpose({
@@ -82,33 +55,7 @@ defineExpose({
 :deep(.el-dialog__header) {
   padding-bottom: 7px !important;
 }
-.editor-mode {
-  padding: 0 0 0.5rem 0;
-}
 .add-mode {
   padding: 1rem 0 0.5rem 0;
-}
-.pre-list {
-  margin: 1rem 0;
-  height: 245px;
-  overflow-y: scroll;
-  .item {
-    padding: 10px 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-    color: @ink;
-    .icon {
-      margin-right: 0.2rem;
-    }
-    .info {
-      margin-left: 0.4rem;
-      font-size: 12px;
-      color: @ink-4;
-    }
-  }
-  .item:hover {
-    background-color: @surface-2;
-  }
 }
 </style>

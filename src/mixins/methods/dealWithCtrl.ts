@@ -26,6 +26,10 @@ export default function dealWithCtrl(e: KeyboardEvent, _this: any) {
     case 90: // z
       undo(e.shiftKey)
       break
+    case 13: // Enter
+      e.preventDefault()
+      _this.present?.()
+      break
     case 83: // s
       e.preventDefault()
       _this.save()

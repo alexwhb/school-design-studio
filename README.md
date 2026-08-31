@@ -1,13 +1,14 @@
 # School Design Studio
 
 A drag-and-drop design editor for schools — posters, flyers, newsletters,
-certificates and slides — that exports to PNG and **PowerPoint**.
+certificates and slides — that exports to **PDF**, PNG and **PowerPoint**.
 
 Open it in a browser and you get a canvas, a page-size picker and panels down
 the left for templates, text, elements, photos and uploads. Drag things on,
-type over them, and export a print-ready PNG or an editable `.pptx` deck. There
-is no sign-up and no server to stand up: `npm install && npm start` is the whole
-setup, and the bundled content library ships in the repository as JSON.
+type over them, and export a PDF for the print shop, a PNG for the website, or
+an editable `.pptx` deck. There is no sign-up and no server to stand up:
+`npm install && npm start` is the whole setup, and the bundled content library
+ships in the repository as JSON.
 
 ## Where this came from
 
@@ -159,7 +160,7 @@ rewritten, but upstream's Chinese comments remain throughout `packages/`,
 comments only; nothing a user sees goes through them. Translating them is a
 standing chore rather than a blocker.
 
-**Fonts.** The Chinese font list is replaced with 20 open-licence English
+**Fonts.** The Chinese font list is replaced with 26 open-licence English
 families (SIL OFL / Apache 2.0), bundled in `public/fonts` instead of loaded
 from a CDN. That means they work offline and render identically in the editor
 and in every export. Google serves most of them as a single variable file, so
@@ -186,6 +187,77 @@ A4, flyers, name badges, display boards.
 
 **Defaults.** The watermark is off unless you turn it on, and the app name links
 to `HOME_URL` rather than the original project's marketing site.
+
+## Resizing a design
+
+The reuse people actually ask for: the flyer that worked becomes a slide, or a
+display board, without rebuilding it. **File → Resize design…**, or the Resize
+button under Page size in the settings panel.
+
+Three decisions, in the order you make them. How big — by preset or by typing a
+size. What happens to the artwork:
+
+| Choice | What it does |
+| --- | --- |
+| Scale to fit | Everything grows or shrinks together and stays on the page |
+| Fill the page | Fills the new shape; the edges of the design may fall outside it |
+| Keep sizes | Nothing is resized, the design is recentred |
+
+And, once a design has more than one page, whether it applies to the page you
+are on or to all of them.
+
+Every choice scales the whole composition by a single factor about the centre
+of the page, rather than mapping each element's position proportionally.
+Proportional mapping is the obvious approach and the wrong one: it moves
+elements relative to each other, so a caption drifts away from the photo it
+belongs to as the aspect ratio changes. Scaling as a unit keeps every
+relationship in the design and simply lands it, centred, on the new page.
+
+Adding a fourth behaviour means adding one object to `RESIZE_STRATEGIES` in
+`src/common/methods/resize/strategies.ts`. Nothing else knows what is in that
+list — the dialog renders whatever it finds, and the store action looks
+strategies up by id.
+
+## Pages
+
+The strip along the bottom. Collapsed it is a pill telling you where you are;
+expanded it is a row of thumbnails.
+
+- **Reorder** by dragging, or with Move left / Move right in a page's ⋯ menu.
+  Drag is not offered as the only way: it cannot be done from a keyboard, and it
+  is awkward once the strip has scrolled.
+- **Duplicate** copies a page and its artwork. Every element is renumbered, and
+  grouped elements are re-linked to the copy's own container rather than the
+  original's.
+- **Rename** a page and the name shows under its thumbnail and in the collapsed
+  pill. Unnamed pages show their position instead.
+- **Delete** asks first, but only when there is artwork to lose. The last page
+  is emptied rather than removed, because every part of the editor assumes there
+  is a current page.
+
+Up to 50 pages, raised from upstream's 9, which is too few for anything
+presentation-shaped. It is a ceiling rather than a target: every page is held in
+memory and written into the autosave, and the expanded strip renders each
+thumbnail in full.
+
+What a page operation *means* lives in `src/store/design/widget/actions/pages.ts`
+rather than in the strip, so that keeping the current page index, the widget
+list and the canvas in step is written once instead of once per button.
+
+## Spelling
+
+On by default, and switched off in **File → Check spelling**.
+
+Upstream hardcoded `spellcheck="false"` on every text widget, which suits a
+designer setting type and does not suit the person this fork is for: a teacher
+writing the words on a poster that goes home to four hundred families. Off is
+still a real choice though — a page of pupil names, or a school motto in Latin,
+turns the whole design red and the underlines stop meaning anything. The
+preference is remembered in `localStorage` under `ds_spellcheck`.
+
+Only the box being edited is checked. The stacked copies that draw text effects,
+and the thumbnails in the page strip, are never checked: a squiggle drawn three
+times through an outlined heading is not a spelling mistake anyone can act on.
 
 ## Dark mode
 
@@ -220,6 +292,46 @@ Two things to know before adding styles:
   legitimately remains is either artwork (a widget's default colour, a swatch
   palette) or something drawn on top of a photo.
 
+## PDF export, and export quality
+
+**PDF** is the format a design usually leaves in: to a print shop, or attached
+to an email home. Every page of the design becomes a page of the file, sized in
+real inches rather than pixels, so nobody at the other end has to guess how big
+you meant it.
+
+Each page goes in as a picture rather than as rebuilt text and shapes. That is
+deliberate: an editable PDF would need a second renderer kept in step with the
+browser's, and the usual way that goes wrong is a font substituting at the print
+shop. What you see is what prints. The editable route already exists and is
+called PowerPoint.
+
+There is no PDF library in the dependency list. `exportPdf.ts` writes the file
+itself — a catalogue, a page tree, and one JPEG drawn across each page — which
+is about a hundred lines of a stable, thirty-year-old format, against roughly
+350kB for jsPDF on a bundle that is already a megabyte.
+
+**Quality** sits at the top of the Export menu and applies to the image and the
+PDF. It is a resolution multiplier, but it is labelled in the terms the decision
+is actually made in:
+
+| Setting  | Resolution | For                                    |
+| -------- | ---------- | -------------------------------------- |
+| Standard | 150 DPI    | Screen, email, the office copier       |
+| Print    | 300 DPI    | What a print shop asks for             |
+| Large    | 450 DPI    | Something read from across a corridor  |
+
+Those numbers are real, not decorative. The editor stores a page in pixels and
+records nothing about how big it is meant to be, so the paper size has to be
+inferred, and 150 DPI is the convention the page presets are already built on —
+"Letter — portrait" is 1275 × 1650, which is 8.5 × 11 inches at 150. Read back
+at 150, a Letter design produces a PDF that `pdfinfo` reports as
+`612 x 792 pts (letter)`. Read at the CSS-pixel 96 instead, the same design
+would claim to be a 13 × 17 inch sheet.
+
+Turning the quality up puts more pixels on the same sheet rather than making the
+sheet bigger, which is what asking for 300 DPI means. The menu shows both the
+pixel size and the paper size before you commit to either.
+
 ## PowerPoint export
 
 Every page of a design becomes one slide. There are two modes, because they
@@ -244,9 +356,10 @@ Relevant code:
 ```
 src/common/methods/export/
   exportPptx.ts    the mapping from design widgets to slide objects
+  exportPdf.ts     the PDF writer, and the pixels-to-paper conversion
   renderPage.ts    renders any page or element to a PNG, restoring editor state
   utils.ts         unit, colour, HTML-to-text and image helpers
-src/views/components/ExportMenu.vue   the toolbar button
+src/views/components/ExportMenu.vue   the toolbar button, and the quality picker
 ```
 
 ## Using it inside School Planner
@@ -296,12 +409,13 @@ need Puppeteer and a running server.
 
 | Script | Purpose |
 | --- | --- |
-| `fetch-fonts.mjs` + `font-list.json` | Downloads the 20 bundled font families from Google Fonts and regenerates `public/fonts/fonts.css` |
+| `fetch-fonts.mjs` + `font-list.json` | Downloads the 26 bundled font families from Google Fonts and regenerates `public/fonts/fonts.css` |
 | `apply-i18n.py` + `i18n-map.json` | The translation pass — replaces Chinese source strings with English across the tree |
 | `add-content.mjs` | Imports a folder of your own SVGs or PNGs into Elements (shapes, stickers or masks) and rewrites the manifest |
 | `make-stickers.py` | Draws the bundled school sticker set as SVG and rewrites `png.json` |
 | `make-school-templates.py` | Generates the school template pack (`--remove` takes it back out) |
-| `make-template-covers.mjs` | Screenshots each template to produce its gallery thumbnail |
+| `make-slide-themes.py` | Generates the five themed slide decks (`--remove` takes them back out) |
+| `make-template-covers.mjs` | Screenshots each template to produce its gallery thumbnail (`--pack=` narrows it to one pack) |
 | `make-samples.py`, `englishify-samples.py`, `make-sample-covers.mjs` | Build and re-render the sample element groups shown under Text |
 | `test-export.mjs` | End-to-end check: drives the editor, exports, unzips the `.pptx` and asserts the slide contents |
 | `shot.mjs`, `shot-state.mjs`, `screenshots.mjs` | Screenshot helpers used while working on the interface |

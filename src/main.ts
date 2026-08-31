@@ -17,7 +17,7 @@ const pinia = createPinia()
 const app = createApp(App)
 
 elementConfig.components.forEach((component) => {
-  app.component(component.name, component)
+  component.name && app.component(component.name, component)
 })
 
 elementConfig.plugins.forEach((plugin) => {

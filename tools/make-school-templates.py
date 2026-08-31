@@ -503,6 +503,22 @@ def slide_title():
     ]
 
 
+def deck_header(title, eyebrow, *, page_width=1920):
+    """The bar every content slide in the deck opens with.
+
+    The slides are meant to be used together, so the header is one shape rather
+    than a layout each builder redraws: a school that deletes the eyebrow on
+    one slide and not the next gets a deck that flickers.
+    """
+    return [
+        band(NAVY, top=0, height=140, page_width=page_width),
+        text(title, font_=ARCHIVO, size=62, weight=700, colour=WHITE, align='left',
+             left=90, top=38, width=1200, height=84),
+        text(eyebrow, font_=INTER, size=32, colour=DUSK, align='right',
+             left=page_width - 590, top=52, width=500, height=44),
+    ]
+
+
 def slide_content():
     w, h = SLIDE
     rows = []
@@ -521,11 +537,7 @@ def slide_content():
                  left=210, top=top + 82, width=1600, height=52),
         ]
     return 'Slide — three points', (w, h), WHITE, [
-        band(NAVY, top=0, height=140, page_width=w),
-        text("How we'll work this year", font_=ARCHIVO, size=62, weight=700,
-             colour=WHITE, align='left', left=90, top=38, width=1200, height=84),
-        text('Back to School Night', font_=INTER, size=32, colour=DUSK,
-             align='right', left=1330, top=52, width=500, height=44),
+        *deck_header("How we'll work this year", 'Back to School Night', page_width=w),
         *rows,
         rule(GOLD, left=100, top=930, width=240, height=10),
         text('Questions welcome any time — alvarez@springfield.k12.us',
@@ -534,9 +546,378 @@ def slide_content():
     ]
 
 
+
+# ------------------------------------------------------------------- deck ---
+# Twelve slides meant to be used together rather than picked one at a time:
+# the same navy header, the same 90px margin, Archivo for headings and Inter
+# for everything read at a distance. Between them they cover the shape of an
+# ordinary school talk — open, divide, list, show a number, quote someone,
+# compare, walk a year, hand out jobs, close.
+
+
+def slide_section():
+    w, h = SLIDE
+    return 'Slide — section divider', (w, h), NAVY, [
+        shape('Rectangle', colour=GOLD, left=0, top=0, width=20, height=h),
+        text('02', font_=ANTON, size=190, colour=GOLD, align='left',
+             left=140, top=250, width=600, height=240),
+        text('What changes this year', font_=PLAYFAIR, size=110, weight=700,
+             colour=WHITE, align='left', left=140, top=520, width=1500, height=150),
+        rule(GOLD, left=140, top=730, width=240),
+        text('Curriculum  ·  Schedule  ·  Support at home', font_=INTER, size=42,
+             colour=MIST, align='left', left=140, top=800, width=1500, height=56),
+    ]
+
+
+def slide_agenda():
+    w, h = SLIDE
+    rows = []
+    entries = [
+        ('6:00', 'Welcome and introductions'),
+        ('6:15', 'How the year is laid out'),
+        ('6:35', 'Reading and writing at home'),
+        ('6:55', 'Questions from families'),
+        ('7:10', 'Visit the classrooms'),
+    ]
+    for index, (time_, label) in enumerate(entries):
+        top = 250 + index * 150
+        rows += [
+            shape('Circle', colour=NAVY_WASH, left=100, top=top, width=76, height=76),
+            text(str(index + 1), font_=BEBAS, size=44, colour=NAVY,
+                 left=100, top=top + 14, width=76, height=56),
+            text(label, font_=ARCHIVO, size=48, colour=INK, align='left',
+                 left=220, top=top + 10, width=1150, height=64),
+            text(time_, font_=INTER, size=40, colour=SLATE, align='right',
+                 left=1420, top=top + 16, width=400, height=54),
+        ]
+    return 'Slide — agenda', (w, h), WHITE, [
+        *deck_header('Agenda', 'Back to School Night', page_width=w),
+        *rows,
+    ]
+
+
+def slide_number():
+    w, h = SLIDE
+    return 'Slide — one number', (w, h), CREAM, [
+        text('READING AT HOME', font_=BEBAS, size=44, colour=NAVY, align='left',
+             left=140, top=200, width=1500, height=56, spacing=8),
+        text('9 in 10', font_=ANTON, size=280, colour=NAVY, align='left',
+             left=140, top=290, width=1640, height=340),
+        rule(GOLD, left=140, top=680, width=240),
+        text('students read four or more nights a week', font_=PLAYFAIR, size=70,
+             colour=INK, align='left', left=140, top=760, width=1500, height=94),
+        text('Spring family survey  ·  412 responses', font_=INTER, size=32,
+             colour=SLATE, align='left', left=140, top=900, width=1500, height=44),
+    ]
+
+
+def slide_quote():
+    w, h = SLIDE
+    return 'Slide — quote', (w, h), NAVY_DEEP, [
+        text('“', font_=PLAYFAIR, size=420, weight=700, colour=WHITE_GHOST,
+             align='left', left=120, top=120, width=500, height=520),
+        # Two lines at this size, and they have to stay two: the rule and the
+        # attribution below are placed, not flowed, so a third line runs into
+        # them. Roughly 30 characters a line is the ceiling.
+        text('The week she started bringing<br/>a book home, bedtime got easier.',
+             font_=PLAYFAIR, size=76, colour=WHITE, align='left', left=260,
+             top=380, width=1500, height=250, line_height=1.45),
+        rule(GOLD, left=260, top=700, width=160),
+        text('A fourth-grade family, October', font_=INTER, size=38, colour=GOLD,
+             align='left', left=260, top=770, width=1200, height=52),
+    ]
+
+
+def slide_two_columns():
+    w, h = SLIDE
+    columns = []
+    entries = [
+        (100, 'book open', 'At school', 'Twenty minutes of quiet reading,<br/>every day after lunch.<br/>Book clubs meet on Fridays.'),
+        (1000, 'apple', 'At home', 'Twenty minutes more, out loud<br/>if they will still let you.<br/>Sign the log on Sunday.'),
+    ]
+    for left, icon, heading, body in entries:
+        columns += [
+            panel(NAVY_WASH, left=left, top=240, width=820, height=660),
+            shape(icon, colour=NAVY, left=left + 60, top=310, width=88, height=88),
+            text(heading, font_=ARCHIVO, size=58, weight=700, colour=NAVY, align='left',
+                 left=left + 60, top=450, width=700, height=76),
+            text(body, font_=INTER, size=38, colour=INK, align='left',
+                 left=left + 60, top=560, width=700, height=220, line_height=1.6),
+        ]
+    return 'Slide — two columns', (w, h), WHITE, [
+        *deck_header('Two halves of the same habit', 'Back to School Night', page_width=w),
+        *columns,
+    ]
+
+
+def slide_timeline():
+    w, h = SLIDE
+    marks = []
+    entries = [
+        ('SEPT', 'Reading logs go home'),
+        ('NOV', 'Conferences'),
+        ('FEB', 'Book fair week'),
+        ('MAY', 'Showcase night'),
+    ]
+    # Four evenly spaced stops on one rule. The dot is centred on the line, so
+    # its own left is half a dot back from the stop.
+    for index, (when, what) in enumerate(entries):
+        centre = 260 + index * 470
+        marks += [
+            shape('Circle', colour=GOLD, left=centre - 22, top=538, width=44, height=44),
+            text(when, font_=BEBAS, size=52, colour=NAVY,
+                 left=centre - 200, top=420, width=400, height=66, spacing=4),
+            text(what, font_=INTER, size=34, colour=SLATE,
+                 left=centre - 200, top=630, width=400, height=94, line_height=1.4),
+        ]
+    return 'Slide — timeline', (w, h), WHITE, [
+        *deck_header('The year at a glance', 'Back to School Night', page_width=w),
+        # A plain bar rather than the library's Line, whose rounded caps read as
+        # a lozenge once stretched across the whole slide.
+        shape('Rectangle', colour=MIST, left=120, top=556, width=1680, height=8),
+        *marks,
+    ]
+
+
+def slide_photo():
+    w, h = SLIDE
+    return 'Slide — photo and caption', (w, h), WHITE, [
+        panel(CREAM, left=90, top=90, width=860, height=900),
+        shape('camera', colour=MIST, left=440, top=440, width=160, height=160),
+        text('Drop a photo here', font_=INTER, size=36, colour=SLATE,
+             left=190, top=640, width=660, height=50),
+        text('The first week', font_=ARCHIVO, size=88, weight=700, colour=NAVY,
+             align='left', left=1020, top=240, width=800, height=116),
+        rule(GOLD, left=1020, top=400, width=200),
+        text('Everyone found a seat, a locker and<br/>at least one person to eat lunch with.<br/>The rest of the year is easier after that.',
+             font_=INTER, size=40, colour=INK, align='left', left=1020, top=470,
+             width=800, height=250, line_height=1.6),
+        text('Photo: Ms. Alvarez', font_=INTER, size=30, colour=SLATE,
+             align='left', left=1020, top=880, width=800, height=42),
+    ]
+
+
+def slide_three_numbers():
+    w, h = SLIDE
+    columns = []
+    entries = [
+        (100, '412', 'FAMILIES', 'answered the spring survey'),
+        (720, '9 in 10', 'READ NIGHTLY', 'four nights a week or more'),
+        (1340, '26', 'CLUB MEETINGS', 'held before the winter break'),
+    ]
+    for left, number, label, detail in entries:
+        columns += [
+            text(number, font_=ANTON, size=140, colour=NAVY, left=left, top=300,
+                 width=480, height=180),
+            text(label, font_=BEBAS, size=44, colour=GOLD, left=left, top=510,
+                 width=480, height=56, spacing=4),
+            text(detail, font_=INTER, size=34, colour=SLATE, left=left, top=590,
+                 width=480, height=96, line_height=1.45),
+        ]
+    return 'Slide — three numbers', (w, h), WHITE, [
+        *deck_header('Where we stand', 'Board update', page_width=w),
+        *columns,
+        rule(GOLD, left=100, top=880, width=240, height=10),
+        text('Full report in the board packet, page 14.', font_=INTER, size=34,
+             colour=SLATE, align='left', left=100, top=925, width=1600, height=48),
+    ]
+
+
+def slide_next_steps():
+    w, h = SLIDE
+    rows = []
+    entries = [
+        ('Sign and return the reading log', 'Families'),
+        ('Send home book club rosters', 'Ms. Alvarez'),
+        ('Book the library for Fridays', 'Office'),
+        ('Set the showcase date', 'Team'),
+    ]
+    for index, (task, owner) in enumerate(entries):
+        top = 260 + index * 160
+        rows += [
+            shape('check circle', colour=TEAL, left=100, top=top, width=72, height=72),
+            text(task, font_=ARCHIVO, size=48, colour=INK, align='left',
+                 left=210, top=top + 8, width=1080, height=64),
+            pill(NAVY_WASH, left=1400, top=top + 4, width=420, height=64),
+            text(owner, font_=INTER, size=34, colour=NAVY, left=1400, top=top + 18,
+                 width=420, height=48),
+        ]
+    return 'Slide — next steps', (w, h), CREAM, [
+        *deck_header('What happens next', 'Back to School Night', page_width=w),
+        *rows,
+    ]
+
+
+def slide_team():
+    w, h = SLIDE
+    people = []
+    entries = [
+        (200, NAVY, 'MA', 'Ms. Alvarez', 'Grade 7 English'),
+        (790, TEAL, 'JH', 'Mr. Hamasu', 'Grade 7 Math'),
+        (1380, PLUM, 'RO', 'Ms. Okafor', 'Reading support'),
+    ]
+    for left, colour, initials, name, role in entries:
+        people += [
+            shape('Circle', colour=colour, left=left + 60, top=260, width=220, height=220),
+            text(initials, font_=BEBAS, size=96, colour=WHITE, left=left + 60,
+                 top=320, width=220, height=120, spacing=2),
+            text(name, font_=ARCHIVO, size=50, weight=700, colour=INK, left=left,
+                 top=540, width=340, height=66),
+            text(role, font_=INTER, size=34, colour=SLATE, left=left, top=620,
+                 width=340, height=94, line_height=1.4),
+        ]
+    return 'Slide — the team', (w, h), WHITE, [
+        *deck_header('Who you will meet tonight', 'Back to School Night', page_width=w),
+        *people,
+        text('Reach any of us at office@springfield.k12.us', font_=INTER, size=34,
+             colour=SLATE, left=100, top=880, width=1720, height=48),
+    ]
+
+
+def slide_dates():
+    w, h = SLIDE
+    rows = []
+    entries = [
+        ('September 18', 'Back to School Night'),
+        ('October 14 – 15', 'Parent–teacher conferences'),
+        ('November 3 – 7', 'Book fair'),
+        ('February 6', 'Science fair sign-up closes'),
+        ('May 15', 'Field day'),
+    ]
+    for index, (when, what) in enumerate(entries):
+        top = 230 + index * 140
+        # Every other row sits on a wash, which is what keeps the eye on the
+        # line when the two columns are this far apart.
+        if index % 2 == 0:
+            rows.append(panel(NAVY_WASH, left=90, top=top - 16, width=1740, height=116, radius=16))
+        rows += [
+            text(when, font_=ARCHIVO, size=46, weight=700, colour=NAVY, align='left',
+                 left=140, top=top + 8, width=560, height=62),
+            text(what, font_=INTER, size=42, colour=INK, align='left',
+                 left=740, top=top + 12, width=1040, height=58),
+        ]
+    return 'Slide — key dates', (w, h), WHITE, [
+        *deck_header('Dates to keep', 'Back to School Night', page_width=w),
+        *rows,
+    ]
+
+
+def slide_closing():
+    w, h = SLIDE
+    return 'Slide — thank you', (w, h), NAVY, [
+        shape('Rectangle', colour=GOLD, left=0, top=0, width=20, height=h),
+        shape('graduation cap', colour=WHITE_GHOST, left=1340, top=380, width=440, height=440),
+        text('Thank you', font_=PLAYFAIR, size=150, weight=700, colour=WHITE,
+             align='left', left=140, top=340, width=1200, height=200),
+        rule(GOLD, left=140, top=590, width=240),
+        text('Questions are welcome any evening this week.', font_=INTER, size=46,
+             colour=MIST, align='left', left=140, top=670, width=1200, height=62),
+        text('alvarez@springfield.k12.us  ·  (555) 010-2200', font_=INTER, size=38,
+             colour=DUSK, align='left', left=140, top=780, width=1200, height=52),
+    ]
+
+
+# ---------------------------------------------------------------- notices ---
+
+def volunteer_signup():
+    w, h = LETTER_P
+    return 'Volunteer sign-up', (w, h), CREAM, [
+        band(TEAL, top=0, height=380, page_width=w),
+        shape('users', colour=WHITE, left=577, top=70, width=120, height=120),
+        text('WE NEED YOU', font_=OSWALD, size=104, weight=700, colour=WHITE,
+             left=87, top=220, width=1101, height=134, spacing=3),
+        text('Two hours a term keeps all of this running.', font_=MERRIWEATHER,
+             size=44, colour=INK, left=137, top=450, width=1001, height=62),
+        panel(WHITE, left=137, top=580, width=1001, height=640),
+        *bullet_row('book open', 'Library shelving', 'Tuesday mornings, 8:30 – 10:00',
+                    colour=TEAL, left=197, top=640, width=881),
+        *bullet_row('utensils', 'Lunch service', 'Any weekday, 11:15 – 12:45',
+                    colour=TEAL, left=197, top=790, width=881),
+        *bullet_row('bus', 'Field trip chaperone', 'Four dates across the year',
+                    colour=TEAL, left=197, top=940, width=881),
+        *bullet_row('party popper', 'Event set-up', 'Evenings, roughly once a term',
+                    colour=TEAL, left=197, top=1090, width=881),
+        # One line each: both of these are placed rather than flowed, so a
+        # sign-up line long enough to wrap lands on the note below it.
+        text('Sign up at springfield.k12.us/volunteer',
+             font_=INTER, size=38, colour=SLATE, left=137, top=1290,
+             width=1001, height=54),
+        text('Background check required — the office will walk you through it.',
+             font_=INTER, size=32, colour=SLATE, left=137, top=1370,
+             width=1001, height=46),
+        footer('SPRINGFIELD ELEMENTARY PTA', colour=TEAL, page_width=w, top=1500, size=42),
+    ]
+
+
+def spirit_week():
+    w, h = LETTER_P
+    rows = []
+    entries = [
+        ('MON', 'Pyjama day'),
+        ('TUE', 'Team colors'),
+        ('WED', 'Wacky hat'),
+        ('THU', 'Decades day'),
+        ('FRI', 'School spirit'),
+    ]
+    for index, (day, theme) in enumerate(entries):
+        top = 720 + index * 150
+        rows += [
+            pill(GOLD, left=137, top=top, width=210, height=110),
+            text(day, font_=BEBAS, size=64, colour=NAVY, left=137, top=top + 22,
+                 width=210, height=76, spacing=3),
+            text(theme, font_=ARCHIVO, size=62, weight=700, colour=WHITE, align='left',
+                 left=397, top=top + 22, width=741, height=82),
+        ]
+    return 'Spirit Week schedule', (w, h), RED, [
+        shape('megaphone', colour=RED_GHOST, left=637, top=90, width=520, height=520),
+        text('SPIRIT<br/>WEEK', font_=ANTON, size=170, colour=WHITE, align='left',
+             left=87, top=180, width=1101, height=420, line_height=1.05, spacing=3),
+        text('March 9 – 13', font_=ARCHIVO, size=62, weight=700, colour=GOLD,
+             align='left', left=137, top=610, width=1001, height=84),
+        *rows,
+        text('Dress code still applies. No masks, no face paint in class.',
+             font_=INTER, size=34, colour=WHITE, left=137, top=1500,
+             width=1001, height=48),
+        footer('SPRINGFIELD MIDDLE SCHOOL', colour=GOLD, page_width=w, top=1570, size=42),
+    ]
+
+
+def field_trip():
+    w, h = LETTER_P
+    return 'Field trip permission notice', (w, h), WHITE, [
+        band(FOREST, top=0, height=26, page_width=w),
+        shape('bus', colour=FOREST, left=100, top=140, width=130, height=130),
+        text('Field trip', font_=PLAYFAIR, size=110, weight=700, colour=INK,
+             align='left', left=100, top=320, width=1075, height=150),
+        rule(FOREST, left=100, top=520, width=240),
+        text('Grade 4  ·  City Science Museum', font_=ARCHIVO, size=56, weight=700,
+             colour=FOREST, align='left', left=100, top=590, width=1075, height=76),
+        panel(CREAM, left=100, top=720, width=1075, height=520),
+        *bullet_row('calendar days', 'Thursday, April 16', None,
+                    colour=FOREST, left=160, top=780, width=955),
+        *bullet_row('clock', 'Leave 8:45 AM  ·  back by 2:30 PM', None,
+                    colour=FOREST, left=160, top=890, width=955),
+        *bullet_row('backpack', 'Packed lunch, water, closed shoes', None,
+                    colour=FOREST, left=160, top=1000, width=955),
+        *bullet_row('check circle', 'Slip and 12 dollars due Friday, April 3', None,
+                    colour=FOREST, left=160, top=1110, width=955),
+        text('No child is left behind over cost — tell the office and it is handled,<br/>quietly and without a form.',
+             font_=INTER, size=34, colour=SLATE, align='left', left=100, top=1310,
+             width=1075, height=110, line_height=1.5),
+        footer('SPRINGFIELD ELEMENTARY', colour=FOREST, page_width=w, top=1500,
+               size=42, align='left', left=100, width=1075),
+    ]
+
+
+# Order is what the gallery shows, and the id is FIRST_ID plus the position, so
+# new entries go on the end: reordering this list would renumber every template
+# after the change and orphan the covers already shot for them.
 BUILDERS = [
     field_day, open_house, conferences, book_fair, picture_day, spring_concert,
     science_fair, bake_sale, certificate, welcome_sign, slide_title, slide_content,
+    slide_section, slide_agenda, slide_number, slide_quote, slide_two_columns,
+    slide_timeline, slide_photo, slide_three_numbers, slide_next_steps, slide_team,
+    slide_dates, slide_closing, volunteer_signup, spirit_week, field_trip,
 ]
 
 

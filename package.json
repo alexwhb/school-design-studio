@@ -13,6 +13,7 @@
     "v-build": "cross-env NODE_ENV=production && vite build",
     "v-build-hard": "cross-env NODE_ENV=production vue-tsc --noEmit && vite build",
     "fetch-fonts": "node tools/fetch-fonts.mjs",
+    "fetch-iconfont": "node tools/fetch-iconfont.mjs",
     "dev:react": "cross-env NODE_ENV=development vite --config vite.react.config.ts",
     "build:react": "cross-env NODE_ENV=production vite build --config vite.react.config.ts",
     "dev:servers": "node tools/dev/servers.mjs",
@@ -98,7 +99,7 @@
   ],
   "website": "https://design.palxp.cn",
   "homepage": "https://xp.palxp.cn",
-  "description": "A simple English-language design editor for schools: posters, flyers, newsletters and slides, with PowerPoint export.",
+  "description": "A simple English-language design editor for schools: posters, flyers, newsletters and slides, with PDF and PowerPoint export.",
   "exports": {
     ".": {
       "types": "./dist-embed/index.d.ts",

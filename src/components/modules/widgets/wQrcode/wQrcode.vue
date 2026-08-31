@@ -96,7 +96,7 @@ onMounted(async () => {
 function updateRecord() {
   if (dActiveElement.value?.uuid === props.params.uuid) {
     let record = dActiveElement.value?.record
-    if (!widgetRef.value) return
+    if (!record || !widgetRef.value) return
     record.width = widgetRef.value.offsetWidth
     record.height = widgetRef.value.offsetHeight
   }

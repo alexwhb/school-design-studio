@@ -45,7 +45,6 @@
       <icon-item-select :data="alignIconList" @finish="alignAction" />
       <br />
     </el-collapse>
-    <!-- <CropImage ref="crop" @done="cropDone" /> -->
     <inner-tool-bar v-show="state.innerElement.cropEdit" :style="toolBarStyle">
       <number-slider v-model="state.innerElement.zoom" class="inner-bar" label="Scale" :step="0.01" :minValue="1" :maxValue="3" />
       <i style="padding: 0 8px; cursor: pointer" class="icon sd-queren" @click="imgCrop(false)" />
@@ -64,11 +63,11 @@ import numberInput from '../../settings/numberInput.vue'
 import iconItemSelect, { TIconItemSelectData } from '../../settings/iconItemSelect.vue'
 import numberSlider from '../../settings/numberSlider.vue'
 // import textInput from '../../settings/textInput.vue'
-// import CropImage from '@/components/business/cropper/CropImage.vue'
 import ContainerWrap from '../../settings/EffectSelect/ContainerWrap.vue'
 // import uploader from '@/components/common/Uploader/index.vue'
 import { getImage } from '@/common/methods/getImgDetail'
 import api from '@/api'
+import type { LocalUpload } from '@/common/methods/localUploads'
 import layerIconList from '@/assets/data/LayerIconList'
 import alignIconList from '@/assets/data/AlignListData'
 import picBox from '@/components/business/picture-selector'
@@ -332,9 +331,9 @@ function openImageCutout() {
 }
 
 // Background removed
-async function cutImageDone(url: string) {
+async function cutImageDone(saved: LocalUpload) {
   setTimeout(() => {
-    state.innerElement.imgUrl = url
+    state.innerElement.imgUrl = saved.url
   }, 300)
 }
 </script>

@@ -12,6 +12,10 @@ function isMacOS() {
 
 export default [
   {
+    feat: `Present full screen`,
+    info: `${ctrlKey} + Enter`,
+  },
+  {
     feat: `Pan the page`,
     info: `Space + drag`,
   },

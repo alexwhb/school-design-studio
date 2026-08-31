@@ -7,6 +7,23 @@
  * HTML, remote image URLs).
  */
 
+/**
+ * Rejects if `work` has not settled in time.
+ *
+ * Every await in the export path — a fetch, an image decode, html2canvas
+ * itself — can in principle never settle, and when one of them doesn't the
+ * export does not fail, it stops: progress frozen, no error, nothing to do but
+ * reload. A bound turns any of those into an ordinary failure the caller can
+ * report or fall back from.
+ */
+export function withTimeout<T>(work: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>
+  const limit = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+  })
+  return Promise.race([work, limit]).finally(() => clearTimeout(timer)) as Promise<T>
+}
+
 /** The editor treats a design pixel as a CSS pixel, which is 1/96 of an inch. */
 export const PX_PER_INCH = 96
 
@@ -74,26 +91,35 @@ export function htmlToText(html?: string): string {
 /** Reads the rotation, in degrees, out of a widget's transform string. */
 export function readRotation(widget: Record<string, any>): number {
   if (typeof widget.rotate === 'number' && widget.rotate) return widget.rotate
+  // Some widgets store the angle as a CSS string ('30deg') rather than a number,
+  // which used to fall through to the transform and read as no rotation at all.
+  if (typeof widget.rotate === 'string' && widget.rotate.trim()) {
+    const degrees = parseFloat(widget.rotate)
+    if (!Number.isNaN(degrees) && degrees) return degrees
+  }
   const transform = widget.transform
   if (typeof transform !== 'string') return 0
   const match = transform.match(/rotate\((-?[\d.]+)deg\)/i)
   return match ? parseFloat(match[1]) : 0
 }
 
+const IMAGE_TIMEOUT = 15000
+
 /**
  * PowerPoint needs image bytes, not a URL. Fetch the image and base64 it.
  *
  * Falls back to drawing it on a canvas, which covers images the browser has
  * already cached but will not hand over via fetch. Returns null when the image
- * cannot be read at all (a cross-origin host with no CORS headers), so the
- * caller can skip it rather than produce a corrupt file.
+ * cannot be read at all (a cross-origin host with no CORS headers), or when a
+ * host simply never answers, so the caller can skip it rather than produce a
+ * corrupt file or wait forever.
  */
 export async function imageToDataUrl(url: string): Promise<string | null> {
   if (!url) return null
   if (url.startsWith('data:')) return url
 
   try {
-    const res = await fetch(url, { mode: 'cors' })
+    const res = await withTimeout(fetch(url, { mode: 'cors', signal: AbortSignal.timeout(IMAGE_TIMEOUT) }), IMAGE_TIMEOUT, `fetching ${url}`)
     if (res.ok) {
       const blob = await res.blob()
       return await blobToDataUrl(blob)
@@ -103,10 +129,26 @@ export async function imageToDataUrl(url: string): Promise<string | null> {
   }
 
   try {
-    return await drawImageToDataUrl(url)
+    return await withTimeout(drawImageToDataUrl(url), IMAGE_TIMEOUT, `loading ${url}`)
   } catch {
     return null
   }
+}
+
+/**
+ * Turns a `data:` URL back into a Blob.
+ *
+ * Decoded by hand rather than with `fetch(dataUrl)` because a page's
+ * Content-Security-Policy can refuse to connect to a data: URL, and an export
+ * that only works on some deployments is worse than no shortcut at all.
+ */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const [header, payload] = String(dataUrl).split(',')
+  const type = header.match(/^data:([^;,]+)/)?.[1] || 'application/octet-stream'
+  const bytes = header.includes(';base64') ? atob(payload) : decodeURIComponent(payload)
+  const buffer = new Uint8Array(bytes.length)
+  for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i)
+  return new Blob([buffer], { type })
 }
 
 export function blobToDataUrl(blob: Blob): Promise<string> {

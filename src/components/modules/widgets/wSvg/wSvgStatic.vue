@@ -1,11 +1,17 @@
 <!--
-  TODO: 重构
+  Read-only twin of wSvg.vue.
+
+  Shapes are stored as SVG markup rather than a URL, and their colours as
+  `{{colors[n]}}` placeholders, so drawing one means parsing the markup and
+  substituting the colours. That has to happen the same way here as it does on
+  the canvas — see wSvg.vue — or a shape shows up as an empty box in the page
+  thumbnails and in presentation mode.
 -->
 <template>
   <div
-  ref="widgetRef"
+    ref="widgetRef"
     :style="{
-      position: state.position,
+      position: 'absolute',
       left: params.left - parent.left + 'px',
       top: params.top - parent.top + 'px',
       width: params.width + 'px',
@@ -16,8 +22,8 @@
 </template>
 
 <script lang="ts" setup>
+import { nextTick, onMounted, ref } from 'vue'
 import { TWSvgSetting } from './wSvgSetting'
-import { CSSProperties, computed, nextTick, onBeforeMount, onMounted, onUpdated, reactive, ref, watch } from 'vue';
 
 type TProps = {
   params: TWSvgSetting
@@ -27,109 +33,56 @@ type TProps = {
   }
 }
 
-type TState = {
-  position: CSSProperties['position'], // 'absolute'relative
-}
-
 const props = defineProps<TProps>()
-const state = reactive<TState>({
-  position: 'absolute', // 'absolute'relative
-})
-
 const widgetRef = ref<HTMLElement | null>(null)
 
-let svgElements: Record<string, any>[] | null = null
 onMounted(async () => {
+  // Keep any rotation the shape was given on the canvas.
+  if (widgetRef.value) {
+    props.params.transform && (widgetRef.value.style.transform = props.params.transform)
+    props.params.rotate && (widgetRef.value.style.transform += `rotate(${props.params.rotate})`)
+  }
   await nextTick()
-  await loadSvg()
+  drawSvg()
 })
 
-function loadSvg() {
-  // console.log(this.params)
+function drawSvg() {
   const Snap = (window as any).Snap
-  return new Promise<void>((resolve) => {
-    Snap.load(
-      props.params.svgUrl,
-      function (svg: Record<string, any>) {
-        let svg2 = Snap(svg.node)
-        // let item = svg2.select('circle')
-        // item.attr({
-        //   fill: 'rgb(255, 0, 0)',
-        // })
-        // console.log(item.attr('fill'))
+  if (!Snap || !widgetRef.value) return
 
-        let items = svg2.node.childNodes
-        svg2.node.removeAttribute('width')
-        svg2.node.removeAttribute('height')
-        svg2.node.setAttribute('style', 'height: inherit;width: inherit;')
-        // svg2.node.setAttribute('height', 'inherit')
-        svgElements = []
-        const colorsObj = color2obj()
+  // Snap.parse only hands back the <svg> element itself when the source
+  // *starts* with `<svg`; a licence comment in front of it makes it wrap the
+  // lot in a DocumentFragment instead. Dig the element out either way.
+  const parsed = Snap.parse(props.params.svgUrl)
+  const svgNode: SVGSVGElement | null = parsed.node.nodeType === Node.ELEMENT_NODE ? parsed.node : parsed.node.querySelector('svg')
+  if (!svgNode) return
 
-        deepElement(items)
+  svgNode.removeAttribute('width')
+  svgNode.removeAttribute('height')
+  svgNode.setAttribute('style', 'height: inherit;width: inherit;')
 
-        function deepElement(els: Record<string, any>) {
-          // 判断是NodeList对象则继续递归，否则进入元素处理工厂
-          if (els.item) {
-            els.forEach((element: Record<string, any>) => {
-              elementFactory(element)
-              if (element.childNodes.length > 0) {
-                element.childNodes.forEach((element: Record<string, any>) => {
-                  deepElement(element)
-                })
-              }
-            })
-          } else {
-            elementFactory(els)
-          }
-        }
-        // 元素工厂: 遍历元素中是否存在可自定义的颜色属性
-        function elementFactory(element: Record<string, any>) {
-          const attrsColor: Record<string, any> = {}
-          try {
-            element.attributes.forEach((attr: Record<string, any>) => {
-              if (colorsObj[attr.value]) {
-                // console.log(attr.name, colorsObj[attr.value])
-                attr.value = colorsObj[attr.value]
-                attrsColor[attr.name] = props.params.colors.findIndex((x) => x == attr.value)
-              }
-            })
-          } catch (e) {}
-          if (JSON.stringify(attrsColor) !== '{}' && svgElements) {
-            svgElements.push({
-              item: element,
-              attrsColor,
-            })
-          }
-          // console.log(element.attributes, element.getAttribute('fill'), _this.params.colors)
-        }
+  const colours = colourMap()
+  // The root <svg> carries the colour placeholder as often as its children do
+  // (every Lucide icon puts `stroke` there), so the walk starts at it.
+  applyColours(svgNode, colours)
 
-        // _this.viewBox = svg2.node.viewBox.baseVal
-        // _this.svgImg = img
-
-        // img.attr({
-        //   width: '100%',
-        //   height: '100%',
-        //   transform: '',
-        //   'xlink:href': _this.params.imgUrl || '',
-        // })
-        if (widgetRef.value) {
-          // svg.node.classList.add('svg__box')
-          widgetRef.value.appendChild(svg.node)
-        }
-        resolve()
-      },
-      document.getElementById(props.params.uuid),
-    )
-  })
+  widgetRef.value.appendChild(svgNode)
 }
 
-function color2obj() {
-  const obj: Record<string, any> = {}
-  for (let i = 0; i < props.params.colors.length; i++) {
-    obj[`{{colors[${i}]}}`] = props.params.colors[i]
+function applyColours(el: Element, colours: Record<string, string>) {
+  if (el.attributes) {
+    for (const attr of Array.from(el.attributes)) {
+      if (colours[attr.value]) attr.value = colours[attr.value]
+    }
   }
-  return obj
+  el.childNodes.forEach((child) => applyColours(child as Element, colours))
 }
 
+function colourMap() {
+  const map: Record<string, string> = {}
+  props.params.colors.forEach((colour: string, i: number) => {
+    map[`{{colors[${i}]}}`] = colour
+  })
+  return map
+}
 </script>

@@ -1,5 +1,5 @@
 /**
- * Screenshots each template in the school pack and writes its thumbnail.
+ * Screenshots each generated template and writes its thumbnail.
  *
  * The gallery lays its grid out from the width/height in list.json and fills
  * each cell with the cover image, so a template with no cover is an invisible
@@ -9,7 +9,8 @@
  *
  * Start the app first, then:
  *
- *   node make-template-covers.mjs [baseUrl]     # default http://127.0.0.1:4173
+ *   node make-template-covers.mjs [baseUrl] [id...]     # default http://127.0.0.1:4173
+ *   node make-template-covers.mjs --pack=slide-themes   # one pack rather than all
  *
  * Covers land in public/covers and, if a build is already sitting there, in
  * dist/covers too, so `npm run serve` picks them up without a rebuild.
@@ -19,19 +20,30 @@ import fs from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 
-const BASE = process.argv[2] || 'http://127.0.0.1:4173'
+const args = process.argv.slice(2)
+const packArg = args.find((arg) => arg.startsWith('--pack='))
+const positional = args.filter((arg) => !arg.startsWith('--'))
+
+const BASE = positional[0] || 'http://127.0.0.1:4173'
 const ROOT = path.resolve(import.meta.dirname, '..')
 const OUT = path.join(ROOT, 'public', 'covers')
 const DIST_OUT = path.join(ROOT, 'dist', 'covers')
 const LIST = path.join(ROOT, 'service', 'src', 'mock', 'templates', 'list.json')
-const PACK = 'school-events'
 
+// Every generated template carries a pack marker; --pack narrows the run to
+// one of them, and without it every packed template is shot. Any ids after the
+// base URL narrow it further, which is the difference between a two-second
+// check on one layout and re-shooting all of them.
+const PACK = packArg?.slice('--pack='.length)
+const only = new Set(positional.slice(1))
 const templates = JSON.parse(await fs.readFile(LIST, 'utf8')).filter(
-	(item) => item.pack === PACK,
+	(item) =>
+		(PACK ? item.pack === PACK : Boolean(item.pack)) &&
+		(only.size === 0 || only.has(String(item.id))),
 )
 if (!templates.length) {
 	console.error(
-		`No "${PACK}" templates in list.json. Run make-school-templates.py first.`,
+		`No ${PACK ? `"${PACK}"` : 'packed'} templates in list.json. Run the generator first.`,
 	)
 	process.exit(1)
 }
@@ -77,6 +89,17 @@ for (const template of templates) {
 	// Deselect, so the transform handles are not baked into the thumbnail.
 	await page.mouse.click(20, 900)
 	await page.waitForTimeout(400)
+
+	// The zoom control and the artboard strip float over the bottom of the well,
+	// inside the area this screenshot covers, so without this a cover of a poster
+	// has "Fit" printed in its corner.
+	await page.addStyleTag({
+		content: `
+			.moveable-control-box, .moveable-control, .moveable-line, .moveable-area,
+			.page-resize, .resize__bar, .artboards, .zoom-control-wrap { display: none !important; }
+			#page-design-canvas .layer, #page-design-canvas .layer:hover { outline: none !important; }
+		`,
+	})
 
 	const file = `template-${template.id}.png`
 	await page

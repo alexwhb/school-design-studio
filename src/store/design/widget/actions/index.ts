@@ -45,6 +45,9 @@ export function dMove(store: TWidgetStore, payload: TMovePayload) {
 
   let parent = page
   if (!target) return
+  // The page is not draggable, and it is the one thing with no record.
+  const record = target.record
+  if (!record) return
   if (target.parent !== '-1') {
     const widget = store.dWidgets.find((item) => item.uuid === target.parent)
     if (widget) {
@@ -57,8 +60,8 @@ export function dMove(store: TWidgetStore, payload: TMovePayload) {
   let left = widgetXY.x + Math.floor((dx * 100) / canvasStore.dZoom)
   let top = widgetXY.y + Math.floor((dy * 100) / canvasStore.dZoom)
 
-  left = Math.max(Math.min(left, page.width - target.record.width), 0)
-  top = Math.max(Math.min(top, page.height - target.record.height), 0)
+  left = Math.max(Math.min(left, page.width - record.width), 0)
+  top = Math.max(Math.min(top, page.height - record.height), 0)
 
   if (target.isContainer) {
     const dLeft = target.left - left
@@ -99,8 +102,8 @@ export function updateGroupSize(store: TWidgetStore, uuid: string) {
     if (widgets[i].parent === group.uuid) {
       left = Math.min(left, widgets[i].left)
       top = Math.min(top, widgets[i].top)
-      right = Math.max(right, widgets[i].record.width + widgets[i].left)
-      bottom = Math.max(bottom, widgets[i].record.height + widgets[i].top)
+      right = Math.max(right, (widgets[i].record?.width ?? widgets[i].width) + widgets[i].left)
+      bottom = Math.max(bottom, (widgets[i].record?.height ?? widgets[i].height) + widgets[i].top)
     }
   }
   group.width = right - left

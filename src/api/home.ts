@@ -6,14 +6,6 @@
  * @LastEditTime: 2024-04-16 15:37:54
  */
 import fetch from '@/utils/axios'
-import _config from '@/config'
-
-function serialize(obj: any) {
-  return Object.keys(obj).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`).join('&');
-}
-
-// const screenshot_url = window.location.protocol + '//' + window.location.host + '/draw'
-export const download = (params: Type.Object = {}) => `${_config.SCREEN_URL}/api/screenshots?${serialize(params)}`
 
 type IGetTempListParam = {
   search: string
