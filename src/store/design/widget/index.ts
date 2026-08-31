@@ -10,7 +10,9 @@ import { Store, defineStore } from "pinia";
 import { useCanvasStore } from '@/store'
 import { TInidDMovePayload, TMovePayload, dMove, initDMove, setDropOver, setMouseEvent, setdActiveElement, updateGroupSize, updateHoverUuid } from "./actions";
 import { TPageState } from "@/store/design/canvas/d";
-import { TInitResize, TSize, TdResizePayload, dResize, initDResize, resize, autoResizeAll } from "./actions/resize";
+import { TInitResize, TSize, TdResizePayload, dResize, initDResize, resize } from "./actions/resize";
+import { TResizePagesPayload, resizePages } from "./actions/resizePages";
+import { addPage, duplicatePage, movePage, removePage, renamePage, showPage } from "./actions/pages";
 import { TUpdateWidgetMultiplePayload, TUpdateWidgetPayload, TsetWidgetStyleData, addWidget, deleteWidget, setDWidgets, updateDWidgets, setWidgetStyle, updateWidgetData, updateWidgetMultiple, lockWidgets, setDLayouts } from "./actions/widget";
 import { addGroup } from "./actions/group";
 import { setTemplate } from "./actions/template";
@@ -151,7 +153,20 @@ type TAction = {
   lockWidgets: () => void
   setMouseEvent: (e: MouseEvent | null) => void
   setdActiveElement: (data: TdWidgetData) => void
-  autoResizeAll: (data: TSize) => void
+  /** Changes the size of the design, reflowing the artwork onto it. */
+  resizePages: (payload: TResizePagesPayload) => void
+  /** Shows a page on the canvas. */
+  showPage: (index: number) => void
+  /** Adds an empty page after the current one. */
+  addPage: () => void
+  /** Copies a page, artwork and all. */
+  duplicatePage: (index: number) => void
+  /** Removes a page, or empties it when it is the only one. */
+  removePage: (index: number) => void
+  /** Reorders the pages. */
+  movePage: (from: number, to: number) => void
+  /** Names a page. */
+  renamePage: (index: number, name: string) => void
   getWidgets: () => TdWidgetData[]
 }
 
@@ -219,7 +234,13 @@ const WidgetStore = defineStore<"widgetStore", TWidgetState, TGetter, TAction>("
     lockWidgets() { lockWidgets(this) },
     setMouseEvent(event) { setMouseEvent(this, event) },
     setdActiveElement(data) { setdActiveElement(this, data) },
-    autoResizeAll(data) { autoResizeAll(this, data) },
+    resizePages(payload) { resizePages(this, payload) },
+    showPage(index) { showPage(this, index) },
+    addPage() { addPage(this) },
+    duplicatePage(index) { duplicatePage(this, index) },
+    removePage(index) { removePage(this, index) },
+    movePage(from, to) { movePage(this, from, to) },
+    renamePage(index, name) { renamePage(this, index, name) },
     setDLayouts(data) { setDLayouts(this, data) },
     getWidgets() {
       const pageStore = useCanvasStore() as TCanvasStore

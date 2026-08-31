@@ -6,9 +6,10 @@
     </div>
     <el-collapse v-else v-model="state.activeNames">
       <el-collapse-item title="Page size" name="1">
-        <sizeEditor :params="state.innerElement">
-          <i @click="openSizeEdit" class="icon sd-edit"></i>
-        </sizeEditor>
+        <div class="page-size">
+          <span class="page-size__value">{{ Math.round(state.innerElement.width) }} × {{ Math.round(state.innerElement.height) }} px</span>
+          <el-button plain size="small" @click="openSizeEdit">Resize…</el-button>
+        </div>
       </el-collapse-item>
       <el-collapse-item title="Background" name="2">
         <el-button style="width: 100%; margin: 0 0 1rem 0" type="primary" link @click="state.showBgLib = true">Choose from the background library</el-button>
@@ -46,7 +47,7 @@
         <el-button v-show="state.mode === 'Image' && state.innerElement.backgroundImage" class="btn-wrap" @click="shiftOut">Move background to a layer</el-button>
       </el-collapse-item>
     </el-collapse>
-    <createDesign ref="sizeEditRef" :params="state.innerElement" />
+    <resizeDesign ref="sizeEditRef" />
   </div>
 </template>
 
@@ -65,8 +66,7 @@ import { TPageState } from '@/store/design/canvas/d'
 import { storeToRefs } from 'pinia'
 import { Delete as iconDelete, Download as iconDownload } from '@element-plus/icons-vue'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
-import sizeEditor from '@/components/business/create-design/sizeEditor.vue'
-import createDesign from '@/components/business/create-design'
+import resizeDesign from '@/components/business/resize-design'
 
 type TState = {
   activeNames: string[]
@@ -91,7 +91,7 @@ const state = reactive<TState>({
   modes: ['Colour', 'Image'],
   showBgLib: false,
 })
-const sizeEditRef: Ref<typeof createDesign | null> = ref(null)
+const sizeEditRef: Ref<typeof resizeDesign | null> = ref(null)
 // const { dActiveElement } = useSetupMapGetters(['dActiveElement'])
 const { dActiveElement } = storeToRefs(widgetStore)
 let _localTempBG: string | null = null
@@ -204,6 +204,17 @@ function openSizeEdit() {
 </script>
 
 <style lang="less" scoped>
+.page-size {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  &__value {
+    color: @ink-2;
+    font-size: @text-base;
+  }
+}
+
 #page-style {
   height: 100%;
   width: 100%;

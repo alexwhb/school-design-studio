@@ -12,7 +12,7 @@
       <div class="top-nav-wrap">
         <div class="top-left">
           <div class="name" @click="jump2home">{{ state.APP_NAME }}</div>
-          <Folder @select="dealWith" ref="ref1"> <div class="operation-item"><i class="icon sd-wenjian" /> <span class="text">File</span></div> </Folder>
+          <Folder @select="dealWith" ref="ref1" :show-guides="state.showLineGuides"> <div class="operation-item"><i class="icon sd-wenjian" /> <span class="text">File</span></div> </Folder>
           <Helper @select="dealWith"> <div class="operation-item"><i class="icon sd-bangzhu" /> <span class="text">Help</span></div> </Helper>
           <div class="top-nav-divider" />
           <div class="operation">
@@ -62,6 +62,8 @@
     <Tour ref="tourRef" :steps="[ref1, ref2, ref3, ref4]" />
     <!-- New design -->
     <createDesign ref="createDesignRef" />
+    <!-- Resize an existing design -->
+    <resizeDesign ref="resizeDesignRef" />
   </div>
 </template>
 
@@ -87,6 +89,7 @@ import { useCanvasStore, useControlStore, useHistoryStore, useWidgetStore, useGr
 import type { ButtonInstance } from 'element-plus'
 import Tour from './components/Tour.vue'
 import createDesign from '@/components/business/create-design'
+import resizeDesign from '@/components/business/resize-design'
 import ExportMenu from './components/ExportMenu.vue'
 import multipleBoards from '@/components/modules/layout/multipleBoards'
 import useHistory from '@/common/hooks/history'
@@ -142,6 +145,7 @@ const autosave = useAutosave({
 const zoomControlRef = ref<typeof zoomControl | null>(null)
 const controlStore = useControlStore()
 const createDesignRef: Ref<typeof createDesign | null> = ref(null)
+const resizeDesignRef: Ref<typeof resizeDesign | null> = ref(null)
 
 // The design is saved as it changes, so this is only about the couple of
 // seconds between the last edit and the write that has not happened yet.
@@ -269,6 +273,9 @@ const fns: any = {
   changeLineGuides,
   newDesign: () => {
     createDesignRef.value?.open()
+  },
+  resizeDesign: () => {
+    resizeDesignRef.value?.open()
   }
 }
 const dealWith = (fnName: string, params?: any) => {

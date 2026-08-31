@@ -123,28 +123,3 @@ export function resize(store: TWidgetStore, size: TSize) {
 }
 
 /** 自适应适配所有元素 */
-export function autoResizeAll(store: TWidgetStore, lastPageSize: TSize) {
-  if (!lastPageSize) return
-  const canvasStore = useCanvasStore()
-  const { width: lastWidth, height: lastHeight } = lastPageSize
-  const { width: pageWidth, height: pageHeight } = canvasStore.dPage
-  const originWHRatio = lastWidth / lastHeight // Original ratio
-  const WHRatio = pageWidth / pageHeight // Current ratio
-  const changeFn = originWHRatio > WHRatio ? 'max' : 'min'
-  const degree = [pageWidth / lastWidth, pageHeight / lastHeight]
-  const ratio = Math[changeFn](...degree)
-  const pageDiff = (pageWidth - lastWidth) / 2
-  for (const widget of store.dWidgets) {
-    const originWidth = widget.width
-    let diff = 0
-    if (widget.type === 'w-text') {
-      widget.fontSize && (widget.fontSize *= ratio)
-    } else if (widget.type !== 'w-group') {
-      widget.width *= ratio
-      widget.height *= ratio
-    } else widget.height *= ratio
-    diff = (originWidth - widget.width) / 2
-    widget.left = widget.left + diff + pageDiff
-    widget.top *= degree[1]
-  }
-}

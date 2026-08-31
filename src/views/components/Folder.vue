@@ -13,6 +13,7 @@
     <template #dropdown>
       <el-dropdown-menu>
         <el-dropdown-item><div @click="$emit('select', 'newDesign')" class="item">New design</div></el-dropdown-item>
+        <el-dropdown-item><div @click="$emit('select', 'resizeDesign')" class="item">Resize design…</div></el-dropdown-item>
         <el-dropdown-item @click="openPSD">Import file</el-dropdown-item>
         <el-dropdown-item @click="$emit('select', 'save')" divided>Save</el-dropdown-item>
         <el-dropdown-item @click="$emit('select', 'download')">Export file</el-dropdown-item>

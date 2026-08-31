@@ -188,6 +188,62 @@ A4, flyers, name badges, display boards.
 **Defaults.** The watermark is off unless you turn it on, and the app name links
 to `HOME_URL` rather than the original project's marketing site.
 
+## Resizing a design
+
+The reuse people actually ask for: the flyer that worked becomes a slide, or a
+display board, without rebuilding it. **File → Resize design…**, or the Resize
+button under Page size in the settings panel.
+
+Three decisions, in the order you make them. How big — by preset or by typing a
+size. What happens to the artwork:
+
+| Choice | What it does |
+| --- | --- |
+| Scale to fit | Everything grows or shrinks together and stays on the page |
+| Fill the page | Fills the new shape; the edges of the design may fall outside it |
+| Keep sizes | Nothing is resized, the design is recentred |
+
+And, once a design has more than one page, whether it applies to the page you
+are on or to all of them.
+
+Every choice scales the whole composition by a single factor about the centre
+of the page, rather than mapping each element's position proportionally.
+Proportional mapping is the obvious approach and the wrong one: it moves
+elements relative to each other, so a caption drifts away from the photo it
+belongs to as the aspect ratio changes. Scaling as a unit keeps every
+relationship in the design and simply lands it, centred, on the new page.
+
+Adding a fourth behaviour means adding one object to `RESIZE_STRATEGIES` in
+`src/common/methods/resize/strategies.ts`. Nothing else knows what is in that
+list — the dialog renders whatever it finds, and the store action looks
+strategies up by id.
+
+## Pages
+
+The strip along the bottom. Collapsed it is a pill telling you where you are;
+expanded it is a row of thumbnails.
+
+- **Reorder** by dragging, or with Move left / Move right in a page's ⋯ menu.
+  Drag is not offered as the only way: it cannot be done from a keyboard, and it
+  is awkward once the strip has scrolled.
+- **Duplicate** copies a page and its artwork. Every element is renumbered, and
+  grouped elements are re-linked to the copy's own container rather than the
+  original's.
+- **Rename** a page and the name shows under its thumbnail and in the collapsed
+  pill. Unnamed pages show their position instead.
+- **Delete** asks first, but only when there is artwork to lose. The last page
+  is emptied rather than removed, because every part of the editor assumes there
+  is a current page.
+
+Up to 50 pages, raised from upstream's 9, which is too few for anything
+presentation-shaped. It is a ceiling rather than a target: every page is held in
+memory and written into the autosave, and the expanded strip renders each
+thumbnail in full.
+
+What a page operation *means* lives in `src/store/design/widget/actions/pages.ts`
+rather than in the strip, so that keeping the current page index, the widget
+list and the canvas in step is written once instead of once per button.
+
 ## Dark mode
 
 The sun/moon button in the toolbar switches between light and dark. With no
