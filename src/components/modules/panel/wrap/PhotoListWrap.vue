@@ -74,9 +74,12 @@ let loading = false
 onMounted(async () => {
   if (state.types.length <= 0) {
     // const types = await api.material.getKinds({ type: 4 })
+    // Upstream repeated one placeholder name for both rows, which my
+    // translation turned into a sentence describing the layout. These are
+    // untitled stock batches with no theme, so label them plainly.
     state.types = [
-      { id: 1, name: 'Photo list with a responsive layout' },
-      { id: 2, name: 'Photo list with a responsive layout' },
+      { id: 1, name: 'Stock photos' },
+      { id: 2, name: 'More stock photos' },
     ]
     for (const iterator of state.types) {
       const { list } = await api.material.getImagesList({ cate: iterator.id, pageSize: 2 })

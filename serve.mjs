@@ -12,7 +12,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), 'dist')
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+const ROOT = path.join(HERE, 'dist')
+const MOCK = path.join(HERE, 'service', 'src', 'mock')
 const PORT = Number(process.argv[2] || process.env.PORT || 4173)
 
 const TYPES = {
@@ -40,8 +42,61 @@ if (!fs.existsSync(ROOT)) {
   process.exit(1)
 }
 
+/**
+ * The content library that ships in service/src/mock — sample templates,
+ * shapes, stickers, masks and photo lists.
+ *
+ * Upstream only serves these through the Express backend in service/, which
+ * pulls in Puppeteer and a Chromium download just to render screenshots. That
+ * is a lot of setup for what is really a folder of JSON, so the read-only
+ * lookups are answered here instead and the panels have content out of the box.
+ * Anything that writes still needs the real backend.
+ */
+function readMock(relative) {
+  const file = path.join(MOCK, relative)
+  if (!file.startsWith(MOCK) || !fs.existsSync(file)) return null
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+function contentLibrary(pathname, query) {
+  const cate = query.get('cate')
+  const type = query.get('type')
+  const id = query.get('id')
+
+  switch (pathname) {
+    case '/design/cate':
+      return readMock('cates.json')
+    case '/design/list':
+      // type=1 is the element/text component list, anything else is templates
+      return { list: readMock(type === '1' ? `components/list/${cate}.json` : 'templates/list.json') || [] }
+    case '/design/temp':
+      return readMock(type === '1' ? `components/detail/${id}.json` : `templates/${id}.json`)
+    case '/design/material':
+      return { list: readMock(`materials/${cate}.json`) || [] }
+    case '/design/imgs':
+      return { list: readMock(`materials/photos/${cate || 1}.json`) || [] }
+    default:
+      // Routes that serve a signed-in user's own files and designs. There is
+      // no account system here, so answer with nothing rather than a 404 the
+      // app would surface as an error.
+      return { list: [], records: [], total: 0 }
+  }
+}
+
 const server = http.createServer((req, res) => {
-  const url = decodeURIComponent((req.url || '/').split('?')[0])
+  const [rawPath, rawQuery] = (req.url || '/').split('?')
+  const url = decodeURIComponent(rawPath)
+
+  if (url.startsWith('/design/')) {
+    const result = contentLibrary(url, new URLSearchParams(rawQuery || ''))
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
+    res.end(JSON.stringify({ code: 200, msg: 'ok', result: result ?? undefined }))
+    return
+  }
 
   // Resolve inside dist/ only, so a crafted path cannot escape the web root.
   let filePath = path.join(ROOT, url)

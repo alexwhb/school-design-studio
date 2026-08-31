@@ -29,15 +29,28 @@ Other scripts:
 | `npm run typecheck` | `vue-tsc --noEmit` |
 | `npm run fetch-fonts` | Re-downloads the bundled fonts (see below) |
 
-### The backend is optional
+### Content, and the optional backend
 
-The editor runs standalone. Text, shapes, uploads, PSD import, every style
-control and every export work with nothing else running.
+`npm start` serves the bundled content library too, so Templates, Elements
+(stickers, shapes, masks) and Photos all have content with nothing else
+running. That content lives in `service/src/mock` as plain JSON. Upstream only
+serves it through the Express app in `service/`, which pulls in Puppeteer and a
+Chromium download purely to render screenshots — a lot of setup for a folder of
+JSON — so `serve.mjs` answers the read-only lookups directly.
 
-The optional `service/` backend adds the stock template and photo libraries.
-Without it those two panels are simply empty — the app logs one informational
-line and carries on rather than erroring. Point `API_URL` in `src/config.ts` at
-your own backend to supply your own content.
+You still need the real `service/` backend to *save* designs or templates, and
+for server-side rendering of the trickier exports. Point `API_URL` in
+`src/config.ts` at your own backend to supply your own content.
+
+If the app is served some other way with no backend at all, it degrades rather
+than erroring: the panels show empty states and one informational line is
+logged.
+
+**The two sample templates are the upstream demo content** — Chinese-language
+phone posters at 1242×2208. They are useful for checking that loading and
+applying a template works, and useless to a school. Replacing them is a content
+job: a template is just a JSON file in `service/src/mock/templates/` plus an
+entry in `list.json`.
 
 ## What changed from upstream
 

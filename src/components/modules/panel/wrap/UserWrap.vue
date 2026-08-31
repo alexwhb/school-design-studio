@@ -12,10 +12,12 @@
       <el-tab-pane label="My designs" name="design"> </el-tab-pane>
     </el-tabs>
     <div v-show="state.tabActiveName === 'pics'">
-      <uploader v-model="state.percent" class="upload" @done="uploadDone">
-        <el-button class="upload-btn" plain><i class="iconfont icon-upload" /> Upload image</el-button>
-      </uploader>
-      <el-button disabled class="upload-btn upload-psd" plain type="primary" @click="openPSD">Import PSD</el-button>
+      <div class="upload-actions">
+        <uploader v-model="state.percent" class="upload" @done="uploadDone">
+          <el-button class="upload-btn" plain><i class="iconfont icon-upload" /> Upload image</el-button>
+        </uploader>
+        <el-button class="upload-btn" plain @click="openPSD">Import a PSD file</el-button>
+      </div>
       <div style="margin: 1rem; height: 100vh">
         <photo-list ref="imgListRef" :edit="state.editOptions.photo" :isDone="state.isDone" :listData="state.imgList" @load="load" @drag="dragStart" @select="selectImg" />
       </div>
@@ -286,17 +288,24 @@ defineExpose({
 .tabs {
   padding: 0.2rem 0;
 }
+// Both buttons are full width and stacked. They used to be fixed pixel widths
+// sitting side by side, which only lined up at one exact panel width.
+.upload-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 4px;
+}
 .upload {
-  width: auto;
-  margin: 0 0 0 1rem;
-  display: inline-block;
-  &-btn {
-    width: 170px;
-    font-size: 14px;
-  }
-  &-psd {
-    width: 114px;
-    margin-left: 10px;
+  width: 100%;
+  display: block;
+}
+.upload-btn {
+  width: 100%;
+  font-size: @text-base;
+  margin: 0;
+  .iconfont {
+    margin-right: 6px;
   }
 }
 .wrap {
