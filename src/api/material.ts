@@ -76,6 +76,8 @@ type TGetImageListParams = {
   page?: number
   pageSize?: number
   cate?: number
+  /** Free-text search. Omit it to browse the category given by `cate`. */
+  keyword?: string
 }
 
 export type TGetImageListResult = {
@@ -86,10 +88,49 @@ export type TGetImageListResult = {
   user_id: number
   id: string
   thumb?: string
+  /** Average colour, painted while the thumbnail loads. */
+  color?: string
+  description?: string
+  author?: string
+  /** Photographer's profile, for the attribution Unsplash asks apps to show. */
+  authorUrl?: string
+  photoUrl?: string
+  /** Opaque Unsplash endpoint; hand it back to `trackImageUse` when placed. */
+  downloadLocation?: string
 } & Partial<IGetTempListData>
 
+/**
+ * Why a photo list came back empty, when it is worth telling the user rather
+ * than showing a bare "no results".
+ */
+export type TImageListError = 'unsplash_key_missing' | 'unsplash_key_invalid' | 'unsplash_rate_limited' | 'unsplash_unavailable'
+
+export type TGetImageListResponse = TPageRequestResult<TGetImageListResult[]> & {
+  error?: TImageListError
+  provider?: 'unsplash' | 'bundled'
+}
+
 // 图库列表
-export const getImagesList = (params: TGetImageListParams) => fetch<TPageRequestResult<TGetImageListResult[]>>('design/imgs', params, 'get')
+export const getImagesList = (params: TGetImageListParams) => fetch<TGetImageListResponse>('design/imgs', params, 'get')
+
+/**
+ * Unsplash's API terms require an app to report when a photo is actually used,
+ * which is how the photographer's download count is credited. Fire-and-forget:
+ * the server holds the key, and a failure here must not block a placement.
+ *
+ * Placing a photo raises mousedown *and* click, which are one gesture and one
+ * use, so a repeat of the same photo inside a moment is dropped.
+ */
+const recentlyTracked = new Map<string, number>()
+const TRACK_DEDUPE_MS = 3000
+
+export const trackImageUse = (downloadLocation?: string) => {
+  if (!downloadLocation) return
+  const now = Date.now()
+  if (now - (recentlyTracked.get(downloadLocation) ?? 0) < TRACK_DEDUPE_MS) return
+  recentlyTracked.set(downloadLocation, now)
+  fetch('design/imgs/download', { location: downloadLocation, _noLoading: true }, 'get').catch(() => {})
+}
 
 type TMyPhotoParams = {
   

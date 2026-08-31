@@ -22,9 +22,17 @@
     </el-dropdown>
     <span v-else style="width: 1rem"></span>
 
-    <el-input v-model="state.searchValue" size="large" placeholder="Search" class="input-with-select">
+    <el-input
+      v-model="state.searchValue"
+      size="large"
+      :placeholder="placeholder || 'Search'"
+      class="input-with-select"
+      clearable
+      @keyup.enter="submit"
+      @clear="submit"
+    >
       <template #append>
-        <el-button><i class="iconfont icon-search"></i></el-button>
+        <el-button @click="submit"><i class="iconfont icon-search"></i></el-button>
       </template>
     </el-input>
   </div>
@@ -38,11 +46,14 @@ import api from '@/api'
 type TProps = {
   type?: string
   modelValue?: string
+  placeholder?: string
 }
 
 type TEmits = {
   (event: 'update:modelValue', data: string): void
   (event: 'change', data: TMaterialCatesData): void
+  /** The user asked for these results — Enter, the button, or clearing the box. */
+  (event: 'search', data: string): void
 }
 
 type TMaterialCatesData = {id: string | number, name: string}
@@ -87,8 +98,18 @@ function action(fn: 'change', type: TMaterialCatesData, currentIndex: number | s
   emit(fn, type)
 }
 
+/**
+ * Searching is explicit rather than fired on every keystroke: each one is a
+ * call against a rate-limited third-party API, and half-typed words return
+ * results that flicker past before they are readable.
+ */
+function submit() {
+  emit('search', state.searchValue.trim())
+}
+
 defineExpose({
-  action
+  action,
+  submit,
 })
 
 </script>

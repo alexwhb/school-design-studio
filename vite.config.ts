@@ -10,14 +10,38 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import viteCompression from 'vite-plugin-compression'
 import ElementPlus from 'unplugin-element-plus/vite'
+// @ts-expect-error -- plain ESM, no types; see server/content-library.mjs
+import { contentLibrary } from './server/content-library.mjs'
 
 const resolve = (...data: string[]) => path.resolve(__dirname, ...data)
+
+/**
+ * Answers `/design/*` in `npm run dev` exactly as serve.mjs does for the built
+ * app, so the Templates, Elements and Photos panels have content either way.
+ * The Unsplash access key stays in this process; the browser only ever talks
+ * to the dev server.
+ */
+function contentLibraryPlugin() {
+  return {
+    name: 'design-studio-content-library',
+    configureServer(server: any) {
+      server.middlewares.use(async (req: any, res: any, next: any) => {
+        const [rawPath, rawQuery] = (req.url || '/').split('?')
+        if (!rawPath.startsWith('/design/')) return next()
+        const result = await contentLibrary(decodeURIComponent(rawPath), new URLSearchParams(rawQuery || ''))
+        res.setHeader('Content-Type', 'application/json; charset=utf-8')
+        res.end(JSON.stringify({ code: 200, msg: 'ok', result: result ?? undefined }))
+      })
+    },
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
   // base: '/web',
   plugins: [
     vue(),
+    contentLibraryPlugin(),
     viteCompression({
       verbose: true,
       disable: false,
@@ -54,7 +78,14 @@ export default defineConfig({
     },
   },
   define: {
-    'process.env': process.env,
+    // Only the two variables src/config.ts actually reads. Handing over the
+    // whole of process.env — as this did — inlines every variable in the
+    // building shell into the client bundle, which would put UNSPLASH_ACCESS_KEY
+    // in front of every visitor the moment someone exported it before building.
+    'process.env': JSON.stringify({
+      NODE_ENV: process.env.NODE_ENV,
+      DESIGN_API_URL: process.env.DESIGN_API_URL,
+    }),
   },
   server: {
     hmr: { overlay: false },

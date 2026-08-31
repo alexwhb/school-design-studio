@@ -1,8 +1,9 @@
 # Adding content
 
-Everything in the Templates, Elements and Photos panels comes from JSON in
+Everything in the Templates and Elements panels comes from JSON in
 `service/src/mock/`. There is no database and no CMS — you edit files, and
-`serve.mjs` reads them straight off disk.
+`serve.mjs` reads them straight off disk. The Photos panel is the exception:
+it comes from Unsplash, and the JSON here is only its offline fallback.
 
 ```
 service/src/mock/
@@ -10,7 +11,7 @@ service/src/mock/
     svg.json          Elements > Shapes
     png.json          Elements > Stickers
     mask.json         Elements > Masks
-    photos/1..3.json  Photos
+    photos/1..3.json  Photos, when there is no Unsplash key
   templates/
     list.json         what appears in the Templates panel
     1.json, 2.json    the templates themselves
@@ -70,15 +71,20 @@ For a raster sticker, `thumb` and `url` are usually the same file.
 
 ## Photos
 
-`materials/photos/1.json` … `3.json` are lists of remote image URLs. The
-bundled ones point at Unsplash. Replace the URLs with your own — a school photo
-library, or your own asset host:
+The Photos panel comes from the Unsplash API, not from this folder — see
+**Stock photos** in [README.md](README.md) for the key it needs, and for how to
+change what the three browse rows search for.
+
+`materials/photos/1.json` … `3.json` are the fallback shown when no Unsplash
+key is configured: plain lists of remote image URLs. Replace them with your own
+— a school photo library, or your own asset host — if you would rather not use
+Unsplash at all:
 
 ```json
 { "id": 1, "thumb": "https://…/small.jpg", "url": "https://…/full.jpg", "width": 1600, "height": 1067 }
 ```
 
-The section headings live in `src/components/modules/panel/wrap/PhotoListWrap.vue`.
+`1.json`, `2.json` and `3.json` back the three browse rows in that order.
 
 ## Templates
 

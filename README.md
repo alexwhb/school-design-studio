@@ -29,6 +29,59 @@ Other scripts:
 | `npm run typecheck` | `vue-tsc --noEmit` |
 | `npm run fetch-fonts` | Re-downloads the bundled fonts (see below) |
 
+### Stock photos
+
+The Photos panel is backed by [Unsplash](https://unsplash.com). Searching and
+the three browse rows both go through the Unsplash API, so it needs a key:
+
+1. Register a free application at
+   <https://unsplash.com/oauth/applications> and copy the **Access Key**.
+2. `cp .env.example .env.local` and fill in `UNSPLASH_ACCESS_KEY`.
+3. Restart the server — the file is read at startup.
+
+The key is read server-side only and is never in the client bundle. The browser
+talks to `/design/imgs`, which proxies to Unsplash, caches each result for ten
+minutes and hides the key. That caching matters: a free Unsplash application is
+capped at 50 requests an hour, which an infinite-scrolling grid would otherwise
+spend in a couple of minutes. Apply for production access on the Unsplash
+dashboard to raise it to 5000.
+
+Without a key, the panel falls back to the sample images bundled in
+`service/src/mock/materials/photos`, and search says so instead of pretending.
+The same goes for a rejected key or a spent rate limit — each gets its own
+message in the panel rather than an empty grid.
+
+The three browse rows are stored searches. Change what they cover by editing
+`BROWSE_CATEGORIES` in `server/content-library.mjs` (the queries) and the list
+of the same name in `src/components/modules/panel/wrap/PhotoListWrap.vue` (the
+headings shown before any request goes out).
+
+Unsplash's API terms ask that apps credit photographers and report when a photo
+is used. Hovering a thumbnail shows the photographer, and placing one pings the
+photo's `download_location` through the proxy.
+
+### Uploads
+
+Pictures you add — the Upload button, a pasted screenshot, a background image,
+the result of Remove background — are stored in the browser, in IndexedDB. There
+is no account system and no upload endpoint in this fork, so there is nowhere
+else for them to go; upstream posted them to a Chinese CDN this project has no
+account for, which is why uploading used to end in a thumbnail reading FAILED.
+
+What that means in practice:
+
+- Uploads are per-browser and per-machine. Clearing site data clears them.
+- Large photos are shrunk on the way in — the long edge is capped at 2400px and
+  anything sizeable is re-encoded as JPEG. A phone photo lands at roughly a
+  third of its original weight. PNGs, GIFs and WebP keep their transparency and
+  are left alone unless they are oversized.
+- Images are held as data URLs, so they survive a reload, embed cleanly into a
+  PowerPoint export, and never taint the canvas during a PNG export.
+
+`src/common/methods/localUploads.ts` is the whole of it, and the seam to replace
+when embedding the editor in an app that has its own file store: keep
+`saveUpload` / `listUploads` / `deleteUpload` and change what is inside them.
+
 ### Content, and the optional backend
 
 `npm start` serves the bundled content library too, so Templates, Elements
@@ -38,9 +91,13 @@ serves it through the Express app in `service/`, which pulls in Puppeteer and a
 Chromium download purely to render screenshots — a lot of setup for a folder of
 JSON — so `serve.mjs` answers the read-only lookups directly.
 
+`npm run dev` answers them the same way, from the same code
+(`server/content-library.mjs`, mounted as Vite middleware), so the panels
+behave identically either way.
+
 You still need the real `service/` backend to *save* designs or templates, and
-for server-side rendering of the trickier exports. Point `API_URL` in
-`src/config.ts` at your own backend to supply your own content.
+for server-side rendering of the trickier exports. Set `DESIGN_API_URL` to
+point the editor at it — or at your own backend, to supply your own content.
 
 If the app is served some other way with no backend at all, it degrades rather
 than erroring: the panels show empty states and one informational line is
@@ -70,10 +127,15 @@ makes bold interpolate properly instead of being faked by the browser. See
 `public/fonts/LICENSES.md`.
 
 **Look.** One accent colour, a small neutral ramp, hairline borders, no
-shadows or gradients. All of it comes from `src/assets/styles/tokens.less`, so
-the editor can be re-skinned from one file. No features were removed — the
-toolbar was regrouped, panels were flattened, and section headings were set in
-quiet uppercase.
+shadows or gradients. Every colour in the editor comes from the tokens named in
+`src/assets/styles/tokens.less`, so it can be re-skinned from one file. No
+features were removed — the toolbar was regrouped, panels were flattened, and
+section headings were set in quiet uppercase.
+
+**Dark mode.** New. See below.
+
+**Uploads.** New — they used to go to a server that does not exist here. See
+below.
 
 **Page sizes.** The Chinese e-commerce presets (WeChat article headers, product
 listing pages) are replaced with sizes a school actually uses: slides, Letter,
@@ -83,6 +145,39 @@ A4, flyers, name badges, display boards.
 
 **Defaults.** The watermark is off unless you turn it on, and the app name links
 to `HOME_URL` rather than the original project's marketing site.
+
+## Dark mode
+
+The sun/moon button in the toolbar switches between light and dark. With no
+choice made it follows the operating system and keeps following it; clicking
+pins a theme, and shift-clicking the button hands control back to the system.
+The choice is remembered in `localStorage` under `ds_theme`.
+
+Only the editor's chrome changes. The page itself, the artwork on it and
+everything exported from it are identical in both themes — a PNG exported in
+dark mode is byte-for-byte the one exported in light mode.
+
+Two files decide how it looks:
+
+- `src/assets/styles/theme.less` holds the two palettes, as CSS custom
+  properties on `:root` and `html.dark`.
+- `src/assets/styles/tokens.less` names them (`@ink`, `@surface`, `@accent`, …).
+  Components only ever reference the names, so a component written against the
+  tokens themes itself.
+
+The dark palette is the school planner's admin theme — near-black surfaces,
+hairline borders, one green accent — so an embedded editor reads as part of that
+app rather than a panel bolted onto it.
+
+Two things to know before adding styles:
+
+- Each token is a `var()` reference, so Less colour functions cannot be applied
+  to one. `fade(@accent, 25%)` fails the build with *"Argument cannot be
+  evaluated to a color"*. Use `@accent-a25` / `@accent-a45`, or add a token.
+- Never hardcode a hex for chrome. `tools/` has no lint for this; the check is
+  `grep -rn '#[0-9a-f]\{3,8\}' src --include='*.vue'`, and everything that
+  legitimately remains is either artwork (a widget's default colour, a swatch
+  palette) or something drawn on top of a photo.
 
 ## PowerPoint export
 
@@ -120,7 +215,10 @@ so the practical options are:
 
 1. **Iframe it** at a route like `/design`, and set `HOME_URL` in
    `src/config.ts` so the app name links back into the planner. Simplest, and
-   the editor is already self-contained.
+   the editor is already self-contained. Its dark palette is the planner's admin
+   theme, so an iframe on an `/admin/*` route matches the chrome around it —
+   drive the theme from the host by setting `ds_theme` in `localStorage` on the
+   same origin, or by dropping the `dark` class on `<html>` directly.
 2. **Serve it as a separate app** on a subdomain, sharing a session cookie.
 3. **Port the editor surface** to React. Realistic only if the design data model
    is what you want long term — the store is plain Pinia and the widget schema
@@ -131,8 +229,13 @@ Either way, the things a real deployment still needs:
 - **Auth and tenancy.** There is none. `src/utils/axios.ts` ships a hard-coded
   demo token from upstream. Any real deployment must scope saved designs by
   school, exactly as the rest of the planner does.
-- **Storage.** Uploads and saved designs currently target the upstream backend
-  and a Qiniu bucket (`IMG_URL` in `src/config.ts`).
+- **Storage.** Uploads live in the visitor's own browser (see
+  [Uploads](#uploads)) — fine for one person at one desk, wrong the moment two
+  members of staff are meant to share a picture, or the same person opens the
+  editor on a different machine. Point `src/common/methods/localUploads.ts` at
+  the planner's own file store, scoped by school, before this is more than a
+  demo. Saved *designs* still target the upstream backend and are not wired up
+  at all.
 - **The icon font** is still loaded from `at.alicdn.com`. It works, but it is a
   third-party CDN in the critical path and should be self-hosted like the text
   fonts now are.

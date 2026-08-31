@@ -20,7 +20,10 @@ export default {
   // app when the editor is embedded in one.
   HOME_URL: '/',
   COPYRIGHT: 'Based on poster-design by ShawnPhang (MIT)',
-  API_URL: isDev ? 'http://localhost:7001' : '', // Backend address
+  // Same-origin by default: `npm run dev` and serve.mjs both answer the
+  // read-only /design/* lookups themselves. Set DESIGN_API_URL to point at the
+  // real service/ backend instead (needed for saving designs).
+  API_URL: prefix.DESIGN_API_URL || '', // Backend address
   SCREEN_URL: isDev ? 'http://localhost:7001' : '', // Screenshot service address
   IMG_URL: 'https://store.palxp.cn/', // Asset host
   // ICONFONT_URL: '//at.alicdn.com/t/font_3223711_74mlzj4jdue.css',
