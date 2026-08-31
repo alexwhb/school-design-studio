@@ -73,7 +73,11 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(403).end('Forbidden')
     return
   }
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
+  // `throwIfNoEntry: false` rather than existsSync-then-stat: the two-call
+  // version throws if the file disappears between them, and a synchronous
+  // throw in a request handler is another way to lose the whole server.
+  const stat = fs.statSync(filePath, { throwIfNoEntry: false })
+  if (stat?.isDirectory()) {
     filePath = path.join(filePath, 'index.html')
   }
   if (!fs.existsSync(filePath)) {
@@ -91,11 +95,33 @@ const server = http.createServer(async (req, res) => {
   const type = TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream'
   const immutable = filePath.includes(`${path.sep}assets${path.sep}`) || filePath.includes(`${path.sep}fonts${path.sep}`)
 
-  res.writeHead(200, {
-    'Content-Type': type,
-    'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'no-cache',
+  const stream = fs.createReadStream(filePath)
+
+  // Headers wait for the file to actually open. Everything above this point
+  // only proves the file existed a moment ago, and `vite build` empties dist/
+  // before rewriting it — so on a shared checkout the file can be gone by the
+  // time the stream opens. Committing to a 200 first would leave nothing to
+  // answer with when that happens.
+  stream.on('open', () => {
+    res.writeHead(200, {
+      'Content-Type': type,
+      'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'no-cache',
+    })
+    stream.pipe(res)
   })
-  fs.createReadStream(filePath).pipe(res)
+
+  // Without this listener Node promotes the stream's error to an uncaught
+  // exception and the whole server exits — one unreadable file taking down
+  // every other request, which is what a concurrent rebuild used to do.
+  stream.on('error', () => {
+    if (!res.headersSent) {
+      res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8', 'Retry-After': '5' })
+    }
+    res.end('Rebuilding, try again in a moment.')
+  })
+
+  // A browser that navigates away mid-download leaves the read open otherwise.
+  res.on('close', () => stream.destroy())
 })
 
 server.listen(PORT, '127.0.0.1', () => {
