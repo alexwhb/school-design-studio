@@ -7,7 +7,7 @@
 -->
 <template>
   <div class="wrap">
-    <search-header v-model="state.searchKeyword" @change="cateChange" />
+    <search-header v-model="state.searchKeyword" @change="cateChange" @search="searchChange" />
 
     <el-divider v-show="state.title" style="margin-top: 1.7rem" content-position="left">
       <span style="font-weight: bold">{{ state.title }}</span>
@@ -107,6 +107,11 @@ const load = async (init: boolean = false, stat?: string) => {
   }, 100)
 }
 
+/** Enter, or clearing the box, re-runs the list against the typed keyword. */
+function searchChange() {
+  load(true, pageOptions.state)
+}
+
 function cateChange(type: any) {
   state.title = type.name
   const init = pageOptions.cate != type.id
@@ -171,6 +176,7 @@ const openPSD = () => {
 defineExpose({
   load,
   cateChange,
+  searchChange,
   listRef,
 })
 </script>

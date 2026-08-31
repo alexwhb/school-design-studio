@@ -11,52 +11,47 @@
       <div class="search__type"><i class="iconfont icon-ego-caidan" /></div>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item
-            v-for="type in state.materialCates" :key="type.id"
-            @click="action('change', type, type.id)"
-          >
-            <span :class="['cate__text', { 'cate--select': + state.currentIndex === type.id }]">{{ type.name }}</span>
+          <el-dropdown-item v-for="type in state.materialCates" :key="type.id" @click="action('change', type, type.id)">
+            <span :class="['cate__text', { 'cate--select': +state.currentIndex === type.id }]">{{ type.name }}</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>
-    <span v-else style="width: 1rem"></span>
 
-    <el-input
-      v-model="state.searchValue"
-      size="large"
-      :placeholder="placeholder || 'Search'"
-      class="input-with-select"
-      clearable
-      @keyup.enter="submit"
-      @clear="submit"
-    >
-      <template #append>
-        <el-button @click="submit"><i class="iconfont icon-search"></i></el-button>
+    <el-input v-model="state.searchValue" size="large" :placeholder="placeholder || 'Search'" class="search__input" clearable @keyup.enter="submit" @clear="submit">
+      <!-- Inside the field rather than in an "append" box: the magnifier is a
+           label for what the field does, not a second control to press. -->
+      <template #prefix>
+        <i class="iconfont icon-search" />
       </template>
     </el-input>
   </div>
 </template>
 <script lang="ts" setup>
-import { reactive, toRefs, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import { ElDropdown, ElDropdownItem, ElDropdownMenu } from 'element-plus'
-import { useRoute } from 'vue-router'
 import api from '@/api'
 
 type TProps = {
   type?: string
   modelValue?: string
   placeholder?: string
+  /**
+   * Search as you type. Only for panels backed by the local library — a live
+   * search against a rate-limited third-party API spends the hourly quota a
+   * keystroke at a time.
+   */
+  live?: boolean
 }
 
 type TEmits = {
   (event: 'update:modelValue', data: string): void
   (event: 'change', data: TMaterialCatesData): void
-  /** The user asked for these results — Enter, the button, or clearing the box. */
+  /** The user asked for these results — Enter, typing, or clearing the box. */
   (event: 'search', data: string): void
 }
 
-type TMaterialCatesData = {id: string | number, name: string}
+type TMaterialCatesData = { id: string | number; name: string }
 
 type TState = {
   searchValue: string
@@ -68,9 +63,8 @@ const props = defineProps<TProps>()
 
 const emit = defineEmits<TEmits>()
 
-const route = useRoute()
 const state = reactive<TState>({
-  searchValue: '',
+  searchValue: props.modelValue || '',
   materialCates: [],
   currentIndex: 1,
 })
@@ -86,10 +80,31 @@ if (props.type != 'none') {
   // })
 }
 
+/**
+ * Long enough that a search fires once you have stopped typing rather than
+ * mid-word, short enough that it still feels like the list is following you.
+ */
+const LIVE_DELAY = 200
+let liveTimer: ReturnType<typeof setTimeout> | undefined
+
 watch(
   () => state.searchValue,
-  () => {
-    emit('update:modelValue', state.searchValue)
+  (value) => {
+    emit('update:modelValue', value)
+    if (!props.live) return
+    clearTimeout(liveTimer)
+    liveTimer = setTimeout(submit, LIVE_DELAY)
+  },
+)
+
+// The owner clears the box by clearing what it bound with v-model — going
+// "back" out of a set of results is one of the ways that happens.
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (value !== undefined && value !== state.searchValue) {
+      state.searchValue = value
+    }
   },
 )
 
@@ -99,11 +114,12 @@ function action(fn: 'change', type: TMaterialCatesData, currentIndex: number | s
 }
 
 /**
- * Searching is explicit rather than fired on every keystroke: each one is a
- * call against a rate-limited third-party API, and half-typed words return
- * results that flicker past before they are readable.
+ * Enter and the clear button always search immediately, even where typing
+ * does not: waiting out the debounce after a deliberate press reads as a
+ * dropped keystroke.
  */
 function submit() {
+  clearTimeout(liveTimer)
   emit('search', state.searchValue.trim())
 }
 
@@ -111,7 +127,6 @@ defineExpose({
   action,
   submit,
 })
-
 </script>
 
 <style lang="less" scoped>
@@ -120,23 +135,25 @@ defineExpose({
   display: flex;
   gap: 8px;
   cursor: pointer;
+}
+
+.search__input {
+  // The field is the only thing in the row when there is no category menu, so
+  // it takes the full width and the panel's padding is even on both sides.
+  flex: 1;
+  min-width: 0;
 
   :deep(.el-input__wrapper) {
-    box-shadow: 0 0 0 1px @line inset;
+    padding-left: 10px;
   }
-  // The library's "append" slot draws its own bordered box; flatten it into
-  // the field so the search bar reads as one control.
-  :deep(.el-input-group__append) {
-    background: transparent;
-    box-shadow: none;
-    border-left: 1px solid @line;
-    padding: 0 10px;
-    color: @ink-3;
-    .el-button {
-      border: none;
-      background: transparent;
-      padding: 0;
+  :deep(.el-input__prefix) {
+    color: @ink-4;
+    .iconfont {
+      font-size: 15px;
     }
+  }
+  :deep(.el-input__inner) {
+    font-size: @text-md;
   }
 }
 
@@ -150,7 +167,9 @@ defineExpose({
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.12s ease, color 0.12s ease;
+    transition:
+      background-color 0.12s ease,
+      color 0.12s ease;
     .iconfont {
       font-size: 16px;
     }

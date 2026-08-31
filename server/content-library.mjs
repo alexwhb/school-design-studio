@@ -234,19 +234,86 @@ function readMock(relative) {
 }
 
 /**
- * One page of a mock list, filtered by the panel's search box.
+ * One page of a list.
  *
  * The panels scroll infinitely and stop only when a page comes back empty, so
  * answering every page with the whole file appends the same items over and
  * over. Paging here is what lets them terminate.
  */
-function paged(all, query) {
+function pageOf(all, query) {
   const list = all || []
   const page = Math.max(1, Number(query.get('page')) || 1)
   const pageSize = Math.max(1, Number(query.get('pageSize')) || 20)
+  return { list: list.slice((page - 1) * pageSize, page * pageSize), total: list.length }
+}
+
+/** One page of a mock list, filtered by the panel's search box. */
+function paged(all, query) {
   const keyword = (query.get('search') || '').trim().toLowerCase()
-  const matched = keyword ? list.filter((item) => (item.title || '').toLowerCase().includes(keyword)) : list
-  return { list: matched.slice((page - 1) * pageSize, page * pageSize), total: matched.length }
+  const list = all || []
+  return pageOf(keyword ? list.filter((item) => (item.title || '').toLowerCase().includes(keyword)) : list, query)
+}
+
+/* -------------------------------------------------------------------------- */
+/* Element search                                                             */
+/* -------------------------------------------------------------------------- */
+
+/** The Elements panel's three rows, in the order it draws them. */
+const MATERIAL_CATES = ['png', 'svg', 'mask']
+
+/** "books" and "book" should find each other; nothing more clever than that. */
+const singular = (word) => (word.length > 3 && word.endsWith('s') ? word.slice(0, -1) : word)
+
+/**
+ * How well one item's title answers a query, or 0 for no match. Higher wins,
+ * so that searching "star" leads with the star rather than with "Stack of
+ * books" — an item whose whole title is the query is almost always the one
+ * that was meant.
+ */
+function titleScore(title, query, words) {
+  const target = (title || '').toLowerCase()
+  if (!target) return 0
+  if (target === query) return 100
+  if (target.startsWith(query)) return 80
+  // Matching runs word by word rather than on the raw substring, which is
+  // what keeps "pen" off "book open" while still finding "Gold star" for
+  // "star" and "Stack of books" for "book".
+  const targetWords = target
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .map(singular)
+  if (targetWords.some((candidate) => candidate.startsWith(query))) return 60
+  // Every word of the query has to land somewhere in the title, so "book cal"
+  // matches nothing while "open book" still finds "book open".
+  const all = words.every((word) => targetWords.some((candidate) => candidate.startsWith(word)))
+  return all ? 40 : 0
+}
+
+/**
+ * Free-text search over the element library. Searching is deliberately not
+ * scoped to the row you happen to be looking at: the panel shows one flat list
+ * of results, so typing "star" finds the sticker, the icon and the mask
+ * without you having to guess which row it was filed under.
+ */
+function searchMaterials(keyword, cate) {
+  const query = keyword.trim().toLowerCase()
+  if (!query) return []
+  const words = query
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .map(singular)
+  const cates = cate && MATERIAL_CATES.includes(cate) ? [cate] : MATERIAL_CATES
+
+  const scored = []
+  for (const name of cates) {
+    for (const item of readMock(`materials/${name}.json`) || []) {
+      const score = titleScore(item.title, query, words)
+      if (score) scored.push({ score, order: cates.indexOf(name), item })
+    }
+  }
+  // Ties keep the library's own order, so repeating a search never reshuffles.
+  scored.sort((a, b) => b.score - a.score || a.order - b.order)
+  return scored.map((entry) => entry.item)
 }
 
 let warnedNoKey = false
@@ -277,8 +344,11 @@ export async function contentLibrary(pathname, query) {
       return paged(readMock(type === '1' ? `components/list/${cate}.json` : 'templates/list.json'), query)
     case '/design/temp':
       return readMock(type === '1' ? `components/detail/${id}.json` : `templates/${id}.json`)
-    case '/design/material':
-      return paged(readMock(`materials/${cate}.json`), query)
+    case '/design/material': {
+      const keyword = (query.get('search') || '').trim()
+      if (keyword) return pageOf(searchMaterials(keyword, cate), query)
+      return pageOf(readMock(`materials/${cate}.json`), query)
+    }
 
     case '/design/imgs': {
       const keyword = (query.get('keyword') || '').trim()
