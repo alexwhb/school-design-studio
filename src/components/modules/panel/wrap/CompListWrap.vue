@@ -55,7 +55,7 @@ type TState = {
   list: TGetCompListResult[]
   searchValue: string
   currentCategory: TGetCompListResult | null
-  types: {cate: string, name: string}[]
+  types: { cate: string; name: string }[]
   showList: TGetCompListResult[][]
 }
 
@@ -245,15 +245,25 @@ defineExpose({
 </script>
 
 <style lang="less" scoped>
-// The backing tile for panel artwork. Fixed rather than themed: these samples
-// are full-colour compositions drawn for paper, so they need a light backing
-// in either theme. Kept local to the panel, so the shared token layer stays
-// the place for colours that genuinely change with the theme.
-@art-tile: #f8fafc;
-@art-tile-hover: #eaeef3;
+// The backing tile for panel artwork. Themed, but locally: a column of white
+// cards is a slab of glare on a dark panel, and it drowns out the samples it
+// is meant to present. The covers are transparent PNGs (see
+// tools/make-sample-covers.mjs), so whichever tile is in force shows through
+// them. Held as a custom property rather than a Less literal because Less
+// resolves at build time and this has to follow the runtime theme switch.
+// Mirrors GraphListWrap.
+@art-tile: var(--art-tile);
+@art-tile-hover: var(--art-tile-hover);
 .wrap {
+  --art-tile: #f3f8fa;
+  --art-tile-hover: #e6eef2;
   width: 100%;
   height: 100%;
+}
+
+html.dark .wrap {
+  --art-tile: hsl(0 0% 15%);
+  --art-tile-hover: hsl(0 0% 21%);
 }
 
 .search__wrap {

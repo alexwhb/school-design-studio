@@ -80,9 +80,9 @@ function token(name: string, fallback: string) {
 
 function render() {
   const sameParams: TSameParams = {
-    backgroundColor: token('--ds-ruler-bg', '#f9f9fa'),
-    lineColor: token('--ds-ruler-line', '#bec2c7'),
-    textColor: token('--ds-ruler-text', '#999999'),
+    backgroundColor: token('--ds-ruler-bg', '#f3f8fa'),
+    lineColor: token('--ds-ruler-line', '#acbac1'),
+    textColor: token('--ds-ruler-text', '#75838a'),
     // direction: 'start',
     // height: 30,
     displayDragPos: true,
