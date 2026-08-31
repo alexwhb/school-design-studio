@@ -16,8 +16,14 @@
       <el-progress style="width: 100%" :text-inside="true" :percentage="percent" />
       <div v-show="percent < 100" class="text btn" @click="cancel">{{ cancelText }}</div>
       <div class="text info">{{ msg }}</div>
-      <div v-show="percent >= 100" class="success">
-        <img src="https://store.palxp.cn/Celebration.png" alt="" srcset="" />
+      <!-- Drawn here rather than fetched: this used to hotlink a PNG from the
+           upstream project's asset host, so the one moment the app says "done"
+           depended on a third-party CDN being up. -->
+      <div v-show="percent >= 100" class="success" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="24" cy="24" r="21" opacity="0.25" />
+          <path d="M14 24.5 21 31.5 34 17.5" />
+        </svg>
       </div>
     </div>
   </div>
@@ -132,8 +138,10 @@ defineExpose({
 .success {
   display: flex;
   justify-content: center;
-  img {
-    width: 80%;
+  color: @accent;
+  svg {
+    width: 64px;
+    height: 64px;
   }
 }
 </style>

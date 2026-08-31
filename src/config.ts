@@ -25,11 +25,10 @@ export default {
   // real service/ backend instead (needed for saving designs).
   API_URL: prefix.DESIGN_API_URL || '', // Backend address
   SCREEN_URL: isDev ? 'http://localhost:7001' : '', // Screenshot service address
-  IMG_URL: 'https://store.palxp.cn/', // Asset host
-  // ICONFONT_URL: '//at.alicdn.com/t/font_3223711_74mlzj4jdue.css',
-  ICONFONT_URL: '//at.alicdn.com/t/font_2717063_ypy8vprc3b.css?display=swap',
-  ICONFONT_EXTRA: '//at.alicdn.com/t/c/font_3228074_xojoer6zhp.css',
-  QINIUYUN_PLUGIN: 'https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/qiniu-js/2.5.5/qiniu.min.js',
+  // The toolbar's icon fonts, served from public/ rather than a CDN. They are
+  // in the critical path — when that CDN was unreachable every button in the
+  // app rendered as a blank square. Refresh with `npm run fetch-iconfont`.
+  ICONFONT_URL: 'iconfont/iconfont.css',
   supportSubFont: false, // Enable server-side font subsetting
 }
 

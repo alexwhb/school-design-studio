@@ -12,11 +12,7 @@
 // })
 
 // import store from '@/store'
-import api from '@/api'
 import { saveUpload } from '@/common/methods/localUploads'
-import Qiniu from '@/common/methods/QiNiu'
-import _config from '@/config'
-import { getImage } from '@/common/methods/getImgDetail'
 // import wImage from '@/components/modules/widgets/wImage/wImage.vue'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
 import { wTextSetting } from '@/components/modules/widgets/wText/wTextSetting'

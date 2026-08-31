@@ -12,9 +12,7 @@
         <div class="top-left">
           <div class="name" style="font-size: 15px">PSD import</div>
         </div>
-        <div style="flex: 1">
-          <el-button plain type="primary" @click="jump2word">PSD guidelines</el-button>
-        </div>
+        <div style="flex: 1"></div>
         <el-button v-show="state.isDone" @click="clear">Clear template</el-button>
         <div class="v-tips">
           <HeaderOptions :isDone="state.isDone" @change="optionsChange" />
@@ -27,7 +25,13 @@
       <design-board class="page-design-wrap" pageDesignCanvasId="page-design-canvas">
         <div v-if="state.isDone" class="shelter" :style="{ width: (dPage.width * dZoom) / 100 + 'px', height: (dPage.height * dZoom) / 100 + 'px' }"></div>
         <uploader v-else accept=".psd" :hold="true" :drag="true" class="uploader" @load="selectFile">
-          <div class="uploader__box"><img style="margin-right: 1rem" src="https://cdn.dancf.com/design/svg/icon_psdimport.37e6f23e.svg" alt="upload" /> Drop a file here or choose one PSD 文件</div>
+          <div class="uploader__box">
+            <upload-filled style="width: 48px; height: 48px; margin-right: 1rem" />
+            <div class="uploader__copy">
+              <span>Drop a PSD file here, or choose one</span>
+              <span class="uploader__hint">Text, pictures and shapes arrive as separate layers. Effects, masks and adjustment layers are flattened.</span>
+            </div>
+          </div>
         </uploader>
       </design-board>
       <style-panel v-show="state.isDone"></style-panel>
@@ -54,6 +58,7 @@ import shortcuts from '@/mixins/shortcuts'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
 import useLoading from '@/common/methods/loading'
 import uploader from '@/components/common/Uploader/index.vue'
+import { UploadFilled } from '@element-plus/icons-vue'
 import designBoard from '@/components/modules/layout/designBoard/index.vue'
 import zoomControl from '@/components/modules/layout/zoomControl/index.vue'
 import HeaderOptions, { TEmitChangeData } from './components/UploadTemplate.vue'
@@ -193,10 +198,6 @@ async function loadDone() {
     // this.$store.commit('setShowMoveable', false)
   }, 100)
 }
-function jump2word() {
-  window.open('https://kdocs.cn/l/clmBsIkhve8d')
-}
-
 defineExpose({
   selectFile,
   clear,
@@ -220,6 +221,18 @@ defineExpose({
     align-items: center;
     width: 100%;
     height: 100%;
+  }
+  &__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+  }
+  &__hint {
+    color: @ink-3;
+    font-size: @text-sm;
+    max-width: 34ch;
+    line-height: 1.4;
   }
 }
 .v-tips {
