@@ -22,7 +22,27 @@ import { TupdateLayerIndexData, ungroup, updateLayerIndex } from "./actions/laye
 import pageDefault from "../canvas/page-default";
 import { TCanvasStore } from "../canvas";
 
+/**
+ * An element's rendered box, measured from the DOM after it draws.
+ *
+ * Not the same as the `width`/`height` the store holds: a text box grows with
+ * its content, so the store's width is what the user asked for and the record's
+ * is what the browser produced. Dragging and resizing read it to keep an
+ * element inside the page. A page is not an element and has no record, which is
+ * why this is optional — code that reads it is holding a widget and should say
+ * so, rather than crashing when it turns out to be holding the page.
+ */
+export type TWidgetRecord = {
+  width: number
+  height: number
+  minWidth: number
+  minHeight: number
+  /** Which handles it may be resized by: 'all', 'horizontal' or 'vertical'. */
+  dir: string
+}
+
 export type TdWidgetData = TPageState & Partial<TCommonItemData> & {
+  record?: TWidgetRecord
   parent?: string
   isContainer?: boolean
   text?: string

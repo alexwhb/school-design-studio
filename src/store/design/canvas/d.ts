@@ -53,7 +53,7 @@ export type TStoreAction = {
     value: TPageState[T]
     // pushHistory?: boolean
   }): void
-  getDPage(data: TPageState): TPageState
+  getDPage(): TPageState
   /** 设置dPage */
   setDPage(data: TPageState): void
   /** 更新 Page（从layouts获取）*/

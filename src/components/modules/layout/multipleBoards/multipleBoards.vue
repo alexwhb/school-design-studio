@@ -86,10 +86,11 @@ onMounted(async () => {
     sl.value = mainEl.scrollLeft
   })
 
-  listRef.value?.addEventListener('wheel', (event) => {
+  const list = listRef.value
+  list?.addEventListener('wheel', (event) => {
     event.preventDefault()
     // 使用滚轮横向滚动
-    listRef.value.scrollLeft += event.deltaY
+    list.scrollLeft += event.deltaY
   })
 })
 

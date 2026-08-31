@@ -101,7 +101,8 @@ function updateRecord(tempScale ?: number) {
   if (dActiveElement.value?.uuid === props.params.uuid) {
     // clearTimeout(this.timer)
     let record = dActiveElement.value?.record
-    if (record?.width <= 0) {
+    if (!record) return
+    if (record.width <= 0) {
       touchend()
     }
     // if (this.tempRecord && this.tempRecord.width && this.tempRecord.width != record.width) {
@@ -194,6 +195,7 @@ function touchend() {
     if (!dActiveElement.value) return
     if (dActiveElement.value.uuid === props.params.uuid) {
       let record = dActiveElement.value?.record
+      if (!record) return
       record.width = widget.value?.offsetWidth
       record.height = widget.value?.offsetHeight
       dActiveElement.value.width = widget.value?.offsetWidth

@@ -114,6 +114,8 @@ async function saveTemp() {
     if (dWidgets.value[0].type === 'w-group') {
       const group = dWidgets.value.shift()
       if (!group) return
+      // A page carries no `record`, so the type allows it to be missing.
+      if (!group.record) return
       group.record.width = 0
       group.record.height = 0
       dWidgets.value.push(group)
@@ -214,13 +216,15 @@ async function load(cb: () => void) {
     cb()
     return
   }
-  const { data: content, title, state: _state, width, height } = await api.home[apiName]({ id: id || tempId, type })
+  // Everything out of route.query is a string or an array of them; the API
+  // takes numbers.
+  const { data: content, title, state: _state, width, height } = await api.home[apiName]({ id: Number(id || tempId), type: type == null ? undefined : Number(type) })
   if (!content) return
   const data = JSON.parse(content)
   state.stateBollean = !!_state
   state.title = title
   controlStore.setShowMoveable(false) // Clear the previous selection box
-  if (type == 1) {
+  if (Number(type) === 1) {
     // A saved element. Grouped ones arrive as an array with a w-group
     // container; a single styled text box arrives as one bare widget. The
     // panel already handles both, but this path always called addGroup, so

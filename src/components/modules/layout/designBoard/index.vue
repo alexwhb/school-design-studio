@@ -56,7 +56,6 @@
             </component>
 
             <!-- <ref-line v-if="dSelectWidgets.length === 0" /> -->
-            <!-- <size-control v-if="dSelectWidgets.length === 0" /> -->
           </div>
         </watermark>
       </div>

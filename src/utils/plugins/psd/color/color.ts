@@ -25,7 +25,8 @@ export const change2Hex = (color: string) => {
   let _a = color.substring(7, 9)
   if (reVal.indexOf('#') === -1) {
     a = Number(reVal.split(',')[3])
-    hex = RGB2Hex(...reVal.split(','))
+    const [r, g, b] = reVal.split(',').map(Number)
+    hex = RGB2Hex(r, g, b)
     _a = Math.round((a as number) * 255).toString(16)
     if (_a.length === 1) _a = '0' + _a
   }

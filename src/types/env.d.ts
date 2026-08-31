@@ -1,5 +1,18 @@
 // / <reference lib="dom" />
 
+/**
+ * Replaced at build time by vite.config.ts's `define`, which inlines the two
+ * variables src/config.ts reads. Declared here rather than by pulling in
+ * @types/node, which also swaps the DOM's timer signatures for Node's and
+ * breaks every setTimeout that stores its handle in a number.
+ */
+declare const process: {
+  env: {
+    NODE_ENV?: string
+    DESIGN_API_URL?: string
+  }
+}
+
 interface ImportMeta {
     url: string
   

@@ -225,6 +225,7 @@ function move(payload?: MouseEvent) {
 function updateRecord() {
   if (dActiveElement.value?.uuid === props.params.uuid) {
     let record = dActiveElement.value?.record
+    if (!record) return
     if (widgetRef.value) {
       record.width = widgetRef.value.offsetWidth
       record.height = widgetRef.value.offsetHeight
@@ -305,7 +306,7 @@ function fixRotate() {
   }, 100)
 }
 
-function lockOthers(isCrop) {
+function lockOthers(isCrop: boolean) {
   // 裁剪时锁定其他图层
   widgetStore.lockWidgets()
   if (!isCrop) return

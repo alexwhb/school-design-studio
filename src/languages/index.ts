@@ -26,7 +26,9 @@ const i18n = createI18n({
  * @returns {String}
  */
 export function getBrowserLang() {
-  let browserLang = navigator.language ? navigator.language : navigator.browserLanguage
+  // `browserLanguage` is an old IE property, kept as a fallback and typed here
+  // because the DOM lib has never known about it.
+  let browserLang = navigator.language ? navigator.language : (navigator as Navigator & { browserLanguage?: string }).browserLanguage || 'en'
   let defaultBrowserLang = ''
   if (['cn', 'zh', 'zh-cn'].includes(browserLang.toLowerCase())) {
     defaultBrowserLang = 'zh'

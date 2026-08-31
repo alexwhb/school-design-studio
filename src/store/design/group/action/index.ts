@@ -62,8 +62,8 @@ export function realCombined(store: TGroupStore) {
       // })
       left = Math.min(left, widget.left)
       top = Math.min(top, widget.top)
-      right = Math.max(right, Number(widget.width || widget.record.width) + Number(widget.left))
-      bottom = Math.max(bottom, Number(widget.height || widget.record.height) + Number(widget.top))
+      right = Math.max(right, Number(widget.width || widget.record?.width || 0) + Number(widget.left))
+      bottom = Math.max(bottom, Number(widget.height || widget.record?.height || 0) + Number(widget.top))
     }
     // sortWidgets.sort((a, b) => a.index > b.index)
     // for (let i = 0; i < sortWidgets.length; ++i) {
