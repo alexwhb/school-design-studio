@@ -11,7 +11,9 @@ npm run dev:servers     # Vue on :5174, React on :5273, embed demo on :5373
 npm run dev:react       # React only
 npm run test:parity     # drives both apps and compares them
 npm run test:e2e:react  # end-to-end tests for the port and the embed
-npm run typecheck:react
+npm run typecheck       # the Vue app
+npm run typecheck:react # the port
+npm run typecheck:tests # the parity and e2e suites
 npm run bench:prod      # production builds, before/after numbers
 ```
 

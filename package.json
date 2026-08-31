@@ -23,7 +23,8 @@
     "bench:prod": "node tools/bench/start-prod.mjs && cross-env VUE_URL=http://127.0.0.1:4874 REACT_URL=http://127.0.0.1:4873 node tools/bench/bench.mjs",
     "build:embed": "cross-env NODE_ENV=production vite build --config vite.embed.config.ts",
     "dev:embed-demo": "cross-env NODE_ENV=development vite --config vite.embed-demo.config.ts",
-    "typecheck:react": "tsc --noEmit -p react/tsconfig.json"
+    "typecheck:react": "tsc --noEmit -p react/tsconfig.json",
+    "typecheck:tests": "tsc --noEmit -p tests/tsconfig.json"
   },
   "dependencies": {
     "@palxp/color-picker": "workspace:*",
