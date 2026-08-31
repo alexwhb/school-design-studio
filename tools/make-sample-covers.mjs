@@ -25,7 +25,19 @@ const MOCK = path.join(ROOT, 'service', 'src', 'mock', 'components')
 const DETAIL = path.join(MOCK, 'detail')
 const LIST = path.join(MOCK, 'list')
 
-const SAMPLES = [1, 2, 3, 4, 5, 6]
+// Whatever the panel is currently listing, rather than a hand-kept range: the
+// text presets are ids 1-3 and 7-13, so a literal list here goes stale the
+// moment make-samples.py adds one.
+const SAMPLES = (
+	await Promise.all(
+		['text.json', 'comp.json'].map(async (name) =>
+			JSON.parse(await fs.readFile(path.join(LIST, name), 'utf8')),
+		),
+	)
+)
+	.flat()
+	.map((item) => item.id)
+	.sort((a, b) => a - b)
 const PAD = 24
 
 await fs.mkdir(OUT, { recursive: true })
@@ -87,61 +99,33 @@ for (const id of SAMPLES) {
 	}
 
 	const text = decodeURIComponent(data.text || '')
-	const measured = await page.evaluate(
-		async ({ text, family, size, weight }) => {
-			await document.fonts.load(`${weight} ${size}px "${family}"`)
-			const ctx = document.createElement('canvas').getContext('2d')
-			ctx.font = `${weight} ${size}px "${family}", sans-serif`
-			return ctx.measureText(text).width
-		},
-		{
-			text,
-			family: data.fontClass?.value || 'Inter',
-			size: data.fontSize,
-			weight: data.fontWeight || 400,
-		},
+	const measured = await measureText(
+		page,
+		text,
+		data.fontClass?.value || 'Inter',
+		data.fontSize,
+		data.fontWeight || 400,
 	)
 
-	// measureText knows nothing about the editor's own spacing or effects, both
-	// of which push glyphs past the measured width:
-	//   - letterSpacing is applied as (fontSize * letterSpacing / 100) per gap
-	//   - a stroke effect draws outward from the glyph edge on both sides
+	// measureText knows nothing about the editor's own letter spacing, and the
+	// box it sizes is only the lettering; everything the effect stack paints
+	// outside that is added by effectBleed. The page is then laid out around
+	// the result — the lettering centred horizontally, and pushed down far
+	// enough that a glow or a lean above it still has page to fall on. Pass two
+	// crops to the page, so room that is not on the page is room that is lost.
 	const gaps = Math.max(text.length - 1, 0)
 	const spacing = ((data.fontSize * (data.letterSpacing || 0)) / 100) * gaps
-	const widestStroke = Math.max(
-		0,
-		...(data.textEffects || []).map((e) =>
-			e?.stroke?.enable ? e.stroke.width || 0 : 0,
-		),
-	)
-	const widestOffset = Math.max(
-		0,
-		...(data.textEffects || []).map((e) =>
-			e?.offset?.enable ? Math.abs(e.offset.x || 0) : 0,
-		),
-	)
-	const width = Math.ceil(
-		measured + spacing + widestStroke * 2 + widestOffset + data.fontSize * 0.1,
-	)
-	const verticalOffset = Math.max(
-		0,
-		...(data.textEffects || []).map((e) =>
-			e?.offset?.enable ? Math.abs(e.offset.y || 0) : 0,
-		),
-	)
-	const height = Math.ceil(
-		data.fontSize * (data.lineHeight || 1.2) +
-			widestStroke * 2 +
-			verticalOffset,
-	)
+	const lineBox = data.fontSize * (data.lineHeight || 1.2)
 
-	data.width = width
-	data.height = height
+	data.width = Math.ceil(measured + spacing + data.fontSize * 0.1)
+	const bleed = effectBleed(data)
+	data.width = Math.ceil(data.width + bleed.x * 2)
+	data.height = Math.ceil(lineBox)
 	data.left = PAD
-	data.top = PAD
+	data.top = Math.ceil(PAD + bleed.y)
 	record.data = JSON.stringify(data)
-	record.width = width + PAD * 2
-	record.height = height + PAD * 2
+	record.width = data.width + PAD * 2
+	record.height = Math.ceil(data.top + lineBox + bleed.y + PAD)
 	await fs.writeFile(file, JSON.stringify(record))
 	console.log(`  sized ${id}: "${text}" -> ${record.width}x${record.height}`)
 }
@@ -180,6 +164,7 @@ const TRANSPARENT_PAGE = `
 `
 
 for (const id of SAMPLES) {
+	const record = JSON.parse(await fs.readFile(path.join(DETAIL, `${id}.json`), 'utf8'))
 	await page.goto(`${BASE}/home?tempid=${id}&tempType=1`, {
 		waitUntil: 'domcontentloaded',
 	})
@@ -190,7 +175,67 @@ for (const id of SAMPLES) {
 	await page.mouse.click(760, 120)
 	await page.waitForTimeout(600)
 
-	const box = await page.evaluate(() => {
+	// The dev server reloads the page whenever anything under src/ is saved,
+	// which destroys the execution context mid-measure. One retry turns that
+	// from a lost run into a lost second.
+	const shot = { pageWidth: record.width, bleed: effectBleed(JSON.parse(record.data)) }
+	const box = await measureArtwork(page, shot).catch(() => measureArtwork(page, shot))
+	if (!box || box.width < 4 || box.height < 4) {
+		console.log(`  ! ${id}: nothing on the canvas`)
+		continue
+	}
+
+	await page.screenshot({
+		path: path.join(OUT, `sample-${id}.png`),
+		omitBackground: true,
+		clip: box,
+	})
+	console.log(
+		`  ✓ sample-${id}.png  ${Math.round(box.width)}x${Math.round(box.height)}`,
+	)
+}
+
+/**
+ * How far outside its own box an effect stack paints, in design pixels.
+ *
+ * The crop below is the widget's rectangle as the browser lays it out, and the
+ * editor sets a text widget's height from its line box — so a glow, a lean or
+ * a descender is simply outside the rectangle and would be sliced off. This is
+ * how much to give back. Grouped samples sit on a backdrop that already
+ * contains them, so they need none of it.
+ */
+function effectBleed(data) {
+	if (Array.isArray(data)) return { x: 0, y: 0 }
+	const layers = data.textEffects || []
+	const size = data.fontSize || 0
+	const lineBox = size * (data.lineHeight || 1.2)
+	const widest = (pick) => Math.max(0, ...layers.map(pick), 0)
+	const lean = (degrees, across) => Math.tan((Math.abs(degrees || 0) * Math.PI) / 180) * across
+
+	const stroke = widest((e) => (e?.stroke?.enable ? e.stroke.width || 0 : 0))
+	const blur = widest((e) => (e?.shadow?.enable ? e.shadow.blur || 0 : 0))
+	return {
+		x:
+			stroke +
+			blur +
+			widest((e) => (e?.shadow?.enable ? Math.abs(e.shadow.offsetX || 0) : 0)) +
+			widest((e) => (e?.offset?.enable ? Math.abs(e.offset.x || 0) : 0)) +
+			widest((e) => (e?.skew?.enable ? lean(e.skew.x, lineBox) : 0)),
+		// A display face routinely hangs below the line box it is set in, so
+		// every sample gets a little vertical room whether or not it has effects.
+		y:
+			stroke +
+			blur +
+			size * 0.35 +
+			widest((e) => (e?.shadow?.enable ? Math.abs(e.shadow.offsetY || 0) : 0)) +
+			widest((e) => (e?.offset?.enable ? Math.abs(e.offset.y || 0) : 0)) +
+			widest((e) => (e?.skew?.enable ? lean(e.skew.y, data.width || 0) : 0)),
+	}
+}
+
+/** The rectangle the artwork occupies, plus its bleed, clamped to the page. */
+function measureArtwork(page, { pageWidth, bleed }) {
+	return page.evaluate(({ pageWidth, bleed }) => {
 		const canvas = document.getElementById('page-design-canvas')
 		if (!canvas) return null
 		const page = canvas.getBoundingClientRect()
@@ -211,29 +256,20 @@ for (const id of SAMPLES) {
 		}
 		if (!Number.isFinite(l)) return null
 
-		// Clamp to the page. Effect layers can overflow it, and anything past the
-		// edge is the editor's grey background rather than artwork.
-		return {
-			x: Math.max(l, page.left),
-			y: Math.max(t, page.top),
-			width: Math.min(r, page.right) - Math.max(l, page.left),
-			height: Math.min(b, page.bottom) - Math.max(t, page.top),
-		}
-	})
-
-	if (!box || box.width < 4 || box.height < 4) {
-		console.log(`  ! ${id}: nothing on the canvas`)
-		continue
-	}
-
-	await page.screenshot({
-		path: path.join(OUT, `sample-${id}.png`),
-		omitBackground: true,
-		clip: box,
-	})
-	console.log(
-		`  ✓ sample-${id}.png  ${Math.round(box.width)}x${Math.round(box.height)}`,
-	)
+		// The canvas is zoomed to fit the well, so a design pixel is not a
+		// screen pixel and the bleed, which arrives in design pixels, has to be
+		// scaled with it. The clamp stops at the page: the page itself paints
+		// transparent here, but the panel of template thumbnails beyond it does
+		// not, and a wide sample reaches it.
+		const scale = pageWidth ? page.width / pageWidth : 1
+		const padX = (bleed?.x || 0) * scale
+		const padY = (bleed?.y || 0) * scale
+		const left = Math.max(l - padX, page.left)
+		const top = Math.max(t - padY, page.top)
+		const right = Math.min(r + padX, page.right)
+		const bottom = Math.min(b + padY, page.bottom)
+		return { x: left, y: top, width: right - left, height: bottom - top }
+	}, { pageWidth, bleed })
 }
 
 await browser.close()

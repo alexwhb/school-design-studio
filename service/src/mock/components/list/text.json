@@ -3,24 +3,80 @@
     "id": 1,
     "cover": "/covers/sample-1.png",
     "title": "Varsity outline",
-    "width": 733,
-    "height": 281,
+    "width": 740,
+    "height": 409,
     "state": 1
   },
   {
     "id": 2,
     "cover": "/covers/sample-2.png",
     "title": "Hard shadow",
-    "width": 985,
-    "height": 231,
+    "width": 995,
+    "height": 346,
     "state": 1
   },
   {
     "id": 3,
     "cover": "/covers/sample-3.png",
     "title": "Soft shadow",
-    "width": 777,
-    "height": 221,
+    "width": 813,
+    "height": 368,
+    "state": 1
+  },
+  {
+    "id": 7,
+    "cover": "/covers/sample-7.png",
+    "title": "Gradient fill",
+    "width": 872,
+    "height": 326,
+    "state": 1
+  },
+  {
+    "id": 8,
+    "cover": "/covers/sample-8.png",
+    "title": "3D extrude",
+    "width": 808,
+    "height": 374,
+    "state": 1
+  },
+  {
+    "id": 9,
+    "cover": "/covers/sample-9.png",
+    "title": "Hollow outline",
+    "width": 692,
+    "height": 342,
+    "state": 1
+  },
+  {
+    "id": 10,
+    "cover": "/covers/sample-10.png",
+    "title": "Sticker cut-out",
+    "width": 794,
+    "height": 422,
+    "state": 1
+  },
+  {
+    "id": 11,
+    "cover": "/covers/sample-11.png",
+    "title": "Cast shadow",
+    "width": 824,
+    "height": 326,
+    "state": 1
+  },
+  {
+    "id": 12,
+    "cover": "/covers/sample-12.png",
+    "title": "Double outline",
+    "width": 822,
+    "height": 378,
+    "state": 1
+  },
+  {
+    "id": 13,
+    "cover": "/covers/sample-13.png",
+    "title": "Neon glow",
+    "width": 965,
+    "height": 427,
     "state": 1
   }
 ]

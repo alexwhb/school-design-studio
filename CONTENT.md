@@ -16,9 +16,9 @@ service/src/mock/
     list.json         what appears in the Templates panel
     101..112.json     the school pack (see below)
   components/
-    list/text.json    Text > Text with effects
+    list/text.json    Text > Text with effects, and the effect presets
     list/comp.json    Text > Sample element groups
-    detail/1..6.json  the elements themselves
+    detail/1..13.json the elements themselves
 ```
 
 After editing, run `npm run build` if you are serving the production build.
@@ -246,3 +246,61 @@ Spectral, DM Serif Display, IBM Plex Mono and JetBrains Mono. They are bundled
 like the rest (`npm run fetch-fonts`, all SIL OFL) and appear in the text
 panel, the last two under a new Monospace group.
 
+## Text effects and sample elements
+
+The Text panel has two rows below the plain heading/body buttons — **Text with
+effects** and **Sample element groups** — and they come from
+`components/list/text.json` and `components/list/comp.json`, each entry
+pointing at a `components/detail/<id>.json` that holds the actual widgets.
+
+```bash
+python3 tools/make-samples.py                          # write them
+node tools/make-sample-covers.mjs http://127.0.0.1:5173  # size and shoot
+```
+
+The cover pass does two jobs: it measures each sample in the real browser with
+the real font and writes the box back, then screenshots it on transparency. It
+has to run after any edit, because a sample whose box was sized for the old
+wording clips the new one.
+
+### What a text preset is
+
+Ten of the samples are one text widget carrying a `textEffects` array, and they
+are used two different ways:
+
+- picking one in the **Text panel** drops the whole thing on the page — wording,
+  font, size and effect;
+- the **Choose** button in the settings panel's Text effects section lists the
+  same file and takes only the effect stack, applying it to the text you have.
+  It carries the preset's text colour across as well, because the plain text
+  still paints underneath the stack — the hollow preset is only hollow if the
+  text below it is transparent.
+
+A stack is a list of layers, painted in array order, so the array reads back to
+front: the face of the lettering is the last entry. The settings panel numbers
+them the other way up, nearest first. Each layer can carry:
+
+| part | what it does |
+| --- | --- |
+| `filling` | `type: 0` flat colour, `2` gradient (`gradient.angle` + `stops`), `1` image |
+| `stroke` | an outline, drawn outward from the glyph edge |
+| `shadow` | offset and blur; with no offset and no fill of its own, a glow |
+| `offset` | the whole layer moved — stack several for an extruded block |
+| `skew` | the whole layer leaned, pivoting on the bottom of the box |
+
+Only `filling`, `stroke`, `shadow` and `offset` came from upstream; `skew` is
+ours, and it is what makes a cast shadow possible. A preset stores only the
+parts it uses, and the panel fills in the rest when you open it, so an older
+preset still offers every control.
+
+Three things worth knowing before you add one:
+
+- **Keep it to a single widget.** The Choose button reads `textEffects` off the
+  parsed detail file, so a grouped sample has nothing for it to apply.
+- **The step in an extrude has to be one pixel.** At three the diagonals come
+  out visibly stepped; depth comes from the number of layers instead.
+- **A stroke or a gradient fill does not survive PNG export.** Both are drawn
+  with CSS that html2canvas has no renderer for (`-webkit-text-stroke`,
+  `background-clip: text`), so an outlined heading exports as a flat one.
+  Shadows and offsets do survive. The .pptx export is aware of this and
+  rasterises text carrying any effect rather than writing it as editable text.

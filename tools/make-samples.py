@@ -181,6 +181,89 @@ def sample_classic():
         ])
 
 
+def sample_gradient():
+    """One fill, painted as a gradient and clipped to the glyphs."""
+    return text_widget(
+        'Spirit Week', font_=ARCHIVO, size=150, weight=700, colour=NAVY,
+        effects=[effect(filling=gradient(120, (NAVY, 0), (TEAL, 1)))])
+
+
+def sample_extrude():
+    """A stack of offsets in one flat colour, read as depth.
+
+    Each layer is the same lettering nudged one pixel further down and right,
+    so what the eye sees is the side of a solid block rather than a stack of
+    copies. The step has to be a single pixel: at three the diagonals come out
+    visibly stepped, and the depth then has to come from the number of layers
+    instead.
+    """
+    depth = [effect(filling=solid(NAVY), offset={'enable': True, 'x': i, 'y': i})
+             for i in range(24, 0, -1)]
+    return text_widget(
+        'GAME NIGHT', font_=ANTON, size=150, colour=GOLD, spacing=2,
+        effects=depth + [effect(filling=solid(GOLD))])
+
+
+def sample_hollow():
+    """Outline only. The widget's own colour has to go transparent for this:
+    the plain text layer is always drawn under the effect stack, so leaving it
+    set would fill the letters back in."""
+    return text_widget(
+        'PEP RALLY', font_=ANTON, size=150, colour='#00000000', spacing=4,
+        effects=[effect(stroke={'enable': True, 'type': 'center', 'color': RED, 'width': 8})])
+
+
+def sample_sticker():
+    """A thick white keyline and a soft shadow — a die-cut sticker."""
+    return text_widget(
+        'Bake Sale', font_=FREDOKA, size=150, weight=700, colour=RED,
+        effects=[
+            effect(stroke={'enable': True, 'type': 'center', 'color': WHITE, 'width': 20},
+                   shadow={'enable': True, 'color': SOFT_SHADOW, 'offsetX': 0, 'offsetY': 10, 'blur': 18}),
+            effect(filling=solid(RED)),
+        ])
+
+
+def sample_cast_shadow():
+    """A leaning translucent copy, as if the lettering stood on the page.
+
+    The skew pivots on the bottom of the box, so the shadow stays joined to the
+    foot of the letters instead of sliding out from under them, and it leans
+    right because the light is coming from the upper left.
+    """
+    return text_widget(
+        'FIELD TRIP', font_=BEBAS, size=150, colour=NAVY, spacing=4,
+        effects=[
+            effect(filling=solid(NAVY_CAST), skew={'enable': True, 'x': -34, 'y': 0}),
+            effect(filling=solid(NAVY)),
+        ])
+
+
+def sample_double_outline():
+    """Two keylines around a white face — a crest or a letterman patch."""
+    return text_widget(
+        'HONOR ROLL', font_=ANTON, size=150, colour=WHITE, spacing=3,
+        effects=[
+            effect(stroke={'enable': True, 'type': 'center', 'color': GOLD, 'width': 26}),
+            effect(stroke={'enable': True, 'type': 'center', 'color': NAVY, 'width': 12}),
+            effect(filling=solid(WHITE)),
+        ])
+
+
+def sample_neon():
+    """A halo, cast twice at different radii.
+
+    A shadow is drawn from the shape of the glyphs whether or not the layer
+    fills them, so a layer with no fill and a blurred shadow at no offset is
+    pure glow. Two of them — one tight, one wide — is what stops it reading as
+    a smudge.
+    """
+    halo = lambda blur: effect(shadow={'enable': True, 'color': VIOLET_GLOW, 'offsetX': 0, 'offsetY': 0, 'blur': blur})
+    return text_widget(
+        'Movie Night', font_=PACIFICO, size=140, colour=VIOLET,
+        effects=[halo(60), halo(26), effect(filling=solid(VIOLET))])
+
+
 def sample_ribbon():
     """A banner with a title across it."""
     w, h = 900, 300
@@ -222,7 +305,19 @@ SAMPLES = {
     '4': ('Ribbon banner', sample_ribbon),
     '5': ('Award badge', sample_badge),
     '6': ('Event card', sample_card),
+    '7': ('Gradient fill', sample_gradient),
+    '8': ('3D extrude', sample_extrude),
+    '9': ('Hollow outline', sample_hollow),
+    '10': ('Sticker cut-out', sample_sticker),
+    '11': ('Cast shadow', sample_cast_shadow),
+    '12': ('Double outline', sample_double_outline),
+    '13': ('Neon glow', sample_neon),
 }
+
+# Which list each sample belongs to. Ids 1-3 came first and 7-13 were added
+# later, so the text presets are not a contiguous run; the groups keep 4-6.
+TEXT_SAMPLES = ['1', '2', '3', '7', '8', '9', '10', '11', '12', '13']
+COMP_SAMPLES = ['4', '5', '6']
 
 
 def main():
@@ -246,7 +341,7 @@ def main():
         sizes[sid_] = (title, record['width'], record['height'])
         print(f'{sid_}.json  {title:<18} {record["width"]:.0f}x{record["height"]:.0f}')
 
-    for name, ids in (('text.json', ['1', '2', '3']), ('comp.json', ['4', '5', '6'])):
+    for name, ids in (('text.json', TEXT_SAMPLES), ('comp.json', COMP_SAMPLES)):
         items = [{
             'id': int(i), 'cover': f'/covers/sample-{i}.png', 'title': sizes[i][0],
             'width': sizes[i][1], 'height': sizes[i][2], 'state': 1,
