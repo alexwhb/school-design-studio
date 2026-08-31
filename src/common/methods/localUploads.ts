@@ -26,15 +26,13 @@
  * bytes live.
  */
 
+import { run, STORES } from './localDb'
+
 /** Longest edge kept for an uploaded photo, in pixels. */
 const MAX_EDGE = 2400
 /** Above this, re-encode as JPEG; below it, keep the original bytes. */
 const REENCODE_ABOVE_BYTES = 600 * 1024
 const JPEG_QUALITY = 0.85
-
-const DB_NAME = 'design-studio'
-const DB_VERSION = 1
-const STORE = 'uploads'
 
 export type LocalUpload = {
   id: string
@@ -45,41 +43,6 @@ export type LocalUpload = {
   /** Original filename, shown on hover. */
   title: string
   created_time: string
-}
-
-let dbPromise: Promise<IDBDatabase> | null = null
-
-function openDb(): Promise<IDBDatabase> {
-  if (!dbPromise) {
-    dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION)
-      request.onupgradeneeded = () => {
-        const db = request.result
-        if (!db.objectStoreNames.contains(STORE)) {
-          db.createObjectStore(STORE, { keyPath: 'id' })
-        }
-      }
-      request.onsuccess = () => resolve(request.result)
-      request.onerror = () => reject(request.error)
-    }).catch((error) => {
-      // Let the next call try again rather than caching the failure forever.
-      dbPromise = null
-      throw error
-    })
-  }
-  return dbPromise
-}
-
-function run<T>(mode: IDBTransactionMode, work: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  return openDb().then(
-    (db) =>
-      new Promise<T>((resolve, reject) => {
-        const tx = db.transaction(STORE, mode)
-        const request = work(tx.objectStore(STORE))
-        request.onsuccess = () => resolve(request.result)
-        request.onerror = () => reject(request.error)
-      }),
-  )
 }
 
 function readAsDataUrl(blob: Blob): Promise<string> {
@@ -161,16 +124,16 @@ export async function saveUpload(file: File): Promise<LocalUpload> {
     title: file.name || 'Upload',
     created_time: new Date().toISOString(),
   }
-  await run('readwrite', (store) => store.add(record) as IDBRequest<any>)
+  await run(STORES.uploads, 'readwrite', (store) => store.add(record) as IDBRequest<any>)
   return record
 }
 
 /** Newest first, which is the order someone expects after an upload. */
 export async function listUploads(): Promise<LocalUpload[]> {
-  const all = (await run('readonly', (store) => store.getAll() as IDBRequest<LocalUpload[]>)) || []
+  const all = (await run(STORES.uploads, 'readonly', (store) => store.getAll() as IDBRequest<LocalUpload[]>)) || []
   return all.sort((a, b) => (a.created_time < b.created_time ? 1 : -1))
 }
 
 export async function deleteUpload(id: string): Promise<void> {
-  await run('readwrite', (store) => store.delete(id) as IDBRequest<any>)
+  await run(STORES.uploads, 'readwrite', (store) => store.delete(id) as IDBRequest<any>)
 }

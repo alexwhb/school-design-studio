@@ -287,8 +287,14 @@ function getTitle() {
   return state.title
 }
 
+/** Puts a name back in the box — used when a saved design is restored. */
+function setTitle(title: string) {
+  state.title = title || ''
+}
+
 defineExpose({
   getTitle,
+  setTitle,
   download,
   save,
   saveTemp,

@@ -90,6 +90,8 @@ import createDesign from '@/components/business/create-design'
 import ExportMenu from './components/ExportMenu.vue'
 import multipleBoards from '@/components/modules/layout/multipleBoards'
 import useHistory from '@/common/hooks/history'
+import useAutosave from '@/common/hooks/autosave'
+import { useRoute } from 'vue-router'
 useHistory()
 
 const ref1 = ref<ButtonInstance>()
@@ -130,13 +132,22 @@ const state = reactive<TState>({
   showLineGuides: false,
 })
 const optionsRef = ref<typeof HeaderOptions | null>(null)
+const route = useRoute()
+// The design's name lives in the toolbar's own state, so autosave reads and
+// writes it through there rather than keeping a second copy.
+const autosave = useAutosave({
+  getTitle: () => getDesignTitle(),
+  setTitle: (title: string) => optionsRef.value?.setTitle(title),
+})
 const zoomControlRef = ref<typeof zoomControl | null>(null)
 const controlStore = useControlStore()
 const createDesignRef: Ref<typeof createDesign | null> = ref(null)
 
+// The design is saved as it changes, so this is only about the couple of
+// seconds between the last edit and the write that has not happened yet.
 const beforeUnload = function (e: Event): any {
-  if (dHistoryStack.value.changes.length > 0) {
-    const confirmationMessage: string = 'Your changes are not saved automatically.';
+  if (autosave.isDirty()) {
+    const confirmationMessage: string = 'Your most recent changes have not been saved yet.';
     (e || window.event).returnValue = (confirmationMessage as any) // Gecko and Trident
     return confirmationMessage // Gecko and WebKit
   } else return false
@@ -172,8 +183,7 @@ function zoomAdd() {
 }
 
 function save() {
-  if (!optionsRef.value) return
-  optionsRef.value.save()
+  void autosave.saveNow()
 }
 
 const { handleKeydowm, handleKeyup, dealCtrl } = shortcuts.methods
@@ -221,6 +231,11 @@ function loadData() {
     // zoomControlRef.value.screenChange()
     // Select the page by default:page
     widgetStore.selectWidget({ uuid: '-1' })
+    // Offer the last design back, but only on a blank canvas: arriving with an
+    // id or a template id is a request for that design, and asking about a
+    // different one would be an interruption. Watching starts either way.
+    const { id, tempid } = route.query
+    await autosave.restoreThenWatch(!id && !tempid)
   })
 }
 
@@ -245,9 +260,7 @@ const fns: any = {
   openTour: () => {
     tourRef.value.open()
   },
-  save: () => {
-    optionsRef.value?.save(false)
-  },
+  save,
   download: () => {
     optionsRef.value?.download()
   },
