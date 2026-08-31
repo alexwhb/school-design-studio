@@ -13,7 +13,7 @@
 <template>
   <div :style="{ position, bottom: -1 * st + 'px', left: sl + 'px' }" :class="['artboards', isFold ? 'fold' : 'unfold']">
     <div ref="listRef" class="wrap">
-      <div v-if="isFold" v-show="dLayouts.length > 0" class="btn" @click="isFold = !isFold">{{ foldLabel }} <i class="icon sd-zhankai" /></div>
+      <div v-if="isFold" v-show="dLayouts.length > 0" class="btn" :title="foldLabel" @click="isFold = !isFold"><span class="btn__label">{{ foldLabel }}</span> <i class="icon sd-zhankai" /></div>
       <div class="list" v-else>
         <span @click="isFold = !isFold" class="icon-btn"><i class="icon sd-zhankai" /></span>
 
@@ -441,9 +441,13 @@ async function deletePage(position: number) {
   }
 }
 
+// The pill grows with the page name rather than spilling out of its own border,
+// and a name long enough to crowd the canvas is cut with an ellipsis.
 .fold {
   cursor: pointer;
-  width: 150px;
+  width: max-content;
+  min-width: 130px;
+  max-width: min(320px, 100%);
   text-align: center;
   height: 34px;
   margin-bottom: 12px;
@@ -459,6 +463,7 @@ async function deletePage(position: number) {
   .icon {
     margin-left: 6px;
     font-size: 11px;
+    flex-shrink: 0;
   }
   .btn {
     padding: 0 14px;
@@ -469,6 +474,11 @@ async function deletePage(position: number) {
     height: 100%;
     white-space: nowrap;
     border-radius: @radius;
+    overflow: hidden;
+    &__label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     &:hover {
       background: @surface-2;
     }
