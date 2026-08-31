@@ -19,8 +19,7 @@
         <li :class="['widget', { active: getIsActive(element.uuid), disable: !showItem(element) }, 'item-one']" @click="selectLayer(element)" @mouseover="hoverLayer(element)" @mouseout="hoverLayer('-1')">
           <!-- <span v-show="+element.parent !== -1" :class="['widget-type icon', `sd-xiaji`]"></span> -->
           <span v-show="+element.parent !== -1" class="second-layer"></span>
-          <img v-if="element.imgUrl" class="widget-type widget-type__img" :src="element.imgUrl" />
-          <img v-else-if="element.svgUrl" class="widget-type widget-type__img" :src="element.svgUrl" />
+          <img v-if="layerThumb(element)" class="widget-type widget-type__img" :src="layerThumb(element)" />
           <span v-else :class="['widget-type icon', `sd-${element.type}`, element.type]"></span>
           <span :class="['widget-name', 'line-clamp-1', `${element.type}`]">{{ element.text || element.name }} {{ element.mask ? '(container)' : '' }}</span>
           <div class="widget-out" :data-type="element.type" :data-uuid="element.uuid">
@@ -52,7 +51,7 @@ export default defineComponent({
   setup(props, context) {
     const widgetStore = useWidgetStore()
     let widgets = ref<TdWidgetData[]>([])
-    const state = reactive<{drag: boolean}>({
+    const state = reactive<{ drag: boolean }>({
       drag: false,
     })
     const dragOptions = computed(() => {
@@ -64,7 +63,6 @@ export default defineComponent({
       }
     })
 
-    
     // const dPage = computed(() => {
     //   return store.getters.dPage
     // })
@@ -74,6 +72,16 @@ export default defineComponent({
     // const dSelectWidgets = computed(() => {
     //   return store.getters.dSelectWidgets
     // })
+    // A shape carries its SVG as markup in `svgUrl`, not as a link, so it has to
+    // be wrapped in a data URI here — handed straight to `src` the browser shows
+    // a broken image. Colour placeholders are substituted the way wSvg does it.
+    const layerThumb = (element: any) => {
+      const source: string = element.svgUrl || element.imgUrl || ''
+      if (!source.trimStart().startsWith('<')) return source
+      const markup = (element.colors || []).reduce((acc: string, color: string, i: number) => acc.split(`{{colors[${i}]}}`).join(color), source)
+      return `data:image/svg+xml;utf8,${encodeURIComponent(markup)}`
+    }
+
     const showItem = (item: any) => {
       return state.drag === true && item.parent != '-1' ? false : true
     }
@@ -141,7 +149,7 @@ export default defineComponent({
       widgetStore.updateWidgetData({
         uuid: item.uuid,
         key: 'lock',
-        value: typeof item.lock === 'undefined' ? true : !item.lock
+        value: typeof item.lock === 'undefined' ? true : !item.lock,
       })
       // store.dispatch('updateWidgetData', {
       //   uuid: item.uuid,
@@ -152,7 +160,7 @@ export default defineComponent({
       // item.lock = typeof item.lock === 'undefined' ? true : !item.lock
     }
 
-    return { lockLayer, onDone, onMove, selectLayer, hoverLayer, widgets, getWidgets, getIsActive, ...toRefs(state), dragOptions, showItem }
+    return { lockLayer, onDone, onMove, selectLayer, hoverLayer, widgets, getWidgets, getIsActive, ...toRefs(state), dragOptions, showItem, layerThumb }
   },
   watch: {
     data: {
@@ -197,7 +205,9 @@ export default defineComponent({
         object-fit: contain;
         background-color: @color0;
         background-image: linear-gradient(45deg, var(--ds-checker-a) 25%, transparent 25%, transparent 75%, var(--ds-checker-a) 75%, var(--ds-checker-a)), linear-gradient(45deg, var(--ds-checker-a) 25%, transparent 25%, transparent 75%, var(--ds-checker-a) 75%, var(--ds-checker-a));
-        background-position: 0 0, 10px 10px;
+        background-position:
+          0 0,
+          10px 10px;
         background-size: 21px 21px;
         outline: 1px solid @line;
       }

@@ -192,68 +192,55 @@ function handlemousemove(e: MouseEvent) {
 }
 
 function loadSvg() {
-  // console.log(this.params)
   const Snap = (window as any).Snap
   return new Promise<void>((resolve) => {
-    // Snap.load(
-    // props.params.svgUrl,
-    //   function (svg: Record<string, any>) {
-        // 链接加载方法
-    //   },
-    // )
-    const svg = Snap.parse(props.params.svgUrl)
-    let svg2 = Snap(svg.node)
-        let items = svg2.node.childNodes
-        svg2.node.removeAttribute('width')
-        svg2.node.removeAttribute('height')
-        svg2.node.setAttribute('style', 'height: inherit;width: inherit;')
-        // svg2.node.setAttribute('height', 'inherit')
-        svgElements = []
-        const colorsObj = color2obj()
+    // Snap.parse only hands back the <svg> element itself when the source
+    // *starts* with `<svg`; anything before it — a licence comment, say —
+    // makes it wrap the lot in a DocumentFragment instead. Dig the element out
+    // either way, or the attribute calls below throw and nothing is appended,
+    // leaving a selectable but empty box on the canvas.
+    const parsed = Snap.parse(props.params.svgUrl)
+    const svgNode: SVGSVGElement | null = parsed.node.nodeType === Node.ELEMENT_NODE ? parsed.node : parsed.node.querySelector('svg')
+    if (!svgNode) {
+      resolve()
+      return
+    }
 
-        deepElement(items)
+    svgNode.removeAttribute('width')
+    svgNode.removeAttribute('height')
+    svgNode.setAttribute('style', 'height: inherit;width: inherit;')
+    svgElements = []
+    const colorsObj = color2obj()
 
-        function deepElement(els: Record<string, any>) {
-          // 判断是NodeList对象则继续递归，否则进入元素处理工厂
-          if (els.item) {
-            els.forEach((element: Record<string, any>) => {
-              elementFactory(element)
-              if (element.childNodes.length > 0) {
-                element.childNodes.forEach((element: Record<string, any>) => {
-                  deepElement(element)
-                })
-              }
-            })
-          } else {
-            elementFactory(els)
-          }
-        }
-        // 元素工厂: 遍历元素中是否存在可自定义的颜色属性
-        function elementFactory(element: Record<string, any>) {
-          const attrsColor: Record<string, any> = {}
-          try {
-            element.attributes.forEach((attr: Record<string, any>) => {
-              if (colorsObj[attr.value]) {
-                // console.log(attr.name, colorsObj[attr.value])
-                attr.value = colorsObj[attr.value]
-                attrsColor[attr.name] = props.params.colors.findIndex((x) => x == attr.value)
-              }
-            })
-          } catch (e) {}
-          if (JSON.stringify(attrsColor) !== '{}' && svgElements) {
-            svgElements.push({
-              item: element,
-              attrsColor,
-            })
-          }
-          // console.log(element.attributes, element.getAttribute('fill'), _this.params.colors)
-        }
-        
-        if (widgetRef.value) {
-          // svg.node.classList.add('svg__box')
-          widgetRef.value.appendChild(svg.node)
-        }
-        resolve()
+    // The root <svg> carries the colour placeholder as often as its children do
+    // (every Lucide icon puts `stroke` there), so the walk starts at it.
+    deepElement(svgNode)
+
+    function deepElement(el: Record<string, any>) {
+      elementFactory(el)
+      el.childNodes.forEach((child: Record<string, any>) => deepElement(child))
+    }
+    // 元素工厂: 遍历元素中是否存在可自定义的颜色属性
+    function elementFactory(element: Record<string, any>) {
+      if (!element.attributes) return // text and comment nodes
+      const attrsColor: Record<string, any> = {}
+      for (const attr of Array.from(element.attributes) as Record<string, any>[]) {
+        if (!colorsObj[attr.value]) continue
+        attr.value = colorsObj[attr.value]
+        attrsColor[attr.name] = props.params.colors.findIndex((x) => x == attr.value)
+      }
+      if (JSON.stringify(attrsColor) !== '{}' && svgElements) {
+        svgElements.push({
+          item: element,
+          attrsColor,
+        })
+      }
+    }
+
+    if (widgetRef.value) {
+      widgetRef.value.appendChild(svgNode)
+    }
+    resolve()
   })
 }
 
