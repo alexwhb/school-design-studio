@@ -21,21 +21,18 @@
     <div class="top-nav-divider" />
     <slot />
   </div>
-  <!-- Renders the page to an image for the cover thumbnail and the PNG export -->
-  <SaveImage ref="canvasImage" />
 </template>
 
 <script lang="ts" setup>
 import api from '@/api'
-import { reactive, toRefs, ref } from 'vue'
+import { reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import _dl from '@/common/methods/download'
 import useNotification from '@/common/methods/notification'
-import SaveImage from '@/components/business/save-download/CreateCover.vue'
 import { useFontStore } from '@/common/methods/fonts'
 // import copyRight from './CopyRight.vue'
-import _config from '@/config'
 import downloadBlob from '@/common/methods/download/downloadBlob'
+import { withPageRenderer } from '@/common/methods/export/renderPage'
+import { dataUrlToBlob, safeFileName } from '@/common/methods/export/utils'
 import { useControlStore, useHistoryStore, useCanvasStore, useUserStore, useWidgetStore } from '@/store/index'
 import { storeToRefs } from 'pinia'
 import watermarkOption from './Watermark.vue'
@@ -57,14 +54,12 @@ type TState = {
   loading: boolean
 }
 
-const props = defineProps<TProps>()
+defineProps<TProps>()
 const emit = defineEmits<TEmits>()
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const widgetStore = useWidgetStore()
-
-const canvasImage = ref<typeof SaveImage | null>(null)
 
 // const {
 //   dWidgets, tempEditing
@@ -76,7 +71,7 @@ const historyStore = useHistoryStore()
 
 const { dPage } = storeToRefs(pageStore)
 const { tempEditing } = storeToRefs(userStore)
-const { dWidgets, dLayouts } = storeToRefs(widgetStore)
+const { dWidgets } = storeToRefs(widgetStore)
 const { dHistoryStack } = storeToRefs(useHistoryStore())
 
 const state = reactive<TState>({
@@ -138,65 +133,50 @@ async function stateChange(e: string | number | boolean) {
   const { stat } = await api.home.saveTemp({ id: tempid, type, state: e ? 1 : 0 })
   stat != 0 && useNotification('Saved', 'Your template has been updated')
 }
-async function download() {
+/**
+ * Exports the current page as a PNG.
+ *
+ * Everything is drawn in the browser, by the same renderer the PowerPoint
+ * export uses. Upstream sent designs containing an SVG shape, a masked image, a
+ * QR code or text effects to a Puppeteer screenshot service instead — a backend
+ * this fork does not run, so those exports came back as whatever the web server
+ * answered `/api/screenshots` with: a 1KB HTML page saved under a .png name.
+ */
+async function download(scale = 1) {
   if (state.loading === true) {
     useNotification('Export in progress', 'Another export is already running. Please wait.')
     return
   }
   state.loading = true
   emit('update:modelValue', true)
-  emit('change', { downloadPercent: 1, downloadText: 'Saving…' })
-  const currentRecord = pageStore.dCurrentPage
-  const backEndCapture: boolean = checkDownloadPoster(dLayouts.value[currentRecord])
-  const fileName = `${state.title || 'Untitled design'}.png`
-  if (!backEndCapture) {
-    // 无特殊条件命中则直接从前端出图
-    const { blob } = await canvasImage.value?.createPoster()
-    downloadBlob(blob, fileName)
-    emit('change', { downloadPercent: 100, downloadText: 'Your design has been downloaded' })
-    state.loading = false
-  }
-  await save(true)
-  const { id, tempid } = route.query
-  if (!id && !tempid) {
-    emit('change', { downloadPercent: 0, downloadText: 'Please wait…' })
-    useNotification('Could not save', 'Pick a template first, then try again.', { type: 'error' })
-    state.loading = false
-    return
-  }
-  if (backEndCapture) {
-    // 从服务端生成图片
-    const { width, height } = dPage.value
-    emit('update:modelValue', true)
-    emit('change', { downloadPercent: 1, downloadText: 'Preparing your design...' })
-    let timerCount = 0
-    const animation = setInterval(() => {
-      if (props.modelValue && timerCount < 75) {
-        timerCount += RandomNumber(1, 10)
-        emit('change', { downloadPercent: 1 + timerCount, downloadText: 'Building the image' })
-      } else {
-        clearInterval(animation)
-      }
-    }, 800)
-    await _dl.downloadImg(
-      api.home.download({ id, tempid, width, height, index: pageStore.dCurrentPage }) + '&r=' + Math.random(),
-      (progress: number, xhr: any) => {
-        if (props.modelValue) {
-          clearInterval(animation)
-          progress >= timerCount && emit('change', { downloadPercent: Number(progress.toFixed(0)), downloadText: 'Generating the image' })
-        } else {
-          xhr.abort()
-          state.loading = false
-        }
-      },
-      fileName,
-    )
+  emit('change', { downloadPercent: 5, downloadText: 'Preparing your design…' })
+
+  try {
+    const dataUrl = await withPageRenderer((renderer) => {
+      emit('change', { downloadPercent: 35, downloadText: 'Drawing the page' })
+      return renderer.renderPage(pageStore.dCurrentPage, scale)
+    })
+    if (!dataUrl) throw new Error('The page could not be drawn.')
+
+    emit('change', { downloadPercent: 90, downloadText: 'Saving the image' })
+    downloadBlob(dataUrlToBlob(dataUrl), safeFileName(state.title, 'png'))
     emit('change', { downloadPercent: 100, downloadText: 'Your design has been downloaded', downloadMsg: '' })
+  } catch (e: any) {
+    console.error('[export] image export failed', e)
+    emit('change', { downloadPercent: 0, downloadText: '' })
+    useNotification('Could not export', e?.message || 'Sorry, that export did not work. Please try again.', { type: 'error' })
+    return
+  } finally {
     state.loading = false
   }
-}
-function RandomNumber(min: number, max: number) {
-  return Math.ceil(Math.random() * (max - min)) + min
+
+  // The file is already on disk, so a failure to save the template must not
+  // read as a failed export.
+  try {
+    await save(true)
+  } catch (e) {
+    console.warn('[export] could not save the design after exporting', e)
+  }
 }
 
 async function load(cb: () => void) {
@@ -258,18 +238,6 @@ function initBoard() {
 
 function jump2Edit() {
   userStore.managerEdit(true)
-}
-
-function checkDownloadPoster({ layers }: any) {
-  let backEndCapture = false
-  for (let i = 0; i < layers.length; i++) {
-    const { type, mask, textEffects } = layers[i]
-    if ((type === 'w-image' && mask) || type === 'w-svg' || type === 'w-qrcode' || (textEffects && textEffects.length > 0)) {
-      backEndCapture = true
-      break
-    }
-  }
-  return backEndCapture
 }
 
 function getTitle() {

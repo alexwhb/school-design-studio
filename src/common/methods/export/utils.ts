@@ -109,6 +109,22 @@ export async function imageToDataUrl(url: string): Promise<string | null> {
   }
 }
 
+/**
+ * Turns a `data:` URL back into a Blob.
+ *
+ * Decoded by hand rather than with `fetch(dataUrl)` because a page's
+ * Content-Security-Policy can refuse to connect to a data: URL, and an export
+ * that only works on some deployments is worse than no shortcut at all.
+ */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const [header, payload] = String(dataUrl).split(',')
+  const type = header.match(/^data:([^;,]+)/)?.[1] || 'application/octet-stream'
+  const bytes = header.includes(';base64') ? atob(payload) : decodeURIComponent(payload)
+  const buffer = new Uint8Array(bytes.length)
+  for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i)
+  return new Blob([buffer], { type })
+}
+
 export function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()

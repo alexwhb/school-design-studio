@@ -10,6 +10,7 @@ import html2canvas from 'html2canvas'
 import FontFaceObserver from 'fontfaceobserver'
 import { nextTick } from 'vue'
 import { useCanvasStore, useControlStore, useWidgetStore } from '@/store'
+import { rasterizeElement, subtreeNeedsRasterizing } from './rasterizeElement'
 import type { TdWidgetData } from '@/store/design/widget'
 
 const CANVAS_ID = 'page-design-canvas'
@@ -41,6 +42,94 @@ function afterPaint(delay = 120): Promise<void> {
   })
 }
 
+/**
+ * Swaps every inline `<svg>` for an `<img>` of the same SVG.
+ *
+ * html2canvas walks the DOM itself and has no SVG renderer, so it draws an
+ * inline `<svg>` as nothing at all — which is how a shape or sticker could sit
+ * on the canvas and then be missing from the exported file. An `<img>` pointing
+ * at the same markup goes down html2canvas's image path instead, where the
+ * browser does the rasterising.
+ *
+ * Runs on the clone, after it is in the document, so the sizes are the ones the
+ * element actually renders at.
+ */
+async function inlineSvgToImages(root: HTMLElement): Promise<void> {
+  const pending: Promise<unknown>[] = []
+
+  // The canvas carries the editor's zoom as `transform: scale()`, so every
+  // getBoundingClientRect inside it comes back multiplied by that zoom. The
+  // replacement <img> is sized in ordinary layout pixels, which the same
+  // transform then scales again — so divide the zoom back out first, or a
+  // shape exports at whatever fraction of its size the user was zoomed to.
+  const zoom = root.getBoundingClientRect().width / root.offsetWidth || 1
+
+  for (const svg of Array.from(root.querySelectorAll('svg'))) {
+    const rect = svg.getBoundingClientRect()
+    const width = rect.width / zoom
+    const height = rect.height / zoom
+    if (!width || !height) continue
+
+    const standalone = svg.cloneNode(true) as SVGSVGElement
+    standalone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    standalone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    // The widget strips the width/height attributes and sets `width: inherit`
+    // so the SVG fills its box. Standing on its own there is nothing to inherit
+    // from, so pin the size it was just measured at.
+    standalone.setAttribute('width', String(width))
+    standalone.setAttribute('height', String(height))
+    standalone.style.width = `${width}px`
+    standalone.style.height = `${height}px`
+
+    const markup = new XMLSerializer().serializeToString(standalone)
+    const img = document.createElement('img')
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`
+    img.style.width = `${width}px`
+    img.style.height = `${height}px`
+    img.style.display = 'block'
+    svg.replaceWith(img)
+
+    // Decode up front: html2canvas snapshots whatever the image has painted so
+    // far, and an undecoded one paints nothing.
+    pending.push(img.decode().catch(() => undefined))
+  }
+
+  await Promise.all(pending)
+}
+
+/**
+ * Pre-renders the widgets html2canvas would get wrong.
+ *
+ * A text widget carrying an outline or a gradient fill, and any masked image,
+ * are drawn by the browser into a flat picture first — see `rasterizeElement`
+ * for why. Each one that succeeds is swapped for that picture; each one that
+ * fails is left alone, so the worst case is the old imperfect render rather
+ * than a hole in the page.
+ */
+async function rasterizeUnsupported(root: HTMLElement, scale: number): Promise<void> {
+  // Only whole widgets are replaced, never the layers inside one: an outlined
+  // heading is a stack of layers that overlap exactly, and swapping them
+  // individually would lose how they sit together.
+  const widgets = Array.from(root.children).filter((child): child is HTMLElement => child instanceof HTMLElement)
+
+  for (const widget of widgets) {
+    if (!subtreeNeedsRasterizing(widget)) continue
+
+    const picture = await rasterizeElement(widget, scale)
+    if (!picture) {
+      console.warn('[export] could not pre-render a widget; leaving it to html2canvas', widget.className)
+      continue
+    }
+
+    const img = document.createElement('img')
+    img.src = picture
+    const style = getComputedStyle(widget)
+    img.style.cssText = `position:absolute;left:${style.left};top:${style.top};width:${widget.offsetWidth}px;height:${widget.offsetHeight}px;transform:${style.transform};transform-origin:${style.transformOrigin};opacity:${style.opacity};display:block`
+    widget.replaceWith(img)
+    await img.decode().catch(() => undefined)
+  }
+}
+
 async function capture(el: HTMLElement, scale: number): Promise<string | null> {
   const clone = el.cloneNode(true) as HTMLElement
   clone.setAttribute('id', 'export-clone')
@@ -49,13 +138,27 @@ async function capture(el: HTMLElement, scale: number): Promise<string | null> {
   clone.style.top = '0'
   document.body.appendChild(clone)
   try {
+    await rasterizeUnsupported(clone, scale)
+    await inlineSvgToImages(clone)
     const fonts = document.fonts
     const canvas = await html2canvas(clone, {
       backgroundColor: null,
       useCORS: true,
       scale,
       logging: false,
-      onclone: (doc: Document) => fonts.forEach((font) => (doc as any).fonts.add(font)),
+      // Firefox throws InvalidModificationError from `FontFaceSet.add()` for any
+      // face that came from an @font-face rule, and html2canvas lets that escape
+      // the whole export. Those faces are already in the clone, which carries
+      // the same stylesheets; only the ones registered from JS (wText.vue) need
+      // copying, so skip whatever the set refuses.
+      onclone: (doc: Document) =>
+        fonts.forEach((font) => {
+          try {
+            ;(doc as any).fonts.add(font)
+          } catch {
+            // already present via the cloned stylesheets
+          }
+        }),
     })
     return canvas.toDataURL('image/png')
   } catch (e) {
@@ -67,8 +170,9 @@ async function capture(el: HTMLElement, scale: number): Promise<string | null> {
 }
 
 export type PageRenderer = {
-  renderPage: (pageIndex: number) => Promise<string | null>
-  renderWidget: (pageIndex: number, widget: TdWidgetData) => Promise<string | null>
+  /** `scale` multiplies the output resolution; 1 is the design's true pixel size. */
+  renderPage: (pageIndex: number, scale?: number) => Promise<string | null>
+  renderWidget: (pageIndex: number, widget: TdWidgetData, scale?: number) => Promise<string | null>
 }
 
 /**
@@ -105,15 +209,15 @@ export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Prom
   const scaleForZoom = () => 100 / (canvasStore.dZoom || 100)
 
   const renderer: PageRenderer = {
-    async renderPage(pageIndex) {
+    async renderPage(pageIndex, scale = 1) {
       await goTo(pageIndex)
       const el = document.getElementById(CANVAS_ID)
-      return el ? capture(el, scaleForZoom()) : null
+      return el ? capture(el, scaleForZoom() * scale) : null
     },
-    async renderWidget(pageIndex, widget) {
+    async renderWidget(pageIndex, widget, scale = 1) {
       await goTo(pageIndex)
       const el = document.getElementById(String(widget.uuid))
-      return el ? capture(el, scaleForZoom()) : null
+      return el ? capture(el, scaleForZoom() * scale) : null
     },
   }
 

@@ -7,8 +7,6 @@
 -->
 <template>
   <el-button v-show="isDone" type="primary" plain @click="prepare"><b>Upload template</b></el-button>
-  <!-- 生成图片组件 -->
-  <SaveImage ref="canvasImage" />
 </template>
 
 <script lang="ts" setup>
@@ -16,7 +14,6 @@ import api from '@/api'
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import useNotification from '@/common/methods/notification'
-import SaveImage from '@/components/business/save-download/CreateCover.vue'
 import { useFontStore } from '@/common/methods/fonts'
 import _config from '@/config'
 import github from '@/api/github'
@@ -60,8 +57,6 @@ const router = useRouter()
 const widgetStore = useWidgetStore()
 const controlStore = useControlStore()
 const { dWidgets } = storeToRefs(widgetStore)
-
-const canvasImage = ref<typeof SaveImage | null>(null)
 const state = reactive<TState>({
   stateBollean: false,
   title: '',
@@ -69,19 +64,6 @@ const state = reactive<TState>({
 })
 
 useFontStore.init() // Load the fonts
-
-// 生成封面
-// const draw = () => {
-//   return new Promise<string>((resolve) => {
-//     if (!canvasImage.value) {
-//       resolve('')
-//     } else {
-//       canvasImage.value.createCover(({ key }: { key: string }) => {
-//         resolve(_config.IMG_URL + key)
-//       })
-//     }
-//   })
-// }
 
 let addition = 0 // Bytes so far
 let lenCount = 0 // Total bytes
@@ -149,7 +131,6 @@ async function uploadImgs() {
 
 const uploadTemplate = async () => {
   emit('change', { downloadPercent: 95, downloadText: 'Making the cover image', downloadMsg: 'Almost done...' })
-  // const cover = await draw()
   const data = Number(type) == 1 ? JSON.stringify(widgets) : JSON.stringify({ page, widgets })
   const { id, stat, msg } = await api.home.saveTemp({ title: 'From your own design', type, data, width: page.width, height: page.height })
   stat !== 0 ? useNotification('Saved', '') : useNotification('Could not save', msg, { type: 'error' })
