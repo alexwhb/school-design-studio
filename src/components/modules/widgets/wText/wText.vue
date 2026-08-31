@@ -46,11 +46,12 @@
         v-html="params.text"
       ></div>
     </template>
-    <div ref="editWrap" :style="{ fontFamily: `'${params.fontClass.value}'` }" class="edit-text" spellcheck="false" :contenteditable="state.editable ? 'plaintext-only' : false" @input="writingText($event)" @blur="writeDone($event)" v-html="params.text"></div>
+    <div ref="editWrap" :style="{ fontFamily: `'${params.fontClass.value}'` }" class="edit-text" :spellcheck="spellcheck" :contenteditable="state.editable ? 'plaintext-only' : false" @input="writingText($event)" @blur="writeDone($event)" v-html="params.text"></div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import useSpellcheck from '@/common/hooks/useSpellcheck'
 // 文本组件
 // const NAME = 'w-text'
 
@@ -77,6 +78,9 @@ type TProps = {
 }
 
 const props = defineProps<TProps>()
+
+/** Editor-wide preference; see common/hooks/useSpellcheck.ts. */
+const { enabled: spellcheck } = useSpellcheck()
 const widgetStore = useWidgetStore()
 const forceStore = useForceStore()
 const historyStore = useHistoryStore()

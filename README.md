@@ -244,6 +244,21 @@ What a page operation *means* lives in `src/store/design/widget/actions/pages.ts
 rather than in the strip, so that keeping the current page index, the widget
 list and the canvas in step is written once instead of once per button.
 
+## Spelling
+
+On by default, and switched off in **File → Check spelling**.
+
+Upstream hardcoded `spellcheck="false"` on every text widget, which suits a
+designer setting type and does not suit the person this fork is for: a teacher
+writing the words on a poster that goes home to four hundred families. Off is
+still a real choice though — a page of pupil names, or a school motto in Latin,
+turns the whole design red and the underlines stop meaning anything. The
+preference is remembered in `localStorage` under `ds_spellcheck`.
+
+Only the box being edited is checked. The stacked copies that draw text effects,
+and the thumbnails in the page strip, are never checked: a squiggle drawn three
+times through an outlined heading is not a spelling mistake anyone can act on.
+
 ## Dark mode
 
 The sun/moon button in the toolbar switches between light and dark. With no
