@@ -150,6 +150,7 @@ function updateRecord() {
   if (!widget.value) return
   if (dActiveElement.value && dActiveElement.value.uuid === String(props.params.uuid)) {
     let record = dActiveElement.value.record
+    if (!record) return
     record.width = widget.value.offsetWidth
     record.height = widget.value.offsetHeight
     record.minWidth = props.params.fontSize

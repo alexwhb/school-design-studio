@@ -46,7 +46,7 @@ type TProps = {
 }
 
 type TEmits = {
-  (event: 'change', data: { downloadPercent: number; downloadText: string }): void
+  (event: 'change', data: { downloadPercent: number; downloadText: string; downloadMsg?: string }): void
   (event: 'update:modelValue', data: boolean): void
 }
 
@@ -254,17 +254,6 @@ async function load(cb: () => void) {
 function initBoard() {
   widgetStore.setDWidgets(widgetStore.getWidgets())
   pageStore.setDPage(pageStore.getDPage())
-}
-
-function draw() {
-  return new Promise<string>((resolve) => {
-    if (!canvasImage.value) resolve('')
-    else {
-      canvasImage.value.createCover(({ key }: { key: string }) => {
-        resolve(_config.IMG_URL + key)
-      })
-    }
-  })
 }
 
 function jump2Edit() {

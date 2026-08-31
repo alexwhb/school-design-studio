@@ -11,7 +11,6 @@
 
 <script lang="ts" setup>
 import html2canvas from 'html2canvas'
-import Qiniu from '@/common/methods/QiNiu'
 // import { useSetupMapGetters } from '@/common/hooks/mapGetters'
 import { storeToRefs } from 'pinia'
 import { useCanvasStore, useWidgetStore } from '@/store'
@@ -25,46 +24,6 @@ const { dZoom } = storeToRefs(canvasStore)
 
 // props: ['modelValue'],
 // emits: ['update:modelValue'],
-
-async function createCover(cb: any) {
-  const nowZoom = dZoom.value
-  // Deselect元素
-  widgetStore.selectWidget({
-    uuid: '-1',
-  })
-  // store.dispatch('selectWidget', {
-  //   uuid: '-1',
-  // })
-
-  canvasStore.updateZoom(100)
-  // store.dispatch('updateZoom', 100)
-
-  const opts = {
-    useCORS: true, // 跨域图片
-    scale: 0.2,
-  }
-  setTimeout(async () => {
-    const clonePage = document.getElementById('page-design-canvas')?.cloneNode(true) as HTMLElement
-    if (!clonePage) return
-    clonePage.setAttribute('id', 'clone-page')
-    document.body.appendChild(clonePage)
-    html2canvas(clonePage, opts).then((canvas) => {
-      canvas.toBlob(
-        async (blobObj) => {
-          if (blobObj) {
-            const result = await Qiniu.upload(blobObj, { bucket: 'xp-design', prePath: 'cover/user' })
-            cb(result)
-          }
-        },
-        'image/jpeg',
-        0.15,
-      )
-      canvasStore.updateZoom(nowZoom)
-      // store.dispatch('updateZoom', nowZoom)
-      clonePage.remove()
-    })
-  }, 10)
-}
 
 async function createPoster() {
   await checkFonts() // Wait for the fonts to finish loading
@@ -104,7 +63,6 @@ async function checkFonts() {
 }
 
 defineExpose({
-  createCover,
   createPoster,
 })
 </script>

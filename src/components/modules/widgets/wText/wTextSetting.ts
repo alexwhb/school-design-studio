@@ -25,7 +25,8 @@ export type TwTextData = {
   textDecoration: string
   color: string
   textAlign: StyleProperty.TextAlign
-  textAlignLast: StyleProperty.TextAlign
+  /** Only the alignment buttons set this; a new text box has no value for it. */
+  textAlignLast?: StyleProperty.TextAlign
   text: string
   opacity: number
   backgroundColor: string
