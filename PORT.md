@@ -145,23 +145,29 @@ Production builds, median of five runs (`npm run bench:prod`):
 
 | | Vue | React | |
 | --- | --- | --- | --- |
-| cold load to first canvas | 150 ms | 122 ms | **−19%** |
-| insert 30 text widgets | 629 ms | 551 ms | **−12%** |
+| cold load to first canvas | 154 ms | 128 ms | **−17%** |
+| insert 30 text widgets | 616 ms | 545 ms | **−12%** |
 | drag, mean frame | 8.34 ms | 8.33 ms | — |
-| drag, 95th percentile frame | 9.7 ms | 9.7 ms | — |
-| zoom, mean frame | 8.34 ms | 8.34 ms | — |
-| zoom, 95th percentile frame | 9.3 ms | 9.6 ms | +3% |
+| drag, 95th percentile frame | 10.1 ms | 9.9 ms | −2% |
+| zoom, mean frame | 8.34 ms | 8.33 ms | — |
+| zoom, 95th percentile frame | 9.9 ms | 9.8 ms | −1% |
 | drag and zoom, frames over 32 ms | 0 | 0 | — |
-| switch page | 936 ms | 889 ms | −5% |
-| resize a design | 40 ms | 42 ms | +5% |
-| open the presenter | 316 ms | 42 ms | **−87%** |
-| step through slides | 563 ms | 558 ms | −1% |
+| select one element after another | 572 ms | 568 ms | −1% |
+| switch page | 890 ms | 874 ms | −2% |
+| resize a design | 28 ms | 30 ms | +7% |
+| open the presenter | 309 ms | 43 ms | **−86%** |
+| step through slides | 561 ms | 558 ms | −1% |
 
 Benchmark the **production** builds. In dev, React's `jsxDEV` dominates the
 profile and the comparison means nothing.
 
-The two that came out slower are 2ms on a 40ms operation, which is the noise
-floor of the harness.
+Resizing is the one that reads slower, and it is not: over five runs Vue spans
+21–46ms and the port 23–42ms, so the 2ms between the medians is inside the
+harness's own spread. The presenter is the one that is genuinely different —
+309ms against 43ms, with no overlap between the two sets of runs at all.
+
+Selecting is measured because the Animation section is now built on every
+selection; it costs nothing.
 
 Bundles: `dist-react` 1561 kB JS (492 kB gzipped) + 281 kB CSS. The eraser is a
 separate 45 kB chunk (16 kB gzipped), loaded when someone opens it — so the

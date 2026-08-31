@@ -177,6 +177,25 @@ async function benchPageSwitch(page) {
 }
 
 /**
+ * Selecting one element after another.
+ *
+ * Every selection rebuilds the settings panel — the element's own controls, the
+ * text-effect stack and, since it was added, the Animation section — so this is
+ * the interaction most sensitive to anything put in that panel.
+ */
+async function benchSelect(page) {
+  const widgets = page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])')
+  const count = Math.min(await widgets.count(), 10)
+  if (count < 2) return null
+  const started = Date.now()
+  for (let i = 0; i < 12; i++) {
+    await widgets.nth(i % count).click({ position: { x: 10, y: 6 }, force: true })
+    await page.waitForTimeout(40)
+  }
+  return Date.now() - started
+}
+
+/**
  * Opening the presenter and stepping through it.
  *
  * The slides are the design drawn again at another size, so this is the one
@@ -240,6 +259,7 @@ async function run() {
     const pageSwitch = []
     const present = []
     const resize = []
+    const select = []
 
     for (let i = 0; i < RUNS; i++) {
       const page = await newPage(browser, target.url)
@@ -248,6 +268,8 @@ async function run() {
       dragResult && drag.push(dragResult)
       const zoomResult = await benchZoom(page)
       zoomResult && zoom.push(zoomResult)
+      const selectResult = await benchSelect(page)
+      selectResult && select.push(selectResult)
       pageSwitch.push(await benchPageSwitch(page))
       resize.push(await benchResize(page))
       present.push(await benchPresent(page))
@@ -263,6 +285,7 @@ async function run() {
       zoomMeanFrameMs: stats(zoom.map((d) => d.meanFrameMs)),
       zoomP95FrameMs: stats(zoom.map((d) => d.p95FrameMs)),
       zoomLongFrames: stats(zoom.map((d) => d.longFrames)),
+      selectWidgetMs: stats(select),
       pageSwitchMs: stats(pageSwitch),
       resizeDesignMs: stats(resize),
       presentOpenMs: stats(present.map((p) => p.openMs)),
