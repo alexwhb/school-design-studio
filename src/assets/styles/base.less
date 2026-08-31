@@ -1,88 +1,223 @@
-// element UI fix
+// Element Plus overrides.
+//
+// The component library ships with a fairly heavy default look — thick borders,
+// blue-tinted greys, chunky paddings. This flattens it out so the editor's own
+// chrome and the library's controls read as one thing.
+
+// ---- buttons ------------------------------------------------------------
+.el-button {
+  font-weight: 500;
+  border-radius: @radius;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+
+  &.is-round,
+  &.is-circle {
+    border-radius: @radius-pill;
+  }
+}
+
+// Solid accent button — the one loud thing in the toolbar.
+.el-button--primary:not(.is-plain):not(.is-link):not(.is-text) {
+  background-color: @accent;
+  border-color: @accent;
+  color: #fff;
+  &:hover,
+  &:focus {
+    background-color: @accent-hover;
+    border-color: @accent-hover;
+  }
+}
+
+// Default button — a quiet outline, not a grey slab.
+.el-button--default {
+  background: @surface;
+  border-color: @line;
+  color: @ink-2;
+  &:hover,
+  &:focus {
+    background: @surface-2;
+    border-color: @line;
+    color: @ink;
+  }
+}
+
+.el-button--primary.is-plain {
+  background: @surface;
+  border-color: @line;
+  color: @ink-2;
+  &:hover,
+  &:focus {
+    background: @accent-soft;
+    border-color: @accent-border;
+    color: @accent;
+  }
+}
+
+.el-button--primary.is-link,
+.el-button--primary.is-text {
+  color: @accent;
+  &:hover {
+    color: @accent-hover;
+  }
+}
+
+// ---- inputs & selects ---------------------------------------------------
+.el-input__wrapper,
+.el-textarea__inner {
+  border-radius: @radius;
+  box-shadow: 0 0 0 1px @line inset;
+  background: @surface;
+  transition: box-shadow 0.12s ease;
+
+  &:hover {
+    box-shadow: 0 0 0 1px #d4d4d8 inset;
+  }
+  &.is-focus,
+  &:focus {
+    box-shadow: 0 0 0 1px @accent inset;
+  }
+}
+
+.el-input__inner {
+  color: @ink;
+  &::placeholder {
+    color: @ink-4;
+  }
+}
+
+// ---- dialogs ------------------------------------------------------------
+.el-dialog {
+  border-radius: @radius-lg;
+  box-shadow: @shadow-pop;
+  padding: 20px;
+
+  .el-dialog__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: @ink;
+  }
+  .el-dialog__header {
+    padding-bottom: 14px;
+    margin-right: 0;
+  }
+  .el-dialog__body {
+    padding: 0;
+    color: @ink-2;
+  }
+  .el-dialog__footer {
+    padding-top: 18px;
+  }
+}
+
+.el-overlay {
+  background-color: rgba(24, 24, 27, 0.4);
+}
+
+// ---- popovers, dropdowns, tooltips --------------------------------------
+.el-popper {
+  border-radius: @radius;
+  box-shadow: @shadow-pop !important;
+  border-color: @line !important;
+  font-size: @text-base;
+}
+.el-popper.is-dark {
+  background: @ink;
+  border-color: @ink !important;
+  .el-popper__arrow::before {
+    background: @ink;
+    border-color: @ink;
+  }
+}
+
+// ---- collapse (the right-hand settings sections) ------------------------
+.el-collapse {
+  border: 0;
+  border-top: none !important;
+  --el-collapse-border-color: transparent;
+}
 .el-collapse-item__header {
   padding: 0;
-  font-size: 14px !important;
-  color: #666666 !important;
+  height: 44px;
+  line-height: 44px;
+  .section-label();
   user-select: none;
+  border-bottom: none !important;
+
+  &:hover {
+    color: @ink-2;
+  }
 }
 .el-collapse-item__wrap {
   padding: 0;
+  border-bottom: none !important;
+  background: transparent;
 }
 .el-collapse-item__content {
-  padding-bottom: 18px !important;
-}
-.el-collapse {
-  border: 0px;
-  border-top: none !important;
+  padding-bottom: 16px !important;
+  color: @ink-2;
+  font-size: @text-base;
 }
 
+// ---- switches, sliders, checkboxes --------------------------------------
+.el-switch.is-checked .el-switch__core {
+  background-color: @accent;
+  border-color: @accent;
+}
+.el-slider {
+  --el-slider-main-bg-color: @accent;
+  --el-slider-runway-bg-color: @line;
+  --el-slider-height: 3px;
+  .el-slider__button {
+    width: 12px;
+    height: 12px;
+    border: 2px solid @accent;
+    background: @accent;
+    box-shadow: none;
+  }
+}
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: @accent;
+  border-color: @accent;
+}
+
+// ---- pagination ---------------------------------------------------------
 .el-pagination {
   padding: 0;
-  .btn-prev {
-    border-radius: 5px;
-    border: 1px solid #e5e5e5;
-    height: 30px;
-    margin-right: 10px;
-    width: 30px;
-  }
-  .btn-next {
-    border-radius: 5px;
-    border: 1px solid #e5e5e5;
-    height: 30px;
-    margin-right: 10px;
-    width: 30px;
-  }
+  --el-pagination-button-bg-color: transparent;
+  .btn-prev,
+  .btn-next,
   .el-pager > li {
-    border-radius: 5px;
-    border: 1px solid #e5e5e5;
+    border-radius: @radius-sm;
     border: none;
-    color: #a5a5a5;
-    font-size: 14px;
+    color: @ink-3;
+    font-size: @text-base;
     height: 30px;
-    margin-right: 10px;
-  }
-  .el-pager {
-    .active {
-      background: #24b9ff;
-      border: none;
-      color: #ffffff;
+    min-width: 30px;
+    background: transparent;
+    &:hover {
+      background: @surface-2;
+      color: @ink;
     }
   }
-  .el-icon-arrow-left {
-    color: #a5a5a5;
-    font-size: 14px;
-  }
-  .el-icon-arrow-right {
-    color: #a5a5a5;
-    font-size: 14px;
-  }
-  .el-select {
-    .el-input {
-      input {
-        border-radius: 5px;
-        color: #262c33;
-        font-size: 14px;
-        height: 30px;
-      }
-    }
-  }
-}
-.el-select {
-  .el-tag {
-    line-height: 23px !important;
-  }
-}
-.el-pagination__jump {
-  font-size: 14px !important;
-  .el-pagination__editor {
-    border-radius: 5px;
-    color: #262c33;
-    font-size: 14px;
-    height: 30px;
+  .el-pager .is-active {
+    background: @accent-soft;
+    color: @accent;
+    font-weight: 600;
   }
 }
 
-// other
+// ---- misc ---------------------------------------------------------------
+.el-divider--vertical {
+  border-color: @line;
+  height: 20px;
+  margin: 0 8px;
+}
+.el-tabs__item.is-active {
+  color: @accent;
+}
+.el-tabs__active-bar {
+  background-color: @accent;
+}
 
 .clearfix {
   &:after {
@@ -100,10 +235,10 @@
   word-wrap: break-word;
 }
 
-// 点击选择框样式
+// ---- canvas selection outlines ------------------------------------------
 .layer {
   &:hover {
-    outline: 2px dashed @main-color !important;
+    outline: 2px solid fade(@accent, 45%) !important;
   }
 }
 .layer-no-hover {
@@ -112,19 +247,13 @@
     outline: 0px !important;
   }
 }
-// .layer-active {
-//   outline: 1px dashed #000000 !important;
-//   &:hover {
-//     outline: 1px dashed #000000 !important;
-//   }
-// }
 .layer-hover {
-  outline: 2px dashed @main-color !important;
+  outline: 2px solid @accent !important;
   &:hover {
-    outline: 2px dashed @main-color !important;
+    outline: 2px solid @accent !important;
   }
 }
-// 锁定不可选中
+// Locked layers cannot be picked up.
 .layer-lock {
   pointer-events: none;
 }

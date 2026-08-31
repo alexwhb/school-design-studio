@@ -1,16 +1,21 @@
 // Some primary CSS, and reset CSS
 
-@font-face {
-  font-family: TitleFont;
-  src: url(../fonts/xpsj.subset.woff2) format('woff2');
-  font-display: swap;
-}
+// The editor's own type. The fonts a *design* can use are declared separately
+// in public/fonts/fonts.css so they load the same way in the editor and in
+// every export.
 body {
-  --el-color-primary: #2254f4;
+  --el-color-primary: @accent;
+  --el-color-primary-light-3: @accent;
+  --el-color-primary-light-5: @accent-border;
+  --el-color-primary-light-9: @accent-soft;
+  --el-border-radius-base: @radius;
+  --el-font-size-base: @text-base;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  color: #333333;
-  font-family: Hiragino Sans GB, Hiragino Sans GB W3, Arial, Microsoft Yahei, STHeiti, sans-serif;
+  color: @ink;
+  font-family: @font-ui;
+  font-size: @text-base;
+  background: @app-bg;
   overflow: hidden;
 }
 .pointer-case {
@@ -32,7 +37,7 @@ default;
   box-sizing: border-box;
   border-width: 0;
   border-style: solid;
-  border-color: #e5e7eb;
+  border-color: @line;
   // font-size: 14px;
   // scrollbar-width: none; /* 火狐滚动条无法自定义宽度，只能通过此属性使滚动条宽度变细 */
   -ms-overflow-style: none; /* 隐藏滚动条（在IE和Edge两个浏览器中很难更改样式，固采取隐藏方式） */
@@ -52,10 +57,12 @@ default;
   height: 5px;
 }
 &::-webkit-scrollbar-thumb {
-  border-radius: 3px;
-  background-color: #d9dcdf;
+  border-radius: @radius-pill;
+  background-color: #d4d4d8;
   cursor: pointer;
-  // box-shadow: 0 0 1px hsl(0deg 0% 100% / 50%);
+}
+&::-webkit-scrollbar-thumb:hover {
+  background-color: #a1a1aa;
 }
 &::-webkit-scrollbar-track {
   // background-color: #f0f1f3;

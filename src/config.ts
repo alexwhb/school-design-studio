@@ -16,6 +16,9 @@ export default {
   BASE_URL: isDev ? '/' : './',
   VERSION: version,
   APP_NAME: 'Design Studio',
+  // Where the app name in the toolbar links back to. Point this at the host
+  // app when the editor is embedded in one.
+  HOME_URL: '/',
   COPYRIGHT: 'Based on poster-design by ShawnPhang (MIT)',
   API_URL: isDev ? 'http://localhost:7001' : '', // Backend address
   SCREEN_URL: isDev ? 'http://localhost:7001' : '', // Screenshot service address

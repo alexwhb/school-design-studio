@@ -6,24 +6,21 @@
  * @LastEditTime: 2024-08-17 09:49:01
 -->
 <template>
-  <div class="top-title"><el-input v-model="state.title" placeholder="Untitled design" class="input-wrap" /></div>
+  <div class="top-title">
+    <el-input v-model="state.title" placeholder="Untitled design" class="input-wrap" />
+  </div>
   <div class="top-icon-wrap">
     <template v-if="tempEditing">
-      <!-- <span style="color: #999; font-size: 14px; margin-right: 0.5rem">{{ state.stateBollean ? '启用' : '停用' }}</span> <el-switch v-model="state.stateBollean" @change="stateChange" />
-      <div class="divide__line">|</div> -->
       <el-button plain type="primary" @click="saveTemp">Save template</el-button>
       <el-button @click="userStore.managerEdit(false)">Cancel</el-button>
-      <!-- <el-button @click="$store.commit('managerEdit', false)">Cancel</el-button> -->
-      <div class="divide__line">|</div>
+      <div class="top-nav-divider" />
     </template>
-    <el-button v-else style="margin-right: 1rem" @click="jump2Edit">Edit template</el-button>
-    <watermark-option style="margin-right: 0.5rem" />
-    <!-- <copyRight> -->
+    <el-button v-else text @click="jump2Edit">Edit template</el-button>
+    <watermark-option />
+    <div class="top-nav-divider" />
     <slot />
-    <!-- <el-button :loading="state.loading" size="large" class="primary-btn" :disabled="tempEditing" plain type="primary" @click="download">Download</el-button> -->
-    <!-- </copyRight> -->
   </div>
-  <!-- 生成图片组件 -->
+  <!-- Renders the page to an image for the cover thumbnail and the PNG export -->
   <SaveImage ref="canvasImage" />
 </template>
 
@@ -272,7 +269,12 @@ function checkDownloadPoster({ layers }: any) {
   return backEndCapture
 }
 
+function getTitle() {
+  return state.title
+}
+
 defineExpose({
+  getTitle,
   download,
   save,
   saveTemp,
@@ -282,51 +284,47 @@ defineExpose({
 </script>
 
 <style lang="less" scoped>
+// The design's name sits between the menus and the actions. It reads as plain
+// text until you reach for it, so it does not compete with the toolbar.
+.top-title {
+  flex: 1;
+  min-width: 0;
+  padding-left: 10px;
+
+  .input-wrap {
+    width: 100%;
+    max-width: 320px;
+
+    :deep(.el-input__wrapper) {
+      background: transparent;
+      box-shadow: none;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    :deep(input) {
+      color: @ink;
+      font-size: @text-md;
+      font-weight: 500;
+      &::placeholder {
+        color: @ink-4;
+        font-weight: 400;
+      }
+    }
+    &:hover :deep(.el-input__wrapper) {
+      background: @surface-2;
+    }
+    :deep(.el-input__wrapper.is-focus) {
+      background: @surface;
+      box-shadow: 0 0 0 1px @accent inset;
+    }
+  }
+}
+
 .top-icon-wrap {
   display: flex;
   align-items: center;
-  padding-right: 20px;
-  height: 54px;
-  .top-icon {
-    background-color: rgba(0, 0, 0, 0.4);
-    border-radius: 5px;
-    color: #ffffff;
-    cursor: pointer;
-    font-weight: bold;
-    margin: 8px;
-    padding: 5px 8px;
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-  }
-}
-.top-title {
-  color: @color-black;
-  flex: 1;
-  padding-left: 20px;
-  // font-weight: bold;
-  .input-wrap {
-    // box-shadow: none;
-    width: 15rem;
-    :deep(input) {
-      border-color: #ffffff;
-      // border-color: #e8eaec;
-    }
-  }
-  .input-wrap:hover {
-    :deep(input) {
-      // border-color: #e8eaec;
-    }
-  }
-}
-.primary-btn {
-  font-weight: 600;
-  transform: scale(0.95);
-  margin-left: 10px;
-}
-.divide__line {
-  margin: 0 1rem;
-  color: #e8eaec;
-  height: 20px;
+  gap: 4px;
+  height: @topbar-height;
+  flex-shrink: 0;
 }
 </style>

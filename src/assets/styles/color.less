@@ -1,12 +1,16 @@
-// @color-main: #1b1634;
-@color-main: #ffffff;
+// Legacy colour variables, kept so existing components keep compiling.
+// New styles should use the tokens directly.
+//
+// Vite injects this file into every .less file (see vite.config.ts
+// css.preprocessorOptions), which is what makes the tokens global.
+@import './tokens.less';
+
+@color-main: @surface;
 @color-white: #ffffff;
-@color-black: #000000;
-@color-light-gray: #3e4651;
-@color-dark-gray: #262c33;
+@color-black: @ink;
+@color-light-gray: @ink-2;
+@color-dark-gray: @ink;
 @color-transparent: #ffffff00;
 
-// @active-text-color: rgb(250, 131, 52);
-// @main-color: rgb(250, 131, 52);
-@active-text-color: #2254f4; // #1195db;
-@main-color: #2254f4; // #1195db;
+@active-text-color: @accent;
+@main-color: @accent;

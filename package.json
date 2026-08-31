@@ -30,6 +30,7 @@
     "nanoid": "^3.1.23",
     "normalize.css": "^8.0.1",
     "pinia": "^2.1.7",
+    "pptxgenjs": "^4.0.1",
     "psd.js": "^3.9.0",
     "qr-code-styling": "^1.6.0-rc.1",
     "selecto": "^1.13.0",

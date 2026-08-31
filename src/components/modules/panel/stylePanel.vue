@@ -79,50 +79,57 @@ function layerChange(newLayer: TdWidgetData[]) {
 </script>
 
 <style lang="less" scoped>
-@color0: #ffffff;
-@color1: #999999;
-@background-color-transparent: rgba(0,0,0,.08);
-
-#style-panel ::-webkit-scrollbar {
-  display: none; /* Chrome Safari */
-}
 #style-panel {
-  background-color: @color0;
-  border-left: 1px solid @background-color-transparent;
+  background-color: @surface;
+  border-left: 1px solid @line;
   display: flex;
   flex-direction: column;
   height: 100%;
   position: relative;
-  width: 280px;
+  width: @style-panel-width;
+  flex-shrink: 0;
+
+  // A quiet two-up switch rather than a shadowed tab bar.
   .style-tab {
-    box-shadow: 0px 2px 0px 0px rgba(0, 0, 0, 0.1);
     display: flex;
-    flex-direction: row;
-    text-align: center;
+    gap: 4px;
+    padding: 10px 12px;
+    border-bottom: 1px solid @line;
     width: 100%;
     z-index: 10;
+
     .tab {
       user-select: none;
-      background-color: @color0;
-      font-size: 14px;
-      color: @color1;
-      cursor: pointer;
       flex: 1;
-      padding: 14px 10px;
+      text-align: center;
+      padding: 6px 10px;
+      border-radius: @radius-sm;
+      font-size: @text-base;
+      font-weight: 500;
+      color: @ink-3;
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+
+      &:hover {
+        background: @surface-2;
+        color: @ink-2;
+      }
     }
+
     .tab.active-tab {
-      // background-color: #3e4651;
-      font-size: 15px;
-      color: #444444;
+      background: @accent-soft;
+      color: @accent;
       font-weight: 600;
     }
   }
+
   .style-wrap {
     flex: 1;
     overflow: auto;
     width: 100%;
-    padding: 0px 20px;
+    padding: 4px 16px 24px;
   }
+
   .layer-wrap {
     flex: 1;
     overflow: auto;
@@ -130,10 +137,14 @@ function layerChange(newLayer: TdWidgetData[]) {
   }
 }
 
+#style-panel ::-webkit-scrollbar {
+  width: 6px;
+}
+
 .gounp {
   &__btn {
     width: 100%;
-    margin-bottom: 2.7rem;
+    margin-bottom: 1.5rem;
   }
 }
 </style>

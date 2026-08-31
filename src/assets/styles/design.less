@@ -1,21 +1,18 @@
 @import './color.less';
-// design index page
-@color4: #50555b;
-@color5: #808080;
-@width0: 1180px;
-@width1: 120px;
-@width2: 100%;
-@height2: 54px;
 
-@canvasBG: #f8f8f8;
-@pageBG: #f0f2f5;
-@canvasDeepBG: #000;
+// The editor shell: top bar, the three columns beneath it, and the page well.
+//
+// Deliberately flat — one hairline under the toolbar, one between each column,
+// no shadows and no gradients. Anything that needs emphasis uses the accent
+// colour or weight, not a box.
+
+@min-width: 1180px;
 
 .page-design-bg-color {
-  background-color: @canvasDeepBG;
+  background-color: @canvas-bg;
 }
 .page-bg-color {
-  background-color: @pageBG;
+  background-color: @canvas-bg;
 }
 
 #page-design-index {
@@ -23,90 +20,123 @@
   flex-direction: column;
   height: 100%;
   min-height: 500px;
-  min-width: @width0;
+  min-width: @min-width;
   position: absolute;
-  width: @width2;
-  background-color: @canvasBG;
+  width: 100%;
+  background-color: @canvas-bg;
+
   .top-nav {
-    height: @height2;
-    min-width: @width0;
+    height: @topbar-height;
+    min-width: @min-width;
     position: relative;
-    width: @width2;
+    width: 100%;
+
     .top-nav-wrap {
-      border-bottom: 1px solid rgba(202, 119, 119, 0.1);
       align-items: center;
-      background-color: @color-main;
+      background-color: @surface;
+      border-bottom: 1px solid @line;
       display: flex;
-      height: @height2;
-      min-width: @width0;
+      height: @topbar-height;
+      min-width: @min-width;
       position: fixed;
-      width: @width2;
+      width: 100%;
+      padding: 0 16px;
+      gap: 4px;
+
       .top-left {
         display: flex;
         align-items: center;
-        color: @color-black;
+        gap: 2px;
+        color: @ink;
+
         .name {
-          margin: 0 1rem;
-          // font-weight: bold;
           cursor: pointer;
-          letter-spacing: 2px;
-          color: #333;
-          font-size: 22px;
-          font-family: TitleFont, PingFangSC-Semibold, PingFang SC;
+          color: @ink;
+          font-size: 15px;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          margin-right: 10px;
+          padding: 6px 8px;
+          border-radius: @radius-sm;
+          white-space: nowrap;
+          &:hover {
+            background: @surface-2;
+          }
         }
+
         .operation {
           display: flex;
+          gap: 2px;
+
           &-item {
-            padding: 1rem;
+            padding: 0 10px;
+            height: 32px;
+            border-radius: @radius-sm;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            .icon {
-              // font-size: 18px;
-              color: #333333;
-            }
+            color: @ink-2;
+            font-size: @text-base;
+            transition: background-color 0.12s ease, color 0.12s ease;
+
+            .icon,
             .iconfont {
-              font-size: 14px;
+              color: inherit;
+              font-size: 15px;
             }
             .text {
-              font-weight: 600;
-              margin-left: .4rem;
+              font-weight: 500;
+              margin-left: 6px;
+            }
+            &:hover {
+              background: @surface-2;
+              color: @ink;
             }
           }
+
           .disable {
             cursor: not-allowed;
-            color: #c2c2c2;
+            color: @ink-4;
+            &:hover {
+              background: transparent;
+              color: @ink-4;
+            }
           }
         }
       }
-      .primary-btn {
-        font-weight: 600;
-        transform: scale(0.95);
-        margin-left: 10px;
-      }
     }
   }
+
   .page-design-index-wrap {
     display: flex;
     flex-direction: row;
     flex: 1;
     height: 100%;
     overflow: hidden;
-    width: @width2;
+    width: 100%;
+
     .page-design-wrap {
       flex: 1;
     }
   }
-  // .page-design-index-wrap ::-webkit-scrollbar {
-  //   display: none; /* Chrome Safari */
-  // }
+
+  // Masks the part of the page that overflows the visible well.
   .shelter,
   .shelter-bg {
     position: absolute;
     pointer-events: none;
   }
   .shelter {
-    box-shadow: 0 0 0 5000px rgba(248, 248, 248, 0.99);
+    box-shadow: 0 0 0 5000px @canvas-bg;
     z-index: 8;
   }
+}
+
+// The toolbar divider, used sparingly between groups of controls.
+.top-nav-divider {
+  width: 1px;
+  height: 20px;
+  background: @line;
+  margin: 0 8px;
+  flex-shrink: 0;
 }

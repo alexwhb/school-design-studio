@@ -279,112 +279,113 @@ defineExpose({
 </script>
 
 <style lang="less" scoped>
-@color-select: #1b1634;
-@color1: #ffffff; // Palette background
-@color2: #ffffff;
-@color3: #666666; // Text colour
-@color4: #c2c2c2; // Disabled
-@color5: rgba(0, 0, 0, 0.12); // Highlight background
-@z-border-color: #e6e6e6;
-
+// Floating zoom control, bottom-right of the page well.
 #zoom-control {
-  bottom: 10px;
+  bottom: 12px;
   position: absolute;
-  right: 292px;
+  right: @style-panel-width + 12px;
   z-index: 1000;
+
   .zoom-control-wrap {
     display: flex;
     flex-direction: row;
-    font-size: 14px;
-    height: 38px;
-    .radius-left {
-      border-bottom-left-radius: 6px;
-      border-top-left-radius: 6px;
-      border-block-end: 1px solid @z-border-color;
-      border-block-start: 1px solid @z-border-color;
-      border-left: 1px solid @z-border-color;
-    }
-    .radius-right {
-      border-bottom-right-radius: 6px;
-      border-top-right-radius: 6px;
-      border-block-end: 1px solid @z-border-color;
-      border-block-start: 1px solid @z-border-color;
-      border-right: 1px solid @z-border-color;
-    }
+    align-items: center;
+    height: 34px;
+    background: @surface;
+    border: 1px solid @line;
+    border-radius: @radius;
+    overflow: hidden;
+
     .zoom-icon {
       align-items: center;
-      background-color: @color2;
-      color: @color3;
+      color: @ink-2;
       cursor: pointer;
       display: flex;
       justify-content: center;
-      width: 40px;
+      width: 32px;
+      height: 100%;
+      font-size: 13px;
       &:hover {
-        background-color: @color1;
-        color: @color-select;
+        background-color: @surface-2;
+        color: @ink;
       }
     }
+
     .disable {
-      color: @color4;
+      color: @ink-4;
       &:hover {
-        background-color: @color2;
-        color: @color4;
+        background-color: transparent;
+        color: @ink-4;
         cursor: not-allowed;
       }
     }
+
+    // Wide enough for "Fit to screen" to stay on one line.
     .zoom-text {
       user-select: none;
       align-items: center;
-      background-color: @color2;
-      color: @color3;
+      color: @ink-2;
       cursor: pointer;
       display: flex;
       justify-content: center;
-      width: 60px;
-      border-block-end: 1px solid @z-border-color;
-      border-block-start: 1px solid @z-border-color;
+      min-width: 104px;
+      padding: 0 10px;
+      height: 100%;
+      font-size: @text-base;
+      font-weight: 500;
+      white-space: nowrap;
+      border-left: 1px solid @line;
+      border-right: 1px solid @line;
       &:hover {
-        background-color: @color1;
-        color: @color-select;
+        background-color: @surface-2;
+        color: @ink;
       }
     }
+    .zoom-text-active {
+      background-color: @surface-2;
+      color: @ink;
+    }
   }
+
   .zoom-selecter {
-    background-color: @color1;
-    color: @color3;
+    background-color: @surface;
+    border: 1px solid @line;
+    border-radius: @radius;
+    box-shadow: @shadow-pop;
+    color: @ink-2;
     position: absolute;
     top: -8px;
     transform: translateY(-100%);
     width: 100%;
+    padding: 4px;
     z-index: 1000;
-    &:after {
-      bottom: -8px;
-      content: '';
-      left: 50%;
-      position: absolute;
-      transform: translateX(-50%);
-    }
+
     .zoom-item {
       align-items: center;
+      border-radius: @radius-sm;
       cursor: pointer;
       display: flex;
-      font-size: 14px;
-      height: 34px;
-      padding: 10px;
+      font-size: @text-base;
+      height: 30px;
+      padding: 0 8px;
       width: 100%;
-      i {
-        margin-right: 10px;
-        &:last-child {
-          margin-right: 0;
-        }
-      }
+      white-space: nowrap;
+
       span {
         flex: 1;
       }
-      &:hover {
-        background-color: @color5;
-        color: @color-select;
+      i {
+        font-size: 12px;
+        color: @accent;
       }
+      &:hover {
+        background-color: @surface-2;
+        color: @ink;
+      }
+    }
+    .zoom-item-active {
+      color: @accent;
+      font-weight: 500;
     }
   }
 }

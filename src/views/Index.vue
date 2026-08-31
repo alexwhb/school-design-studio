@@ -12,21 +12,20 @@
       <div class="top-nav-wrap">
         <div class="top-left">
           <div class="name" @click="jump2home">{{ state.APP_NAME }}</div>
+          <Folder @select="dealWith" ref="ref1"> <div class="operation-item"><i class="icon sd-wenjian" /> <span class="text">File</span></div> </Folder>
+          <Helper @select="dealWith"> <div class="operation-item"><i class="icon sd-bangzhu" /> <span class="text">Help</span></div> </Helper>
+          <div class="top-nav-divider" />
           <div class="operation">
-            <div :class="['operation-item', { disable: !undoable }]" @click="undoable ? handleHistory('undo') : ''"><i class="iconfont icon-undo" /></div>
-            <div :class="['operation-item', { disable: !redoable }]" @click="redoable ? handleHistory('redo') : ''"><i class="iconfont icon-redo" /></div>
+            <el-tooltip :show-after="400" :hide-after="0" effect="dark" content="Undo" placement="bottom">
+              <div :class="['operation-item', { disable: !undoable }]" @click="undoable ? handleHistory('undo') : ''"><i class="iconfont icon-undo" /></div>
+            </el-tooltip>
+            <el-tooltip :show-after="400" :hide-after="0" effect="dark" content="Redo" placement="bottom">
+              <div :class="['operation-item', { disable: !redoable }]" @click="redoable ? handleHistory('redo') : ''"><i class="iconfont icon-redo" /></div>
+            </el-tooltip>
           </div>
-          <el-divider direction="vertical" />
-          <Folder @select="dealWith" ref="ref1"> <div class="operation-item"><i class="icon sd-wenjian" /> <span class="text" >File</span></div> </Folder>
-          <Helper @select="dealWith"> <div class="operation-item"><i class="icon sd-bangzhu" /> <span class="text" >Help</span></div> </Helper>
-          <!-- <el-tooltip effect="dark" :show-after="300" :offset="0" content="标尺" placement="bottom">
-            <i style="font-size: 20px" class="icon sd-biaochi operation-item" @click="changeLineGuides" />
-          </el-tooltip> -->
-          <el-divider direction="vertical" />
         </div>
         <HeaderOptions ref="optionsRef" v-model="state.isContinue" @change="optionsChange">
-          <!-- <el-button size="large" class="primary-btn" @click="dealWith('save')">{{ $t('header.save') }}</el-button> -->
-          <el-button ref="ref4" size="large" class="primary-btn" type="primary" @click="dealWith('download')">{{ $t('header.download') }}</el-button>
+          <ExportMenu ref="ref4" :get-title="getDesignTitle" @select="dealWith" @progress="optionsChange" />
         </HeaderOptions>
       </div>
     </div>
@@ -88,6 +87,7 @@ import { useCanvasStore, useControlStore, useHistoryStore, useWidgetStore, useGr
 import type { ButtonInstance } from 'element-plus'
 import Tour from './components/Tour.vue'
 import createDesign from '@/components/business/create-design'
+import ExportMenu from './components/ExportMenu.vue'
 import multipleBoards from '@/components/modules/layout/multipleBoards'
 import useHistory from '@/common/hooks/history'
 useHistory()
@@ -145,9 +145,9 @@ const beforeUnload = function (e: Event): any {
 !_config.isDev && window.addEventListener('beforeunload', beforeUnload)
 
 function jump2home() {
-  // const fullPath = window.location.href.split('/')
-  // window.open(fullPath[0] + '//' + fullPath[2])
-  window.open('https://xp.palxp.cn/')
+  // Where the app name links back to. Set HOME_URL when embedding the editor
+  // in another app so this returns people to that app rather than reloading.
+  window.location.href = _config.HOME_URL
 }
 
 const undoable = computed(() => {
@@ -233,6 +233,11 @@ function optionsChange({ downloadPercent, downloadText, downloadMsg }: { downloa
   state.downloadPercent = downloadPercent
   state.downloadText = downloadText
   state.downloadMsg = downloadMsg
+}
+
+/** The design's current name, read at the moment of export. */
+function getDesignTitle(): string {
+  return optionsRef.value?.getTitle() || 'Untitled design'
 }
 
 const tourRef = ref<any>()

@@ -63,6 +63,7 @@ import textInputArea from '../../settings/textInputArea.vue'
 import valueSelect from '../../settings/valueSelect.vue'
 import effectWrap from '../../settings/EffectSelect/TextWrap.vue'
 import { useFontStore } from '@/common/methods/fonts'
+import { FONT_GROUPS } from '@/assets/data/FontsData'
 import usePageFontsFilter from './pageFontsFilter'
 import { wTextSetting, TwTextData } from './wTextSetting'
 import { storeToRefs } from 'pinia'
@@ -180,13 +181,13 @@ function selectTextEffect({ key, value, style }: any) {
 
 function loadFonts() {
   const localFonts = useFontStore.list
-  const fontLists: Record<string, any> = { 'Current page': [], 'All fonts': [] }
+  const fontLists: Record<string, any> = { 'On this page': [] }
+  for (const group of Object.values(FONT_GROUPS)) fontLists[group] = []
   for (const font of localFonts) {
-    const { id, oid, value, url, alias, preview, lang } = font
-    const item = { id, oid, value, url, alias, preview }
-    fontLists['All fonts'].push(item)
+    const { id, oid, value, url, alias, preview, kind } = font
+    fontLists[FONT_GROUPS[kind]].push({ id, oid, value, url, alias, preview })
   }
-  fontLists['Current page'] = usePageFontsFilter()
+  fontLists['On this page'] = usePageFontsFilter()
   state.fontClassList = fontLists
 }
 
@@ -197,7 +198,7 @@ function finish(key: string, value: number | Record<string, any> | string) {
     value,
   })
   setTimeout(() => {
-    key === 'fontClass' && (state.fontClassList['Current page'] = usePageFontsFilter())
+    key === 'fontClass' && (state.fontClassList['On this page'] = usePageFontsFilter())
   }, 300)
 }
 

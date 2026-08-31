@@ -1,0 +1,66 @@
+// Design tokens.
+//
+// One accent colour, a small neutral ramp, thin borders and almost no shadow.
+// Everything that used to be a hard-coded hex in a component should come from
+// here, so the whole editor can be re-skinned from one file.
+
+// ---- accent -------------------------------------------------------------
+@accent: #4f46e5; // indigo
+@accent-hover: #4338ca;
+@accent-soft: #eef2ff; // tinted background for selected rows
+@accent-border: #c7d2fe;
+
+// ---- neutrals -----------------------------------------------------------
+@ink: #18181b; // primary text
+@ink-2: #52525b; // secondary text, control labels
+@ink-3: #71717a; // muted text, section headings
+@ink-4: #a1a1aa; // placeholder, disabled
+
+@surface: #ffffff; // panels, toolbar, cards
+@surface-2: #fafafa; // hovered rows, inset wells
+@canvas-bg: #eef0f3; // the area the page sits on
+@app-bg: #f5f5f4; // warm off-white behind everything
+
+@line: #e8e8e6; // default hairline
+@line-soft: #f1f1ef; // lighter divider inside a panel
+
+@danger: #dc2626;
+
+// ---- shape --------------------------------------------------------------
+@radius-sm: 6px;
+@radius: 8px;
+@radius-lg: 12px;
+@radius-pill: 999px;
+
+// A single, barely-there shadow. Popovers get it; nothing else should.
+@shadow-pop: 0 6px 24px rgba(24, 24, 27, 0.1), 0 1px 2px rgba(24, 24, 27, 0.06);
+
+// ---- type ---------------------------------------------------------------
+@font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+@text-xs: 11px;
+@text-sm: 12px;
+@text-base: 13px;
+@text-md: 14px;
+
+// ---- layout -------------------------------------------------------------
+@rail-width: 76px; // icon rail on the far left
+@panel-width: 300px; // the panel that opens next to the rail
+@style-panel-width: 288px; // settings panel on the right
+@topbar-height: 56px;
+
+// A section heading: small, upper case, quiet.
+.section-label() {
+  font-size: @text-xs;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: @ink-3;
+}
+
+// The standard bordered control (inputs, selects, small cards).
+.control-surface() {
+  background: @surface;
+  border: 1px solid @line;
+  border-radius: @radius;
+}
