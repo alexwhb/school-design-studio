@@ -10,6 +10,14 @@
         <icon-item-select label="" :data="iconList" @finish="alignAction" />
       </div>
       <component :is="dActiveElement?.type + '-style'" v-show="!showGroupCombined" v-if="dActiveElement?.type" />
+      <!--
+        Animation sits here rather than inside each w*Style component so that
+        every element type gets it from one place. The page itself is not an
+        element and has nothing to animate, so it is excluded.
+      -->
+      <div v-if="animatable" v-show="!showGroupCombined" class="animate-slot">
+        <animate-wrap :widget="dActiveElement as TdWidgetData" :key="dActiveElement?.uuid" />
+      </div>
     </div>
     <div v-show="activeTab === 1" class="layer-wrap">
       <layer-list :data="dWidgets" @change="layerChange" />
@@ -22,7 +30,8 @@
 // const NAME = 'style-panel'
 import alignIconList, { AlignListData } from '@/assets/data/AlignListData'
 import iconItemSelect, { TIconItemSelectData } from '../settings/iconItemSelect.vue'
-import { ref, watch } from 'vue';
+import animateWrap from '../settings/AnimateSelect/AnimateWrap.vue'
+import { computed, ref, watch } from 'vue';
 // import { useSetupMapGetters } from '@/common/hooks/mapGetters';
 import { useControlStore, useGroupStore, useHistoryStore, useWidgetStore } from '@/store';
 import { storeToRefs } from 'pinia';
@@ -40,6 +49,12 @@ const showGroupCombined = ref(false)
 
 // const { dActiveElement, dWidgets, dSelectWidgets } = useSetupMapGetters(['dActiveElement', 'dWidgets', 'dSelectWidgets'])
 const { dActiveElement, dWidgets, dSelectWidgets } = storeToRefs(widgetStore)
+
+/** The page has no entrance of its own; everything drawn on it does. */
+const animatable = computed(() => {
+  const type = dActiveElement.value?.type
+  return !!type && type !== 'page'
+})
 
 watch(
   dSelectWidgets,
@@ -79,6 +94,12 @@ function layerChange(newLayer: TdWidgetData[]) {
 </script>
 
 <style lang="less" scoped>
+// The animation card is the one control that is not part of a widget's own
+// style component, so it carries its own gutter.
+.animate-slot {
+  padding: 12px 10px 20px;
+}
+
 #style-panel {
   background-color: @surface;
   border-left: 1px solid @line;

@@ -29,7 +29,14 @@
     >
       <div ref="stageRef" class="present__stage">
         <div v-for="(page, i) in pages" :key="'slide' + i" class="present__slot" :class="{ 'is-current': i === index }" :aria-hidden="i !== index">
-          <SlideView v-if="mounted.has(i)" :page="page" :max-width="stage.width" :max-height="stage.height" />
+          <SlideView
+            v-if="mounted.has(i)"
+            :ref="(el: any) => registerSlide(i, el)"
+            :page="page"
+            :max-width="stage.width"
+            :max-height="stage.height"
+            animated
+          />
         </div>
       </div>
 
@@ -56,13 +63,13 @@
 
       <div class="present__chrome" @click.stop @mousemove.stop="wake">
         <div class="present__bar">
-          <button type="button" class="present__btn" title="Previous slide (←)" :disabled="index === 0" @click="prev">
+          <button type="button" class="present__btn" title="Previous (←)" :disabled="index === 0 && buildStep === 0" @click="prev">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
           </button>
           <button type="button" class="present__counter" title="All slides (G)" @click="isOverview = !isOverview">
             <b>{{ index + 1 }}</b> / {{ pages.length }}
           </button>
-          <button type="button" class="present__btn" title="Next slide (→)" :disabled="index >= pages.length - 1" @click="next">
+          <button type="button" class="present__btn" :title="hasBuildsLeft ? 'Next build (→)' : 'Next slide (→)'" :disabled="index >= pages.length - 1 && !hasBuildsLeft" @click="next">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
           </button>
 
@@ -120,6 +127,38 @@ const elapsed = ref(0)
 /** Slides drawn so far. Only ever grows, so going back is instant. */
 const mounted = ref(new Set<number>())
 
+/**
+ * Where the current slide is in its own build.
+ *
+ * A slide whose elements have entrances is worth more than one advance: the
+ * first shows the slide, and each one after it brings on the next group of
+ * elements. Only once a slide has run out of builds does advancing turn the page.
+ */
+const buildStep = ref(0)
+const slideSteps = ref(1)
+const lastBuildStep = computed(() => Math.max(0, slideSteps.value - 1))
+const hasBuildsLeft = computed(() => buildStep.value < lastBuildStep.value)
+
+/** The mounted SlideView for each slide, so its build can be driven from here. */
+const slides = new Map<number, any>()
+function registerSlide(i: number, el: any) {
+  if (el) slides.set(i, el)
+  else slides.delete(i)
+}
+
+/**
+ * Shows slide `n` from the top of its build when arriving forwards, and fully
+ * built when arriving backwards — the way every other presentation tool behaves,
+ * because a build the room has already watched should not be replayed at them.
+ */
+async function arrive(n: number, forwards: boolean) {
+  await nextTick()
+  const slide = slides.get(n)
+  slideSteps.value = slide?.stepCount ?? 1
+  buildStep.value = forwards ? 0 : lastBuildStep.value
+  slide?.showUpTo(buildStep.value, forwards)
+}
+
 const rootRef = ref<HTMLElement | null>(null)
 const stageRef = ref<HTMLElement | null>(null)
 
@@ -134,7 +173,10 @@ function reach(centre: number) {
   mounted.value = next
 }
 
-watch(index, (n) => reach(n))
+watch(index, (n, previous) => {
+  reach(n)
+  arrive(n, previous === undefined || n > previous)
+})
 
 /** The name the page strip would show, so a slide is called the same thing in both. */
 function pageLabel(page: TdLayout | undefined, position: number) {
@@ -178,6 +220,7 @@ async function open(startAt?: number) {
   await nextTick()
   rootRef.value?.focus()
   measureStage()
+  arrive(index.value, true)
   window.addEventListener('keydown', onKeydown, true)
   window.addEventListener('resize', measureStage)
   document.addEventListener('fullscreenchange', onFullscreenChange)
@@ -227,10 +270,22 @@ function goTo(n: number, { closeOverview = false } = {}) {
 }
 
 function next() {
+  if (hasBuildsLeft.value) {
+    curtain.value = ''
+    buildStep.value += 1
+    slides.get(index.value)?.showUpTo(buildStep.value, true)
+    return
+  }
   if (index.value < pages.value.length - 1) goTo(index.value + 1)
 }
 
 function prev() {
+  if (buildStep.value > 0) {
+    curtain.value = ''
+    buildStep.value -= 1
+    slides.get(index.value)?.showUpTo(buildStep.value, false)
+    return
+  }
   if (index.value > 0) goTo(index.value - 1)
 }
 

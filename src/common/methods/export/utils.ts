@@ -91,6 +91,12 @@ export function htmlToText(html?: string): string {
 /** Reads the rotation, in degrees, out of a widget's transform string. */
 export function readRotation(widget: Record<string, any>): number {
   if (typeof widget.rotate === 'number' && widget.rotate) return widget.rotate
+  // Some widgets store the angle as a CSS string ('30deg') rather than a number,
+  // which used to fall through to the transform and read as no rotation at all.
+  if (typeof widget.rotate === 'string' && widget.rotate.trim()) {
+    const degrees = parseFloat(widget.rotate)
+    if (!Number.isNaN(degrees) && degrees) return degrees
+  }
   const transform = widget.transform
   if (typeof transform !== 'string') return 0
   const match = transform.match(/rotate\((-?[\d.]+)deg\)/i)

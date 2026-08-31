@@ -23,6 +23,7 @@ import { TUpdateAlignData, updateAlign } from "./actions/align";
 import { TupdateLayerIndexData, ungroup, updateLayerIndex } from "./actions/layer";
 import pageDefault from "../canvas/page-default";
 import { TCanvasStore } from "../canvas";
+import type { TWidgetAnimation } from "@/common/animations/presets";
 
 /**
  * An element's rendered box, measured from the DOM after it draws.
@@ -58,6 +59,8 @@ export type TdWidgetData = TPageState & Partial<TCommonItemData> & {
   cropEdit?: boolean
   fontClass?: Record<string, any>
   writingMode?: string
+  /** Entrance animation, played in the presenter. Absent means the element is simply there. */
+  animation?: TWidgetAnimation
 }
 
 export type TdLayout = {
