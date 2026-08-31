@@ -17,16 +17,12 @@
           </el-radio-group>
           <number-slider
             v-model="state.radius" class="slider-wrap"
-            label="Brush size" :showInput="false"
-            labelWidth="90px" 
-            :maxValue="state.constants?.RADIUS_SLIDER_MAX" :minValue="state.constants?.RADIUS_SLIDER_MIN" 
+            label="Brush size" :showInput="false" :maxValue="state.constants?.RADIUS_SLIDER_MAX" :minValue="state.constants?.RADIUS_SLIDER_MIN" 
             :step="state.constants?.RADIUS_SLIDER_STEP"
           />
           <number-slider
             v-model="state.hardness" class="slider-wrap"
-            label="Softness" :showInput="false"
-            labelWidth="90px" 
-            :maxValue="state.constants?.HARDNESS_SLIDER_MAX" :minValue="state.constants?.HARDNESS_SLIDER_MIN"
+            label="Softness" :showInput="false" :maxValue="state.constants?.HARDNESS_SLIDER_MAX" :minValue="state.constants?.HARDNESS_SLIDER_MIN"
             :step="state.constants?.HARDNESS_SLIDER_STEP"
           />
         </div>

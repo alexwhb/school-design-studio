@@ -159,38 +159,42 @@ function removePoster(removeIndex: number) {
 </script>
 
 <style lang="less" scoped>
+// The page strip along the bottom. Collapsed it is a small pill showing which
+// page you are on; expanded it is a row of thumbnails.
 .artboards {
   left: 0;
   z-index: 99;
   padding: 0 12px;
-  font-size: 14px;
-  color: #666666;
-  font-weight: 600;
-  transition: all 0.5s;
+  font-size: @text-base;
+  color: @ink-2;
+  font-weight: 500;
+  transition: all 0.3s;
+
   .icon {
-    transition: all 0.3s;
-    color: #babec2;
+    transition: transform 0.2s ease;
+    color: @ink-4;
   }
   .list {
     display: flex;
     align-items: center;
   }
+
   .item-box,
   .item-add {
     position: relative;
     width: 72px;
     height: 72px;
-    border-radius: 5px;
-    margin: 5px 0 0 14px;
-    background: #f1f2f4;
+    border-radius: @radius;
+    margin: 5px 0 0 10px;
+    background: @surface;
     overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.07);
+    border: 1px solid @line;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
   }
-  .item-box:hover {
-    .sd-quxiao {
-      opacity: 1;
-    }
+  .item-box:hover .sd-quxiao {
+    opacity: 1;
   }
+
   .sd-quxiao,
   .item-idx {
     position: absolute;
@@ -198,113 +202,132 @@ function removePoster(removeIndex: number) {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 2px;
+    border-radius: 4px;
   }
   .item-idx {
-    font-size: 12px;
-    bottom: 2px;
-    left: 2px;
-    width: 17px;
-    height: 17px;
-    color: #ffffff;
-    background: rgba(0, 0, 0, 0.6);
+    font-size: @text-xs;
+    bottom: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    color: @ink-3;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 1px @line;
   }
   .sd-quxiao {
     opacity: 0;
-    font-size: 12px;
-    padding: 1px 2px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 10px;
+    width: 16px;
+    height: 16px;
+    border: 1px solid @line;
     cursor: pointer;
-    background-color: #ffffff;
-    color: #666666;
-    right: 1px;
-    top: 1px;
+    background-color: @surface;
+    color: @ink-3;
+    right: 3px;
+    top: 3px;
+    transition: color 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+    &:hover {
+      color: @danger;
+      border-color: @danger;
+    }
   }
-  .sd-quxiao:hover {
-    transform: scale(1.2);
-  }
+
   .item-add {
     cursor: pointer;
-    width: 70px;
-    height: 70px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: @ink-4;
+    background: @surface-2;
     .icon-add {
-      font-size: 24px;
+      font-size: 18px;
+    }
+    &:hover {
+      color: @accent;
+      border-color: @accent-border;
+      background: @accent-soft;
     }
   }
-  .item-add:hover {
-    filter: brightness(95%);
-  }
+
   .item-default:hover {
-    box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.4), 0px 4px 12px 0px rgba(0, 0, 0, 0.07);
+    border-color: #d4d4d8;
   }
+  // Selected page: a ring in the accent colour, not a heavy glow.
   .item-select {
-    box-shadow: 0px 0px 2px 3px @main-color;
+    border-color: @accent;
+    box-shadow: 0 0 0 2px fade(@accent, 25%);
   }
-  .item-box:first-of-type {
-    margin-left: 0;
-  }
+  .item-box:first-of-type,
   .item-box:first-child {
     margin-left: 0;
   }
 }
+
 .unfold {
   width: calc(100% - 155px);
   height: 90px;
   .wrap {
-    padding: 10px 10px 10px 0;
+    padding: 8px 10px;
     height: 100%;
-    background-color: #ffffff;
+    background-color: @surface;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: hidden;
-    border-radius: 12px;
-    box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.08), 0px 4px 12px 0px rgba(0, 0, 0, 0.04);
+    border: 1px solid @line;
+    border-radius: @radius-lg;
+
     .icon-btn {
-      display: inline-block;
       cursor: pointer;
-      width: 47px;
+      width: 34px;
       height: 70px;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
+      color: @ink-4;
+      &:hover {
+        color: @ink;
+      }
     }
     .sd-zhankai {
-      font-size: 18px;
-    }
-    .sd-zhankai:hover {
-      transform: scale(1.4);
+      font-size: 14px;
     }
   }
 }
+
 .fold {
   cursor: pointer;
   width: 150px;
   text-align: center;
-  height: 38px;
-  margin-bottom: 10px;
+  height: 34px;
+  margin-bottom: 12px;
+
   .wrap {
     display: flex;
     align-items: center;
     height: 100%;
-    background-color: #ffffff;
-    border-radius: 5px;
-    box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.08), 0px 4px 12px 0px rgba(0, 0, 0, 0.04);
+    background-color: @surface;
+    border: 1px solid @line;
+    border-radius: @radius;
   }
   .icon {
-    margin-left: 4px;
+    margin-left: 6px;
+    font-size: 11px;
   }
   .btn {
-    padding: 0 20px;
+    padding: 0 14px;
     display: flex;
     width: 100%;
     align-items: center;
     justify-content: center;
     height: 100%;
+    white-space: nowrap;
+    border-radius: @radius;
+    &:hover {
+      background: @surface-2;
+    }
   }
   .btn:hover > .sd-zhankai {
     transform: rotate(180deg);

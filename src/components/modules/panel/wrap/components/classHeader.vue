@@ -52,71 +52,93 @@ defineExpose({ select, back })
 <style lang="less" scoped>
 .content {
   &__wrap {
-    padding: 0.5rem 1rem;
+    padding: 4px 14px 100px;
     height: 100%;
     overflow: auto;
-    padding-bottom: 100px;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE 10+ */
   }
   &__wrap::-webkit-scrollbar {
-    display: none; /* Chrome Safari */
+    display: none;
   }
 }
+
 .types {
   display: flex;
   flex-wrap: wrap;
   padding: 10px 0 0 6px;
+
   &__item {
     position: relative;
     width: 64px;
-    // height: 44px;
     height: 64px;
     display: flex;
     justify-content: center;
     align-items: center;
     color: #fff;
     font-weight: 600;
-    font-size: 13px;
-    border-radius: 4px;
+    font-size: @text-base;
+    border-radius: @radius;
     cursor: pointer;
     margin: 8px 4px 0 4px;
     background-size: cover;
     background-repeat: no-repeat;
     text-shadow: 0 1px 0 rgb(0 0 0 / 25%);
-    opacity: 0.5;
+    opacity: 0.55;
+    transition: opacity 0.12s ease;
+    &:hover {
+      opacity: 0.8;
+    }
   }
   &--select {
     opacity: 1;
   }
+
+  // Section heading inside a panel: quiet uppercase, with the "All" link
+  // sitting on the same line.
   &__header {
     user-select: none;
     cursor: pointer;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: #333333;
+    margin: 16px 0 10px;
+    .section-label();
     display: flex;
     align-items: center;
+
     &-more {
       display: flex;
       align-items: center;
-      color: #a0a0a0;
-      font-size: 13px;
+      gap: 2px;
+      color: @ink-4;
+      font-size: @text-xs;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      .iconfont {
+        font-size: 10px;
+      }
+      &:hover {
+        color: @accent;
+      }
     }
+
     &-back {
       cursor: pointer;
-      padding: 0 0 0 0.6rem;
+      padding: 0 0 0 14px;
       display: flex;
       align-items: center;
-      color: #333;
-      font-size: 16px;
+      gap: 6px;
+      color: @ink;
+      font-size: @text-md;
+      font-weight: 500;
       height: 2.9rem;
       position: absolute;
       z-index: 2;
-      background: #ffffff;
-      width: 320px;
+      background: @surface;
+      width: @panel-width;
       .icon-right {
         transform: rotate(180deg);
+        font-size: 12px;
+        color: @ink-3;
       }
     }
   }

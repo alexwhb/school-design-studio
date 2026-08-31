@@ -47,6 +47,13 @@ axios.interceptors.response.use((res: AxiosResponse<any>) => {
     if (!res.data) {
       return Promise.reject(res)
     }
+    // A string body means something other than the API answered — typically a
+    // static host returning index.html for an unknown path. Treat it the same
+    // as the backend being absent rather than handing HTML to the callers.
+    if (typeof res.data === 'string') {
+      warnBackendOffline()
+      return Promise.resolve(emptyResult())
+    }
     if (res.data.code === 401) {
       console.log('Signed out')
       useUserStore().changeOnline(false)
@@ -62,13 +69,39 @@ axios.interceptors.response.use((res: AxiosResponse<any>) => {
     }
   },
   (error) => {
-    // if (error.response.status === 401) {
-    // }
     useBaseStore().hideLoading()
-    // store.dispatch('hideLoading')
+
+    // No `response` means the request never reached a server: the optional
+    // content backend is not running. That is a supported way to use the
+    // editor — you still get text, shapes, uploads and every export, just no
+    // stock template or photo library. Resolving with an empty result lets the
+    // panels show an empty state instead of throwing past every caller.
+    if (!error?.response) {
+      warnBackendOffline()
+      return Promise.resolve(emptyResult())
+    }
+
     return Promise.reject(error)
   },
 )
+
+/**
+ * Satisfies both shapes callers expect: it destructures as `{ list }` and it
+ * still has a `length`, so neither style of call site blows up.
+ */
+function emptyResult() {
+  return Object.assign([], { list: [], data: [], records: [], total: 0, stat: 0 })
+}
+
+let warnedOffline = false
+function warnBackendOffline() {
+  if (warnedOffline) return
+  warnedOffline = true
+  console.info(
+    `[Design Studio] No content backend at ${baseUrl || 'the configured API URL'}. ` +
+      'Templates and stock photos are unavailable; everything else works normally.',
+  )
+}
 
 type TFetchRequestConfigParams = AxiosRequestConfig & Record<string, any>
 type TFetchMethod = keyof Pick<

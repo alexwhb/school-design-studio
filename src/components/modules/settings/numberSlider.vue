@@ -6,25 +6,32 @@
  * @LastEditTime: 2023-10-16 09:46:23
 -->
 <template>
+  <!--
+    Label sits above the track rather than beside it. English control names
+    ("Letter spacing", "Line height") are long enough to wrap in a fixed-width
+    gutter, and stacking also gives the slider its full width.
+  -->
   <div id="number-slider">
-    <span :style="{ width: labelWidth }" class="label">{{ label }}</span>
+    <div class="slider-head">
+      <span class="label">{{ label }}</span>
+      <span class="value">{{ displayValue }}</span>
+    </div>
     <el-slider
       v-model="innerValue"
       :min="minValue" :max="maxValue" :step="step"
-      input-size="small" 
-      :show-input="showInput" :show-tooltip="false" :show-input-controls="false"
+      input-size="small"
+      :show-input="false" :show-tooltip="false" :show-input-controls="false"
       @change="changeValue"
-    /> 
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 // const NAME = 'number-slider'
-import { watch, ref, onMounted } from 'vue';
+import { watch, ref, computed, onMounted } from 'vue';
 
 type TProps = {
   label?: string
-  labelWidth?: string
   modelValue?: number
   minValue?: number
   maxValue?: number
@@ -39,7 +46,6 @@ type TEmits = {
 
 const props = withDefaults(defineProps<TProps>(), {
   label: '',
-  labelWidth: '71px',
   modelValue: 0,
   minValue: 0,
   maxValue: 500,
@@ -66,6 +72,9 @@ watch(
     innerValue.value = props.modelValue
   }
 )
+
+/** Trims float noise so the readout stays short: 1.5, not 1.4999999999. */
+const displayValue = computed(() => Number(Number(innerValue.value).toFixed(2)))
 
 function changeValue(value: number | number[]) {
   emit('finish', value)
@@ -99,15 +108,30 @@ function changeValue(value: number | number[]) {
 
 <style lang="less" scoped>
 #number-slider {
-  align-items: center;
   display: flex;
-  .label {
-    user-select: none;
-    margin-right: 4px;
+  flex-direction: column;
+  width: 100%;
+
+  .slider-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+
+    .label {
+      user-select: none;
+      color: @ink-2;
+      font-size: @text-base;
+    }
+    .value {
+      color: @ink-3;
+      font-size: @text-sm;
+      font-variant-numeric: tabular-nums;
+    }
   }
-}
-.slider-demo-block .el-slider {
-  margin-top: 0;
-  margin-left: 12px;
+
+  :deep(.el-slider) {
+    margin-top: 2px;
+  }
 }
 </style>

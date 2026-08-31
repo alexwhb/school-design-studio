@@ -8,7 +8,12 @@
         <!-- eslint-disable-next-line vue/no-v-model-argument -->
         <color-picker v-model:value="state.innerColor" :modes="modes" @change="colorChange" @nativePick="dropColor" />
         <template #reference>
-          <div class="color__bar" :style="{ background: state.innerColor }"></div>
+          <!-- A small chip beside the value reads more like a colour field than
+               a full-width bar, and leaves room to show the value itself. -->
+          <div class="color__field">
+            <span class="color__chip transparent-bg"><span class="color__chip-fill" :style="{ background: state.innerColor }"></span></span>
+            <span class="color__value">{{ readableColor }}</span>
+          </div>
         </template>
       </el-popover>
     </div>
@@ -16,7 +21,7 @@
 </template>
 
 <script lang="ts" setup>
-import {reactive, onMounted, watch } from 'vue'
+import { reactive, computed, onMounted, watch } from 'vue'
 
 import colorPicker from '@palxp/color-picker'
 import { useControlStore } from '@/store';
@@ -69,6 +74,17 @@ let first = true
 
 onMounted(() => {
   checkColorLength()
+})
+
+/** Shows a plain hex, or the kind of fill when it is not a flat colour. */
+const readableColor = computed(() => {
+  const value = state.innerColor || ''
+  if (!value) return 'None'
+  if (value.includes('gradient')) return 'Gradient'
+  if (value.startsWith('url')) return 'Image'
+  const hex = value.replace(/^#/, '').toUpperCase()
+  // Drop a fully opaque alpha pair; it is noise.
+  return '#' + (hex.length === 8 && hex.endsWith('FF') ? hex.slice(0, 6) : hex)
 })
 
 const dropColor = async (color: string) => {
@@ -148,40 +164,61 @@ defineExpose({
 :deep(.el-color-picker--small .el-color-picker__trigger) {
   width: 100%;
 }
+
 .color {
-  &__bar {
-    border-radius: 3px;
+  &__field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     width: 100%;
-    height: 28px;
-    // border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 6%);
+    height: 30px;
+    padding: 0 8px;
+    .control-surface();
     cursor: pointer;
+    transition: border-color 0.12s ease;
+    &:hover {
+      border-color: #d4d4d8;
+    }
   }
-  &__bar:hover {
-    // border: 1px solid #bdbfc5;
-    box-shadow: inset 0 0 0 1px #bdbfc5;
+  &__chip {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: block;
+    position: relative;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+    background-size: 8px 8px;
+  }
+  &__chip-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+  }
+  &__value {
+    color: @ink-2;
+    font-size: @text-sm;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
+
 .color__select {
   .content {
     width: 100%;
     align-items: center;
     display: flex;
   }
-  .label {
-    margin-right: 10px;
-  }
   .input-label {
     user-select: none;
-    // font-size: 12px;
-    line-height: 22px;
-    padding: 0px 0 10px 0;
-    font-size: 14px;
-    font-family: PingFangSC-Regular, PingFang SC;
-    font-weight: 400;
-    color: #666666;
+    padding: 0 0 6px;
+    font-size: @text-base;
+    color: @ink-2;
   }
 }
+
 .native {
   position: relative;
   margin-left: 4px;
@@ -199,13 +236,13 @@ defineExpose({
     right: 0;
     z-index: 9;
     pointer-events: none;
-    color: #666666;
-    border: 1px solid #e6e6e6;
-    border-radius: 4px;
+    color: @ink-2;
+    border: 1px solid @line;
+    border-radius: @radius-sm;
     line-height: 28px;
   }
 }
 .native:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: @surface-2;
 }
 </style>

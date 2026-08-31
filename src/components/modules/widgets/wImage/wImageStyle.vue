@@ -32,8 +32,8 @@
         <div class="slide-wrap">
           <number-slider v-model="state.innerElement.opacity" style="font-size: 14px" label="Opacity" :step="0.05" :maxValue="1" @finish="(value) => finish('opacity', value)" />
           <number-slider v-model="state.innerElement.radius" style="font-size: 14px" label="Corner radius" :maxValue="Math.min(Number(state.innerElement.record?.width), Number(state.innerElement.record?.height))" @finish="(value) => finish('radius', value)" />
-          <!-- <number-slider v-model="innerElement.letterSpacing" style="font-size: 14px" label="Letter spacing" labelWidth="40px" :step="0.05" :minValue="-50" :maxValue="innerElement.fontSize" @finish="(value) => finish('letterSpacing', value)" />
-        <number-slider v-model="innerElement.lineHeight" style="font-size: 14px" label="Line height" labelWidth="40px" :step="0.05" :minValue="0" :maxValue="2.5" @finish="(value) => finish('lineHeight', value)" /> -->
+          <!-- <number-slider v-model="innerElement.letterSpacing" style="font-size: 14px" label="Letter spacing" :step="0.05" :minValue="-50" :maxValue="innerElement.fontSize" @finish="(value) => finish('letterSpacing', value)" />
+        <number-slider v-model="innerElement.lineHeight" style="font-size: 14px" label="Line height" :step="0.05" :minValue="0" :maxValue="2.5" @finish="(value) => finish('lineHeight', value)" /> -->
         </div>
       </el-collapse-item>
       <el-collapse-item v-if="state.innerElement.isNinePatch" title="Nine-patch settings" name="3">
@@ -47,7 +47,7 @@
     </el-collapse>
     <!-- <CropImage ref="crop" @done="cropDone" /> -->
     <inner-tool-bar v-show="state.innerElement.cropEdit" :style="toolBarStyle">
-      <number-slider v-model="state.innerElement.zoom" class="inner-bar" label="Scale" labelWidth="40px" :step="0.01" :minValue="1" :maxValue="3" />
+      <number-slider v-model="state.innerElement.zoom" class="inner-bar" label="Scale" :step="0.01" :minValue="1" :maxValue="3" />
       <i style="padding: 0 8px; cursor: pointer" class="icon sd-queren" @click="imgCrop(false)" />
     </inner-tool-bar>
     <picBox ref="picBoxRef" @select="selectDone" />

@@ -24,8 +24,8 @@
       </div> -->
       <!-- <el-collapse-item title="Size and position" name="1"> -->
       <div class="style-item slide-wrap">
-        <number-slider v-model="state.innerElement.letterSpacing" style="font-size: 14px" label="Letter spacing" labelWidth="40px" :step="0.05" :minValue="-state.innerElement.fontSize" :maxValue="state.innerElement.fontSize * 2" @finish="(value) => finish('letterSpacing', value)" />
-        <number-slider v-model="state.innerElement.lineHeight" style="font-size: 14px" label="Line height" labelWidth="40px" :step="0.05" :minValue="0" :maxValue="2.5" @finish="(value) => finish('lineHeight', value)" />
+        <number-slider v-model="state.innerElement.letterSpacing" style="font-size: 14px" label="Letter spacing" :step="0.05" :minValue="-state.innerElement.fontSize" :maxValue="state.innerElement.fontSize * 2" @finish="(value) => finish('letterSpacing', value)" />
+        <number-slider v-model="state.innerElement.lineHeight" style="font-size: 14px" label="Line height" :step="0.05" :minValue="0" :maxValue="2.5" @finish="(value) => finish('lineHeight', value)" />
       </div>
       <!-- </el-collapse-item> -->
 
@@ -64,7 +64,6 @@ import valueSelect from '../../settings/valueSelect.vue'
 import effectWrap from '../../settings/EffectSelect/TextWrap.vue'
 import { useFontStore } from '@/common/methods/fonts'
 import { FONT_GROUPS } from '@/assets/data/FontsData'
-import usePageFontsFilter from './pageFontsFilter'
 import { wTextSetting, TwTextData } from './wTextSetting'
 import { storeToRefs } from 'pinia'
 import { useControlStore, useForceStore, useWidgetStore } from '@/store'
@@ -181,13 +180,14 @@ function selectTextEffect({ key, value, style }: any) {
 
 function loadFonts() {
   const localFonts = useFontStore.list
-  const fontLists: Record<string, any> = { 'On this page': [] }
+  // Four plain categories. With twenty fonts an "on this page" tab was one tab
+  // too many for the picker's width and told people nothing they could not see.
+  const fontLists: Record<string, any> = {}
   for (const group of Object.values(FONT_GROUPS)) fontLists[group] = []
   for (const font of localFonts) {
     const { id, oid, value, url, alias, preview, kind } = font
     fontLists[FONT_GROUPS[kind]].push({ id, oid, value, url, alias, preview })
   }
-  fontLists['On this page'] = usePageFontsFilter()
   state.fontClassList = fontLists
 }
 
@@ -198,7 +198,6 @@ function finish(key: string, value: number | Record<string, any> | string) {
     value,
   })
   setTimeout(() => {
-    key === 'fontClass' && (state.fontClassList['On this page'] = usePageFontsFilter())
   }, 300)
 }
 
@@ -302,7 +301,7 @@ defineExpose({
   width: 100%;
 }
 .style-item {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 .setting-list {
   display: flex;
@@ -312,10 +311,12 @@ defineExpose({
   width: 100%;
 }
 
+// Sliders are grouped by spacing alone rather than a tinted panel.
 .slide-wrap {
   width: 100%;
-  padding: 16px;
-  background: #f3f5f7;
-  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 0;
 }
 </style>

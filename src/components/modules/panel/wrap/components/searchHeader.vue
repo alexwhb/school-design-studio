@@ -94,42 +94,59 @@ defineExpose({
 </script>
 
 <style lang="less" scoped>
-:deep(.el-input__suffix) {
-  padding-top: 9px;
-}
 .search__wrap {
-  padding: 16px 1rem 0rem 0rem;
+  padding: 14px 14px 6px;
   display: flex;
+  gap: 8px;
   cursor: pointer;
-}
-.search {
-  &__type {
-    border: 1px solid #e8eaec;
-    color: #666666;
-    width: 44px;
-    margin: 0 0.6rem 0 1rem;
-    border-radius: 4px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    .iconfont {
-      font-size: 20px;
+
+  :deep(.el-input__wrapper) {
+    box-shadow: 0 0 0 1px @line inset;
+  }
+  // The library's "append" slot draws its own bordered box; flatten it into
+  // the field so the search bar reads as one control.
+  :deep(.el-input-group__append) {
+    background: transparent;
+    box-shadow: none;
+    border-left: 1px solid @line;
+    padding: 0 10px;
+    color: @ink-3;
+    .el-button {
+      border: none;
+      background: transparent;
+      padding: 0;
     }
   }
-  &__type:hover {
-    color: @active-text-color;
+}
+
+.search {
+  &__type {
+    border: 1px solid @line;
+    color: @ink-2;
+    width: 36px;
+    flex-shrink: 0;
+    border-radius: @radius;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.12s ease, color 0.12s ease;
+    .iconfont {
+      font-size: 16px;
+    }
+    &:hover {
+      background: @surface-2;
+      color: @ink;
+    }
   }
 }
 
 .cate {
   &__text {
-    font-weight: bold;
+    font-size: @text-base;
   }
   &--select {
-    color: @main-color;
+    color: @accent;
+    font-weight: 600;
   }
 }
 </style>

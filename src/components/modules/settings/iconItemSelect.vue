@@ -61,46 +61,60 @@ function selectItem(item: TIconItemSelectData) {
 <style lang="less" scoped>
 .flex {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   flex-direction: row;
 }
+
+// A segmented group: one hairline around the set, the active item tinted.
 .btn__bar {
   margin-bottom: 12px;
-  padding: 0 12px;
-  background: #f3f5f7;
-  border: none;
-  border-radius: 6px;
-  height: 40px;
+  padding: 3px;
+  background: @surface;
+  border: 1px solid @line;
+  border-radius: @radius;
+  height: 34px;
+  gap: 2px;
 }
 </style>
+
 <style lang="less" scoped>
 .icon-item-select {
-  // display: flex;
   width: 100%;
   .label {
     margin-right: 10px;
+    color: @ink-2;
+    font-size: @text-base;
   }
   .list {
     line-height: 1;
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+
     .list-item {
-      color: #444950;
+      color: @ink-2;
       cursor: pointer;
-      padding: 5px;
-      margin: 4px 0;
-      height: 32px;
-      width: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      margin: 0;
+      height: 26px;
+      border-radius: @radius-sm;
+      transition: background-color 0.12s ease, color 0.12s ease;
+
       i {
-        font-size: 21px;
+        font-size: 17px;
       }
       &:hover {
-        background-color: #e3e4e5;
-        border-radius: 7px;
+        background-color: @surface-2;
+        color: @ink;
       }
     }
+
     .list-item.active {
-      color: @main-color;
-      font-weight: bold;
-      // color: #ffffff;
+      color: @accent;
+      background-color: @accent-soft;
     }
   }
 }

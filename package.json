@@ -1,15 +1,18 @@
 {
-  "name": "xunpai-design",
+  "name": "design-studio",
   "version": "1.0.0",
   "private": true,
   "author": "ShawnPhang",
   "scripts": {
-    "prepared": "npm i && cd service && PUPPETEER_DOWNLOAD_BASE_URL=https://cdn.npmmirror.com/binaries/chrome-for-testing npm i",
-    "serve": "npm run dev & cd service && npm run dev",
     "dev": "cross-env NODE_ENV=development vite",
+    "start": "npm run build && node serve.mjs",
+    "serve": "node serve.mjs",
     "build": "cross-env NODE_ENV=production && vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "prepared": "npm i && cd service && PUPPETEER_DOWNLOAD_BASE_URL=https://cdn.npmmirror.com/binaries/chrome-for-testing npm i",
     "v-build": "cross-env NODE_ENV=production && vite build",
-    "v-build-hard": "cross-env NODE_ENV=production vue-tsc --noEmit && vite build"
+    "v-build-hard": "cross-env NODE_ENV=production vue-tsc --noEmit && vite build",
+    "fetch-fonts": "node ../tools/fetch-fonts.mjs"
   },
   "dependencies": {
     "@palxp/color-picker": "workspace:*",
@@ -68,5 +71,6 @@
     "Chrome >= 90"
   ],
   "website": "https://design.palxp.cn",
-  "homepage": "https://xp.palxp.cn"
+  "homepage": "https://xp.palxp.cn",
+  "description": "A simple English-language design editor for schools: posters, flyers, newsletters and slides, with PowerPoint export."
 }

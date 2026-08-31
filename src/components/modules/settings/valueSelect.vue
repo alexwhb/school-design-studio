@@ -105,9 +105,22 @@ const state = reactive<TState>({
   width: '0',
   innerValue: '',
   innerPreview: '',
-  activeTab: 'Chinese',
+  activeTab: '',
 })
 const selectRef = ref<HTMLElement | null>(null)
+
+// Default to the first group rather than a fixed name. The original hard-coded
+// the Chinese font tab, so renaming the groups left the picker showing a tab
+// bar with no list under it.
+watch(
+  () => props.data,
+  (data) => {
+    if (!data || Array.isArray(data)) return
+    const keys = Object.keys(data)
+    if (keys.length && !keys.includes(state.activeTab)) state.activeTab = keys[0]
+  },
+  { immediate: true, deep: true },
+)
 
 const showValue = computed(() => {
   return state.innerValue
@@ -198,13 +211,10 @@ function down() {
   width: 80px;
   .input-label {
     user-select: none;
-    // font-size: 12px;
-    line-height: 22px;
-    padding: 12px 0 10px 0;
-    font-size: 14px;
-    font-family: PingFangSC-Regular, PingFang SC;
-    font-weight: 400;
-    color: #666666;
+    line-height: 20px;
+    padding: 0 0 6px;
+    font-size: @text-base;
+    color: @ink-2;
   }
   .input-unit {
     font-size: 14px;
@@ -213,14 +223,18 @@ function down() {
     color: #777;
   }
   .input-wrap {
-    border-radius: 6px;
-    // border: 1px solid @color0;
+    border-radius: @radius;
+    border: 1px solid @line;
     display: flex;
     align-items: center;
     flex-direction: row;
     width: 80px;
-    background: #f3f5f7;
-    height: 40px;
+    background: @surface;
+    height: 34px;
+    transition: border-color 0.12s ease;
+    &:hover {
+      border-color: #d4d4d8;
+    }
     .preview {
       overflow: hidden;
     }
@@ -228,8 +242,9 @@ function down() {
       background: transparent;
       border-radius: 3px;
       border: 0px;
-      font-size: 14px;
-      height: 40px;
+      font-size: @text-base;
+      color: @ink;
+      height: 32px;
       outline: none;
       padding: 6px;
       text-align: center;
@@ -244,11 +259,11 @@ function down() {
       display: flex;
       align-items: center;
       // flex-direction: column;
-      height: 40px;
+      height: 32px;
       .icon-down1 {
-        font-size: 24px;
+        font-size: 18px;
         margin-right: 6px;
-        color: @color1;
+        color: @ink-4;
         line-height: 32px;
       }
       // .down {
@@ -270,38 +285,55 @@ function down() {
     }
   }
   .input-wrap.active {
-    // border: 1px solid rgba(59, 116, 241, 0.7);
-    border: 1px solid rgba(0, 0, 0, 0.04);
-    box-shadow: 1px 1px 5px 2px rgba(59, 116, 241, 0.1);
+    border-color: @accent;
   }
 }
 .list-ul {
-  max-height: 240px;
+  max-height: 300px;
   overflow-y: auto;
   li {
     display: flex;
     align-items: center;
-    color: #000000;
+    color: @ink;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 15px;
     overflow: hidden;
-    padding: 5px;
+    padding: 7px 10px;
+    border-radius: @radius-sm;
     text-overflow: ellipsis;
     white-space: nowrap;
     &:hover {
-      background-color: @color1;
+      background-color: @surface-2;
     }
   }
   li.active {
-    color: #3b74f1;
+    color: @accent;
+    background-color: @accent-soft;
   }
   .preview {
-    // transform: scaleY(-1);
     height: 1.6em;
   }
 }
 
+// Wide enough for the font category tabs to sit on one line.
 .tabs-wrap {
-  width: 210px;
+  width: 300px;
+
+  :deep(.el-tabs__header) {
+    margin-bottom: 6px;
+  }
+  :deep(.el-tabs__item) {
+    font-size: @text-sm;
+    padding: 0 10px;
+    height: 34px;
+    color: @ink-3;
+    &.is-active {
+      color: @accent;
+    }
+  }
+  :deep(.el-tabs__nav-wrap::after) {
+    height: 1px;
+    background-color: @line;
+  }
 }
 </style>
