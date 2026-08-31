@@ -14,7 +14,7 @@ service/src/mock/
     photos/1..3.json  Photos, when there is no Unsplash key
   templates/
     list.json         what appears in the Templates panel
-    101..112.json     the school pack (see below)
+    101..127.json     the school pack (see below)
   components/
     list/text.json    Text > Text with effects, and the effect presets
     list/comp.json    Text > Sample element groups
@@ -175,8 +175,8 @@ Then add to `templates/list.json`:
 
 ### The school pack
 
-Twelve templates — posters, a certificate, a door sign and two slides — are
-generated rather than hand-written:
+Twenty-seven templates — thirteen posters and notices, a certificate, a door
+sign and twelve presentation slides — are generated rather than hand-written:
 
 ```bash
 python3 tools/make-school-templates.py      # write them
@@ -187,11 +187,36 @@ python3 tools/make-school-templates.py --remove   # or take them back out
 Editing a layout means editing the builder function for it and re-running,
 which is a good deal less painful than hand-editing a JSON string.
 
-They are ids 101–112 and every record carries `"pack": "school-events"`, which
+They are ids 101–127 and every record carries `"pack": "school-events"`, which
 is what `--remove` keys on, so removing them cannot touch anything else.
 Covers need the app running (`npm run dev` or `npm start`) because there is no
 way to render a page outside the editor — pass a different base URL as the
-first argument if you are not on port 4173.
+first argument if you are not on port 4173, and any ids after it to re-shoot
+just those (`node tools/make-template-covers.mjs http://127.0.0.1:5173 116`).
+
+Ids follow position in `BUILDERS`, so a new layout goes on the end of that
+list: inserting one in the middle renumbers everything after it and orphans the
+covers already shot.
+
+Every run reassigns every widget's uuid, so all twenty-seven files turn up
+dirty in `git status` even when you changed one layout — or none. That is the
+generator working, not you breaking something: the ids are per-widget handles
+the editor mints fresh each time, and nothing outside the file refers to them.
+Read the diff of the template you meant to change and take the rest as noise.
+
+The twelve slides (113–124) are a deck rather than a dozen unrelated layouts —
+one navy header, a 90px margin, Archivo for headings and Inter for body — so a
+school can pick six of them and have a presentation that looks made rather than
+assembled. Between them they cover the shape of an ordinary school talk: title,
+section divider, agenda, one big number, three numbers, a quote, two columns, a
+timeline, a photo and caption, next steps, the team, key dates, thank you.
+
+Two things to hold on to when editing a slide. Text is **placed, not flowed**:
+nothing reflows around a line that grew, so copy long enough to wrap runs into
+whatever was positioned below it — the quote slide is two lines and has to stay
+two. And a slide is 1920x1080 at 96dpi, which the .pptx export scales to a
+standard 13.333in widescreen slide, so a design that fits the page fits
+PowerPoint.
 
 Nothing in the pack introduces a licence obligation. The shapes and icons come
 from `materials/svg.json` (the icons are Lucide, ISC), the fonts are the
