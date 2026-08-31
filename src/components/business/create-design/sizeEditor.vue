@@ -91,11 +91,11 @@ function isNumber(val: any) {
   }
   .sd-fdb,
   .sd-db {
-    color: #999999;
+    color: @ink-3;
     margin: 0 6px 0 -4px;
   }
   .sd-db {
-    color: #333333;
+    color: @ink;
   }
 }
 </style>

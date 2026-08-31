@@ -17,6 +17,7 @@
     </template>
     <el-button v-else text @click="jump2Edit">Edit template</el-button>
     <watermark-option />
+    <theme-toggle />
     <div class="top-nav-divider" />
     <slot />
   </div>
@@ -38,6 +39,7 @@ import downloadBlob from '@/common/methods/download/downloadBlob'
 import { useControlStore, useHistoryStore, useCanvasStore, useUserStore, useWidgetStore } from '@/store/index'
 import { storeToRefs } from 'pinia'
 import watermarkOption from './Watermark.vue'
+import themeToggle from './ThemeToggle.vue'
 
 type TProps = {
   modelValue?: boolean

@@ -51,6 +51,7 @@ import { IGetTempListData } from '@/api/home'
 import eventBus from '@/utils/plugins/eventBus'
 import { storeToRefs } from 'pinia'
 import { useControlStore, useCanvasStore, useWidgetStore } from '@/store'
+import { listUploads, deleteUpload } from '@/common/methods/localUploads'
 
 type TProps = {
   active?: number
@@ -88,32 +89,26 @@ const state = reactive<TState>({
 })
 
 let loading = false
-let page = 0
 let listPage = 0
 
-const load = (init?: boolean) => {
+/**
+ * Uploads live in this browser (see common/methods/localUploads), so there is
+ * no server to page through — the whole list arrives at once and the "load
+ * more" path just marks itself done.
+ */
+const load = async (init?: boolean) => {
   if (init) {
     state.imgList = []
-    page = 0
     state.isDone = false
   }
   if (state.isDone || loading) {
     return
   }
   loading = true
-  page += 1
-  api.material.getMyPhoto({ page }).then(({ list }) => {
-    if (list.length <= 0) {
-      state.isDone = true
-    } else {
-      state.imgList = state.imgList.concat(list)
-    }
-    setTimeout(() => {
-      loading = false
-      if (!imgListRef.value) return
-      checkHeight(imgListRef.value.getRef(), load)
-    }, 100)
-  })
+  const list = (await listUploads().catch(() => [])) as unknown as IGetTempListData[]
+  state.imgList = list
+  state.isDone = true
+  loading = false
 }
 
 const loadDesign = (init: boolean = false) => {
@@ -187,13 +182,11 @@ const deleteImg = async ({ i, item }: controlImgParam) => {
   // store.commit('setShowMoveable', false) // Clear the previous selection box
   controlStore.setShowMoveable(false) // Clear the previous selection box
 
-  const isPass = await useConfirm('Warning', 'This cannot be undone, and anything already using this file will break.', 'warning')
+  const isPass = await useConfirm('Remove this upload?', 'It will disappear from anything on the page that uses it.', 'warning')
   if (!isPass) {
     return false
   }
-  const arr = item.url.split('/')
-  let key = arr.splice(3, arr.length - 1).join('/')
-  api.material.deleteMyPhoto({ id: item.id, key })
+  await deleteUpload(String(item.id))
   if (!imgListRef.value) return
   imgListRef.value.delItem(i) // Notification flag
 }
@@ -282,7 +275,7 @@ defineExpose({
   padding-top: 1rem;
   text-align: center;
   font-size: 14px;
-  color: #999;
+  color: @ink-3;
 }
 
 .tabs {

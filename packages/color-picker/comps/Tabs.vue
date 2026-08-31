@@ -79,8 +79,8 @@ defineExpose({ tabs })
 .my-tabs__header {
   margin-bottom: 0.75rem;
   border-radius: 0.25rem;
-  --tw-bg-opacity: 1;
-  background-color: rgb(243 244 246 / var(--tw-bg-opacity));
+  background-color: var(--ds-surface-3);
+  color: var(--ds-ink-3);
   padding: 0px;
   padding: 0.125rem;
 }
@@ -101,6 +101,7 @@ defineExpose({ tabs })
 }
 .my-tab__title.my-active {
   font-weight: bold;
+  color: var(--ds-ink);
 }
 
 .my-tab__slider {
@@ -108,8 +109,7 @@ defineExpose({ tabs })
   bottom: 0px;
   top: 0px;
   border-radius: 0.25rem;
-  --tw-bg-opacity: 1;
-  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+  background-color: var(--ds-surface);
   --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);

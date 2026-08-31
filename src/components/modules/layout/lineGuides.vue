@@ -14,6 +14,7 @@ import { watch } from 'vue'
 
 import Guides, { GuideOptions } from '@scena/guides'
 import { useCanvasStore } from '@/store'
+import useTheme from '@/common/hooks/useTheme'
 
 type TProps = {
   show: boolean
@@ -36,6 +37,7 @@ const props = withDefaults(defineProps<TProps>(), {
 })
 
 const canvasStore = useCanvasStore()
+const { resolved: theme } = useTheme()
 const container = 'page-design' // page-design out-page
 let guidesTop: TGuidesData | null = null
 let guidesLeft: TGuidesData | null = null
@@ -54,6 +56,15 @@ watch(
   },
 )
 
+// @scena/guides paints the rulers into a canvas from colours passed at
+// construction, so it cannot follow a CSS variable. Rebuild them when the
+// theme changes — cheap, and only while the rulers are actually shown.
+watch(theme, () => {
+  if (!props.show) return
+  destroy()
+  render()
+})
+
 function destroy() {
   guidesTop?.destroy()
   guidesLeft?.destroy()
@@ -61,11 +72,17 @@ function destroy() {
   guidesLeft = null
 }
 
+/** Reads a theme token, so the rulers match whichever palette is live. */
+function token(name: string, fallback: string) {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return value || fallback
+}
+
 function render() {
   const sameParams: TSameParams = {
-    backgroundColor: '#f9f9fa',
-    lineColor: '#bec2c7',
-    textColor: '#999999',
+    backgroundColor: token('--ds-ruler-bg', '#f9f9fa'),
+    lineColor: token('--ds-ruler-line', '#bec2c7'),
+    textColor: token('--ds-ruler-text', '#999999'),
     // direction: 'start',
     // height: 30,
     displayDragPos: true,

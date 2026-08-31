@@ -77,7 +77,7 @@ export default defineComponent({
   width: 38px;
   margin-left: 5px;
   padding: 0 0 0 4px;
-  border: 1px solid #e8eaec;
+  border: 1px solid @line;
   border-radius: 4px;
   position: relative;
 }
@@ -98,7 +98,7 @@ export default defineComponent({
   z-index: 2;
   right: 2px;
   margin-top: 3px;
-  background: #ffffff;
+  background: @surface;
   width: 60px;
   height: 60px;
   border-radius: 7px;
@@ -111,7 +111,7 @@ export default defineComponent({
     height: 54px;
     position: relative;
     overflow: hidden;
-    background: #f1f2f4;
+    background: @surface-3;
     border-radius: 50%;
     user-select: none;
     cursor: pointer;
@@ -122,7 +122,7 @@ export default defineComponent({
     left: 50%;
     width: 50%;
     height: 1px;
-    background: #999999;
+    background: @ink-3;
     pointer-events: none;
     transform-origin: left top;
   }
@@ -134,7 +134,7 @@ export default defineComponent({
     width: 3px;
     height: 3px;
     border-radius: 50%;
-    background: #999999;
+    background: @ink-3;
   }
   .line::after {
     position: absolute;
@@ -144,7 +144,7 @@ export default defineComponent({
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: #999999;
+    background: @ink-3;
   }
 }
 </style>

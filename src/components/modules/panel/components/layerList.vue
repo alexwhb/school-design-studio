@@ -167,15 +167,15 @@ export default defineComponent({
 </script>
 
 <style lang="less" scoped>
-@color0: #ffffff;
-@color1: #999999;
-@color2: rgba(0, 0, 0, 0.05);
+@color0: @surface;
+@color1: @ink-3;
+@color2: @surface-2;
 
 .widget-list {
   width: 100%;
   .widget {
     align-items: center;
-    background-color: #ffffff;
+    background-color: @surface;
     border-bottom: 1px solid @color2;
     color: @color1;
     // cursor: move;
@@ -185,7 +185,7 @@ export default defineComponent({
     position: relative;
     width: 100%;
     .widget-type {
-      // outline: 1px solid #dedede;
+      // outline: 1px solid @line;
       align-items: center;
       color: @color1;
       display: flex;
@@ -196,10 +196,10 @@ export default defineComponent({
       &__img {
         object-fit: contain;
         background-color: @color0;
-        background-image: -webkit-linear-gradient(45deg, #efefef 25%, transparent 25%, transparent 75%, #efefef 75%, #efefef), -webkit-linear-gradient(45deg, #efefef 25%, transparent 25%, transparent 75%, #efefef 75%, #efefef);
+        background-image: linear-gradient(45deg, var(--ds-checker-a) 25%, transparent 25%, transparent 75%, var(--ds-checker-a) 75%, var(--ds-checker-a)), linear-gradient(45deg, var(--ds-checker-a) 25%, transparent 25%, transparent 75%, var(--ds-checker-a) 75%, var(--ds-checker-a));
         background-position: 0 0, 10px 10px;
         background-size: 21px 21px;
-        outline: 1px solid #dedede;
+        outline: 1px solid @line;
       }
     }
     .widget-name {
@@ -219,9 +219,15 @@ export default defineComponent({
       opacity: 1;
     }
   }
+  // Selected row. Was a solid grey slab with inverted text, which in a dark
+  // theme became the brightest thing in the panel. Uses the same accent tint as
+  // every other selected thing in the editor instead.
   .widget.active {
-    background-color: #888888;
-    color: @color0;
+    background-color: @accent-soft;
+    color: @accent;
+    .widget-type {
+      color: @accent;
+    }
   }
   .item-one {
     padding-left: 12px;
@@ -241,7 +247,7 @@ export default defineComponent({
   right: 12px;
   font-size: 18px;
   cursor: default;
-  color: #444444;
+  color: @ink-2;
 }
 .sd-jiesuo {
   opacity: 0;
@@ -255,7 +261,7 @@ export default defineComponent({
 
 // dragable
 .choose {
-  border: 1px dashed #999999 !important;
+  border: 1px dashed @accent-border !important;
 }
 
 .flip-list-move {

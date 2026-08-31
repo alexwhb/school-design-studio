@@ -108,7 +108,9 @@ defineExpose({ select, back })
       display: flex;
       align-items: center;
       gap: 2px;
-      color: @ink-4;
+      // @ink-4 is the placeholder/disabled step; this is a live link, and at
+      // 11px it fell under 3:1 on a white panel.
+      color: @ink-3;
       font-size: @text-xs;
       font-weight: 500;
       letter-spacing: 0;

@@ -214,7 +214,7 @@ defineExpose({
   transform: translate(-50%, -50%);
   top: 50%;
   &__box {
-    color: #666666;
+    color: @ink-2;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -225,6 +225,6 @@ defineExpose({
 .v-tips {
   padding: 0 1rem;
   font-size: 15px;
-  color: #666666;
+  color: @ink-2;
 }
 </style>

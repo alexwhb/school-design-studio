@@ -198,14 +198,14 @@ function alignAction(item: TIconItemSelectData) {
   margin-bottom: 10px;
 }
 .ungroup {
-  background-color: #3b74f1;
-  color: #ffffff;
+  background-color: @accent;
+  color: @accent-on;
   cursor: pointer;
   margin: 10px;
   padding: 5px;
   text-align: center;
   &:hover {
-    background-color: #4f82f2;
+    background-color: @accent-hover;
   }
 }
 .block-btn {

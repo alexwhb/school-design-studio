@@ -173,7 +173,7 @@ function alignAction(item: TIconItemSelectData) {
 .slide-wrap {
   width: 100%;
   padding: 16px;
-  background: #f3f5f7;
+  background: @surface-2;
   border-radius: 6px;
 }
 #w-image-style {

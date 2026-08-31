@@ -6,12 +6,10 @@
  * @Date: 2024-03-03 19:00:00
  */
 
-import Qiniu from '@/common/methods/QiNiu'
 import { TCommonUploadCb, TUploadErrorResult } from '@/api/ai'
 import { TImageCutoutState } from './index.vue'
-import api from '@/api'
-import { getImage } from '@/common/methods/getImgDetail'
-import _config from '@/config'
+import { saveUpload } from '@/common/methods/localUploads'
+import eventBus from '@/utils/plugins/eventBus'
 import { Ref } from 'vue'
 
 /** Choose an image */
@@ -46,18 +44,23 @@ export const selectImageFile = async (state: TImageCutoutState, raw: Ref<HTMLEle
   successCb('', file.name)
 }
 
+/**
+ * Keeps a background-removed cut-out and returns the URL to place it with.
+ *
+ * This used to push the PNG to Qiniu — a CDN this fork has no account for — so
+ * it always threw, returned '' and silently lost the cut-out the user had just
+ * waited for. It goes to the same browser-side library as every other upload
+ * now, which also means it turns up in the Uploads panel to be reused.
+ */
 export async function uploadCutPhotoToCloud(cutImage: string) {
   try {
     const response = await fetch(cutImage)
-    const buffer = await response.arrayBuffer()
-    const file = new File([buffer], `cut_image_${Math.random()}.png`)
-    // upload
-    const qnOptions = { bucket: 'xp-design', prePath: 'user' }
-    const result = await Qiniu.upload(file, qnOptions)
-    const { width, height } = await getImage(file)
-    const url = _config.IMG_URL + result.key
-    await api.material.addMyPhoto({ width, height, url })
-    return url
+    const blob = await response.blob()
+    // PNG, not JPEG: cutting a background out is pointless without the alpha.
+    const file = new File([blob], `cut-out-${Date.now()}.png`, { type: 'image/png' })
+    const saved = await saveUpload(file)
+    eventBus.emit('refreshUserImages')
+    return saved.url
   } catch (e) {
     console.error(`upload cut file error: msg: ${e}`)
     return ''

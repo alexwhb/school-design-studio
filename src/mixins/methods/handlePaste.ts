@@ -13,6 +13,7 @@
 
 // import store from '@/store'
 import api from '@/api'
+import { saveUpload } from '@/common/methods/localUploads'
 import Qiniu from '@/common/methods/QiNiu'
 import _config from '@/config'
 import { getImage } from '@/common/methods/getImgDetail'
@@ -64,14 +65,11 @@ export default (pasteImageFile?: any) => {
   })
 }
 async function uploadParseImage(file: File, { controlStore, pageStore, widgetStore }: any) {
-  // Upload image
-  const resp = await api.material.upload({ file }, (up: any, dp: any) => {
-    console.log(up, dp)
-  })
-  const { width, height } = await getImage(file)
-  try {
-    await api.material.addMyPhoto({ ...resp, width, height })
-  } catch (error) {}
+  // Pasting a picture is an upload like any other, so it goes to the same
+  // store the Upload button uses and shows up in the Uploads panel.
+  const saved = await saveUpload(file).catch(() => null)
+  if (!saved) return
+  const { width, height } = saved
   // 刷新用户列表
   eventBus.emit('refreshUserImages')
   // 添加图片到画布中
@@ -79,7 +77,7 @@ async function uploadParseImage(file: File, { controlStore, pageStore, widgetSto
   const setting = JSON.parse(JSON.stringify(wImageSetting))
   setting.width = width
   setting.height = height
-  setting.imgUrl = resp?.url
+  setting.imgUrl = saved.url
   const { width: pW, height: pH } = pageStore.dPage
   setting.left = pW / 2 - width / 2
   setting.top = pH / 2 - height / 2

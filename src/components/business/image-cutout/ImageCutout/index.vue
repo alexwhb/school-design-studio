@@ -161,7 +161,7 @@ const edit = () => {
 <style lang="less" scoped>
 .uploader {
   &__box {
-    color: #333333;
+    color: @ink;
     display: flex;
     justify-content: center;
     align-items: center;

@@ -420,7 +420,7 @@ function getChilds(uuid: string) {
       background-position: center;
       background-repeat: no-repeat;
       background-size: cover;
-      box-shadow: 1px 1px 10px 3px rgba(0, 0, 0, 0.1);
+      box-shadow: @shadow-page;
       margin: 0 auto;
       position: relative;
       // z-index: -9999;

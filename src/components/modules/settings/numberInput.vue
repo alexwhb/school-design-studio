@@ -34,7 +34,7 @@
         @keydown="(e) => opNumber(e)"
       />
     </div>
-    <span style="color: rgba(0, 0, 0, 0.45)">{{ label }}</span>
+    <span style="color: var(--ds-ink-3)">{{ label }}</span>
     <!-- <div :class="{ 'input-wrap': true, active: inputBorder }">
       <input :class="{ 'real-input': true, disable: !editable }" type="text" :value="modelValue" :readonly="editable ? false : 'readonly'" @input="updateValue($event.target.value)" @focus="focusInput" @blur="blurInput" @keyup="verifyNumber" @keydown="(e) => opNumber(e)" />
       <div v-if="editable" class="op-btn">
@@ -173,8 +173,8 @@ function blurInput() {
 </script>
 
 <style lang="less" scoped>
-@color0: #e1e1e1;
-@color1: #d1d1d1;
+@color0: @line;
+@color1: @line-strong;
 
 .number-input {
   height: 60px;
@@ -203,7 +203,7 @@ function blurInput() {
       width: 100%;
     }
     .real-input.disable {
-      color: #666666;
+      color: @ink-2;
       cursor: not-allowed;
     }
     .op-btn {
@@ -218,11 +218,11 @@ function blurInput() {
         transform: scale(0.8);
         .iconfont {
           font-size: 12px;
-          color: rgba(0, 0, 0, 0.5);
+          color: @ink-3;
         }
         .iconfont:hover {
           font-size: 14px;
-          color: rgba(0, 0, 0, 0.9);
+          color: @ink;
         }
       }
       // .down {
@@ -231,8 +231,8 @@ function blurInput() {
     }
   }
   .input-wrap.active {
-    border: 1px solid rgba(59, 116, 241, 0.7);
-    box-shadow: 1px 1px 5px 2px rgba(59, 116, 241, 0.1);
+    border: 1px solid @accent;
+    box-shadow: 0 0 0 2px @accent-a25;
   }
 }
 
@@ -243,10 +243,10 @@ function blurInput() {
   align-items: center;
   width: 45%;
   height: 40px;
-  background: #f3f5f7;
+  background: @surface-2;
   border-radius: 4px;
   font-size: 14px;
-  color: #33383e;
+  color: @ink;
   padding: 0 16px 0 11px;
   cursor: pointer;
   .input-wrap {
@@ -278,6 +278,6 @@ function blurInput() {
   margin: -14px 0 0 3px;
   transform: scale(0.85);
   transform-origin: left;
-  color: #888888;
+  color: @ink-3;
 }
 </style>

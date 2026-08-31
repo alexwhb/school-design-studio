@@ -10,6 +10,22 @@
   </head>
 
   <body>
+    <script>
+      // Set the theme class before the first paint. Doing this from the app
+      // would mean rendering the light theme and then repainting, which reads
+      // as a white flash on a dark screen. Must stay in step with
+      // src/common/hooks/useTheme.ts.
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('ds_theme')
+          var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) {
+            document.documentElement.classList.add('dark')
+            document.documentElement.style.colorScheme = 'dark'
+          }
+        } catch (e) {}
+      })()
+    </script>
     <div class="pointer-case" id="app"></div>
     <script type="module" src="/src/main.ts"></script>
     <script defer src="/snap.svg-min.js"></script>

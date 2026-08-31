@@ -221,7 +221,6 @@ async function uploadImgDone(img: TUploadDoneData) {
   // store.commit('setShowMoveable', false)
   controlStore.setShowMoveable(false)
 
-  await api.material.addMyPhoto(img)
   // this.innerElement.width = img.width
   // this.innerElement.height = img.height * (this.innerElement.width / img.width)
   state.innerElement.url = img.url
@@ -235,7 +234,7 @@ async function uploadImgDone(img: TUploadDoneData) {
 .slide-wrap {
   width: 100%;
   padding: 16px;
-  background: #f3f5f7;
+  background: @surface-2;
   border-radius: 6px;
 }
 #w-image-style {

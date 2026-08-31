@@ -75,18 +75,18 @@ const openIssues = () => {
     justify-content: space-between;
     padding: 8px 16px;
     margin-bottom: 0;
-    color: #4c535c;
+    color: @ink-2;
     white-space: nowrap;
     .title {
-      color: #333333;
+      color: @ink;
       font-size: 14px;
       font-weight: 400;
     }
     .instruct {
       padding: 7px 8px;
       margin-left: 14px;
-      color: #222529;
-      background: #f1f2f4;
+      color: @ink;
+      background: @surface-2;
       border-radius: 8px;
     }
   }

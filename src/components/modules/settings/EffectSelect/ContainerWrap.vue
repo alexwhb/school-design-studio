@@ -130,7 +130,7 @@ defineExpose({
 .title {
   font-size: 14px;
   font-weight: 600;
-  color: #33383e;
+  color: @ink;
 }
 .strength {
   width: 80px;
@@ -151,7 +151,7 @@ defineExpose({
     display: flex;
   }
   &__select-item:hover {
-    background: rgba(0, 0, 0, 0.07);
+    background: @surface-2;
   }
 }
 .select__box ::-webkit-scrollbar {

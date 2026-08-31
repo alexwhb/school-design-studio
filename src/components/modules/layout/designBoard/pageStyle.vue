@@ -162,7 +162,6 @@ function finish(key: keyof TPageState, value: string | number) {
   })
 }
 async function uploadImgDone(img: TUploadDoneData) {
-  await api.material.addMyPhoto(img)
   pageStore.updatePageData({
     key: 'backgroundTransform',
     value: {},
@@ -210,11 +209,11 @@ function openSizeEdit() {
   width: 100%;
   .sd-edit {
     cursor: pointer;
-    color: #666666;
+    color: @ink-2;
     font-size: 22px;
   }
   .sd-edit:hover {
-    color: #333333;
+    color: @ink;
     transform: scale(1.2);
   }
 }
@@ -230,13 +229,13 @@ function openSizeEdit() {
     cursor: pointer;
     display: flex;
     align-items: center;
-    color: #333;
+    color: @ink;
     font-size: 14px;
     font-weight: 600;
     height: 2.9rem;
     position: absolute;
     z-index: 2;
-    background: #ffffff;
+    background: @surface;
     width: 259px;
     .icon-right {
       transform: rotate(180deg);
@@ -252,7 +251,7 @@ function openSizeEdit() {
   justify-content: center;
   height: 160px;
   padding: 16px;
-  background-color: #f1f2f4;
+  background-color: @surface-3;
   border-radius: 8px;
   .bg-options {
     position: absolute;
@@ -263,7 +262,7 @@ function openSizeEdit() {
   .btn-item {
     margin-left: 5px;
     cursor: pointer;
-    background-color: #ffffff;
+    background-color: @popover;
     width: 24px;
     height: 24px;
     padding: 0;
@@ -273,7 +272,7 @@ function openSizeEdit() {
     justify-content: center;
     align-items: center;
     border: none;
-    box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.08), 0px 4px 12px 0px rgba(0, 0, 0, 0.04);
+    box-shadow: @shadow-pop;
   }
   .bg-control {
     transition: all 0.3s;
@@ -281,7 +280,7 @@ function openSizeEdit() {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.07);
+    background: @surface-2;
     .btns {
       padding: 0 2%;
       position: absolute;

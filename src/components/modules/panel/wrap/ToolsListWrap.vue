@@ -94,7 +94,7 @@ function openImageCutout() {
   display: flex;
   position: relative;
   font-size: 16px;
-  color: #333333;
+  color: @ink;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -106,13 +106,13 @@ function openImageCutout() {
   border-radius: 4px;
   font-size: 15px;
   height: 72px;
-  color: #33383e;
+  color: @ink;
   display: flex;
   align-items: center;
   cursor: pointer;
   margin: 0 1rem 16px;
   user-select: none;
-  background-color: #f6f7f9;
+  background-color: @surface-2;
 }
 .item:hover {
   opacity: 1;
@@ -127,7 +127,7 @@ function openImageCutout() {
 }
 .desc {
   padding-top: 0.5rem;
-  color: #7f8792;
+  color: @ink-3;
   font-size: 12px;
 }
 </style>

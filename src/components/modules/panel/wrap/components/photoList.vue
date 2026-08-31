@@ -273,7 +273,7 @@ defineExpose({
   padding-top: 1rem;
   text-align: center;
   font-size: 14px;
-  color: #999;
+  color: @ink-3;
 }
 /* 呼吸效果 */
 @keyframes breathe {

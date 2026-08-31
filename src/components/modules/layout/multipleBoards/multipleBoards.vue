@@ -211,7 +211,7 @@ function removePoster(removeIndex: number) {
     width: 16px;
     height: 16px;
     color: @ink-3;
-    background: rgba(255, 255, 255, 0.9);
+    background: @surface;
     box-shadow: 0 0 0 1px @line;
   }
   .sd-quxiao {
@@ -250,12 +250,12 @@ function removePoster(removeIndex: number) {
   }
 
   .item-default:hover {
-    border-color: #d4d4d8;
+    border-color: @line-strong;
   }
   // Selected page: a ring in the accent colour, not a heavy glow.
   .item-select {
     border-color: @accent;
-    box-shadow: 0 0 0 2px fade(@accent, 25%);
+    box-shadow: 0 0 0 2px @accent-a25;
   }
   .item-box:first-of-type,
   .item-box:first-child {

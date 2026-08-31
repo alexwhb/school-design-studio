@@ -1,0 +1,118 @@
+// Runtime theme values.
+//
+// tokens.less names the design tokens and is what components reference; this
+// file is where the two palettes those names resolve to actually live. The
+// split matters because Less variables are resolved at build time — if the
+// hexes lived in tokens.less there would be one baked-in palette and no way to
+// switch. Here every token is a CSS custom property, so flipping `.dark` on
+// <html> re-paints the whole editor with no rebuild and no duplicated rules.
+//
+// Emitted once, from index.less. Do not import it anywhere else: tokens.less is
+// injected into every component's <style> block (see vite.config.ts
+// modifyVars), and this file would be duplicated with it.
+//
+// The dark palette is the school planner's admin/template-editor theme
+// (tailwind.css `.theme-admin`) — near-black surfaces, hairline borders, one
+// green accent — so an embedded editor reads as part of that app rather than a
+// panel bolted onto it.
+
+:root {
+  color-scheme: light;
+
+  // ---- accent ----------------------------------------------------------
+  --ds-accent: #4f46e5;
+  --ds-accent-hover: #4338ca;
+  --ds-accent-soft: #eef2ff;
+  --ds-accent-border: #c7d2fe;
+  --ds-accent-on: #ffffff; // text/icons drawn on top of a solid accent fill
+  --ds-accent-a45: rgba(79, 70, 229, 0.45);
+  --ds-accent-a25: rgba(79, 70, 229, 0.25);
+
+  // ---- text ------------------------------------------------------------
+  --ds-ink: #18181b;
+  --ds-ink-2: #52525b;
+  --ds-ink-3: #71717a;
+  --ds-ink-4: #a1a1aa;
+
+  // ---- surfaces --------------------------------------------------------
+  --ds-surface: #ffffff;
+  --ds-surface-2: #fafafa;
+  --ds-surface-3: #f1f2f4; // pressed states, inset wells
+  --ds-popover: #ffffff;
+  --ds-canvas-bg: #eef0f3;
+  --ds-app-bg: #f5f5f4;
+  --ds-overlay: rgba(24, 24, 27, 0.4);
+
+  // ---- lines -----------------------------------------------------------
+  --ds-line: #e8e8e6;
+  --ds-line-soft: #f1f1ef;
+  --ds-line-strong: #d4d4d8; // hovered input borders, guide rules
+
+  --ds-danger: #dc2626;
+
+  // ---- shadows ---------------------------------------------------------
+  --ds-shadow-pop: 0 6px 24px rgba(24, 24, 27, 0.1), 0 1px 2px rgba(24, 24, 27, 0.06);
+  --ds-shadow-page: 0 0 2px rgba(24, 24, 27, 0.08), 0 4px 12px rgba(24, 24, 27, 0.06);
+
+  // ---- odds and ends ---------------------------------------------------
+  --ds-tooltip-bg: #18181b;
+  --ds-tooltip-fg: #ffffff;
+  --ds-scroll-thumb: #d4d4d8;
+  --ds-scroll-thumb-hover: #a1a1aa;
+  // The chequerboard that means "transparent" behind a page or a thumbnail.
+  --ds-checker-a: #f0f0f0;
+  --ds-checker-b: #ffffff;
+  // Ruler gutter (see lineGuides.vue, which reads these through getComputedStyle).
+  --ds-ruler-bg: #f9f9fa;
+  --ds-ruler-line: #bec2c7;
+  --ds-ruler-text: #999999;
+}
+
+// Mirrors tailwind.css `.theme-admin` in the school planner.
+html.dark {
+  color-scheme: dark;
+
+  --ds-accent: hsl(142 60% 45%);
+  --ds-accent-hover: hsl(142 60% 52%);
+  --ds-accent-soft: hsl(150 45% 13%);
+  --ds-accent-border: hsl(142 35% 28%);
+  --ds-accent-on: hsl(0 0% 8%);
+  --ds-accent-a45: hsl(142 60% 45% / 0.45);
+  --ds-accent-a25: hsl(142 60% 45% / 0.25);
+
+  --ds-ink: hsl(0 0% 98%);
+  --ds-ink-2: hsl(0 0% 78%);
+  --ds-ink-3: hsl(0 0% 64%);
+  --ds-ink-4: hsl(0 0% 44%);
+
+  --ds-surface: hsl(0 0% 7%);
+  --ds-surface-2: hsl(0 0% 12%);
+  --ds-surface-3: hsl(0 0% 16%);
+  --ds-popover: hsl(0 0% 9%);
+  // The well the page sits in. Darker than the panels, so the artwork — which
+  // is usually white — is the brightest thing on screen, as it should be.
+  --ds-canvas-bg: hsl(0 0% 4%);
+  --ds-app-bg: hsl(0 0% 4%);
+  --ds-overlay: rgba(0, 0, 0, 0.66);
+
+  --ds-line: hsl(0 0% 18%);
+  --ds-line-soft: hsl(0 0% 11%);
+  --ds-line-strong: hsl(0 0% 28%);
+
+  --ds-danger: hsl(0 72% 58%);
+
+  // Shadow alone is invisible against near-black, so the popover carries a
+  // hairline as well — that is what separates it from the panel beneath.
+  --ds-shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 0 1px hsl(0 0% 18%);
+  --ds-shadow-page: 0 2px 4px rgba(0, 0, 0, 0.5), 0 8px 28px rgba(0, 0, 0, 0.45);
+
+  --ds-tooltip-bg: hsl(0 0% 24%);
+  --ds-tooltip-fg: hsl(0 0% 98%);
+  --ds-scroll-thumb: hsl(0 0% 26%);
+  --ds-scroll-thumb-hover: hsl(0 0% 38%);
+  --ds-checker-a: hsl(0 0% 13%);
+  --ds-checker-b: hsl(0 0% 18%);
+  --ds-ruler-bg: hsl(0 0% 7%);
+  --ds-ruler-line: hsl(0 0% 30%);
+  --ds-ruler-text: hsl(0 0% 55%);
+}

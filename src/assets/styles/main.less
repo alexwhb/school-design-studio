@@ -3,6 +3,10 @@
 // The editor's own type. The fonts a *design* can use are declared separately
 // in public/fonts/fonts.css so they load the same way in the editor and in
 // every export.
+html,
+body {
+  height: 100%;
+}
 body {
   --el-color-primary: @accent;
   --el-color-primary-light-3: @accent;
@@ -17,6 +21,10 @@ body {
   font-size: @text-base;
   background: @app-bg;
   overflow: hidden;
+  // Every colour in the editor comes from a custom property, so a theme switch
+  // is a repaint of the whole tree at once. Easing the two properties that
+  // carry it keeps that from reading as a flash.
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 .pointer-case {
   cursor: -webkit-image-set(
@@ -58,11 +66,11 @@ default;
 }
 &::-webkit-scrollbar-thumb {
   border-radius: @radius-pill;
-  background-color: #d4d4d8;
+  background-color: @scroll-thumb;
   cursor: pointer;
 }
 &::-webkit-scrollbar-thumb:hover {
-  background-color: #a1a1aa;
+  background-color: @scroll-thumb-hover;
 }
 &::-webkit-scrollbar-track {
   // background-color: #f0f1f3;
@@ -124,6 +132,21 @@ video {
   max-width: 100%;
   height: auto;
 }
+// The editor has a number of bare <input>/<textarea> elements whose visible
+// surface is the wrapper around them, not the field itself. Left alone they
+// fall through to the UA's own colours — which flip with color-scheme, so in
+// dark mode each one showed up as a grey slab inside its own border.
+input,
+textarea,
+select {
+  color: @ink;
+  background-color: transparent;
+  font-family: inherit;
+  &::placeholder {
+    color: @ink-4;
+  }
+}
+
 input {
   outline: 0;
   &:-moz-focusring {

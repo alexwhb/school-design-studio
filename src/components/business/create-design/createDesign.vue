@@ -97,18 +97,18 @@ defineExpose({
     border-radius: 8px;
     cursor: pointer;
     font-size: 15px;
-    color: #333;
+    color: @ink;
     .icon {
       margin-right: 0.2rem;
     }
     .info {
       margin-left: 0.4rem;
       font-size: 12px;
-      color: #b4b8bf;
+      color: @ink-4;
     }
   }
   .item:hover {
-    background-color: #f6f7f9;
+    background-color: @surface-2;
   }
 }
 </style>

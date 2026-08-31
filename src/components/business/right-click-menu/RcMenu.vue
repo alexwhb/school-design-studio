@@ -153,8 +153,8 @@ function selectMenu(type: TWidgetItemData['type']) {
   width: 100%;
   z-index: 99999;
   .menu-list {
-    background-color: @color-white;
-    box-shadow: 1px 0px 10px 3px rgba(0, 0, 0, 0.1);
+    background-color: @popover;
+    box-shadow: @shadow-pop;
     padding: 5px;
     position: absolute;
     width: 120px;
@@ -165,12 +165,12 @@ function selectMenu(type: TWidgetItemData['type']) {
       padding: 5px 15px;
       width: 100%;
       &:hover {
-        background-color: #ececec;
+        background-color: @surface-2;
       }
     }
     .menu-item.disable-menu {
-      background-color: @color-white;
-      color: #aaaaaa;
+      background-color: @popover;
+      color: @ink-4;
       cursor: not-allowed;
     }
   }

@@ -10,6 +10,7 @@
     <template #header>
       <div class="card-header">
         <div
+          class="effect-preview"
           :style="{
             position: 'relative',
             width: '27px',
@@ -302,10 +303,10 @@ defineExpose({
   padding-right: 32px;
 }
 :deep(.el-input-group__prepend) {
-  background: #ffffff;
+  background: @surface;
 }
 :deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
-  color: #333333;
+  color: @ink;
 }
 :deep(.el-collapse-item__header) {
   border-bottom: none;
@@ -323,7 +324,7 @@ defineExpose({
     font-size: 14px;
     flex: 1;
     padding: 12px 0 2px 0;
-    color: #333333;
+    color: @ink;
   }
   &__header:first-of-type {
     padding: 0 0 2px 0;
@@ -347,7 +348,7 @@ defineExpose({
     content: '';
     height: 1px;
     width: 100%;
-    background: #e9e9e9;
+    background: @surface-2;
     top: 16px;
   }
   &__wrap:first-of-type {
@@ -362,6 +363,17 @@ defineExpose({
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+// The sample glyph is drawn in the text's own colour — usually black, because
+// that is what it will be on the page. Sitting it on paper rather than on the
+// panel is what keeps it visible in a dark theme, and is the more honest
+// preview either way. An explicit background on the widget still wins, since
+// Vue writes that inline.
+.effect-preview {
+  background: #ffffff;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px @line;
 }
 
 .text {
@@ -380,7 +392,7 @@ defineExpose({
 
 .demo {
   font-size: 27px;
-  color: #ffffff;
+  color: @accent-on;
   outline: none;
   position: absolute;
   top: 0;
@@ -391,7 +403,7 @@ defineExpose({
 .title {
   font-size: 14px;
   font-weight: 600;
-  color: #33383e;
+  color: @ink;
 }
 .select__box {
   display: flex;
@@ -407,7 +419,7 @@ defineExpose({
     display: flex;
   }
   &__select-item:hover {
-    background: rgba(0, 0, 0, 0.07);
+    background: @surface-2;
   }
 }
 
@@ -444,7 +456,7 @@ defineExpose({
 
 // dragable
 .choose {
-  border: 1px dashed #999999 !important;
+  border: 1px dashed @accent-border !important;
 }
 
 .flip-list-move {
@@ -464,6 +476,6 @@ defineExpose({
 .line {
   margin-top: 8px;
   height: 18px;
-  border-top: 1px solid #e9e9e9;
+  border-top: 1px solid @line;
 }
 </style>

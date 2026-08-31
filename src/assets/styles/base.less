@@ -4,6 +4,37 @@
 // blue-tinted greys, chunky paddings. This flattens it out so the editor's own
 // chrome and the library's controls read as one thing.
 
+// Element Plus ships a dark palette as plain custom properties on html.dark
+// (imported in main.ts). It is a neutral blue-grey, not ours, so the handful of
+// variables that actually decide how a control reads are re-pointed at the
+// editor's own tokens. Everything the editor does not style directly — the
+// notification toast, the message box, a select dropdown — then lands on the
+// same greys as the panel it opens over.
+html.dark {
+  --el-bg-color: @surface;
+  --el-bg-color-page: @app-bg;
+  --el-bg-color-overlay: @popover;
+  --el-text-color-primary: @ink;
+  --el-text-color-regular: @ink-2;
+  --el-text-color-secondary: @ink-3;
+  --el-text-color-placeholder: @ink-4;
+  --el-text-color-disabled: @ink-4;
+  --el-border-color: @line;
+  --el-border-color-light: @line;
+  --el-border-color-lighter: @line-soft;
+  --el-border-color-extra-light: @line-soft;
+  --el-border-color-dark: @line-strong;
+  --el-border-color-darker: @line-strong;
+  --el-fill-color: @surface-2;
+  --el-fill-color-light: @surface-2;
+  --el-fill-color-lighter: @surface-2;
+  --el-fill-color-extra-light: @surface-2;
+  --el-fill-color-dark: @surface-3;
+  --el-fill-color-darker: @surface-3;
+  --el-fill-color-blank: @surface;
+  --el-mask-color: @overlay;
+}
+
 // ---- buttons ------------------------------------------------------------
 .el-button {
   font-weight: 500;
@@ -20,7 +51,7 @@
 .el-button--primary:not(.is-plain):not(.is-link):not(.is-text) {
   background-color: @accent;
   border-color: @accent;
-  color: #fff;
+  color: @accent-on;
   &:hover,
   &:focus {
     background-color: @accent-hover;
@@ -70,7 +101,7 @@
   transition: box-shadow 0.12s ease;
 
   &:hover {
-    box-shadow: 0 0 0 1px #d4d4d8 inset;
+    box-shadow: 0 0 0 1px @line-strong inset;
   }
   &.is-focus,
   &:focus {
@@ -87,6 +118,7 @@
 
 // ---- dialogs ------------------------------------------------------------
 .el-dialog {
+  background: @popover;
   border-radius: @radius-lg;
   box-shadow: @shadow-pop;
   padding: 20px;
@@ -110,7 +142,7 @@
 }
 
 .el-overlay {
-  background-color: rgba(24, 24, 27, 0.4);
+  background-color: @overlay;
 }
 
 // ---- popovers, dropdowns, tooltips --------------------------------------
@@ -120,12 +152,15 @@
   border-color: @line !important;
   font-size: @text-base;
 }
+// Tooltips invert against the app rather than matching it, which in a dark
+// theme means going *lighter* — reusing @ink here would paint white on white.
 .el-popper.is-dark {
-  background: @ink;
-  border-color: @ink !important;
+  background: @tooltip-bg;
+  color: @tooltip-fg;
+  border-color: @tooltip-bg !important;
   .el-popper__arrow::before {
-    background: @ink;
-    border-color: @ink;
+    background: @tooltip-bg;
+    border-color: @tooltip-bg;
   }
 }
 
@@ -238,7 +273,7 @@
 // ---- canvas selection outlines ------------------------------------------
 .layer {
   &:hover {
-    outline: 2px solid fade(@accent, 45%) !important;
+    outline: 2px solid @accent-a45 !important;
   }
 }
 .layer-no-hover {

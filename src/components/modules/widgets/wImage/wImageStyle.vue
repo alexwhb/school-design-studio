@@ -377,7 +377,7 @@ async function cutImageDone(url: string) {
   margin-top: 18px;
   width: 100%;
   padding: 16px;
-  background: #f3f5f7;
+  background: @surface-2;
   border-radius: 6px;
 }
 

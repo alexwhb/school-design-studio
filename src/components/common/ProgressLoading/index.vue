@@ -70,10 +70,10 @@ defineExpose({
   z-index: 99999;
   top: 0;
   left: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: @overlay;
 }
 .content {
-  background: #ffffff;
+  background: @popover;
   border-radius: 8px;
   padding: 2rem 4rem;
 }
@@ -83,17 +83,17 @@ defineExpose({
   font-weight: bold;
   width: 100%;
   text-align: center;
-  color: #333333;
+  color: @ink;
 }
 .btn {
   font-weight: 400;
   font-size: 16px;
   cursor: pointer;
-  color: #3771e5;
+  color: @accent;
 }
 .info {
   font-weight: 400;
   font-size: 16px;
-  color: #777777;
+  color: @ink-3;
 }
 </style>

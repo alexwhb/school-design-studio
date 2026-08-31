@@ -110,7 +110,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999999;
+  color: @ink-3;
 }
 .img-water-fall {
   position: relative;
@@ -121,7 +121,7 @@ defineExpose({
     position: relative;
     background-size: cover;
     border-radius: 5px;
-    border: 1px solid #e0e5ea;
+    border: 1px solid @line;
     overflow: hidden;
     .img {
       display: block;

@@ -32,6 +32,7 @@
 
 <script lang="ts" setup>
 import { reactive } from 'vue'
+import { listUploads } from '@/common/methods/localUploads'
 import { ElTabPane, ElTabs, TabPaneName } from 'element-plus'
 import api from '@/api'
 import { TGetImageListResult } from '@/api/material'
@@ -60,26 +61,21 @@ const state = reactive<TState>({
 })
 
 let loading = false
-let page = 0
 let picPage = 0
 
+// Uploads are held in this browser, so there is nothing to page through.
 const load = async (init?: boolean) => {
   if (init) {
     state.imgList = []
-    page = 0
     state.isDone = false
   }
   if (state.isDone || loading) {
     return
   }
   loading = true
-  page += 1
-  api.material.getMyPhoto({ page }).then(({ list }) => {
-    list.length <= 0 ? (state.isDone = true) : (state.imgList = state.imgList.concat(list as TGetImageListResult[]))
-    setTimeout(() => {
-      loading = false
-    }, 100)
-  })
+  state.imgList = (await listUploads().catch(() => [])) as unknown as TGetImageListResult[]
+  state.isDone = true
+  loading = false
 }
 
 const loadPic = (init?: boolean) => {

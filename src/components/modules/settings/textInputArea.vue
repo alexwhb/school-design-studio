@@ -85,11 +85,11 @@ function getValue(value: string) {
     padding-right: 14px;
     line-height: 28px;
     font-size: 14px;
-    color: #9da3ac;
+    color: @ink-3;
   }
   .input-wrap {
     border-radius: 3px;
-    border: 1px solid #e1e1e1;
+    border: 1px solid @line;
     flex: 1;
     padding: 5px;
     .real-input {
@@ -100,13 +100,13 @@ function getValue(value: string) {
       width: 100%;
     }
     .real-input.disable {
-      color: #666666;
+      color: @ink-2;
       cursor: not-allowed;
     }
   }
   .input-wrap.active {
-    border: 1px solid rgba(59, 116, 241, 0.7);
-    box-shadow: 1px 1px 5px 2px rgba(59, 116, 241, 0.1);
+    border: 1px solid @accent;
+    box-shadow: 0 0 0 2px @accent-a25;
   }
 }
 </style>

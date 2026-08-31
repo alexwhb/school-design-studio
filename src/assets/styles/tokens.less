@@ -3,28 +3,51 @@
 // One accent colour, a small neutral ramp, thin borders and almost no shadow.
 // Everything that used to be a hard-coded hex in a component should come from
 // here, so the whole editor can be re-skinned from one file.
+//
+// Each colour is an alias for a CSS custom property rather than a literal, so a
+// component writing `background: @surface` compiles to `background:
+// var(--ds-surface)` and follows the light/dark switch at runtime. The values
+// behind these names live in theme.less. Sizes stay literal — Less needs to do
+// arithmetic on them (`@rail-width + @panel-width`), which var() cannot.
+//
+// Because these are var() references, Less colour functions (fade, lighten,
+// darken, mix) cannot be applied to them. Where a component needs a translucent
+// accent, add an explicit token — see @accent-a45.
 
 // ---- accent -------------------------------------------------------------
-@accent: #4f46e5; // indigo
-@accent-hover: #4338ca;
-@accent-soft: #eef2ff; // tinted background for selected rows
-@accent-border: #c7d2fe;
+@accent: var(--ds-accent);
+@accent-hover: var(--ds-accent-hover);
+@accent-soft: var(--ds-accent-soft); // tinted background for selected rows
+@accent-border: var(--ds-accent-border);
+@accent-on: var(--ds-accent-on); // text drawn on a solid accent fill
+@accent-a45: var(--ds-accent-a45);
+@accent-a25: var(--ds-accent-a25);
 
 // ---- neutrals -----------------------------------------------------------
-@ink: #18181b; // primary text
-@ink-2: #52525b; // secondary text, control labels
-@ink-3: #71717a; // muted text, section headings
-@ink-4: #a1a1aa; // placeholder, disabled
+@ink: var(--ds-ink); // primary text
+@ink-2: var(--ds-ink-2); // secondary text, control labels
+@ink-3: var(--ds-ink-3); // muted text, section headings
+@ink-4: var(--ds-ink-4); // placeholder, disabled
 
-@surface: #ffffff; // panels, toolbar, cards
-@surface-2: #fafafa; // hovered rows, inset wells
-@canvas-bg: #eef0f3; // the area the page sits on
-@app-bg: #f5f5f4; // warm off-white behind everything
+@surface: var(--ds-surface); // panels, toolbar, cards
+@surface-2: var(--ds-surface-2); // hovered rows, inset wells
+@surface-3: var(--ds-surface-3); // pressed states, deeper wells
+@popover: var(--ds-popover); // menus and popovers, which float above a panel
+@canvas-bg: var(--ds-canvas-bg); // the area the page sits on
+@app-bg: var(--ds-app-bg); // behind everything
+@overlay: var(--ds-overlay); // dims the app behind a modal
 
-@line: #e8e8e6; // default hairline
-@line-soft: #f1f1ef; // lighter divider inside a panel
+@line: var(--ds-line); // default hairline
+@line-soft: var(--ds-line-soft); // lighter divider inside a panel
+@line-strong: var(--ds-line-strong); // hovered control borders
 
-@danger: #dc2626;
+@danger: var(--ds-danger);
+
+@tooltip-bg: var(--ds-tooltip-bg);
+@tooltip-fg: var(--ds-tooltip-fg);
+
+@scroll-thumb: var(--ds-scroll-thumb);
+@scroll-thumb-hover: var(--ds-scroll-thumb-hover);
 
 // ---- shape --------------------------------------------------------------
 @radius-sm: 6px;
@@ -33,7 +56,8 @@
 @radius-pill: 999px;
 
 // A single, barely-there shadow. Popovers get it; nothing else should.
-@shadow-pop: 0 6px 24px rgba(24, 24, 27, 0.1), 0 1px 2px rgba(24, 24, 27, 0.06);
+@shadow-pop: var(--ds-shadow-pop);
+@shadow-page: var(--ds-shadow-page);
 
 // ---- type ---------------------------------------------------------------
 @font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;

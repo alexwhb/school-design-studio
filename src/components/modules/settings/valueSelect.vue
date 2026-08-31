@@ -202,8 +202,8 @@ function down() {
 </style>
 
 <style lang="less" scoped>
-@color0: #e1e1e1;
-@color1: #d1d1d1;
+@color0: @line;
+@color1: @line-strong;
 
 .value-select {
   // height: 60px;
@@ -220,7 +220,7 @@ function down() {
     font-size: 14px;
     margin-right: 5px;
     line-height: 30px;
-    color: #777;
+    color: @ink-3;
   }
   .input-wrap {
     border-radius: @radius;
@@ -233,7 +233,7 @@ function down() {
     height: 34px;
     transition: border-color 0.12s ease;
     &:hover {
-      border-color: #d4d4d8;
+      border-color: @line-strong;
     }
     .preview {
       overflow: hidden;
@@ -251,7 +251,7 @@ function down() {
       width: 100%;
     }
     .real-input.disable {
-      color: #666666;
+      color: @ink-2;
       cursor: not-allowed;
     }
     .op-btn {

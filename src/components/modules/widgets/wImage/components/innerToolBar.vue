@@ -19,9 +19,9 @@
 
   padding: 5px;
   font-size: 13px;
-  background: #fff;
+  background: @popover;
   border-radius: 3px;
-  box-shadow: 0 0 5px rgb(0 0 0 / 30%);
+  box-shadow: @shadow-pop;
   display: flex;
   align-items: center;
 }

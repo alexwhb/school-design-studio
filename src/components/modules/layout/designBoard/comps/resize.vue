@@ -70,7 +70,7 @@ const ph = computed(() => props.height)
 </script>
 
 <style lang="less" scoped>
-@bar-color: rgba(0, 0, 0, 0.2);
+@bar-color: @line-strong;
 
 .page-resize {
   pointer-events: none;

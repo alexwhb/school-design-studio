@@ -259,6 +259,9 @@ async function dragStart(e: MouseEvent, item: TGetListData) {
   gap: 0px !important;
   &__item {
     overflow: hidden;
+    // Deliberately a fixed light tile, not @surface: the shapes are black
+    // outlines and the stickers are drawn for paper, so both vanish on a dark
+    // panel. The hover wash below darkens that tile and works either way.
     background: #f8fafc;
     margin-bottom: 8px;
     margin-right: 8px;
@@ -293,6 +296,6 @@ async function dragStart(e: MouseEvent, item: TGetListData) {
   padding-top: 1rem;
   text-align: center;
   font-size: 14px;
-  color: #999;
+  color: @ink-3;
 }
 </style>

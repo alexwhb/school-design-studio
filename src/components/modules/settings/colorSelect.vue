@@ -177,7 +177,7 @@ defineExpose({
     cursor: pointer;
     transition: border-color 0.12s ease;
     &:hover {
-      border-color: #d4d4d8;
+      border-color: @line-strong;
     }
   }
   &__chip {
@@ -187,7 +187,7 @@ defineExpose({
     flex-shrink: 0;
     display: block;
     position: relative;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+    box-shadow: inset 0 0 0 1px @line-strong;
     background-size: 8px 8px;
   }
   &__chip-fill {

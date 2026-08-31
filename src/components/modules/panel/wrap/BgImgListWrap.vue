@@ -191,7 +191,7 @@ defineExpose({
   }
   &__img:hover::before {
     content: ' ';
-    background: rgba(0, 0, 0, 0.1);
+    background: @surface-3;
     position: absolute;
     left: 0;
     top: 0;
@@ -206,7 +206,7 @@ defineExpose({
   padding-top: 1rem;
   text-align: center;
   font-size: 14px;
-  color: #999;
+  color: @ink-3;
 }
 
 .color {
@@ -215,7 +215,7 @@ defineExpose({
     flex-wrap: wrap;
   }
   &__item {
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid @line;
     margin: 2.8px;
     width: 43px;
     height: 36px;

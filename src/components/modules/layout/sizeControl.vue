@@ -105,9 +105,9 @@
 #size-control {
   position: absolute;
   .square {
-    background-color: #ffffff;
+    background-color: @surface;
     height: 10px;
-    outline: 1px solid #3b74f1;
+    outline: 1px solid @accent;
     position: absolute;
     transform: translateX(-50%) translateY(-50%);
     width: 10px;

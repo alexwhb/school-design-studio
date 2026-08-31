@@ -14,12 +14,9 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, nextTick, withDefaults } from 'vue'
+import { withDefaults } from 'vue'
 import { ElUpload, UploadRequestOptions } from 'element-plus'
-// import Qiniu from '@/common/methods/QiNiu'
-import api from '@/api'
-import { getImage } from '@/common/methods/getImgDetail'
-import _config from '@/config'
+import { saveUpload } from '@/common/methods/localUploads'
 import useNotification from '@/common/methods/notification'
 
 type TModelData = {
@@ -31,13 +28,18 @@ export type TUploadDoneData = {
   width: number
   height: number
   url: string
+  id?: string
+  title?: string
 }
-
-type TQiNiuUploadReturn = { hash: string; key: string }
 
 type TProps = {
   modelValue?: TModelData
   options?: { bucket: string; prePath: string }
+  /**
+   * Hand the raw File to the parent instead of storing it — used by the tools
+   * that open a picture in a cropper or a cut-out editor rather than adding it
+   * to the library.
+   */
   hold?: boolean
 }
 
@@ -62,18 +64,6 @@ let uploadList: File[] = [] // Upload queue
 let index: number = 0 // Index of the file being uploaded
 let count: number = 0 // Total files being uploaded
 
-let tempSimpleRes: TQiNiuUploadReturn | null // Returned for a single-file upload
-
-// onMounted(async () => {
-//   await nextTick()
-//   setTimeout(() => {
-//     // 加载七牛上传插件
-//     const link_element = document.createElement('script')
-//     link_element.setAttribute('src', _config.QINIUYUN_PLUGIN)
-//     document.head.appendChild(link_element)
-//   }, 1000)
-// })
-
 const upload = async ({ file }: UploadRequestOptions) => {
   if (props.hold) {
     emit('load', file)
@@ -88,47 +78,45 @@ const upload = async ({ file }: UploadRequestOptions) => {
 
 // Upload queue
 const uploadQueue = async () => {
-  if (!uploading) {
-    uploading = true
-    const file = uploadList[0]
-    if (file) {
-      if (file.size <= 1024 * 1024) {
-        tempSimpleRes = await qiNiuUpload(file) // Files queued, start uploading
-        const { width, height } = await getImage(file)
-        useNotification('Uploaded', '', { position: 'bottom-left' })
-        emit('done', { width, height, url: tempSimpleRes?.url }) // Respond for a single file
-      } else useNotification('Keep uploads small', 'Please upload an image smaller than 1M !', { type: 'error', position: 'bottom-left' })
-      uploading = false
-      handleRemove() // Remove uploaded file
-      index++
-      updatePercent(null)
-      uploadQueue()
+  if (uploading) return
+  uploading = true
+  const file = uploadList[0]
+  if (file) {
+    // There used to be a 1MB ceiling here, which rejected most photos taken on
+    // a phone. The store downscales instead, so the only thing worth refusing
+    // is a file so large that reading it would stall the tab.
+    if (file.size > 40 * 1024 * 1024) {
+      useNotification('That image is too big', 'Please use a picture under 40MB.', { type: 'error', position: 'bottom-left' })
     } else {
-      uploading = false
-      timer = setTimeout(() => {
-        index = count = 0
-        updatePercent(0)
-      }, 3000)
+      updatePercent(0)
+      try {
+        const saved = await saveUpload(file)
+        useNotification('Uploaded', saved.title, { position: 'bottom-left' })
+        emit('done', { id: saved.id, width: saved.width, height: saved.height, url: saved.url, title: saved.title })
+      } catch (error) {
+        // Storing can genuinely fail — the browser's quota is full, or the file
+        // is not an image the browser can decode. Say which, rather than
+        // leaving a broken thumbnail in the panel.
+        const quota = error instanceof DOMException && (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
+        useNotification(
+          quota ? 'No room left for uploads' : "That image could not be added",
+          quota ? 'Delete some uploads and try again.' : (error as Error)?.message || 'The file could not be read.',
+          { type: 'error', position: 'bottom-left' },
+        )
+      }
     }
+    uploading = false
+    handleRemove() // Remove uploaded file
+    index++
+    updatePercent(null)
+    uploadQueue()
+  } else {
+    uploading = false
+    timer = setTimeout(() => {
+      index = count = 0
+      updatePercent(0)
+    }, 3000)
   }
-}
-
-const qiNiuUpload = async (file: File): Promise<null | TQiNiuUploadReturn> => {
-  updatePercent(0)
-  return new Promise(async (resolve) => {
-    if (props.hold) {
-      emit('load', file)
-      resolve(null)
-    } else {
-      const result = await api.material.upload({ file }, (up: any, dp: any) => {
-        console.log(up, dp)
-      })
-      // const result = await Qiniu.upload(file, props.options, (res: Type.Object) => {
-      //   updatePercent(res.total.percent)
-      // })
-      resolve(result)
-    }
-  })
 }
 
 // 更新视图
