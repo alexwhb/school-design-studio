@@ -35,10 +35,26 @@ async function waitForFonts(): Promise<void> {
   )
 }
 
-/** Gives the browser a frame or two to actually paint the page we just switched to. */
+/**
+ * Gives the browser a frame or two to actually paint the page we just switched to.
+ *
+ * A hidden tab does not run requestAnimationFrame at all, so waiting only on a
+ * frame would never return — and since this sits between pages, a multi-page
+ * export left in the background would stop dead with the progress bar frozen
+ * and no way out but a reload. A plain timer settles it in that case. The tab
+ * is also throttled while hidden, so a background export is slower and can
+ * catch a page mid-layout; imperfect beats unrecoverable.
+ */
 function afterPaint(delay = 120): Promise<void> {
   return new Promise((resolve) => {
-    requestAnimationFrame(() => setTimeout(resolve, delay))
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      resolve()
+    }
+    requestAnimationFrame(() => setTimeout(finish, delay))
+    setTimeout(finish, delay + 400)
   })
 }
 
