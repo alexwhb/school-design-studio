@@ -55,6 +55,12 @@
   --ds-shadow-page: 0 0 2px rgba(24, 24, 27, 0.08), 0 4px 12px rgba(24, 24, 27, 0.06);
 
   // ---- odds and ends ---------------------------------------------------
+  // Shading laid over artwork — a photo thumbnail, a background preview. One
+  // value for both themes on purpose: it darkens what is underneath rather
+  // than replacing it, and what is underneath is the user's picture, which
+  // does not change with the theme. Never swap this for a surface token.
+  --ds-scrim: rgba(0, 0, 0, 0.1);
+  --ds-scrim-strong: rgba(0, 0, 0, 0.28);
   --ds-tooltip-bg: #18181b;
   --ds-tooltip-fg: #ffffff;
   --ds-scroll-thumb: #d4d4d8;
@@ -106,6 +112,12 @@ html.dark {
   --ds-shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 0 1px hsl(0 0% 18%);
   --ds-shadow-page: 0 2px 4px rgba(0, 0, 0, 0.5), 0 8px 28px rgba(0, 0, 0, 0.45);
 
+  // Shading laid over artwork — a photo thumbnail, a background preview. One
+  // value for both themes on purpose: it darkens what is underneath rather
+  // than replacing it, and what is underneath is the user's picture, which
+  // does not change with the theme. Never swap this for a surface token.
+  --ds-scrim: rgba(0, 0, 0, 0.1);
+  --ds-scrim-strong: rgba(0, 0, 0, 0.28);
   --ds-tooltip-bg: hsl(0 0% 24%);
   --ds-tooltip-fg: hsl(0 0% 98%);
   --ds-scroll-thumb: hsl(0 0% 26%);

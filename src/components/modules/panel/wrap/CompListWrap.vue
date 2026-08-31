@@ -245,6 +245,12 @@ defineExpose({
 </script>
 
 <style lang="less" scoped>
+// The backing tile for panel artwork. Fixed rather than themed: these samples
+// are full-colour compositions drawn for paper, so they need a light backing
+// in either theme. Kept local to the panel, so the shared token layer stays
+// the place for colours that genuinely change with the theme.
+@art-tile: #f8fafc;
+@art-tile-hover: #eaeef3;
 .wrap {
   width: 100%;
   height: 100%;
@@ -270,10 +276,7 @@ defineExpose({
   gap: 0 !important;
   &__item {
     overflow: hidden;
-    // Deliberately a fixed light tile, not @surface: the shapes are black
-    // outlines and the stickers are drawn for paper, so both vanish on a dark
-    // panel. The hover wash below darkens that tile and works either way.
-    background: #f8fafc;
+    background: @art-tile;
     margin-bottom: 8px;
     margin-right: 8px;
   }
@@ -288,13 +291,16 @@ defineExpose({
     cursor: grab;
     width: 90px;
     height: 90px;
-    background: #f8fafc;
+    background: @art-tile;
     padding: 4px;
     border-radius: 4px;
   }
+  // A solid step darker, not a translucent black wash. A wash only reads as
+  // "slightly darker" while the light tile is underneath it; on a dark panel
+  // it replaces the tile and the sample loses its backing mid-hover.
   &__img:hover,
   &__img-thumb:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: @art-tile-hover;
   }
 }
 

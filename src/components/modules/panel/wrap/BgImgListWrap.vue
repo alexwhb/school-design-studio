@@ -189,9 +189,11 @@ defineExpose({
     height: 92px;
     border-radius: 4px;
   }
+  // Shades the thumbnail; must stay translucent, or it hides the picture it is
+  // meant to highlight.
   &__img:hover::before {
     content: ' ';
-    background: @surface-3;
+    background: @scrim;
     position: absolute;
     left: 0;
     top: 0;

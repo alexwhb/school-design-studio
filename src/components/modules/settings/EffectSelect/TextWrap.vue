@@ -348,7 +348,7 @@ defineExpose({
     content: '';
     height: 1px;
     width: 100%;
-    background: @surface-2;
+    background: @line;
     top: 16px;
   }
   &__wrap:first-of-type {

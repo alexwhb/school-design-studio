@@ -274,13 +274,15 @@ function openSizeEdit() {
     border: none;
     box-shadow: @shadow-pop;
   }
+  // Fades in over the background image with the buttons that change it, so it
+  // shades rather than covers — you keep seeing what you are replacing.
   .bg-control {
     transition: all 0.3s;
     opacity: 0;
     position: absolute;
     width: 100%;
     height: 100%;
-    background: @surface-2;
+    background: @scrim-strong;
     .btns {
       padding: 0 2%;
       position: absolute;
