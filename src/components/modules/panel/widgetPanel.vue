@@ -8,7 +8,7 @@
           :class="['classify-item', { 'active-classify-item': state.activeWidgetClassify === index && state.active }]"
           @click="clickClassify(index)"
         >
-          <div class="icon-box"><i :class="['iconfont', 'icon', item.icon]" :style="item.style" /></div>
+          <div class="icon-box"><i :class="['iconfont', 'rail-icon', item.icon]" :style="item.style" /></div>
           <p>{{ item.name }}</p>
         </li>
       </ul>
@@ -120,7 +120,11 @@ defineExpose({
           justify-content: center;
           height: 22px;
         }
-        .icon {
+        // Named rail-icon, not icon: `.icon` is the base class of the second
+        // iconfont project and sets font-family with !important, so an element
+        // carrying both it and `.iconfont` renders these glyphs from the wrong
+        // font — as boxes.
+        .rail-icon {
           font-size: 20px;
           color: @ink-2;
           transition: color 0.12s ease;
@@ -138,7 +142,7 @@ defineExpose({
       .active-classify-item,
       .active-classify-item:hover {
         background: @accent-soft;
-        .icon,
+        .rail-icon,
         p {
           color: @accent;
         }
