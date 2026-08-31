@@ -10,8 +10,6 @@ import app_config, { LocalStorageKey } from '@/config'
 import { useBaseStore, useUserStore } from '@/store/index';
 
 axios.defaults.timeout = 30000
-// axios.defaults.headers.authorization = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTAwMDEsImV4cCI6MTc4ODU3NDc1MDU4NX0.L_t6DFD48Dm6rUPfgIgOWJkz18En1m_-hhMHcpbxliY';
-const defaultToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTAwMDEsImV4cCI6MTc4ODU3NDc1MDU4NX0.L_t6DFD48Dm6rUPfgIgOWJkz18En1m_-hhMHcpbxliY';
 // const version = app_config.VERSION;
 const baseUrl = app_config.API_URL
 
@@ -123,7 +121,11 @@ const fetch = <T = any> (
     // store.commit('loading', '加载中..');
   }
 
-  const token = defaultToken//localStorage.getItem(LocalStorageKey.tokenKey)
+  // Upstream hardcoded a demo JWT here, so every request went out wearing a
+  // stranger's identity. There is no account system in this fork, so normally
+  // there is no token and no Authorization header at all. The key is the seam
+  // for a host app that does have a session: write it and requests pick it up.
+  const token = localStorage.getItem(LocalStorageKey.tokenKey)
   const headerObject: Record<string, any> = {}
   token && (headerObject.Authorization = token)
   
