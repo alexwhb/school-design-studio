@@ -33,7 +33,7 @@ export type TImageSetting = {
 }
 
 const setting: TImageSetting = {
-  name: '图片',
+  name: 'Image',
   type: 'w-image',
   uuid: '-1',
   width: 300,

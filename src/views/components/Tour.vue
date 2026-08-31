@@ -7,12 +7,12 @@
 -->
 <template>
   <el-tour v-model="isShow">
-    <el-tour-step :target="steps[0]?.$el" title="文件管理">
-      <div>点击文件菜单，管理你的设计，设置页面视图等操作。</div>
+    <el-tour-step :target="steps[0]?.$el" title="File menu">
+      <div>Use the File menu to start a new design, import or export files, and change page settings.</div>
     </el-tour-step>
-    <el-tour-step placement="right" :target="steps[1]?.$el" title="左侧工具栏" description="在这里可以选择模板开始设计，或是挑选文字、图片等素材拖拽至画布中。" />
-    <el-tour-step placement="left" :target="steps[2]?.$el" title="右侧属性栏" description="当选中画布中的元素时，在此处会显示相应的编辑界面；同时也可以切换到“图层”管理。" />
-    <el-tour-step :target="steps[3]?.$el" title="下载作品" description="点击此处即可导出当前作品，赶紧试试吧。" />
+    <el-tour-step placement="right" :target="steps[1]?.$el" title="Toolbar" description="Start from a template, or drag text, photos and shapes onto your page." />
+    <el-tour-step placement="left" :target="steps[2]?.$el" title="Settings panel" description="Select anything on the page and its settings appear here. Switch to Layers to reorder items." />
+    <el-tour-step :target="steps[3]?.$el" title="Download" description="Export your design as an image, PDF or PowerPoint file." />
   </el-tour>
 </template>
 

@@ -45,15 +45,15 @@ export type TdLayout = {
 
 export type TWidgetState = {
   dActiveWidgetXY: {
-    /** 选中组件的横向初始值 */
+    /** Starting x of the selected element */
     x: number,
-    /** 选中组件的纵向初始值 */
+    /** Starting y of the selected element */
     y: number
   }
   dMouseXY: {
-    /** 鼠标按下时的横坐标 */
+    /** Mouse x on press */
     x: number
-    /** 鼠标按下时的纵坐标 */
+    /** Mouse y on press */
     y: number
   },
   /** 初始化调整大小时组件的宽高 */
@@ -61,23 +61,23 @@ export type TWidgetState = {
     width: number
     height: number
   },
-  /** 选中的组件或页面 */
+  /** Selected element or page */
   dActiveElement: TdWidgetData | null
-  /** 鼠标在这个图层上 */
+  /** Mouse is over this layer */
   dHoverUuid: string
-  /** 拖动时放在哪个图层上 */
+  /** Layer the drag is hovering over */
   dDropOverUuid: string
-  /** 已使用的组件 */
+  /** Elements in use */
   dWidgets: TdWidgetData[]
   /** 所有图层数据与页面数据 */
   dLayouts: TdLayout[]
-  /** 记录多选的组件 */
+  /** Multi-selected elements */
   dSelectWidgets: TdWidgetData[]
-  /** 复制的组件（可能是单个也可能是数组） */
+  /** Copied elements (one or many) */
   dCopyElement: TdWidgetData[]
-  /** 记录当前选择的元素, data */
+  /** The currently selected element, data */
   selectItem: { data?: Record<string, any> | null, type?: string }
-  /** 正在活动的鼠标事件 */
+  /** Active mouse event */
   activeMouseEvent: MouseEvent | null
 }
 
@@ -138,30 +138,30 @@ type TAction = {
 const WidgetStore = defineStore<"widgetStore", TWidgetState, TGetter, TAction>("widgetStore", {
   state: () => ({
     dActiveWidgetXY: {
-      x: 0, // 选中组件的横向初始值
-      y: 0, // 选中组件的纵向初始值
+      x: 0, // Starting x of the selected element
+      y: 0, // Starting y of the selected element
     },
     dMouseXY: {
-      x: 0, // 鼠标按下时的横坐标
-      y: 0, // 鼠标按下时的纵坐标
+      x: 0, // Mouse x on press
+      y: 0, // Mouse y on press
     },
     dResizeWH: {
       // 初始化调整大小时组件的宽高
       width: 0,
       height: 0,
     },
-    dActiveElement: null, // 选中的组件或页面
-    dHoverUuid: '-1', // 鼠标在这个图层上
-    dDropOverUuid: '', // 拖动时放在哪个图层上
-    dWidgets: [], // 已使用的组件
+    dActiveElement: null, // Selected element or page
+    dHoverUuid: '-1', // Mouse is over this layer
+    dDropOverUuid: '', // Layer the drag is hovering over
+    dWidgets: [], // Elements in use
     dLayouts: [{
       global: pageDefault,
       layers: []
-    }], // 页面与图层数据
-    dSelectWidgets: [], // 记录多选的组件
-    selectItem: { data: null }, // 记录当前选择的元素, data
-    activeMouseEvent: null, // 正在活动的鼠标事件
-    dCopyElement: [], // 复制的组件（可能是单个也可能是数组）
+    }], // Page and layer data
+    dSelectWidgets: [], // Multi-selected elements
+    selectItem: { data: null }, // The currently selected element, data
+    activeMouseEvent: null, // Active mouse event
+    dCopyElement: [], // Copied elements (one or many)
   }),
 
   // getters: {

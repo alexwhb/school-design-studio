@@ -15,13 +15,13 @@ import pageDefault from './page-default';
 /** 画布全局设置 */
 const CanvasStore = defineStore<"canvasStore", TCanvasState, {}, TStoreAction>("canvasStore", {
   state: () => ({
-    dZoom: 0, // 画布缩放百分比
-    dPresetPadding: 25, // 画布默认预留边距
-    dBottomHeight: 0, // 画布底部工具栏高度
-    dPaddingTop: 0, // 用于画布垂直居中的修正值
+    dZoom: 0, // Zoom percentage
+    dPresetPadding: 25, // Default page padding
+    dBottomHeight: 0, // Height of the bottom bar
+    dPaddingTop: 0, // Offset that keeps the page vertically centred
     dScreen: {
-      width: 0, // 记录编辑界面的宽度
-      height: 0, // 记录编辑界面的高度
+      width: 0, // Editor viewport width
+      height: 0, // Editor viewport height
     },
     guidelines: {
       // moveable 标尺辅助线
@@ -38,11 +38,11 @@ const CanvasStore = defineStore<"canvasStore", TCanvasState, {}, TStoreAction>("
     // },
   },
   actions: {
-    /** 更新画布缩放百分比 */
+    /** 更新Zoom percentage */
     updateZoom(zoom: number) {
       this.dZoom = zoom
     },
-    /** 更新画布垂直居中修正值 */
+    /** 更新画布Centre vertically修正值 */
     updatePaddingTop(num: number) {
       this.dPaddingTop = num
     },
@@ -96,7 +96,7 @@ const CanvasStore = defineStore<"canvasStore", TCanvasState, {}, TStoreAction>("
     setBottomHeight(h: number) {
       this.dBottomHeight = h
     },
-    /** 更新当前页面下标 */
+    /** 更新Current page下标 */
     setDCurrentPage(n: number) {
       this.dCurrentPage = n
     }

@@ -36,7 +36,7 @@ export function updateLayerIndex(store: TWidgetStore, { uuid, value, isGroup }: 
   let next = index + value
   let move = false
   const maxLen = widgets.length
-  let gCount = 1 // 记录跳过的组合数量
+  let gCount = 1 // How many groups were skipped
   // 循环找出要目标位置并移动（因为存在组合，所以不能直接移动到下一个位置）
   while (next >= 0 && next < maxLen) {
     const nextWidget = widgets[next]
@@ -79,7 +79,7 @@ export function updateLayerIndex(store: TWidgetStore, { uuid, value, isGroup }: 
   }
 }
 
-// TODO: 取消组合
+// TODO: Ungroup
 export function ungroup(store: TWidgetStore, uuid: string) {
   const forceStore = useForceStore()
 

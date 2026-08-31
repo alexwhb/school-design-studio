@@ -105,7 +105,7 @@ const state = reactive<TState>({
   width: '0',
   innerValue: '',
   innerPreview: '',
-  activeTab: '中文',
+  activeTab: 'Chinese',
 })
 const selectRef = ref<HTMLElement | null>(null)
 

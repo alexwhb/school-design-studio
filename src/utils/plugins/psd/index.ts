@@ -135,7 +135,7 @@ function toCloudImageConfig(data: any, layer: any) {
     src = layer?.image?.pixelData
   } catch (error: any) {
     if (error.message.includes('layer mask')) {
-      console.warn('图层蒙版不支持，尝试降级处理或简化PSD文件(逐步删除图层)定位问题元素')
+      console.warn('Layer masks are not supported. Try simplifying the PSD by removing layers one at a time to find the one causing it.')
     } else console.error(error)
   }
   return {

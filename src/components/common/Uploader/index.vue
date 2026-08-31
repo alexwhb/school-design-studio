@@ -8,7 +8,7 @@
 <template>
   <el-upload action="" accept="image/*" :http-request="upload" :show-file-list="false" multiple>
     <slot>
-      <el-button size="small">上传图片<i class="el-icon-upload el-icon--right"></i></el-button>
+      <el-button size="small">Upload image<i class="el-icon-upload el-icon--right"></i></el-button>
     </slot>
   </el-upload>
 </template>
@@ -55,14 +55,14 @@ const props = withDefaults(defineProps<TProps>(), {
 
 const emit = defineEmits<TEmits>()
 
-let uploading: boolean = false // 上传状态Flag
+let uploading: boolean = false // Upload stateFlag
 let timer: number
 
-let uploadList: File[] = [] // 上传队列
-let index: number = 0 // 当前上传的脚标
-let count: number = 0 // 当前上传总数
+let uploadList: File[] = [] // Upload queue
+let index: number = 0 // Index of the file being uploaded
+let count: number = 0 // Total files being uploaded
 
-let tempSimpleRes: TQiNiuUploadReturn | null // 单个文件上传时返回
+let tempSimpleRes: TQiNiuUploadReturn | null // Returned for a single-file upload
 
 // onMounted(async () => {
 //   await nextTick()
@@ -86,20 +86,20 @@ const upload = async ({ file }: UploadRequestOptions) => {
   uploadQueue()
 }
 
-// 上传队列
+// Upload queue
 const uploadQueue = async () => {
   if (!uploading) {
     uploading = true
     const file = uploadList[0]
     if (file) {
       if (file.size <= 1024 * 1024) {
-        tempSimpleRes = await qiNiuUpload(file) // 队列有文件，执行上传
+        tempSimpleRes = await qiNiuUpload(file) // Files queued, start uploading
         const { width, height } = await getImage(file)
-        useNotification('上传成功', '', { position: 'bottom-left' })
-        emit('done', { width, height, url: tempSimpleRes?.url }) // 单个文件进行响应
-      } else useNotification('爱护小水管', '请上传小于 1M 的图片哦!', { type: 'error', position: 'bottom-left' })
+        useNotification('Uploaded', '', { position: 'bottom-left' })
+        emit('done', { width, height, url: tempSimpleRes?.url }) // Respond for a single file
+      } else useNotification('Keep uploads small', 'Please upload an image smaller than 1M !', { type: 'error', position: 'bottom-left' })
       uploading = false
-      handleRemove() // 移除已上传文件
+      handleRemove() // Remove uploaded file
       index++
       updatePercent(null)
       uploadQueue()

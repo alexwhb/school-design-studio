@@ -18,7 +18,7 @@
         @click.stop="select(i)"
       >
         <edit-model v-if="props.edit" :options="props.edit" :data="{ item, i }">
-          <div v-if="item.isDelect" class="list__mask">已删除</div>
+          <div v-if="item.isDelect" class="list__mask">Deleted</div>
           <el-image class="img transparent-bg" :src="item.thumb || item.url" :style="{ height: getInnerHeight(item) + 'px' }" lazy loading="lazy" />
         </edit-model>
         <template v-else>
@@ -32,8 +32,8 @@
         </template>
       </div>
     </div>
-    <div v-if="!props.isDone" v-show="state.loading" class="loading"><i class="el-icon-loading" /> 拼命加载中</div>
-    <div v-else class="loading">全部加载完毕</div>
+    <div v-if="!props.isDone" v-show="state.loading" class="loading"><i class="el-icon-loading" /> Loading</div>
+    <div v-else class="loading">That is everything</div>
   </ul>
 </template>
 
@@ -103,10 +103,10 @@ watch(
     }
     let list = newList.filter((v: IGetTempListData) => !oldList.includes(v)) // difference
     list = JSON.parse(JSON.stringify(list))  
-    const marginRight = 6 // 间距
+    const marginRight = 6 // Spacing
     const limitWidth = (await getFatherWidth()) - marginRight
-    const standardHeight = 280 // 高度阈值
-    const neatArr: IGetTempListData[][] = [] // 整理后的数组
+    const standardHeight = 280 // Height threshold
+    const neatArr: IGetTempListData[][] = [] // Sorted list
     function factory(cutArr: IGetTempListData[]) {
       return new Promise<{ height: number, list: IGetTempListData[] }>((resolve) => {
         const lineup = list.shift()

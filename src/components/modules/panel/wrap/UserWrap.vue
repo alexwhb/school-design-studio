@@ -8,14 +8,14 @@
 <template>
   <div class="wrap">
     <el-tabs v-model="state.tabActiveName" :stretch="true" class="tabs" @tab-change="tabChange">
-      <el-tab-pane label="资源管理" name="pics"> </el-tab-pane>
-      <el-tab-pane label="我的作品" name="design"> </el-tab-pane>
+      <el-tab-pane label="Manage files" name="pics"> </el-tab-pane>
+      <el-tab-pane label="My designs" name="design"> </el-tab-pane>
     </el-tabs>
     <div v-show="state.tabActiveName === 'pics'">
       <uploader v-model="state.percent" class="upload" @done="uploadDone">
-        <el-button class="upload-btn" plain><i class="iconfont icon-upload" /> 上传图片</el-button>
+        <el-button class="upload-btn" plain><i class="iconfont icon-upload" /> Upload image</el-button>
       </uploader>
-      <el-button disabled class="upload-btn upload-psd" plain type="primary" @click="openPSD">导入 PSD</el-button>
+      <el-button disabled class="upload-btn upload-psd" plain type="primary" @click="openPSD">Import PSD</el-button>
       <div style="margin: 1rem; height: 100vh">
         <photo-list ref="imgListRef" :edit="state.editOptions.photo" :isDone="state.isDone" :listData="state.imgList" @load="load" @drag="dragStart" @select="selectImg" />
       </div>
@@ -23,8 +23,8 @@
     <div v-show="state.tabActiveName === 'design'" class="wrap">
       <ul ref="listRef" v-infinite-scroll="loadDesign" class="infinite-list" :infinite-scroll-distance="150" style="overflow: auto">
         <img-water-fall :edit="state.editOptions.works" :listData="state.designList" @select="selectDesign" />
-        <!-- <div v-show="loading" class="loading"><i class="el-icon-loading"></i>拼命加载中..</div> -->
-        <div v-show="state.isDone" class="loading">全部加载完毕</div>
+        <!-- <div v-show="loading" class="loading"><i class="el-icon-loading"></i>Loading..</div> -->
+        <div v-show="state.isDone" class="loading">That is everything</div>
       </ul>
     </div>
   </div>
@@ -56,7 +56,7 @@ type TProps = {
 
 type TState = {
   prePath: string
-  percent: { num: number } // 当前上传进度
+  percent: { num: number } // Upload progress
   imgList: IGetTempListData[]
   designList: IGetTempListData[]
   isDone: boolean
@@ -77,7 +77,7 @@ const imgListRef = ref<typeof photoList | null>(null)
 
 const state = reactive<TState>({
   prePath: 'user',
-  percent: { num: 0 }, // 当前上传进度
+  percent: { num: 0 }, // Upload progress
   imgList: [],
   designList: [],
   isDone: false,
@@ -160,8 +160,8 @@ onMounted(() => {
 const selectImg = async (index: number) => {
   const item = state.imgList[index]
 
-  // store.commit('setShowMoveable', false) // 清理掉上一次的选择
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择
+  // store.commit('setShowMoveable', false) // Clear the previous selection
+  controlStore.setShowMoveable(false) // Clear the previous selection
 
   let setting = JSON.parse(JSON.stringify(wImageSetting))
   const img = await setImageData(item)
@@ -182,10 +182,10 @@ type controlImgParam = {
 }
 
 const deleteImg = async ({ i, item }: controlImgParam) => {
-  // store.commit('setShowMoveable', false) // 清理掉上一次的选择框
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择框
+  // store.commit('setShowMoveable', false) // Clear the previous selection box
+  controlStore.setShowMoveable(false) // Clear the previous selection box
 
-  const isPass = await useConfirm('警告', '删除后不可找回，已引用资源将会失效，请谨慎操作', 'warning')
+  const isPass = await useConfirm('Warning', 'This cannot be undone, and anything already using this file will break.', 'warning')
   if (!isPass) {
     return false
   }
@@ -193,10 +193,10 @@ const deleteImg = async ({ i, item }: controlImgParam) => {
   let key = arr.splice(3, arr.length - 1).join('/')
   api.material.deleteMyPhoto({ id: item.id, key })
   if (!imgListRef.value) return
-  imgListRef.value.delItem(i) // 通知标记
+  imgListRef.value.delItem(i) // Notification flag
 }
 const deleteWorks = async ({ i, item }: controlImgParam) => {
-  const isPass = await useConfirm('警告', '删除后不可找回，请确认操作', 'warning')
+  const isPass = await useConfirm('Warning', 'This cannot be undone. Are you sure?', 'warning')
   if (isPass) {
     await api.material.deleteMyWorks({ id: item.id })
     setTimeout(() => {
@@ -209,13 +209,13 @@ const deleteWorks = async ({ i, item }: controlImgParam) => {
 state.editOptions = {
   photo: [
     {
-      name: '删除',
+      name: 'Delete',
       fn: deleteImg,
     },
   ],
   works: [
     {
-      name: '删除',
+      name: 'Delete',
       fn: deleteWorks,
     },
   ],
@@ -233,7 +233,7 @@ const uploadDone = async (res: any) => {
   const newList = [res, ...state.imgList]
   state.imgList = []
   setTimeout(() => {
-    state.imgList = newList // 模拟加载
+    state.imgList = newList // Simulated loading
   }, 300)
 }
 

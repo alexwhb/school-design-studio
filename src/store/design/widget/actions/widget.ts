@@ -126,7 +126,7 @@ export function deleteWidget(store: TWidgetStore) {
   const activeElement = store.dActiveElement
   if (!activeElement) return
 
-  let count = 0 // 记录容器里的组件数量
+  let count = 0 // Number of elements in the container
   if (selectWidgets.length !== 0) {
     for (let i = 0; i < selectWidgets.length; ++i) {
       const uuid = selectWidgets[i].uuid

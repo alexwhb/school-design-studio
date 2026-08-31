@@ -1,7 +1,7 @@
 <!--
  * @Author: ShawnPhang
  * @Date: 2021-08-09 14:00:23
- * @Description: 文字特效选择框组件
+ * @Description: Text effects选择框组件
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-03-11 01:43:21
 -->
@@ -38,37 +38,37 @@
           </div>
           A
         </div>
-        <span class="title">文字特效</span>
+        <span class="title">Text effects</span>
         <el-popover :visible="state.visiable" placement="left" :width="220" trigger="click">
           <div class="select__box">
-            <div class="select__box__select-item" @click="selectEffect()">无</div>
+            <div class="select__box__select-item" @click="selectEffect()">None</div>
             <div v-for="(l, li) in state.list" :key="'list' + li" class="select__box__select-item" @click="selectEffect(l.id)">
               <img :src="l.cover" />
             </div>
           </div>
           <template #reference>
-            <el-button class="button" link @click="openSet">{{ state.visiable ? '取消' : '选择' }}</el-button>
+            <el-button class="button" link @click="openSet">{{ state.visiable ? 'Cancel' : 'Choose' }}</el-button>
           </template>
         </el-popover>
       </div>
     </template>
     <!-- filling 描边 stroke 阴影 shadow -->
-    <div v-show="state.layers && state.layers.length > 0" class="text item"><span style="width: 65px">强度</span> <el-slider v-model="state.strength" show-input :maxValue="100" input-size="small" :show-input-controls="false" @input="strengthChange"> </el-slider></div>
+    <div v-show="state.layers && state.layers.length > 0" class="text item"><span style="width: 65px">Intensity</span> <el-slider v-model="state.strength" show-input :maxValue="100" input-size="small" :show-input-controls="false" @input="strengthChange"> </el-slider></div>
     <el-collapse-item>
       <template #title>
-        <b>高级编辑</b>
+        <b>Advanced</b>
       </template>
       <div class="line"></div>
       <div style="display: flex; justify-content: space-between">
         <el-button
           class="add-layer" size="small" type="primary" link
           @click="addLayer">
-           + 新建特效层
+           + Add effect
         </el-button>
         <el-button
           v-show="state.layers && state.layers.length > 0" class="add-layer" size="small"
           type="primary" link @click="state.unfold = !state.unfold">
-          {{ state.unfold ? '收起' : '展开' }}全部
+          {{ state.unfold ? 'Collapse all' : 'Expand all' }}
         </el-button>
       </div>
       <div class="line"></div>
@@ -76,25 +76,25 @@
         <template #item="{ element, index }">
           <div class="feature__grab-wrap">
             <div class="layer__title">
-              <i class="icon sd-yidong" /><span style="font-size: 12px"><b>特效层</b> {{ index + 1 }}</span>
+              <i class="icon sd-yidong" /><span style="font-size: 12px"><b>Effect</b> {{ index + 1 }}</span>
               <i class="icon sd-delete" @click="removeLayer(index)" />
             </div>
             <div v-if="element.filling && [0, 2, '0', '2'].includes(element.filling.type)" v-show="state.unfold" class="feature__item">
-              <el-checkbox v-model="element.filling.enable" label="填充" class="feature__header" />
-              <color-select v-model="element.filling.color" width="28px" :modes="['纯色', '渐变']" label="" @change="colorChange($event, element.filling)" />
+              <el-checkbox v-model="element.filling.enable" label="Fill" class="feature__header" />
+              <color-select v-model="element.filling.color" width="28px" :modes="['Solid', 'Gradient']" label="" @change="colorChange($event, element.filling)" />
             </div>
             <div v-if="element.stroke" v-show="state.unfold" class="feature__item">
-              <el-checkbox v-model="element.stroke.enable" label="描边" class="feature__header" />
+              <el-checkbox v-model="element.stroke.enable" label="Outline" class="feature__header" />
               <el-input-number v-model="element.stroke.width" style="width: 65px; margin-right: 0.5rem" :min="0" size="small" controls-position="right" />
               <color-select v-model="element.stroke.color" width="28px" label="" @finish="(value) => finish('color', value)" />
             </div>
             <div v-if="element.offset" v-show="state.unfold" class="feature__item">
-              <el-checkbox v-model="element.offset.enable" label="偏移" class="feature__header" />
+              <el-checkbox v-model="element.offset.enable" label="Offset" class="feature__header" />
               <numberInput v-model="element.offset.x" style="width: 49.5px; margin-right: 2px" prepend="x" type="simple" />
               <numberInput v-model="element.offset.y" style="width: 49.5px" prepend="y" type="simple" />
             </div>
             <div v-if="element.shadow" v-show="state.unfold" class="feature__item">
-              <el-checkbox v-model="element.shadow.enable" label="阴影" class="feature__header" />
+              <el-checkbox v-model="element.shadow.enable" label="Shadow" class="feature__header" />
               <numberInput v-model="element.shadow.blur" prepend="blur" :minValue="0" style="width: 30px; margin-right: 2px" type="simple" />
               <numberInput v-model="element.shadow.offsetX" prepend="x" style="width: 30px; margin-right: 2px" type="simple" />
               <numberInput v-model="element.shadow.offsetY" prepend="y" style="width: 30px; margin-right: 0.5rem" type="simple" />
@@ -148,8 +148,8 @@ const props = withDefaults(defineProps<TProps>(), {
 const emit = defineEmits<TEmits>()
 
 const state = reactive<TState>({
-  strength: 50, // 强度
-  visiable: false, // 弹出选择层控制
+  strength: 50, // Intensity
+  visiable: false, // Layer picker popover
   list: [],
   layers: [],
   draging: false,
@@ -162,7 +162,7 @@ const dragOptions = {
   chosenClass: 'choose',
 }
 const coefficient = computed(() => Math.round(160 / 27))
-let rawData: Record<string, any>[] = [] // 初始化记录数据，用于强度修改
+let rawData: Record<string, any>[] = [] // Initial values, used when changing intensity
 
 onMounted(async () => {
   await nextTick()
@@ -226,8 +226,8 @@ const finish = (type?: string, value?: string) => {}
 
 const colorChange = (e: Record<string, any>, item: Record<string, any>) => {
   const modeStr: Record<string, number> = {
-    渐变: 2,
-    纯色: 0,
+    Gradient: 2,
+    Solid: 0,
   }
   item.gradient = {
     angle: e.angle,

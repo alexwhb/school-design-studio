@@ -22,7 +22,7 @@
     </el-dropdown>
     <span v-else style="width: 1rem"></span>
 
-    <el-input v-model="state.searchValue" size="large" placeholder="输入关键词搜索" class="input-with-select">
+    <el-input v-model="state.searchValue" size="large" placeholder="Search" class="input-with-select">
       <template #append>
         <el-button><i class="iconfont icon-search"></i></el-button>
       </template>
@@ -65,9 +65,9 @@ const state = reactive<TState>({
 })
 
 if (props.type != 'none') {
-  state.materialCates = [{ id: 0, name: '示例模板' }]
+  state.materialCates = [{ id: 0, name: 'Sample templates' }]
   // api.home.getCategories({ type: 1 }).then((list: any) => {
-  //   list.unshift({ id: 0, name: '全部' })
+  //   list.unshift({ id: 0, name: 'All' })
   //   state.materialCates = list
   //   const { cate } = route.query
   //   cate && (state.currentIndex = cate as string)

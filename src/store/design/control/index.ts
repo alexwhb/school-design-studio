@@ -11,19 +11,19 @@ import { useHistoryStore } from "@/store";
 import { Store, defineStore } from "pinia";
 
 type TControlState = {
-  /** 是否正在移动组件 */
+  /** Whether an element is being moved */
   dMoving: boolean 
-  /** 是否正在抓取组件 */
+  /** Whether an element is being grabbed */
   dDraging: boolean
-  /** 是否正在调整组件宽高 */
+  /** Whether an element is being resized */
   dResizeing: boolean
-  /** 是否显示参考线 */
+  /** Whether guides are shown */
   dShowRefLine: boolean
-  /** 全局控制选择框的显示 */
+  /** Global toggle for the selection box */
   showMoveable: boolean
-  /** 是否显示moveable的旋转按钮 */
+  /** 是否显示moveablerotation handle */
   showRotatable: boolean
-  /** 记录是否按下alt键 / 或ctrl */
+  /** Track whether thealt键 / 或ctrl */
   dAltDown: boolean
   // 是否按下空格键
   dSpaceDown: boolean
@@ -45,21 +45,21 @@ type TControlAction = {
   stopDMove: () => void
   /** 设置正在裁剪or编辑的组件 */
   setCropUuid: (uuid: string) => void
-  setSpaceDown: (uuid: boolean) => void // 设置是否按下空格键
+  setSpaceDown: (uuid: boolean) => void // Track whether space is held
 }
 
 /** 全局控制配置 */
 const ControlStore =  defineStore<"controlStore", TControlState, {}, TControlAction>("controlStore", {
   state: () => ({
-    dMoving: false, // 是否正在移动组件
-    dDraging: false, // 是否正在抓取组件
-    dResizeing: false, // 是否正在调整组件宽高
-    dShowRefLine: true, // 是否显示参考线
-    showMoveable: false, // 全局控制选择框的显示
-    showRotatable: true, // 是否显示moveable的旋转按钮
-    dAltDown: false, // 记录是否按下alt键 / 或ctrl
+    dMoving: false, // Whether an element is being moved
+    dDraging: false, // Whether an element is being grabbed
+    dResizeing: false, // Whether an element is being resized
+    dShowRefLine: true, // Whether guides are shown
+    showMoveable: false, // Global toggle for the selection box
+    showRotatable: true, // 是否显示moveablerotation handle
+    dAltDown: false, // Track whether thealt键 / 或ctrl
     dCropUuid: '-1', // 正在编辑or裁剪的组件id
-    dSpaceDown: false, // 记录是否按下空格键
+    dSpaceDown: false, // Track whether space is held
   }),
   getters: {},
   actions: {
@@ -88,7 +88,7 @@ const ControlStore =  defineStore<"controlStore", TControlState, {}, TControlAct
     /** TODO 组合操作 */
     updateAltDown(e: boolean) {
       this.dAltDown = e
-      console.log('控制组合按键, 成组功能为: realCombined')
+      console.log('modifier key handling, group action: realCombined')
     },
     /** 组件调整结束 */
     stopDResize() {

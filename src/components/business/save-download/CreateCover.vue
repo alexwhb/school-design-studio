@@ -28,7 +28,7 @@ const { dZoom } = storeToRefs(canvasStore)
 
 async function createCover(cb: any) {
   const nowZoom = dZoom.value
-  // 取消选中元素
+  // Deselect元素
   widgetStore.selectWidget({
     uuid: '-1',
   })
@@ -67,10 +67,10 @@ async function createCover(cb: any) {
 }
 
 async function createPoster() {
-  await checkFonts() // 等待字体加载完成
+  await checkFonts() // Wait for the fonts to finish loading
   const fonts = document.fonts
   const opts = {
-    backgroundColor: null, // 关闭背景以支持透明图片生成
+    backgroundColor: null, // No background, so transparent PNGs work
     useCORS: true,
     scale: 100 / dZoom.value, // * window.devicePixelRatio
     onclone: (document: any) => fonts.forEach((font) => document.fonts.add(font)),
@@ -97,7 +97,7 @@ async function checkFonts() {
   widgets.forEach((item: any) => {
     if (item.fontClass && item.fontClass.value) {
       const loader = new FontFaceObserver(item.fontClass.value)
-      fontLoaders.push(loader.load(null, 120000)) // 延长超时让检测不会丢失字体
+      fontLoaders.push(loader.load(null, 120000)) // A long timeout so slow fonts still get picked up
     }
   })
   await Promise.all(fontLoaders)

@@ -14,10 +14,10 @@ import { getImage } from '@/common/methods/getImgDetail'
 import _config from '@/config'
 import { Ref } from 'vue'
 
-/** 选择图片 */
+/** Choose an image */
 export const selectImageFile = async (state: TImageCutoutState, raw: Ref<HTMLElement | null>, file: File, successCb?: (result: MediaSource, fileName: string) => void, uploadCb?: TCommonUploadCb) => {
   // if (file.size > 1024 * 1024 * 2) {
-  //   alert('上传图片超出限制')
+  //   alert('Upload image超出限制')
   //   return false
   // }
   if (!raw.value) return

@@ -26,29 +26,29 @@ export type TWidgetItemData = {
 export const widgetMenu: TWidgetItemData[] = [
   {
     type: 'copy',
-    text: '复制',
+    text: 'Copy',
   },
   {
     type: 'paste',
-    text: '粘贴',
+    text: 'Paste',
   },
   {
     type: 'index-up',
-    text: '上移一层',
+    text: 'Bring forward',
   },
   {
     type: 'index-down',
-    text: '下移一层',
+    text: 'Send backward',
   },
   {
     type: 'del',
-    text: '删除',
+    text: 'Delete',
   },
 ]
 
 export const pageMenu: TWidgetItemData[] = [
   {
     type: 'paste',
-    text: '粘贴',
+    text: 'Paste',
   },
 ]

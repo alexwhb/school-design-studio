@@ -45,7 +45,7 @@ watch(
       await nextTick()
       const target = `[id="${val.uuid}"]`
       _target = `[id="${val.uuid}"]`
-      moveable.rotatable = true // 选择时会取消旋转
+      moveable.rotatable = true // Selecting cancels the rotation handle
       // 方向点位设置
       // this.moveable.renderDirections = val.type === 'w-text' ? ['e', 'se'] : 'w-image' ? ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se'] : ['nw', 'ne', 'sw', 'se']
       switch (val.type) {
@@ -189,7 +189,7 @@ type TMoveableOptions = {
   container?:  HTMLElement | null
   zoom: number
   draggable: boolean
-  clippable: boolean // 裁剪
+  clippable: boolean // Crop
   throttleDrag: number
   resizable: boolean
   throttleResize: number
@@ -239,7 +239,7 @@ onMounted(() => {
     // container: document.querySelector('#page-design'),
     zoom: 0.8,
     draggable: true,
-    clippable: false, // 裁剪
+    clippable: false, // Crop
     throttleDrag: 0,
     resizable: true,
     throttleResize: 0,
@@ -353,7 +353,7 @@ onMounted(() => {
   .on('rotate', ({ target, beforeDist, dist, transform }: any) => {
     // console.log('onRotate', Number(this.dActiveElement.rotate) + Number(beforeDist + dist))
     target.style.transform = transform
-    target.style.height = dActiveElement.value?.height + 'px' // 修正文字高度变化
+    target.style.height = dActiveElement.value?.height + 'px' // Correct the text height
   })
   .on('rotateEnd', (e: any) => {
     const tf = e.target.style.transform
@@ -443,7 +443,7 @@ onMounted(() => {
       //   // 临时屏蔽，抖得太严重
       //   return
       // }
-      console.log('重置translate', dActiveElement.value)
+      console.log('reset translate', dActiveElement.value)
       // 转换成位置
       // if (this.dActiveElement.cache && this.dActiveElement.cache.recordLeft) {
       //   const left = e.lastEvent.drag.translate[0] + Number(this.dActiveElement.cache.recordLeft)

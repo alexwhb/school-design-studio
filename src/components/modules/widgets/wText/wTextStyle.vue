@@ -1,36 +1,36 @@
 <template>
   <div id="w-text-style">
     <el-collapse v-model="state.activeNames">
-      <el-collapse-item title="位置尺寸" name="1">
+      <el-collapse-item title="Size and position" name="1">
         <div class="line-layout">
           <number-input v-model="state.innerElement.left" label="X" @finish="(value) => finish('left', value)" />
           <number-input v-model="state.innerElement.top" label="Y" @finish="(value) => finish('top', value)" />
-          <number-input v-model="state.innerElement.width" style="margin-top: 0.5rem" label="宽" :editable="true" @finish="(value) => finish('width', value)" />
-          <number-input v-model="state.innerElement.height" style="margin-top: 0.5rem" label="高" :editable="true" @finish="(value) => finish('height', value)" />
+          <number-input v-model="state.innerElement.width" style="margin-top: 0.5rem" label="W" :editable="true" @finish="(value) => finish('width', value)" />
+          <number-input v-model="state.innerElement.height" style="margin-top: 0.5rem" label="H" :editable="true" @finish="(value) => finish('height', value)" />
         </div>
       </el-collapse-item>
-      <!-- <el-collapse-item title="样式设置" name="2"> -->
+      <!-- <el-collapse-item title="Style" name="2"> -->
       <div class="line-layout style-item">
-        <value-select v-model="state.innerElement.fontClass" label="文字" :data="state.fontClassList" inputWidth="152px" :readonly="true" @finish="(font) => finish('fontClass', font)" />
-        <value-select v-model="state.innerElement.fontSize" label="大小" suffix="px" :data="state.fontSizeList" @finish="(value) => finish('fontSize', value)" />
+        <value-select v-model="state.innerElement.fontClass" label="Text" :data="state.fontClassList" inputWidth="152px" :readonly="true" @finish="(font) => finish('fontClass', font)" />
+        <value-select v-model="state.innerElement.fontSize" label="Size" suffix="px" :data="state.fontSizeList" @finish="(value) => finish('fontSize', value)" />
       </div>
 
       <icon-item-select class="style-item" :data="state.styleIconList1" @finish="textStyleAction" />
       <icon-item-select class="style-item" :data="state.styleIconList2" @finish="textStyleAction" />
 
       <!-- <div style="flex-wrap: nowrap" class="line-layout style-item">
-        <value-select v-model="innerElement.lineHeight" label="行距" suffix="倍" :data="lineHeightList" @finish="(value) => finish('lineHeight', value)" />
-        <value-select v-model="innerElement.letterSpacing" label="字距" suffix="%" :data="letterSpacingList" @finish="(value) => finish('letterSpacing', value)" />
+        <value-select v-model="innerElement.lineHeight" label="Line height" suffix="x" :data="lineHeightList" @finish="(value) => finish('lineHeight', value)" />
+        <value-select v-model="innerElement.letterSpacing" label="Letter spacing" suffix="%" :data="letterSpacingList" @finish="(value) => finish('letterSpacing', value)" />
       </div> -->
-      <!-- <el-collapse-item title="位置尺寸" name="1"> -->
+      <!-- <el-collapse-item title="Size and position" name="1"> -->
       <div class="style-item slide-wrap">
-        <number-slider v-model="state.innerElement.letterSpacing" style="font-size: 14px" label="字距" labelWidth="40px" :step="0.05" :minValue="-state.innerElement.fontSize" :maxValue="state.innerElement.fontSize * 2" @finish="(value) => finish('letterSpacing', value)" />
-        <number-slider v-model="state.innerElement.lineHeight" style="font-size: 14px" label="行距" labelWidth="40px" :step="0.05" :minValue="0" :maxValue="2.5" @finish="(value) => finish('lineHeight', value)" />
+        <number-slider v-model="state.innerElement.letterSpacing" style="font-size: 14px" label="Letter spacing" labelWidth="40px" :step="0.05" :minValue="-state.innerElement.fontSize" :maxValue="state.innerElement.fontSize * 2" @finish="(value) => finish('letterSpacing', value)" />
+        <number-slider v-model="state.innerElement.lineHeight" style="font-size: 14px" label="Line height" labelWidth="40px" :step="0.05" :minValue="0" :maxValue="2.5" @finish="(value) => finish('lineHeight', value)" />
       </div>
       <!-- </el-collapse-item> -->
 
       <div style="flex-wrap: nowrap" class="line-layout style-item">
-        <color-select v-model="state.innerElement.color" label="颜色" @finish="(value) => finish('color', value)" />
+        <color-select v-model="state.innerElement.color" label="Colour" @finish="(value) => finish('color', value)" />
         <!-- <color-select v-model="innerElement.backgroundColor" label="背景颜色" @finish="(value) => finish('backgroundColor', value)" /> -->
       </div>
       <div class="line-layout style-item">
@@ -76,7 +76,7 @@ type TState = {
   tag: boolean
   ingoreKeys: string[]
   fontSizeList: number[]
-  fontClassList: Record<string, any> // 不能设空字体系统默认字体，因为截图服务的默认字体无法保证一致
+  fontClassList: Record<string, any> // Never fall back to the system font: the export service cannot guarantee a match
   lineHeightList: number[]
   letterSpacingList: number[]
   layerIconList: TIconItemSelectData[]
@@ -94,7 +94,7 @@ const state = reactive<TState>({
   tag: false,
   ingoreKeys: ['left', 'top', 'name', 'width', 'height', 'text', 'color', 'backgroundColor'],
   fontSizeList: [12, 14, 24, 26, 28, 30, 36, 48, 60, 72, 96, 108, 120, 140, 180, 200, 250, 300, 400, 500],
-  fontClassList: {}, // 不能设空字体系统默认字体，因为截图服务的默认字体无法保证一致
+  fontClassList: {}, // Never fall back to the system font: the export service cannot guarantee a match
   lineHeightList: [1, 1.5, 2],
   letterSpacingList: [0, 10, 25, 50, 75, 100, 200],
   layerIconList,
@@ -180,13 +180,13 @@ function selectTextEffect({ key, value, style }: any) {
 
 function loadFonts() {
   const localFonts = useFontStore.list
-  const fontLists: Record<string, any> = { 当前页面: [], 中文: [], 英文: [] }
+  const fontLists: Record<string, any> = { 'Current page': [], 'All fonts': [] }
   for (const font of localFonts) {
     const { id, oid, value, url, alias, preview, lang } = font
     const item = { id, oid, value, url, alias, preview }
-    lang === 'zh' ? fontLists['中文'].unshift(item) : fontLists['英文'].unshift(item)
+    fontLists['All fonts'].push(item)
   }
-  fontLists['当前页面'] = usePageFontsFilter()
+  fontLists['Current page'] = usePageFontsFilter()
   state.fontClassList = fontLists
 }
 
@@ -197,7 +197,7 @@ function finish(key: string, value: number | Record<string, any> | string) {
     value,
   })
   setTimeout(() => {
-    key === 'fontClass' && (state.fontClassList['当前页面'] = usePageFontsFilter())
+    key === 'fontClass' && (state.fontClassList['Current page'] = usePageFontsFilter())
   }, 300)
 }
 
@@ -215,11 +215,11 @@ function layerAction(item: TIconItemSelectData) {
 async function textStyleAction(item: TIconItemSelectData) {
   const innerText = state.innerElement as Record<string, any>
   let value = ['textAlign', 'textAlignLast'].includes(item.key || '') ? item.value : (item.value as number[])[item.select ? 1 : 0]
-  // 分散对齐判断是否选中，选中时则为抹去属性
+  // Justify all判断是否选中，选中时则为抹去属性
   item.key === 'textAlignLast' && innerText[item.key] === value && (value = undefined)
   // 设置属性
   item.key && (innerText[item.key] = value)
-  // 对竖版文字特殊处理
+  // 对Vertical text特殊处理
   item.key === 'writingMode' && relationChange()
   await nextTick()
   forceStore.setUpdateRect()

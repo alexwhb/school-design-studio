@@ -5,7 +5,7 @@ export type TSelectWidgetData = {
   uuid: string
 }
 
-// TODO: 选中元件与取消选中
+// TODO: 选中元件与Deselect
 export function selectWidget(store: TWidgetStore, { uuid }: TSelectWidgetData) {
   const controlStore = useControlStore()
   const pageStore = useCanvasStore()

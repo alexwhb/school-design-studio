@@ -90,7 +90,7 @@ async function load() {
         if (item.fontClass && item.fontClass.value) {
           const loader = new FontFaceObserver(item.fontClass.value)
           fontData.push(item.fontClass)
-          fontLoaders.push(loader.load(null, 30000)) // 延长超时让检测不会丢失字体
+          fontLoaders.push(loader.load(null, 30000)) // A long timeout so slow fonts still get picked up
           // 按字体来收集所有文字
           if (fontContent[item.fontClass.value]) {
             fontContent[item.fontClass.value] += item.text
@@ -177,14 +177,14 @@ function handleResize() {
   overflow: scroll;
   offset: 0px;
   
-  scrollbar-width: none; /* Firefox 隐藏滚动条 */
+  scrollbar-width: none; /* Firefox Hide the scrollbar */
   #main {
     overflow: hidden;
   }
 }
 
 #page-draw-html-wrap::-webkit-scrollbar {
-    display: none; /* WebKit 浏览器隐藏滚动条 */
+    display: none; /* WebKit Hide the browser scrollbar */
 }
 
 </style>

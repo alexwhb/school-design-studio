@@ -16,8 +16,8 @@
           <el-image class="list__img" :src="item.thumb" fit="cover" lazy loading="lazy" @click.stop="selectItem(item)" @dragstart="dragStart($event, item)"></el-image>
         </imageTip>
       </div>
-      <div v-show="state.loading" class="loading"><i class="el-icon-loading"></i> 拼命加载中</div>
-      <div v-show="state.loadDone" class="loading">全部加载完毕</div>
+      <div v-show="state.loading" class="loading"><i class="el-icon-loading"></i> Loading</div>
+      <div v-show="state.loadDone" class="loading">That is everything</div>
     </ul>
   </div>
 </template>
@@ -131,7 +131,7 @@ function setBGcolor(color: string) {
 }
 
 async function selectItem(item: TGetImageListResult) {
-  // this.$store.commit('setShowMoveable', false) // 清理掉上一次的选择
+  // this.$store.commit('setShowMoveable', false) // Clear the previous selection
   pageStore.updatePageData({
     key: 'backgroundTransform',
     value: {},

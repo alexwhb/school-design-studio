@@ -125,8 +125,8 @@ export function autoResizeAll(store: TWidgetStore, lastPageSize: TSize) {
   const canvasStore = useCanvasStore()
   const { width: lastWidth, height: lastHeight } = lastPageSize
   const { width: pageWidth, height: pageHeight } = canvasStore.dPage
-  const originWHRatio = lastWidth / lastHeight // 原始比例
-  const WHRatio = pageWidth / pageHeight // 当前比例
+  const originWHRatio = lastWidth / lastHeight // Original ratio
+  const WHRatio = pageWidth / pageHeight // Current ratio
   const changeFn = originWHRatio > WHRatio ? 'max' : 'min'
   const degree = [pageWidth / lastWidth, pageHeight / lastHeight]
   const ratio = Math[changeFn](...degree)

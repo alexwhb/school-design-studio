@@ -12,59 +12,59 @@ function isMacOS() {
 
 export default [
   {
-    feat: `拖拽画布`,
-    info: `空格 + 鼠标拖拽`,
+    feat: `Pan the page`,
+    info: `Space + drag`,
   },
   {
-    feat: `画布缩小`,
-    info: `${ctrlKey} - / ${ctrlKey} + 滚轮`,
+    feat: `Zoom out`,
+    info: `${ctrlKey} - / ${ctrlKey} + scroll wheel`,
   },
   {
-    feat: `画布放大`,
-    info: `${ctrlKey} + / ${ctrlKey} + 滚轮`,
+    feat: `Zoom in`,
+    info: `${ctrlKey} + / ${ctrlKey} + scroll wheel`,
   },
   {
-    feat: `保存`,
+    feat: `Save`,
     info: `${ctrlKey} + S`,
   },
   {
-    feat: `撤销`,
+    feat: `Undo`,
     info: `${ctrlKey} + Z`,
   },
   {
-    feat: `重做`,
+    feat: `Redo`,
     info: `${ctrlKey} + Shift + Z`,
   },
   {
-    feat: `复制`,
+    feat: `Copy`,
     info: `${ctrlKey} + C`,
   },
   {
-    feat: `粘贴`,
+    feat: `Paste`,
     info: `${ctrlKey} + V`,
   },
   {
-    feat: `删除`,
+    feat: `Delete`,
     info: `Delete / Backspace`,
   },
   {
-    feat: `元素移动`,
+    feat: `Move element`,
     info: `← ↑ → ↓`,
   },
   {
-    feat: `快速移动`,
+    feat: `Move faster`,
     info: `Shift + ← ↑ → ↓`,
   },
   {
-    feat: `多选`,
-    info: `${ctrlKey} / Shift + 点选`,
+    feat: `Select multiple`,
+    info: `${ctrlKey} / Shift + click`,
   },
   {
-    feat: `成组`,
+    feat: `Group`,
     info: `${ctrlKey} + G`,
   },
   {
-    feat: `取消选中`,
+    feat: `Deselect`,
     info: `ESC`,
   },
 ]

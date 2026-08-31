@@ -1,75 +1,69 @@
-/*
- * @Author: ShawnPhang
- * @Date: 2024-04-07 17:49:06
- * @Description:
- * @LastEditors: ShawnPhang <https://m.palxp.cn>
- * @LastEditTime: 2024-04-10 00:37:33
+/**
+ * Starting sizes offered when someone creates a new design.
+ *
+ * Print sizes are given in pixels at 150 DPI, which prints cleanly on a normal
+ * school copier without making the files enormous. Screen sizes use their
+ * native pixel dimensions.
  */
 export default [
   {
-    name: '手机海报',
-    width: 1242,
-    height: 2208,
-    icon: 'sd-shouji'
-  },
-  {
-    name: '横版海报',
-    width: 900,
-    height: 500,
-    icon: 'sd-wangye'
-  },
-  {
-    name: '公众号首图',
-    width: 900,
-    height: 383,
-    icon: 'sd-weixin'
-  },
-  {
-    name: '公众号次图',
-    width: 500,
-    height: 500,
-    icon: 'sd-weixin'
-  },
-  {
-    name: '小红书配图',
-    width: 1242,
-    height: 1660,
-    icon: 'sd-shouji'
-  },
-  {
-    name: '商品主图',
-    width: 800,
-    height: 800,
-    icon: 'sd-wangye'
-  },
-  {
-    name: '电商详情页',
-    width: 750,
-    height: 1000,
-    icon: 'sd-wangye'
-  },
-  {
-    name: '电商竖版海报',
-    width: 750,
-    height: 950,
-    icon: 'sd-shouji'
-  },
-  {
-    name: '电商横版海报',
-    width: 750,
-    height: 390,
-    icon: 'sd-wangye'
-  },
-  {
-    name: '小程序封面',
-    width: 520,
-    height: 416,
-    icon: 'sd-weixin'
-  },
-  {
-    name: '壁纸 / PPT(16:9)',
+    name: 'Slide (16:9)',
     width: 1920,
     height: 1080,
-    icon: 'sd-wangye'
-  }
+    icon: 'sd-wangye',
+  },
+  {
+    name: 'Letter — portrait',
+    width: 1275,
+    height: 1650,
+    icon: 'sd-wangye',
+  },
+  {
+    name: 'Letter — landscape',
+    width: 1650,
+    height: 1275,
+    icon: 'sd-wangye',
+  },
+  {
+    name: 'A4 — portrait',
+    width: 1240,
+    height: 1754,
+    icon: 'sd-wangye',
+  },
+  {
+    name: 'Poster (11 × 17)',
+    width: 1650,
+    height: 2550,
+    icon: 'sd-wangye',
+  },
+  {
+    name: 'Half-page flyer',
+    width: 1275,
+    height: 825,
+    icon: 'sd-wangye',
+  },
+  {
+    name: 'Square post',
+    width: 1080,
+    height: 1080,
+    icon: 'sd-shouji',
+  },
+  {
+    name: 'Story / display board',
+    width: 1080,
+    height: 1920,
+    icon: 'sd-shouji',
+  },
+  {
+    name: 'Web banner',
+    width: 1200,
+    height: 400,
+    icon: 'sd-wangye',
+  },
+  {
+    name: 'Name badge',
+    width: 1050,
+    height: 600,
+    icon: 'sd-wangye',
+  },
 ]

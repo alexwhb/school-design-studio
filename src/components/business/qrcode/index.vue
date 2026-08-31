@@ -46,7 +46,7 @@ const render = debounce(300, false, async () => {
     options && qrCode.update(options)
     await nextTick()
     if (!qrCodeDom?.value?.firstChild) return
-    (qrCodeDom.value.firstChild as HTMLElement).setAttribute('style', "width: 100%;") // 强制其适应缩放
+    (qrCodeDom.value.firstChild as HTMLElement).setAttribute('style', "width: 100%;") // Force it to refit
   }
 })
 

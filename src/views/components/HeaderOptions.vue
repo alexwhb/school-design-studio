@@ -6,21 +6,21 @@
  * @LastEditTime: 2024-08-17 09:49:01
 -->
 <template>
-  <div class="top-title"><el-input v-model="state.title" placeholder="未命名的设计" class="input-wrap" /></div>
+  <div class="top-title"><el-input v-model="state.title" placeholder="Untitled design" class="input-wrap" /></div>
   <div class="top-icon-wrap">
     <template v-if="tempEditing">
       <!-- <span style="color: #999; font-size: 14px; margin-right: 0.5rem">{{ state.stateBollean ? '启用' : '停用' }}</span> <el-switch v-model="state.stateBollean" @change="stateChange" />
       <div class="divide__line">|</div> -->
-      <el-button plain type="primary" @click="saveTemp">保存模板</el-button>
-      <el-button @click="userStore.managerEdit(false)">取消</el-button>
-      <!-- <el-button @click="$store.commit('managerEdit', false)">取消</el-button> -->
+      <el-button plain type="primary" @click="saveTemp">Save template</el-button>
+      <el-button @click="userStore.managerEdit(false)">Cancel</el-button>
+      <!-- <el-button @click="$store.commit('managerEdit', false)">Cancel</el-button> -->
       <div class="divide__line">|</div>
     </template>
-    <el-button v-else style="margin-right: 1rem" @click="jump2Edit">修改模板</el-button>
+    <el-button v-else style="margin-right: 1rem" @click="jump2Edit">Edit template</el-button>
     <watermark-option style="margin-right: 0.5rem" />
     <!-- <copyRight> -->
     <slot />
-    <!-- <el-button :loading="state.loading" size="large" class="primary-btn" :disabled="tempEditing" plain type="primary" @click="download">下载作品</el-button> -->
+    <!-- <el-button :loading="state.loading" size="large" class="primary-btn" :disabled="tempEditing" plain type="primary" @click="download">Download</el-button> -->
     <!-- </copyRight> -->
   </div>
   <!-- 生成图片组件 -->
@@ -89,22 +89,22 @@ const state = reactive<TState>({
 
 // 保存作品
 async function save(hasCover: boolean = false) {
-  // 保存用户作品的原理和保存模板是相通的，所以这里反过来用模板示例
+  // 保存用户作品的原理和Save template是相通的，所以这里反过来用模板示例
   await saveTemp()
   // // 没有任何修改记录则不保存
   // if (dHistoryStack.value.changes.length <= 0) {
   //   return
   // }
-  // controlStore.setShowMoveable(false) // 清理掉上一次的选择框
+  // controlStore.setShowMoveable(false) // Clear the previous selection box
   // const { id, tempid } = route.query
   // const data = widgetStore.dLayouts
-  // const { id: newId, stat, msg } = await api.home.saveWorks({ id: id as string, title: state.title || '未命名设计', data: JSON.stringify(data), temp_id: tempid as string, width: dPage.value.width, height: dPage.value.height })
-  // stat !== 0 ? useNotification('保存成功', '可在"我的作品"中查看') : useNotification('保存失败', msg, { type: 'error' })
+  // const { id: newId, stat, msg } = await api.home.saveWorks({ id: id as string, title: state.title || 'Untitled design', data: JSON.stringify(data), temp_id: tempid as string, width: dPage.value.width, height: dPage.value.height })
+  // stat !== 0 ? useNotification('Saved', '可在"My designs"中查看') : useNotification('Could not save', msg, { type: 'error' })
   // !id && router.push({ path: '/home', query: { id: newId }, replace: true })
   // controlStore.setShowMoveable(true)
 }
 
-// 保存模板
+// Save template
 async function saveTemp() {
   const { tempid, tempType: type } = route.query
   if (!tempid) return
@@ -121,13 +121,13 @@ async function saveTemp() {
     }
     // TODO：如果保存组件不存在组合，则添加组合。该功能待优化
     if (!dWidgets.value.some((x: Record<string, any>) => x.type === 'w-group')) {
-      alert('提交组件必须为组合！')
+      alert('An element must be grouped before you can save it.')
       return
       // proxy.dWidgets.push(wGroup.setting)
     }
-    res = await api.home.saveTemp({ id: tempid, type, title: state.title || '未命名组件', data: JSON.stringify(dWidgets.value), width: dPage.value.width, height: dPage.value.height })
-  } else res = await api.home.saveTemp({ id: tempid, title: state.title || '未命名模板', data: JSON.stringify(data), width: dPage.value.width, height: dPage.value.height })
-  res.stat != 0 && useNotification('保存成功', '模板内容已变更')
+    res = await api.home.saveTemp({ id: tempid, type, title: state.title || 'Untitled element', data: JSON.stringify(dWidgets.value), width: dPage.value.width, height: dPage.value.height })
+  } else res = await api.home.saveTemp({ id: tempid, title: state.title || 'Untitled template', data: JSON.stringify(data), width: dPage.value.width, height: dPage.value.height })
+  res.stat != 0 && useNotification('Saved', 'Your template has been updated')
   !tempid && router.push({ path: '/home', query: { tempid: res.id }, replace: true })
 }
 
@@ -135,31 +135,31 @@ async function saveTemp() {
 async function stateChange(e: string | number | boolean) {
   const { tempid, tempType: type } = route.query
   const { stat } = await api.home.saveTemp({ id: tempid, type, state: e ? 1 : 0 })
-  stat != 0 && useNotification('保存成功', '模板内容已变更')
+  stat != 0 && useNotification('Saved', 'Your template has been updated')
 }
 async function download() {
   if (state.loading === true) {
-    useNotification('作品导出中', '当前有作品正在导出，请稍候再试')
+    useNotification('Export in progress', 'Another export is already running. Please wait.')
     return
   }
   state.loading = true
   emit('update:modelValue', true)
-  emit('change', { downloadPercent: 1, downloadText: '保存数据中,请稍候..' })
+  emit('change', { downloadPercent: 1, downloadText: 'Saving…' })
   const currentRecord = pageStore.dCurrentPage
   const backEndCapture: boolean = checkDownloadPoster(dLayouts.value[currentRecord])
-  const fileName = `${state.title || '未命名作品'}.png`
+  const fileName = `${state.title || 'Untitled design'}.png`
   if (!backEndCapture) {
     // 无特殊条件命中则直接从前端出图
     const { blob } = await canvasImage.value?.createPoster()
     downloadBlob(blob, fileName)
-    emit('change', { downloadPercent: 100, downloadText: '作品下载成功' })
+    emit('change', { downloadPercent: 100, downloadText: 'Your design has been downloaded' })
     state.loading = false
   }
   await save(true)
   const { id, tempid } = route.query
   if (!id && !tempid) {
-    emit('change', { downloadPercent: 0, downloadText: '请稍候..' })
-    useNotification('保存失败', '可能暂不支持的功能，先选择模板后操作', { type: 'error' })
+    emit('change', { downloadPercent: 0, downloadText: 'Please wait…' })
+    useNotification('Could not save', 'Pick a template first, then try again.', { type: 'error' })
     state.loading = false
     return
   }
@@ -167,12 +167,12 @@ async function download() {
     // 从服务端生成图片
     const { width, height } = dPage.value
     emit('update:modelValue', true)
-    emit('change', { downloadPercent: 1, downloadText: '正在处理数据...' })
+    emit('change', { downloadPercent: 1, downloadText: 'Preparing your design...' })
     let timerCount = 0
     const animation = setInterval(() => {
       if (props.modelValue && timerCount < 75) {
         timerCount += RandomNumber(1, 10)
-        emit('change', { downloadPercent: 1 + timerCount, downloadText: '正在合成图片' })
+        emit('change', { downloadPercent: 1 + timerCount, downloadText: 'Building the image' })
       } else {
         clearInterval(animation)
       }
@@ -182,7 +182,7 @@ async function download() {
       (progress: number, xhr: any) => {
         if (props.modelValue) {
           clearInterval(animation)
-          progress >= timerCount && emit('change', { downloadPercent: Number(progress.toFixed(0)), downloadText: '图片生成中' })
+          progress >= timerCount && emit('change', { downloadPercent: Number(progress.toFixed(0)), downloadText: 'Generating the image' })
         } else {
           xhr.abort()
           state.loading = false
@@ -190,7 +190,7 @@ async function download() {
       },
       fileName,
     )
-    emit('change', { downloadPercent: 100, downloadText: '作品下载成功', downloadMsg: '' })
+    emit('change', { downloadPercent: 100, downloadText: 'Your design has been downloaded', downloadMsg: '' })
     state.loading = false
   }
 }
@@ -201,11 +201,11 @@ function RandomNumber(min: number, max: number) {
 async function load(cb: () => void) {
   const { id, tempid: tempId, tempType: type, w_h } = route.query
   if (route.name !== 'Draw') {
-    await useFontStore.init() // 初始化加载字体
+    await useFontStore.init() // Load the fonts
   }
   const apiName = tempId && !id ? 'getTempDetail' : 'getWorks'
   if (w_h && !id && !tempId) {
-    // 用于初始化画布大小，创建空作品
+    // 用于Set the starting page size for a blank design
     const wh: any = w_h.toString().split('*')
     wh[0] && (dPage.value.width = wh[0])
     wh[1] && (dPage.value.height = wh[1])
@@ -220,7 +220,7 @@ async function load(cb: () => void) {
   const data = JSON.parse(content)
   state.stateBollean = !!_state
   state.title = title
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择框
+  controlStore.setShowMoveable(false) // Clear the previous selection box
   if (type == 1) {
     // 加载文字组合组件
     dPage.value.width = width

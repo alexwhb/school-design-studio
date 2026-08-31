@@ -47,7 +47,7 @@ export default (pasteImageFile?: any) => {
             uploadParseImage(file, { controlStore, pageStore, widgetStore })
             break
           } else if (item.types.toString().indexOf('text') !== -1) {
-            controlStore.setShowMoveable(false) // 清理掉上一次的选择
+            controlStore.setShowMoveable(false) // Clear the previous selection
 
             const setting = JSON.parse(JSON.stringify(wTextSetting))
             setting.text = await navigator.clipboard.readText()
@@ -64,7 +64,7 @@ export default (pasteImageFile?: any) => {
   })
 }
 async function uploadParseImage(file: File, { controlStore, pageStore, widgetStore }: any) {
-  // 上传图片
+  // Upload image
   const resp = await api.material.upload({ file }, (up: any, dp: any) => {
     console.log(up, dp)
   })
@@ -75,7 +75,7 @@ async function uploadParseImage(file: File, { controlStore, pageStore, widgetSto
   // 刷新用户列表
   eventBus.emit('refreshUserImages')
   // 添加图片到画布中
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择
+  controlStore.setShowMoveable(false) // Clear the previous selection
   const setting = JSON.parse(JSON.stringify(wImageSetting))
   setting.width = width
   setting.height = height
@@ -84,7 +84,7 @@ async function uploadParseImage(file: File, { controlStore, pageStore, widgetSto
   setting.left = pW / 2 - width / 2
   setting.top = pH / 2 - height / 2
   widgetStore.addWidget(setting)
-  // 清空剪贴板，防止多次上传图片
+  // 清空剪贴板，防止多次Upload image
   navigator.clipboard.write([
     new ClipboardItem({
       'text/plain': new Blob([''], { type: 'text/plain' }),

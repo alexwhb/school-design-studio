@@ -27,7 +27,7 @@ export function realCombined(store: TGroupStore) {
     let top = Number(pageStore.dPage.height)
     let right = 0
     let bottom = 0
-    const sortWidgets = [] // 顺序取出元素
+    const sortWidgets = [] // Take the elements in order
     const selectkeys = selectWidgets.map((x: Type.Object) => x.uuid)
     for (const w of widgets) {
       selectkeys.includes(w.uuid) && sortWidgets.push(w)
@@ -37,7 +37,7 @@ export function realCombined(store: TGroupStore) {
       const index = widgets.findIndex((item: Type.Object) => item.uuid === uuid)
       const widget = { ...widgets[index] } // clone
       if (widget.isContainer) {
-        widgets.splice(index, 1) // 删除旧组合
+        widgets.splice(index, 1) // Remove the old group
         for (let i = 0; i < widgets.length; i++) {
           const item = widgets[i]
           item.parent === widget.uuid && (item.parent = group.uuid)
@@ -96,7 +96,7 @@ export function getCombined(store: TGroupStore): Promise<TdWidgetData> {
       let top = pageStore.dPage.height
       let right = 0
       let bottom = 0
-      const sortWidgets = [] // 顺序取出元素
+      const sortWidgets = [] // Take the elements in order
       const selectkeys = selectWidgets.map((x: Type.Object) => x.uuid)
       for (const w of widgets) {
         selectkeys.includes(w.uuid) && sortWidgets.push(w)

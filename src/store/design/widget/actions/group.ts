@@ -18,7 +18,7 @@ export function addGroup(store: TWidgetStore, group: TdWidgetData[]) {
   let parent: TdWidgetData | null = null
   group.forEach((item) => {
     item.uuid = nanoid() // 重设id
-    item.type === 'w-group' && (parent = item) // 找出父组件
+    item.type === 'w-group' && (parent = item) // Find the parent element
   })
   group.forEach((item) => {
     !item.isContainer && parent && (item.parent = parent.uuid) // 重设父id

@@ -49,7 +49,7 @@ export function updateAlign(store: TWidgetStore, { align, uuid, group }: TUpdate
     case 'left':
       left = parent.left
       break
-    case 'ch': // 水平居中
+    case 'ch': // Centre horizontally
       left = parent.left + pw / 2 - targetW / 2
       break
     case 'right':
@@ -58,7 +58,7 @@ export function updateAlign(store: TWidgetStore, { align, uuid, group }: TUpdate
     case 'top':
       top = parent.top
       break
-    case 'cv': // 垂直居中
+    case 'cv': // Centre vertically
       top = parent.top + ph / 2 - targetH / 2
       break
     case 'bottom':

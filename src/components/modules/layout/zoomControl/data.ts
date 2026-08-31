@@ -34,7 +34,7 @@ export const ZoomList: TZoomData[] = [
     value: 200,
   },
   {
-    text: '适应屏幕',
+    text: 'Fit to screen',
     value: -1,
     // icon: 'icon-best-size',
   },

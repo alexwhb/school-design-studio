@@ -17,8 +17,8 @@
             <div :class="['operation-item', { disable: !redoable }]" @click="redoable ? handleHistory('redo') : ''"><i class="iconfont icon-redo" /></div>
           </div>
           <el-divider direction="vertical" />
-          <Folder @select="dealWith" ref="ref1"> <div class="operation-item"><i class="icon sd-wenjian" /> <span class="text" >文件</span></div> </Folder>
-          <Helper @select="dealWith"> <div class="operation-item"><i class="icon sd-bangzhu" /> <span class="text" >帮助</span></div> </Helper>
+          <Folder @select="dealWith" ref="ref1"> <div class="operation-item"><i class="icon sd-wenjian" /> <span class="text" >File</span></div> </Folder>
+          <Helper @select="dealWith"> <div class="operation-item"><i class="icon sd-bangzhu" /> <span class="text" >Help</span></div> </Helper>
           <!-- <el-tooltip effect="dark" :show-after="300" :offset="0" content="标尺" placement="bottom">
             <i style="font-size: 20px" class="icon sd-biaochi operation-item" @click="changeLineGuides" />
           </el-tooltip> -->
@@ -55,13 +55,13 @@
       :percent="state.downloadPercent"
       :text="state.downloadText"
       :msg="state.downloadMsg"
-      cancelText="取消"
+      cancelText="Cancel"
       @cancel="downloadCancel"
       @done="state.downloadPercent = 0"
     />
     <!-- 漫游导航 -->
     <Tour ref="tourRef" :steps="[ref1, ref2, ref3, ref4]" />
-    <!-- 创建设计 -->
+    <!-- New design -->
     <createDesign ref="createDesignRef" />
   </div>
 </template>
@@ -99,7 +99,7 @@ const ref4 = ref<ButtonInstance>()
 
 type TState = {
   style: CSSProperties
-  downloadPercent: number // 下载进度
+  downloadPercent: number // Download progress
   downloadText: string
   downloadMsg: string | undefined
   isContinue: boolean
@@ -122,7 +122,7 @@ const state = reactive<TState>({
     left: '0px',
   },
   // openDraw: false,
-  downloadPercent: 0, // 下载进度
+  downloadPercent: 0, // Download progress
   downloadText: '',
   downloadMsg: '',
   isContinue: true,
@@ -136,7 +136,7 @@ const createDesignRef: Ref<typeof createDesign | null> = ref(null)
 
 const beforeUnload = function (e: Event): any {
   if (dHistoryStack.value.changes.length > 0) {
-    const confirmationMessage: string = '系统不会自动保存您未修改的内容';
+    const confirmationMessage: string = 'Your changes are not saved automatically.';
     (e || window.event).returnValue = (confirmationMessage as any) // Gecko and Trident
     return confirmationMessage // Gecko and WebKit
   } else return false
@@ -213,13 +213,13 @@ function downloadCancel() {
 }
 
 function loadData() {
-  // 初始化加载页面
+  // Load the page
   if (!optionsRef.value) return
   optionsRef.value.load(async () => {
     if (!zoomControlRef.value) return
     // await nextTick()
     // zoomControlRef.value.screenChange()
-    // 初始化激活的控件为page
+    // Select the page by default:page
     widgetStore.selectWidget({ uuid: '-1' })
   })
 }

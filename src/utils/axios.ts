@@ -48,7 +48,7 @@ axios.interceptors.response.use((res: AxiosResponse<any>) => {
       return Promise.reject(res)
     }
     if (res.data.code === 401) {
-      console.log('登录失效')
+      console.log('Signed out')
       useUserStore().changeOnline(false)
       // store.commit('changeOnline', false)
     }

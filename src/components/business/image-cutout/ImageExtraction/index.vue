@@ -10,21 +10,21 @@
     <el-dialog v-model="state.show" align-center width="90%" @close="state.showMatting = false">
       <template #header>
         <div class="tool-wrap">
-          <el-button type="primary" plain @click="done">确认应用</el-button>
+          <el-button type="primary" plain @click="done">Apply</el-button>
           <el-radio-group v-model="state.isErasing" style="margin-left: 35px">
-            <el-radio :value="false" size="large"> <b>修补画笔</b> <i class="icon sd-xiubu" /></el-radio>
-            <el-radio :value="true" size="large"> <b>擦除画笔</b> <i class="icon sd-cachu" /></el-radio>
+            <el-radio :value="false" size="large"> <b>Restore brush</b> <i class="icon sd-xiubu" /></el-radio>
+            <el-radio :value="true" size="large"> <b>Erase brush</b> <i class="icon sd-cachu" /></el-radio>
           </el-radio-group>
           <number-slider
             v-model="state.radius" class="slider-wrap"
-            label="画笔尺寸" :showInput="false"
+            label="Brush size" :showInput="false"
             labelWidth="90px" 
             :maxValue="state.constants?.RADIUS_SLIDER_MAX" :minValue="state.constants?.RADIUS_SLIDER_MIN" 
             :step="state.constants?.RADIUS_SLIDER_STEP"
           />
           <number-slider
             v-model="state.hardness" class="slider-wrap"
-            label="画笔硬度" :showInput="false"
+            label="Softness" :showInput="false"
             labelWidth="90px" 
             :maxValue="state.constants?.HARDNESS_SLIDER_MAX" :minValue="state.constants?.HARDNESS_SLIDER_MIN"
             :step="state.constants?.HARDNESS_SLIDER_STEP"
@@ -65,16 +65,16 @@ const props: TParams = {
   result: ''
 }
 
-let callback: TCallback = null // 传回自动抠图的回调
+let callback: TCallback = null // Callback from automatic background removal
 
 const state = reactive<TState>({
   show: false,
   showMatting: false,
   isErasing: false,
-  radius: 0, // 画笔尺寸
-  brushSize: '', // 画笔尺寸：计算属性，显示值
-  hardness: 0, // 画笔硬度
-  hardnessText: '', // 画笔硬度：计算属性，显示值
+  radius: 0, // Brush size
+  brushSize: '', // Brush size, shown in the slider
+  hardness: 0, // Softness
+  hardnessText: '', // Brush softness, shown in the slider
   constants: null,
 })
 

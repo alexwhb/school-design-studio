@@ -8,13 +8,13 @@
 <template>
   <div class="wrap">
     <!-- <div class="search__wrap">
-      <el-input v-model="searchValue" placeholder="输入关键词搜索" class="input-with-select">
+      <el-input v-model="searchValue" placeholder="Search" class="input-with-select">
         <template #append>
           <el-button><i class="iconfont icon-search"></i></el-button>
         </template>
       </el-input>
     </div>
-    <el-divider content-position="left">推荐组件</el-divider> -->
+    <el-divider content-position="left">Suggested elements</el-divider> -->
     <classHeader v-show="!state.currentCategory" :types="state.types" @select="selectTypes">
       <template v-slot="{ index }">
         <div class="list-wrap">
@@ -34,8 +34,8 @@
           <!-- </edit-model> -->
         </div>
       </el-space>
-      <div v-show="state.loading" class="loading"><i class="el-icon-loading"></i> 拼命加载中</div>
-      <div v-show="state.loadDone" class="loading">全部加载完毕</div>
+      <div v-show="state.loading" class="loading"><i class="el-icon-loading"></i> Loading</div>
+      <div v-show="state.loadDone" class="loading">That is everything</div>
     </ul>
   </div>
 </template>
@@ -85,8 +85,8 @@ onMounted(async () => {
   if (state.types.length <= 0) {
     // const types = await api.material.getKinds({ type: 3 })
     state.types = [
-      { cate: 'text', name: '高级特效文字' },
-      { cate: 'comp', name: '示例组合模板' },
+      { cate: 'text', name: 'Text with effects' },
+      { cate: 'comp', name: 'Sample element groups' },
     ]
     for (const iterator of state.types) {
       const { list } = await api.home.getCompList({
@@ -190,8 +190,8 @@ const selectItem = async (item: TGetCompListResult) => {
   if (isDrag) {
     return
   }
-  // store.commit('setShowMoveable', false) // 清理掉上一次的选择
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择
+  // store.commit('setShowMoveable', false) // Clear the previous selection
+  controlStore.setShowMoveable(false) // Clear the previous selection
 
   tempDetail = tempDetail || (await getCompDetail({ id: item.id, type: 1 }))
   // let group = JSON.parse(tempDetail.data)
@@ -227,7 +227,7 @@ function getCompDetail(params: TGetTempDetail): Promise<TTempDetail> {
     } else
       api.home.getTempDetail(params).then((res: any) => {
         resolve(res)
-        compsCache[params.id] = res // 缓存请求的组件数据
+        compsCache[params.id] = res // Cache the fetched element data
       })
   })
 }

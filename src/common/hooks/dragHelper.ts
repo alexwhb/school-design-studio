@@ -77,7 +77,7 @@ export default class DragHelper {
 
       const app = window.document.getElementById('app')
       if (!app || !e) return
-      app.classList.add('drag_active') // 整个鼠标全局变成抓取
+      app.classList.add('drag_active') // Show the grab cursor everywhere
       const target = e.target as HTMLElement
       // 选中了元素
       this.cloneEl = (target.cloneNode(true) as HTMLElement)

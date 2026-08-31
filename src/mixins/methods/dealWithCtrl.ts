@@ -67,7 +67,7 @@ function copy() {
   // !widgetStore.dActiveElement?.editable && store.dispatch('copyWidget')
 }
 /**
- * 粘贴
+ * Paste
  */
 let pasteImageFile: any = null
 document.addEventListener('paste', async (e: any) => {
@@ -88,7 +88,7 @@ async function paste() {
   }, 10)
 }
 /**
- * 撤销
+ * Undo
  */
 function undo(shiftKey: any) {
   const widgetStore = useWidgetStore()

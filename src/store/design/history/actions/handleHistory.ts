@@ -15,8 +15,8 @@ export default function handleHistory(store: THistoryStore, action: 'undo' | 're
   const pageStore = useCanvasStore()
   const controlStore = useControlStore()
   const widgetStore = useWidgetStore()
-  // controlStore.setShowMoveable(false) // 清理掉上一次的选择框
-  // // store.commit('setShowMoveable', false) // 清理掉上一次的选择框
+  // controlStore.setShowMoveable(false) // Clear the previous selection box
+  // // store.commit('setShowMoveable', false) // Clear the previous selection box
   // const history = store.dHistory
   // const pageHistory = store.dPageHistory
   const historyParams = store.dHistoryParams

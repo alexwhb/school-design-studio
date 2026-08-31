@@ -38,7 +38,7 @@ export default defineComponent({
   setup(props, context) {
     async function action(name: string, value: any) {
       if (name === 'del') {
-        const isDel = await useConfirm('警告', '删除后不可恢复,是否继续', 'warning')
+        const isDel = await useConfirm('Warning', 'This cannot be undone,Continue?', 'warning')
         if (!isDel) {
           return false
         }

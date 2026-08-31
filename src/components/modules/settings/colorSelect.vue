@@ -48,7 +48,7 @@ const props = withDefaults(defineProps<TProps>(), {
   label: '',
   modelValue: '',
   width: '100%',
-  modes: () => (['纯色'])
+  modes: () => (['Solid'])
 })
 
 const emit = defineEmits<TEmits>()
@@ -72,7 +72,7 @@ onMounted(() => {
 })
 
 const dropColor = async (color: string) => {
-  console.log('取色: ', color)
+  console.log('picked colour: ', color)
 }
 
 watch(
@@ -118,13 +118,13 @@ const inputBlur = (color: string) => {
 }
 
 const enter = () => {
-  // store.commit('setShowMoveable', false) // 清理掉上一次的选择框
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择框
+  // store.commit('setShowMoveable', false) // Clear the previous selection box
+  controlStore.setShowMoveable(false) // Clear the previous selection box
 }
 
 const hide = () => {
-  // store.commit('setShowMoveable', true) // 恢复上一次的选择框
-  controlStore.setShowMoveable(true) // 恢复上一次的选择框
+  // store.commit('setShowMoveable', true) // Restore the previous selection box
+  controlStore.setShowMoveable(true) // Restore the previous selection box
 }
 
 

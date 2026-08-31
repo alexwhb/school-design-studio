@@ -18,7 +18,7 @@ export function copyWidget(store: TWidgetStore) {
   if (activeElement.type === 'page') {
     return
   }
-  navigator.clipboard.writeText('') // 清空系统剪贴板内容
+  navigator.clipboard.writeText('') // Clear the system clipboard
   const container = []
   const selectWidgets = store.dSelectWidgets
   if (selectWidgets.length === 0) {

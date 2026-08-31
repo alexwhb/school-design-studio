@@ -6,9 +6,9 @@
  * @LastEditTime: 2024-09-25 00:39:00
  */
 export type TScreeData = {
-  /** 记录编辑界面的宽度 */
+  /** Editor viewport width */
   width: number
-  /** 记录编辑界面的高度 */
+  /** Editor viewport height */
   height: number
 }
 
@@ -18,13 +18,13 @@ export type TGuidelinesData = {
 }
 
 export type TCanvasState = {
-  /** 画布缩放百分比 */
+  /** Zoom percentage */
   dZoom: number
-  /** 画布默认预留边距 */
+  /** Default page padding */
   dPresetPadding: number,
-  /** 画布底部工具栏高度 */
+  /** Height of the bottom bar */
   dBottomHeight: number,
-  /** 画布垂直居中修正值 */
+  /** 画布Centre vertically修正值 */
   dPaddingTop: number
   /** 编辑界面 */
   dScreen: TScreeData
@@ -32,14 +32,14 @@ export type TCanvasState = {
   guidelines: TGuidelinesData
   /** 页面数据 */
   dPage: TPageState
-  /** 当前页面下标 */
+  /** Current page下标 */
   dCurrentPage: number
 }
 
 export type TStoreAction = {
-  /** 更新画布缩放百分比 */
+  /** 更新Zoom percentage */
   updateZoom: (zoom: number) => void
-  /** 更新画布垂直居中修正值 */
+  /** 更新画布Centre vertically修正值 */
   updatePaddingTop: (num: number) => void
   /** 更新编辑界面的宽高 */
   updateScreen: (data: TScreeData) => void
@@ -60,7 +60,7 @@ export type TStoreAction = {
   updateDPage(): void
   /** 设置底部工具栏高度 */
   setBottomHeight(h: number): void
-  /** 更新当前页面下标 */
+  /** 更新Current page下标 */
   setDCurrentPage(n: number): void
 }
 
@@ -70,15 +70,15 @@ export type TPageState = {
   uuid: string
   left: number
   top: number
-  /** 画布宽度 */
+  /** Page width */
   width: number
-  /** 画布高度 */
+  /** Page height */
   height: number
-  /** 画布背景颜色 */
+  /** Page background colour */
   backgroundColor: string
-  /** 画布背景颜色(兼容渐变色) */
+  /** Page background colour(兼容渐变色) */
   backgroundGradient: string,
-  /** 画布背景图片 */
+  /** Page background image */
   backgroundImage: string
   backgroundTransform: {
     x?: number
@@ -86,7 +86,7 @@ export type TPageState = {
   }
   /** 透明度 */
   opacity: number
-  /** 强制刷新用 */
+  /** Used to force a redraw */
   tag: number
 }
 

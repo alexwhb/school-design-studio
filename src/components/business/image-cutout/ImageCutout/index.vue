@@ -6,14 +6,14 @@
  * @Date: 2024-03-03 19:00:00
 -->
 <template>
-  <el-dialog v-model="state.show" title="AI 抠图（模拟演示）" align-center width="650" @close="handleClose">
+  <el-dialog v-model="state.show" title="AI Remove background (demo)" align-center width="650" @close="handleClose">
     <uploader v-if="!state.rawImage" :hold="true" :drag="true" :multiple="true" class="uploader" @load="handleUploaderLoad">
       <div class="uploader__box">
         <upload-filled style="width: 64px; height: 64px" />
-        <!-- <div class="el-upload__text">在此拖入或选择<em>上传图片</em></div> -->
-        <div class="el-upload__text">自动抠图目前依赖后端服务，需自行部署</div>
+        <!-- <div class="el-upload__text">Drop a file here or choose one<em>Upload image</em></div> -->
+        <div class="el-upload__text">Automatic background removal needs the backend service running.</div>
       </div>
-      <div class="el-upload__tip el-upload__text"><em>体验前端效果演示以及修补编辑器，任意上传一张图片即可触发</em></div>
+      <div class="el-upload__tip el-upload__text"><em>Upload any image to try the eraser and touch-up tools.</em></div>
     </uploader>
     <el-progress v-if="!state.cutImage && state.progressText" :percentage="state.progress">
       <el-button text>
@@ -23,17 +23,17 @@
     <div class="content">
       <div v-show="state.rawImage" v-loading="!state.cutImage" :style="{ width: state.offsetWidth ? state.offsetWidth + 'px' : '100%' }" class="scan-effect transparent-bg">
         <img ref="raw" :style="{ 'clip-path': 'inset(0 0 0 ' + state.percent + '%)' }" :src="state.rawImage" alt="" />
-        <img v-show="state.cutImage" :src="state.cutImage" alt="结果图像" @mousemove="mousemove" />
+        <img v-show="state.cutImage" :src="state.cutImage" alt="Result" @mousemove="mousemove" />
         <div v-show="state.cutImage" :style="{ left: state.percent + '%' }" class="scan-line"></div>
       </div>
     </div>
 
     <template #footer>
       <span class="dialog-footer">
-        <el-button v-show="state.cutImage && state.toolModel" @click="clear">清除重选</el-button>
-        <el-button v-show="state.cutImage" type="primary" plain @click="edit">进入编辑模式</el-button>
-        <el-button v-show="state.cutImage && state.toolModel" type="primary" @click="download"> 下载 </el-button>
-        <el-button v-show="state.cutImage && !state.toolModel" v-loading="state.loading" type="primary" @click="cutDone"> {{ state.loading ? '上传中..' : '完成抠图' }} </el-button>
+        <el-button v-show="state.cutImage && state.toolModel" @click="clear">Start over</el-button>
+        <el-button v-show="state.cutImage" type="primary" plain @click="edit">Edit</el-button>
+        <el-button v-show="state.cutImage && state.toolModel" type="primary" @click="download">Download</el-button>
+        <el-button v-show="state.cutImage && !state.toolModel" v-loading="state.loading" type="primary" @click="cutDone"> {{ state.loading ? 'Uploading…' : 'Background removed' }} </el-button>
       </span>
     </template>
     <ImageExtraction ref="matting" />
@@ -92,7 +92,7 @@ const open = (file: File) => {
   controlStore.setShowMoveable(false)
   nextTick(() => {
     if (file) {
-      state.toolModel = false // 在编辑模式打开则不展示工具模式下的下载和清除按钮
+      state.toolModel = false // Hide the download and clear buttons while editing
       handleUploaderLoad(file)
     }
   })

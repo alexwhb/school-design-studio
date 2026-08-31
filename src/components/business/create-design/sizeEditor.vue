@@ -7,11 +7,11 @@
 -->
 <template>
   <div class="position-size">
-    <number-input v-model="params.width" label="宽" :maxValue="5000" />
-    <el-tooltip :show-after="300" :hide-after="0" effect="dark" :content="lockRatio ? '锁定宽高比' : '自由改变'" placement="top">
+    <number-input v-model="params.width" label="W" :maxValue="5000" />
+    <el-tooltip :show-after="300" :hide-after="0" effect="dark" :content="lockRatio ? 'Lock aspect ratio' : 'Change freely'" placement="top">
       <i @click="changeRatio" :class="['icon', lockRatio ? 'sd-db' : 'sd-fdb']" />
     </el-tooltip>
-    <number-input v-model="params.height" label="高" :maxValue="5000" />
+    <number-input v-model="params.height" label="H" :maxValue="5000" />
     <slot />
   </div>
 </template>
@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<TProps>(), {
   params: {},
 })
 
-const lockRatio = ref(false) // 锁定比例缩放画布
+const lockRatio = ref(false) // Lock the aspect ratio while resizing
 let scale = 0,
   temp = { width: 0, height: 0 }
 
@@ -50,7 +50,7 @@ watch(
   },
 )
 
-// 锁定宽高比
+// Lock aspect ratio
 function changeRatio() {
   lockRatio.value = !lockRatio.value
   if (lockRatio.value) {

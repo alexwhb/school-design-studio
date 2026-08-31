@@ -97,7 +97,7 @@ type TMyPhotoParams = {
   pageSize?: number
 }
 
-/** 获取我的资源管理返回 */
+/** 获取我的Manage files返回 */
 export type TMyPhotoResult = {
   created_time: string
   height: number

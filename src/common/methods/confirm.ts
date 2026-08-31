@@ -6,11 +6,11 @@
  * @LastEditTime: 2024-04-08 18:55:12
  */
 import { ElMessageBox, messageType } from 'element-plus'
-export default (title: string = '提示', message: string = '', type: messageType = 'success', extra?: any) => {
+export default (title: string = 'Note', message: string = '', type: messageType = 'success', extra?: any) => {
   return new Promise((resolve: Function) => {
     ElMessageBox.confirm(message, title, Object.assign({
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+      confirmButtonText: 'OK',
+      cancelButtonText: 'Cancel',
       type,
     }, extra))
       .then(() => {

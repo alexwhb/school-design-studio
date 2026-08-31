@@ -32,7 +32,7 @@ export type TWQrcodeSetting = {
 }
 
 export const wQrcodeSetting: TWQrcodeSetting = {
-  name: '二维码',
+  name: 'QR code',
   type: 'w-qrcode',
   uuid: -1,
   width: 300,

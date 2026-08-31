@@ -38,7 +38,7 @@ export const rndNum = (n: number, m: number) => {
 /** 计算差值 */
 export const findClosestNumber = (target: number, numbers: number[]) => {
   if (!Array.isArray(numbers) || numbers.length === 0) {
-    throw new Error('数组不能为空')
+    throw new Error('The list cannot be empty')
   }
   let closestNumber = numbers[0]
   let minDifference = Math.abs(target - closestNumber)

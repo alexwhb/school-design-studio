@@ -13,7 +13,7 @@
     <div v-else class="title">{{ mode }}</div>
 
     <template v-if="showGradient">
-      <div v-show="mode === '渐变'" class="cp__gradient flex-center">
+      <div v-show="mode === 'Gradient'" class="cp__gradient flex-center">
         <div class="cp__gradient-bar">
           <div ref="elGradientTrack" class="cpgb__track" style="width: 100%" :style="{ background: value }">
             <!-- tabindex="-1" 是元素可以触发 keydown 事件 -->
@@ -66,9 +66,9 @@
         <input v-else class="native" type="color" @input="onClickStraw" />
       </div>
       <!-- <input :value="value" @input="$emit('update:value', $event.target.value)" class="input" /> -->
-      <input v-if="mode === '渐变'" class="input" :value="activeGradient.color" />
+      <input v-if="mode === 'Gradient'" class="input" :value="activeGradient.color" />
       <input v-else :value="value" class="input" @blur="onInputBlur" />
-      <template v-if="mode === '纯色'">
+      <template v-if="mode === 'Solid'">
         <div v-for="pc in predefine" :key="pc" class="item item-color" :style="{ background: pc }" @click="onClickStraw({ target: { value: pc } })"></div>
       </template>
       <!-- <input :value="alpha" class="w-12" size="small" :min="0" :max="100" @input="onChangeAlpha" @change="onChangeAlpha" /> -->
@@ -103,7 +103,7 @@ const props = defineProps({
 
   modes: {
     type: Array,
-    default: () => ['纯色', '渐变'], // 图案
+    default: () => ['Solid', 'Gradient'], // pattern
   },
 
   defaultColor: {
@@ -162,7 +162,7 @@ const record = {
 }
 
 const showGradient = computed(() => {
-  return props.modes.includes('渐变')
+  return props.modes.includes('Gradient')
 })
 
 const sliderAlphaBackgroundStyle = computed(() => {
@@ -214,9 +214,9 @@ function onChangeHSLA(newHsla) {
   const hexA = HSLA2HexA(...Object.values(newHsla))
 
   let value
-  if (mode.value === '纯色') {
+  if (mode.value === 'Solid') {
     value = hexA
-  } else if (mode.value === '渐变') {
+  } else if (mode.value === 'Gradient') {
     activeGradient.value.color = hexA
     value = toGradientString(angle.value, gradients.value)
   }
@@ -338,11 +338,11 @@ onBeforeUnmount(() => {
 })
 
 function recordValue(value) {
-  if (mode.value === '纯色') {
+  if (mode.value === 'Solid') {
     record.color = value
-  } else if (mode.value === '渐变') {
+  } else if (mode.value === 'Gradient') {
     record.gradient = value
-  } else if (mode.value === '图案') {
+  } else if (mode.value === 'Pattern') {
     record.image = value
   }
 }
@@ -366,20 +366,20 @@ async function onChangeMode(value) {
   mode.value = value
 
   let color
-  if (value === '纯色') {
+  if (value === 'Solid') {
     color = record.color
-  } else if (value === '渐变') {
+  } else if (value === 'Gradient') {
     color = record.gradient
-  } else if (value === '图案') {
+  } else if (value === 'Pattern') {
     color = record.image
   }
   updateValue(color)
 }
 
 function changeMode(mode) {
-  if (mode === '纯色') {
+  if (mode === 'Solid') {
     setColor(props.value)
-  } else if (mode === '渐变') {
+  } else if (mode === 'Gradient') {
     if (gradients.value.length === 0) {
       props.value.match(/[^,]+/g).forEach((item, index) => {
         if (index === 0) {
@@ -489,16 +489,16 @@ async function onClickStraw(val) {
     result = color + (color.length === 7 ? 'ff' : '')
   } else {
     const eyeDropper = new window.EyeDropper() // 初始化一个EyeDropper对象
-    toolTip('按Esc可退出')
+    toolTip('Press Esc to cancel')
     try {
       const drop = await eyeDropper.open() // 开始拾取颜色
       const colorHexValue = drop.sRGBHex
       result = colorHexValue + 'ff'
     } catch (e) {
-      console.log('用户取消了取色')
+      console.log('colour picking cancelled')
     }
   }
-  if (mode.value === '渐变') {
+  if (mode.value === 'Gradient') {
     activeGradient.value.color = result
     activeGradient.value = { ...activeGradient.value }
   } else {

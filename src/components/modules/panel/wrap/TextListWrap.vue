@@ -15,7 +15,7 @@
         {{ item.text }}
       </div>
     </ul>
-    <el-button class="upload-psd" plain type="primary" @click="openPSD">导入 PSD 创建组合</el-button>
+    <el-button class="upload-psd" plain type="primary" @click="openPSD">Import a PSD file</el-button>
     <div class="other-text-wrap">
       <comp-list-wrap />
     </div>
@@ -46,11 +46,11 @@ const { dPage } = storeToRefs(useCanvasStore())
 
 const selectBasicText = (item: TBasicTextData) => {
 
-  // store.commit('setShowMoveable', false) // 清理掉上一次的选择
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择
+  // store.commit('setShowMoveable', false) // Clear the previous selection
+  controlStore.setShowMoveable(false) // Clear the previous selection
 
   let setting = JSON.parse(JSON.stringify(wTextSetting))
-  setting.text = '双击编辑文字' // item.text
+  setting.text = 'Double-click to edit' // item.text
   setting.width = item.fontSize * setting.text.length
   setting.fontSize = item.fontSize
   setting.fontWeight = item.fontWeight
@@ -74,12 +74,12 @@ const basicTextList: TBasicTextData[] = [
   //   fontWeight: 'bold',
   // },
   {
-    text: '+ 添加文字',
+    text: '+ Add text',
     fontSize: 60,
     fontWeight: 'normal',
   },
   // {
-  //   text: '+ 添加文字',
+  //   text: '+ Add text',
   //   fontSize: 40,
   //   fontWeight: 'normal',
   // },

@@ -67,7 +67,7 @@ export type TwTextData = {
 }
 
 export const wTextSetting: TwTextData = {
-  name: '文本',
+  name: 'Text',
   type: 'w-text',
   uuid: -1,
   editable: false,
@@ -79,7 +79,7 @@ export const wTextSetting: TwTextData = {
   fontSize: 24,
   zoom: 1,
   fontClass: {
-    alias: '站酷快乐体',
+    alias: 'ZCOOL KuaiLe',
     id: 543,
     value: 'zcool-kuaile-regular',
     url: 'https://lib.baomitu.com/fonts/zcool-kuaile/zcool-kuaile-regular.woff2',

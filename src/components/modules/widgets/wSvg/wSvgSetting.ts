@@ -30,7 +30,7 @@ export type TWSvgSetting = {
 }
 
 export const wSvgSetting = {
-  name: '矢量图形',
+  name: 'Shape',
   type: "w-svg",
   uuid: `-1`,
   width: 100,

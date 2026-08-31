@@ -35,7 +35,7 @@ export function dMove(store: TWidgetStore, payload: TMovePayload) {
   const page = useCanvasStore().dPage
   const canvasStore = useCanvasStore()
   const controlStore = useControlStore()
-  const { donotMove } = payload // 由moveable代理移动
+  const { donotMove } = payload // 由moveableProxy move
   controlStore.setdMoving(true)
 
 

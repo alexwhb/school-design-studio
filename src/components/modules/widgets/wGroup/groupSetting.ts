@@ -1,7 +1,7 @@
 
 
 export const wGroupSetting = {
-  name: '组合',
+  name: 'Group',
   type: 'w-group',
   uuid: -1,
   width: 0,

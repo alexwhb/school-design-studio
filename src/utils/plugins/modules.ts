@@ -11,6 +11,6 @@ import { App } from 'vue'
 
 export default (Vue: App) => {
   coms(Vue)
-  Vue.component('page-style', pageStyle) // 背景属性已不在 modules/widgets 中，单独注册
+  Vue.component('page-style', pageStyle) // Background settings no longer live in modules/widgets , so it is registered on its own
   // Vue.use(Field).use(Divider).use(NavBar).use(Toast).use(Popup)
 }

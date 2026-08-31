@@ -17,37 +17,37 @@ export default [
   {
     key: 'align',
     icon: 'icon-align-left',
-    tip: '左对齐',
+    tip: 'Align left',
     value: 'left',
   },
   {
     key: 'align',
     icon: 'icon-align-center-horiz',
-    tip: '水平居中对齐',
+    tip: 'Align centre',
     value: 'ch',
   },
   {
     key: 'align',
     icon: 'icon-align-right',
-    tip: '右对齐',
+    tip: 'Align right',
     value: 'right',
   },
   {
     key: 'align',
     icon: 'icon-align-top',
-    tip: '上对齐',
+    tip: 'Align top',
     value: 'top',
   },
   {
     key: 'align',
     icon: 'icon-align-center-verti',
-    tip: '垂直居中对齐',
+    tip: 'Align middle',
     value: 'cv',
   },
   {
     key: 'align',
     icon: 'icon-align-bottom',
-    tip: '下对齐',
+    tip: 'Align bottom',
     value: 'bottom',
   },
 ] as AlignListData[]

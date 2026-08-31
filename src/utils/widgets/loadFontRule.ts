@@ -30,7 +30,7 @@ export const font2style = async (fontContent: any, fontData: any = []) => {
             const result = await api.material.getFontSub(params, extra)
             fontContent[key] = font.oid ? result : await blob2Base64(result as Blob)
           } catch (e) {
-            console.log('字体获取失败', e)
+            console.log('Could not load the font', e)
           }
         }
       }),

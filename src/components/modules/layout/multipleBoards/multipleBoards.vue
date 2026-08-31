@@ -8,7 +8,7 @@
 <template>
   <div :style="{ position, bottom: -1 * st + 'px', left: sl + 'px' }" :class="['artboards', isFold ? 'fold' : 'unfold']">
     <div ref="listRef" class="wrap">
-      <div v-if="isFold" v-show="dLayouts.length > 0" class="btn" @click="isFold = !isFold">画板 {{ index + 1 }}/{{ dLayouts.length }} <i class="icon sd-zhankai" /></div>
+      <div v-if="isFold" v-show="dLayouts.length > 0" class="btn" @click="isFold = !isFold">Page {{ index + 1 }}/{{ dLayouts.length }} <i class="icon sd-zhankai" /></div>
       <div class="list" v-else>
         <span @click="isFold = !isFold" class="icon-btn"><i class="icon sd-zhankai" /></span>
         <div v-for="(l, li) in dLayouts" :key="'l' + li" :style="{ width: getPW(l.global) + 'px' }" @click="selectPoster(li)" :class="['item-box', index == li ? 'item-select' : 'item-default']">
@@ -127,7 +127,7 @@ function getInitPage() {
 }
 
 function addLayer() {
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择框
+  controlStore.setShowMoveable(false) // Clear the previous selection box
   widgetStore.dLayouts.push({ global: getInitPage(), layers: [] })
   canvasStore.dCurrentPage = dLayouts.value.length - 1
   widgetStore.setDWidgets(widgetStore.getWidgets())
@@ -137,7 +137,7 @@ function addLayer() {
 }
 
 function selectPoster(i: number) {
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择框
+  controlStore.setShowMoveable(false) // Clear the previous selection box
   canvasStore.dCurrentPage = i
   widgetStore.setDWidgets(widgetStore.getWidgets())
   canvasStore.setDPage(dLayouts.value[i].global)
@@ -147,11 +147,11 @@ function removePoster(removeIndex: number) {
   if (index.value === removeIndex) {
     // 当前画布下，清空画布内容而非删除
     widgetStore.dLayouts[removeIndex].layers.length = 0
-    ElMessage('画布已清空')
-    widgetStore.setDWidgets([]) // 清除画布图层
+    ElMessage('The page is now empty')
+    widgetStore.setDWidgets([]) // Clear all layers
     // widgetStore.updateDWidgets()
     // widgetStore.dLayouts[removeIndex].global = getInitPage()
-    canvasStore.setDPage(getInitPage()) // 初始化背景
+    canvasStore.setDPage(getInitPage()) // Reset the background
     // canvasStore.updateDPage()
     // widgetStore.setDWidgets([])
   } else widgetStore.dLayouts.splice(removeIndex, 1)

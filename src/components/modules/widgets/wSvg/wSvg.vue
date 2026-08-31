@@ -41,8 +41,8 @@ type TState = {
   editBoxStyle: CSSProperties
   editBoxs: Record<string, any>
   editingKey: string
-  cropWidgetXY: Record<string, any> // 裁剪框移动作用
-  attrRecord: Record<string, any> // 记录可更改的属性
+  cropWidgetXY: Record<string, any> // Moves the crop box
+  attrRecord: Record<string, any> // Editable properties
   svgImg: Record<string, any> | null
 }
 
@@ -54,8 +54,8 @@ const state = reactive<TState>({
   },
   editBoxs: {},
   editingKey: '',
-  cropWidgetXY: {}, // 裁剪框移动作用
-  attrRecord: {}, // 记录可更改的属性
+  cropWidgetXY: {}, // Moves the crop box
+  attrRecord: {}, // Editable properties
   svgImg: null,
 })
 

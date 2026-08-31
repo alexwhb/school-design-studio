@@ -88,7 +88,7 @@ type TgetCategoriesResult = TCommResResult<TGetCategoriesData>
 export const getCategories = (params: TGetCategoriesParams) => fetch<TgetCategoriesResult[]>('design/cate', params, 'get')
 
 
-// 保存模板
+// Save template
 export const saveTemp = (params: Type.Object = {}) => fetch('design/edit', params, 'post')
 // export const delTemp = (params: Type.Object = {}) => fetch('/api/template/temp_del', params)
 

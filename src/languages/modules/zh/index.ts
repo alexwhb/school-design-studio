@@ -8,10 +8,10 @@
 import header from './header'
 export default {
   home: {
-    welcome: '欢迎使用',
+    welcome: 'Welcome',
   },
   tabs: {
-    refresh: '刷新',
+    refresh: 'Refresh',
   },
   header,
 }

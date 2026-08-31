@@ -57,7 +57,7 @@ async function mouseRightClick(e: MouseEvent) {
   if (!target) return
   let type = target.getAttribute('data-type')
   if (type) {
-    let uuid = target.getAttribute('data-uuid') // 设置选中元素
+    let uuid = target.getAttribute('data-uuid') // Set the selected element
 
     if (uuid !== '-1' && !dAltDown.value) {
       let widget = dWidgets.value.find((item: any) => item.uuid === uuid)
@@ -83,7 +83,7 @@ function showMenu(e: MouseEvent) {
     let ungroup: TWidgetItemData[] = [
       {
         type: 'ungroup',
-        text: '取消组合',
+        text: 'Ungroup',
       },
     ]
     menuListData.value.list = ungroup.concat(menuListData.value.list)

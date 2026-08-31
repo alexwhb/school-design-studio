@@ -8,7 +8,7 @@
 // import { isSupportFontFamily, blob2Base64 } from './utils'
 import { TGetFontItemData, getFonts } from '@/api/material'
 
-const nowVersion = '2' // 当前字体文件版本更新，将刷新前端缓存
+const nowVersion = '2' // Bumping this version clears the cached font list in the browser
 
 /** 字体item类型 */
 export type TFontItemData = { url: string } & Omit<TGetFontItemData, 'woff'>
@@ -32,7 +32,7 @@ export const useFontStore = {
         list: [
           {
             id: 543,
-            alias: '站酷快乐体',
+            alias: 'ZCOOL KuaiLe',
             preview: '',
             ttf: null,
             woff: 'https://lib.baomitu.com/fonts/zcool-kuaile/zcool-kuaile-regular.woff2',

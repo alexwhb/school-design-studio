@@ -211,8 +211,8 @@ async function drop(e: MouseEvent) {
   widgetStore.setDropOver('-1')
   // store.dispatch('setDropOver', '-1')
 
-  // store.commit('setShowMoveable', false) // 清理上一次的选择
-  controlStore.setShowMoveable(false) // 清理上一次的选择
+  // store.commit('setShowMoveable', false) // Clear the previous selection
+  controlStore.setShowMoveable(false) // Clear the previous selection
 
   let lost = eventTarget.className !== 'design-canvas' // className === 'design-canvas' , id: "page-design-canvas"
   // e.stopPropagation()
@@ -271,9 +271,9 @@ async function drop(e: MouseEvent) {
     const targetType = target.getAttribute('data-type')
     const uuid = target.getAttribute('data-uuid')
     if (targetType === 'w-mask') {
-      // 容器
-      // store.commit('setShowMoveable', true) // 恢复选择
-      controlStore.setShowMoveable(true) // 恢复选择
+      // Container
+      // store.commit('setShowMoveable', true) // Restore selection
+      controlStore.setShowMoveable(true) // Restore selection
 
       const widget = dWidgets.value.find((item: { uuid: string }) => item.uuid === uuid)
       if (!widget) return
@@ -287,15 +287,15 @@ async function drop(e: MouseEvent) {
         const widget = dWidgets.value.find((item: { uuid: string }) => item.uuid == dropIn)
         if (!widget) return
         widget.imgUrl = item.value.url
-        // store.commit('setShowMoveable', true) // 恢复选择
-        controlStore.setShowMoveable(true) // 恢复选择
+        // store.commit('setShowMoveable', true) // Restore selection
+        controlStore.setShowMoveable(true) // Restore selection
       } else {
         widgetStore.addWidget(setting as Required<TPageState>)
         // store.dispatch('addWidget', setting) // 正常加入面板
       }
     }
   } else if (type === 'bg') {
-    console.log('背景图片放置')
+    console.log('Background image position')
   } else if (type !== 'group') {
     widgetStore.addWidget(setting as Required<TPageState>)
     // store.dispatch('addWidget', setting) // 正常加入面板
@@ -323,7 +323,7 @@ async function handleMouseMove(e: MouseEvent) {
   const pImg = new PointImg(imageTarget)
   const { rgba } = pImg.getColorXY(e.offsetX, e.offsetY)
   if (rgba && rgba === 'rgba(0,0,0,0)') {
-    console.log('解析点位颜色: ', rgba)
+    console.log('Read the pixel colour: ', rgba)
     let target = await getTarget(imageTarget)
     if (!target) return
     target.style.pointerEvents = 'none'
@@ -353,7 +353,7 @@ async function handleSelection(e: MouseEvent) {
       }
     }
 
-    // 设置选中元素
+    // Set the selected element
     // this.$store.commit('setMoveable', false)
     if (showRotatable.value !== false) {
       widgetStore.selectWidget({
@@ -368,7 +368,7 @@ async function handleSelection(e: MouseEvent) {
       moveInit.methods.initmovement(e) // 参见 mixins
     }
   } else {
-    // 取消选中元素
+    // Deselect元素
     widgetStore.selectWidget({
       uuid: '-1',
     })

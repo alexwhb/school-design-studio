@@ -12,13 +12,13 @@
     </span>
     <template #dropdown>
       <el-dropdown-menu>
-        <el-dropdown-item><div @click="$emit('select', 'newDesign')" class="item">创建设计</div></el-dropdown-item>
-        <el-dropdown-item @click="openPSD">导入文件</el-dropdown-item>
-        <el-dropdown-item @click="$emit('select', 'save')" divided>保存</el-dropdown-item>
-        <el-dropdown-item @click="$emit('select', 'download')">导出文件</el-dropdown-item>
-        <el-dropdown-item disabled>版本记录</el-dropdown-item>
-        <el-dropdown-item disabled>批量套模板</el-dropdown-item>
-        <el-dropdown-item @click="$emit('select', 'changeLineGuides')" divided>标尺与参考线</el-dropdown-item>
+        <el-dropdown-item><div @click="$emit('select', 'newDesign')" class="item">New design</div></el-dropdown-item>
+        <el-dropdown-item @click="openPSD">Import file</el-dropdown-item>
+        <el-dropdown-item @click="$emit('select', 'save')" divided>Save</el-dropdown-item>
+        <el-dropdown-item @click="$emit('select', 'download')">Export file</el-dropdown-item>
+        <el-dropdown-item disabled>Version history</el-dropdown-item>
+        <el-dropdown-item disabled>Batch apply template</el-dropdown-item>
+        <el-dropdown-item @click="$emit('select', 'changeLineGuides')" divided>Rulers and guides</el-dropdown-item>
       </el-dropdown-menu>
     </template>
   </el-dropdown>

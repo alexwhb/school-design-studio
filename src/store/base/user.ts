@@ -11,13 +11,13 @@ import { Store, defineStore } from "pinia"
 type TUserStoreState = {
   /** 登录状态 */
   online: boolean
-  /** 储存用户信息 */
+  /** Stored user details */
   user: {
     name: string | null
   }
-  /**是否为管理员模式 */
+  /**Whether admin mode is on */
   manager: string
-  /** 管理员是否正在编辑模板 */
+  /** Whether an admin is editing a template */
   tempEditing: boolean
 }
 
@@ -32,12 +32,12 @@ type TUserAction = {
 /** User全局状态管理 */
 const useUserStore = defineStore<'userStore', TUserStoreState, {}, TUserAction>('userStore', {
   state: () => ({
-    online: true, // 登录状态，
+    online: true, // Signed-in state, 
     user: {
       name: localStorage.getItem('username'),
-    }, // 储存用户信息
-    manager: '', // 是否为管理员模式
-    tempEditing: false, // 管理员是否正在编辑模板
+    }, // Stored user details
+    manager: '', // Whether admin mode is on
+    tempEditing: false, // Whether an admin is editing a template
   }),
   actions: {
     changeOnline(status: boolean) {

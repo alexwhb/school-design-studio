@@ -1,19 +1,19 @@
 <!--
  * @Author: ShawnPhang
  * @Date: 2024-04-09 11:24:57
- * @Description: 创建/编辑画布尺寸
+ * @Description: 创建/编辑Page size
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-04-16 17:11:59
 -->
 <template>
   <div>
-    <el-dialog v-model="dialogVisible" center destroy-on-close :align-center="false" :title="params ? '编辑尺寸' : '新建空白设计'" width="380" draggable>
+    <el-dialog v-model="dialogVisible" center destroy-on-close :align-center="false" :title="params ? 'Page size' : 'New blank design'" width="380" draggable>
       <!-- <el-divider content-position="left">自定义尺寸</el-divider> -->
-      <el-checkbox v-if="params" v-model="isAdaptive" label="自动调整元素大小位置" size="large" />
+      <el-checkbox v-if="params" v-model="isAdaptive" label="Resize and reposition everything to fit" size="large" />
       <sizeEditor :params="page" :class="params ? 'editor-mode' : 'add-mode'">
-        <el-button @click="finish" plain size="large" type="primary">{{ params ? '应用' : '创建' }}</el-button>
+        <el-button @click="finish" plain size="large" type="primary">{{ params ? 'Apply' : 'Create' }}</el-button>
       </sizeEditor>
-      <el-divider content-position="left">使用推荐尺寸</el-divider>
+      <el-divider content-position="left">Common sizes</el-divider>
       <ul class="pre-list">
         <li @click="applySize(s)" class="item" v-for="(s, si) in sizes" :key="'s' + si">
           <i :class="['icon', s.icon]" /> {{ s.name }} <span class="info">{{ s.width }} × {{ s.height }} px</span>
@@ -55,7 +55,7 @@ const applySize = ({ width, height }: any) => {
 }
 
 const open = () => {
-  controlStore.setShowMoveable(false) // 清理掉上一次的选择框
+  controlStore.setShowMoveable(false) // Clear the previous selection box
   if (props.params) {
     page.value.width = props.params.width
     page.value.height = props.params.height

@@ -15,7 +15,7 @@
     >
       <edit-model v-if="edit" :options="props.edit" :data="{ item, i }">
         {{ item.isDelect }}
-        <div v-if="item.isDelect" class="list__mask">已删除</div>
+        <div v-if="item.isDelect" class="list__mask">Deleted</div>
         <el-image v-if="!item.fail" class="img" :src="item.cover" lazy loading="lazy" @error="loadError(item)" />
         <div v-else class="fail_img">{{ item.title }}</div>
       </edit-model>
@@ -49,27 +49,27 @@ const props = defineProps<TProps>()
 const emit = defineEmits<TEmits>()
 
 const state = reactive<TState>({
-  width: 146, // 图片的宽度
+  width: 146, // Image width
   list: [],
   countHeight: 0,
 })
 
-const columnHeights: number[] = [] // 列的高度
-const columnNums = 2 // 总共有多少列
-const gap = 7 // 图片之间的间隔
+const columnHeights: number[] = [] // Column height
+const columnNums = 2 // How many columns
+const gap = 7 // Gap between images
 
 watch(
   () => props.listData,
   () => {
     columnHeights.length = 0
-    const widthLimit = state.width * columnNums //  + gap * (columnNums - 1) // 每行宽度
+    const widthLimit = state.width * columnNums //  + gap * (columnNums - 1) // Row width
     const cloneList = JSON.parse(JSON.stringify(props.listData))
     for (let i = 0; i < cloneList.length; i++) {
       let index = i % columnNums
       const item = cloneList[i]
-      item.height = (item.height / item.width) * state.width // 图片高度
-      item.left = index * (widthLimit / columnNums + gap) // 定位
-      item.top = columnHeights[index] + gap || 0 // 定位
+      item.height = (item.height / item.width) * state.width // Image height
+      item.left = index * (widthLimit / columnNums + gap) // Position
+      item.top = columnHeights[index] + gap || 0 // Position
       // columnHeights[index] = isNaN(columnHeights[index]) ? item.height : item.height + columnHeights[index] + gap // 记录列高度
       // 找出最短边
       if (isNaN(columnHeights[index])) {

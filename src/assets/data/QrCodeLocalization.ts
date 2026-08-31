@@ -21,37 +21,37 @@ export default {
   dotColorTypes: [
     {
       key: 'single',
-      value: '单色',
+      value: 'Solid',
     },
     {
       key: 'gradient',
-      value: '渐变色',
+      value: 'Gradient',
     },
   ],
   dotTypes: [
     {
       key: 'dots',
-      value: '圆点风格',
+      value: 'Dots',
     },
     {
       key: 'rounded',
-      value: '圆润风格',
+      value: 'Rounded',
     },
     {
       key: 'classy',
-      value: '经典风格',
+      value: 'Classic',
     },
     {
       key: 'classy-rounded',
-      value: '圆角风格',
+      value: 'Soft corners',
     },
     {
       key: 'square',
-      value: '方形风格',
+      value: 'Square',
     },
     {
       key: 'extra-rounded',
-      value: '特殊风格',
+      value: 'Fancy',
     },
   ],
 } as QrCodeLocalizationData

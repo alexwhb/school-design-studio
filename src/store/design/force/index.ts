@@ -3,11 +3,11 @@ import { Store, defineStore } from "pinia";
 
 
 type TForceState = {
-  /** 画布强制刷新适应度 */
+  /** Force the page to refit */
   zoomScreenChange: number | null
-  /** 强制刷新操作框 */
+  /** Force the transform box to redraw */
   updateRect: number | null
-  /** 强制设置选择元素 */
+  /** Force the selected element */
   updateSelect: number | null
 }
 
@@ -19,18 +19,18 @@ type TForceAction = {
 
 const ForceStore = defineStore<"forceStore", TForceState, {}, TForceAction>("forceStore", {
   state: () => ({
-    zoomScreenChange: null, // 画布强制刷新适应度
-    updateRect: null, // 强制刷新操作框
-    updateSelect: null, // 强制设置选择元素
+    zoomScreenChange: null, // Force the page to refit
+    updateRect: null, // Force the transform box to redraw
+    updateSelect: null, // Force the selected element
   }),
 
   actions: {
     setZoomScreenChange() {
-      // 画布尺寸适应度强制刷新
+      // Page size适应度强制刷新
       this.zoomScreenChange = Math.random()
     },
     setUpdateRect() {
-      // 强制刷新操作框
+      // Force the transform box to redraw
       this.updateRect = Math.random()
     },
     setUpdateSelect() {
