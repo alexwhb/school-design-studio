@@ -18,10 +18,24 @@ and stay recolourable.
 
 Derived from the geometric shapes above. Generated for this project.
 
-## Stickers (`png.json`) and templates
+## Stickers (`png.json`)
 
-Still the upstream poster-design demo content, under that project's MIT licence.
-Drawn in a style unlikely to suit a Western school — expect to replace them.
+Thirty flat vector stickers — apple, bus, trophy, clipboard, lab flask and so
+on — generated for this project by `tools/make-stickers.py`. No third-party
+rights apply: every path is drawn in that script, nothing is traced from
+existing artwork, and nothing is fetched at runtime.
+
+They replace three hotlinked kawaii planner cut-outs that came from upstream,
+captioned in Chinese and served from an image host that is often unreachable.
+
+They are `.svg` under `public/stickers/`, but filed as `type: "image"`. `svg`
+means "recolourable line art" to this app, and the Elements panel inverts
+those in dark mode, which would wreck full-colour artwork.
+
+## Templates
+
+Ids 1 and 2 are upstream poster-design demo content, under that project's MIT
+licence. The school pack (101–112) is generated — see CONTENT.md.
 
 ## Photos (`photos/*.json`)
 
