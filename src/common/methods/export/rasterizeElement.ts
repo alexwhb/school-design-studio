@@ -21,7 +21,7 @@
  * a heading rasterised in a fallback font is a worse export than one html2canvas
  * draws imperfectly.
  */
-import { imageToDataUrl } from './utils'
+import { imageToDataUrl, withTimeout } from './utils'
 
 /** The alpha of a computed colour, which is always serialised as rgb/rgba. */
 function alphaOf(color: string): number {
@@ -53,6 +53,9 @@ export function subtreeNeedsRasterizing(el: Element): boolean {
   return Array.from(el.querySelectorAll('*')).some(needsRasterizing)
 }
 
+const FETCH_TIMEOUT = 10000
+const DECODE_TIMEOUT = 20000
+
 // A design reuses the same few fonts across many headings, and re-fetching a
 // woff2 per heading is wasted work, so results are kept for the session.
 const fontCache = new Map<string, string | null>()
@@ -61,7 +64,7 @@ let fontFaces: Promise<{ family: string; url: string }[]> | null = null
 /** Reads the app's own @font-face declarations so we can re-issue them inline. */
 function loadFontFaces(): Promise<{ family: string; url: string }[]> {
   if (!fontFaces) {
-    fontFaces = fetch('/fonts/fonts.css')
+    fontFaces = withTimeout(fetch('/fonts/fonts.css'), FETCH_TIMEOUT, 'reading fonts.css')
       .then((res) => (res.ok ? res.text() : ''))
       .then((css) => {
         const faces: { family: string; url: string }[] = []
@@ -79,7 +82,7 @@ function loadFontFaces(): Promise<{ family: string; url: string }[]> {
 
 async function fontAsDataUrl(url: string): Promise<string | null> {
   if (!fontCache.has(url)) {
-    const value = await fetch(url)
+    const value = await withTimeout(fetch(url), FETCH_TIMEOUT, `fetching ${url}`)
       .then((res) => (res.ok ? res.blob() : null))
       .then((blob) => (blob ? blobToDataUrl(blob) : null))
       .catch(() => null)
@@ -213,7 +216,7 @@ export async function rasterizeElement(el: HTMLElement, scale: number): Promise<
   const img = new Image()
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
   try {
-    await img.decode()
+    await withTimeout(img.decode(), DECODE_TIMEOUT, 'decoding a pre-rendered widget')
   } catch {
     // A malformed subtree, or a resource that slipped through, leaves the image
     // undecodable. Better to let html2canvas have its imperfect go at it.

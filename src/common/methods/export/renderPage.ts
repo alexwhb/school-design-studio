@@ -11,9 +11,14 @@ import FontFaceObserver from 'fontfaceobserver'
 import { nextTick } from 'vue'
 import { useCanvasStore, useControlStore, useWidgetStore } from '@/store'
 import { rasterizeElement, subtreeNeedsRasterizing } from './rasterizeElement'
+import { withTimeout } from './utils'
 import type { TdWidgetData } from '@/store/design/widget'
 
 const CANVAS_ID = 'page-design-canvas'
+
+const DECODE_TIMEOUT = 20000
+const IMAGE_TIMEOUT = 15000
+const RENDER_TIMEOUT = 60000
 
 /** Waits for every font used in the design, so text is not captured mid-swap. */
 async function waitForFonts(): Promise<void> {
@@ -107,7 +112,7 @@ async function inlineSvgToImages(root: HTMLElement): Promise<void> {
 
     // Decode up front: html2canvas snapshots whatever the image has painted so
     // far, and an undecoded one paints nothing.
-    pending.push(img.decode().catch(() => undefined))
+    pending.push(withTimeout(img.decode(), DECODE_TIMEOUT, 'decoding a shape').catch(() => undefined))
   }
 
   await Promise.all(pending)
@@ -142,7 +147,7 @@ async function rasterizeUnsupported(root: HTMLElement, scale: number): Promise<v
     const style = getComputedStyle(widget)
     img.style.cssText = `position:absolute;left:${style.left};top:${style.top};width:${widget.offsetWidth}px;height:${widget.offsetHeight}px;transform:${style.transform};transform-origin:${style.transformOrigin};opacity:${style.opacity};display:block`
     widget.replaceWith(img)
-    await img.decode().catch(() => undefined)
+    await withTimeout(img.decode(), DECODE_TIMEOUT, 'decoding a pre-rendered widget').catch(() => undefined)
   }
 }
 
@@ -157,25 +162,34 @@ async function capture(el: HTMLElement, scale: number): Promise<string | null> {
     await rasterizeUnsupported(clone, scale)
     await inlineSvgToImages(clone)
     const fonts = document.fonts
-    const canvas = await html2canvas(clone, {
-      backgroundColor: null,
-      useCORS: true,
-      scale,
-      logging: false,
-      // Firefox throws InvalidModificationError from `FontFaceSet.add()` for any
-      // face that came from an @font-face rule, and html2canvas lets that escape
-      // the whole export. Those faces are already in the clone, which carries
-      // the same stylesheets; only the ones registered from JS (wText.vue) need
-      // copying, so skip whatever the set refuses.
-      onclone: (doc: Document) =>
-        fonts.forEach((font) => {
-          try {
-            ;(doc as any).fonts.add(font)
-          } catch {
-            // already present via the cloned stylesheets
-          }
-        }),
-    })
+    // html2canvas waits on every image it finds, and has internal waits of its
+    // own. If one of them never settles the export does not fail, it stops —
+    // progress frozen, no error, nothing to do but reload. Bounding it makes
+    // the worst case an error the caller can actually show.
+    const canvas = await withTimeout(
+      html2canvas(clone, {
+        backgroundColor: null,
+        useCORS: true,
+        scale,
+        logging: false,
+        imageTimeout: IMAGE_TIMEOUT,
+        // Firefox throws InvalidModificationError from `FontFaceSet.add()` for any
+        // face that came from an @font-face rule, and html2canvas lets that escape
+        // the whole export. Those faces are already in the clone, which carries
+        // the same stylesheets; only the ones registered from JS (wText.vue) need
+        // copying, so skip whatever the set refuses.
+        onclone: (doc: Document) =>
+          fonts.forEach((font) => {
+            try {
+              ;(doc as any).fonts.add(font)
+            } catch {
+              // already present via the cloned stylesheets
+            }
+          }),
+      }),
+      RENDER_TIMEOUT,
+      'rendering the page',
+    )
     return canvas.toDataURL('image/png')
   } catch (e) {
     console.warn('[export] could not render', e)

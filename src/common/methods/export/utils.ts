@@ -7,6 +7,23 @@
  * HTML, remote image URLs).
  */
 
+/**
+ * Rejects if `work` has not settled in time.
+ *
+ * Every await in the export path — a fetch, an image decode, html2canvas
+ * itself — can in principle never settle, and when one of them doesn't the
+ * export does not fail, it stops: progress frozen, no error, nothing to do but
+ * reload. A bound turns any of those into an ordinary failure the caller can
+ * report or fall back from.
+ */
+export function withTimeout<T>(work: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>
+  const limit = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+  })
+  return Promise.race([work, limit]).finally(() => clearTimeout(timer)) as Promise<T>
+}
+
 /** The editor treats a design pixel as a CSS pixel, which is 1/96 of an inch. */
 export const PX_PER_INCH = 96
 
@@ -80,20 +97,23 @@ export function readRotation(widget: Record<string, any>): number {
   return match ? parseFloat(match[1]) : 0
 }
 
+const IMAGE_TIMEOUT = 15000
+
 /**
  * PowerPoint needs image bytes, not a URL. Fetch the image and base64 it.
  *
  * Falls back to drawing it on a canvas, which covers images the browser has
  * already cached but will not hand over via fetch. Returns null when the image
- * cannot be read at all (a cross-origin host with no CORS headers), so the
- * caller can skip it rather than produce a corrupt file.
+ * cannot be read at all (a cross-origin host with no CORS headers), or when a
+ * host simply never answers, so the caller can skip it rather than produce a
+ * corrupt file or wait forever.
  */
 export async function imageToDataUrl(url: string): Promise<string | null> {
   if (!url) return null
   if (url.startsWith('data:')) return url
 
   try {
-    const res = await fetch(url, { mode: 'cors' })
+    const res = await withTimeout(fetch(url, { mode: 'cors', signal: AbortSignal.timeout(IMAGE_TIMEOUT) }), IMAGE_TIMEOUT, `fetching ${url}`)
     if (res.ok) {
       const blob = await res.blob()
       return await blobToDataUrl(blob)
@@ -103,7 +123,7 @@ export async function imageToDataUrl(url: string): Promise<string | null> {
   }
 
   try {
-    return await drawImageToDataUrl(url)
+    return await withTimeout(drawImageToDataUrl(url), IMAGE_TIMEOUT, `loading ${url}`)
   } catch {
     return null
   }
