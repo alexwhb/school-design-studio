@@ -233,6 +233,22 @@ function readMock(relative) {
   }
 }
 
+/**
+ * One page of a mock list, filtered by the panel's search box.
+ *
+ * The panels scroll infinitely and stop only when a page comes back empty, so
+ * answering every page with the whole file appends the same items over and
+ * over. Paging here is what lets them terminate.
+ */
+function paged(all, query) {
+  const list = all || []
+  const page = Math.max(1, Number(query.get('page')) || 1)
+  const pageSize = Math.max(1, Number(query.get('pageSize')) || 20)
+  const keyword = (query.get('search') || '').trim().toLowerCase()
+  const matched = keyword ? list.filter((item) => (item.title || '').toLowerCase().includes(keyword)) : list
+  return { list: matched.slice((page - 1) * pageSize, page * pageSize), total: matched.length }
+}
+
 let warnedNoKey = false
 function warnNoKey() {
   if (warnedNoKey) return
@@ -256,22 +272,13 @@ export async function contentLibrary(pathname, query) {
   switch (pathname) {
     case '/design/cate':
       return readMock('cates.json')
-    case '/design/list': {
+    case '/design/list':
       // type=1 is the element/text component list, anything else is templates
-      const all = readMock(type === '1' ? `components/list/${cate}.json` : 'templates/list.json') || []
-      // Both panels scroll infinitely and stop only when a page comes back
-      // empty, so answering every page with the whole file appends the same
-      // items over and over. Page the list here and the panel terminates.
-      const page = Math.max(1, Number(query.get('page')) || 1)
-      const pageSize = Math.max(1, Number(query.get('pageSize')) || 20)
-      const keyword = (query.get('search') || '').trim().toLowerCase()
-      const matched = keyword ? all.filter((item) => (item.title || '').toLowerCase().includes(keyword)) : all
-      return { list: matched.slice((page - 1) * pageSize, page * pageSize), total: matched.length }
-    }
+      return paged(readMock(type === '1' ? `components/list/${cate}.json` : 'templates/list.json'), query)
     case '/design/temp':
       return readMock(type === '1' ? `components/detail/${id}.json` : `templates/${id}.json`)
     case '/design/material':
-      return { list: readMock(`materials/${cate}.json`) || [] }
+      return paged(readMock(`materials/${cate}.json`), query)
 
     case '/design/imgs': {
       const keyword = (query.get('keyword') || '').trim()

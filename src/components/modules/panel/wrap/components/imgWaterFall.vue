@@ -27,7 +27,7 @@
 <script lang="ts" setup>
 // const NAME = 'img-water-fall'
 import { IGetTempListData } from '@/api/home';
-import { reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 
 type TProps = {
   listData: IGetTempListData[]
@@ -48,8 +48,10 @@ type TEmits = {
 const props = defineProps<TProps>()
 const emit = defineEmits<TEmits>()
 
+const imgWaterFall = ref<HTMLElement | null>(null)
+
 const state = reactive<TState>({
-  width: 146, // Image width
+  width: 146, // Image width, remeasured against the container below
   list: [],
   countHeight: 0,
 })
@@ -58,9 +60,24 @@ const columnHeights: number[] = [] // Column height
 const columnNums = 2 // How many columns
 const gap = 7 // Gap between images
 
+/**
+ * Column width, from the container rather than a constant.
+ *
+ * Two 146px columns and a 7px gap need 299px, but this element is inset by
+ * 14px from a 299px panel, so the right-hand column was hanging 14px past the
+ * edge and being clipped. Measuring means the columns fit whatever width the
+ * panel happens to be.
+ */
+function measure() {
+  const available = imgWaterFall.value?.clientWidth
+  if (!available) return
+  state.width = Math.floor((available - gap * (columnNums - 1)) / columnNums)
+}
+
 watch(
   () => props.listData,
   () => {
+    measure()
     columnHeights.length = 0
     const widthLimit = state.width * columnNums //  + gap * (columnNums - 1) // Row width
     const cloneList = JSON.parse(JSON.stringify(props.listData))

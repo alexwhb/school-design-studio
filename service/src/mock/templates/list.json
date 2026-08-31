@@ -1,4 +1,110 @@
 [
-  { "id": 1, "cover": "https://pic.imgdb.cn/item/66b93ff9d9c307b7e92cbb2b.jpg", "title": "示例模板1", "width": 1242, "height": 2208, "state": 1 },
-  { "id": 2, "cover": "https://pic.imgdb.cn/item/66b93f95d9c307b7e92c86aa.webp", "title": "示例模板2", "width": 1242, "height": 2208, "state": 1 }
+  {
+    "id": 101,
+    "cover": "/covers/template-101.png",
+    "title": "Field Day poster",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 102,
+    "cover": "/covers/template-102.png",
+    "title": "Open House flyer",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 103,
+    "cover": "/covers/template-103.png",
+    "title": "Parent–teacher conferences",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 104,
+    "cover": "/covers/template-104.png",
+    "title": "Book Fair poster",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 105,
+    "cover": "/covers/template-105.png",
+    "title": "Picture Day notice",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 106,
+    "cover": "/covers/template-106.png",
+    "title": "Spring Concert programme",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 107,
+    "cover": "/covers/template-107.png",
+    "title": "Science Fair poster",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 108,
+    "cover": "/covers/template-108.png",
+    "title": "Bake sale fundraiser",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 109,
+    "cover": "/covers/template-109.png",
+    "title": "Certificate of achievement",
+    "width": 1650,
+    "height": 1275,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 110,
+    "cover": "/covers/template-110.png",
+    "title": "Classroom door sign",
+    "width": 1650,
+    "height": 1275,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 111,
+    "cover": "/covers/template-111.png",
+    "title": "Slide — title",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "school-events"
+  },
+  {
+    "id": 112,
+    "cover": "/covers/template-112.png",
+    "title": "Slide — three points",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "pack": "school-events"
+  }
 ]
