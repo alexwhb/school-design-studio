@@ -25,6 +25,12 @@
           </div>
         </div>
         <HeaderOptions ref="optionsRef" v-model="state.isContinue" @change="optionsChange">
+          <el-tooltip :show-after="400" :hide-after="0" effect="dark" :content="`Show these pages full screen (${presentShortcut})`" placement="bottom">
+            <el-button class="present-btn" @click="present">
+              <svg class="present-btn__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.4v13.2L18.4 12z" /></svg>
+              Present
+            </el-button>
+          </el-tooltip>
           <ExportMenu ref="ref4" :get-title="getDesignTitle" @select="dealWith" @progress="optionsChange" />
         </HeaderOptions>
       </div>
@@ -64,6 +70,8 @@
     <createDesign ref="createDesignRef" />
     <!-- Resize an existing design -->
     <resizeDesign ref="resizeDesignRef" />
+    <!-- Full-screen slideshow -->
+    <PresentMode ref="presentRef" />
   </div>
 </template>
 
@@ -91,6 +99,7 @@ import Tour from './components/Tour.vue'
 import createDesign from '@/components/business/create-design'
 import resizeDesign from '@/components/business/resize-design'
 import ExportMenu from './components/ExportMenu.vue'
+import PresentMode from '@/components/business/presentation'
 import multipleBoards from '@/components/modules/layout/multipleBoards'
 import useHistory from '@/common/hooks/history'
 import useAutosave from '@/common/hooks/autosave'
@@ -190,9 +199,17 @@ function save() {
   void autosave.saveNow()
 }
 
+const presentRef = ref<typeof PresentMode | null>(null)
+const presentShortcut = computed(() => (navigator.userAgent.includes('Mac') ? '\u2318 + Enter' : 'Ctrl + Enter'))
+
+/** Opens the slideshow on the page being edited. */
+function present() {
+  presentRef.value?.open()
+}
+
 const { handleKeydowm, handleKeyup, dealCtrl } = shortcuts.methods
 let checkCtrl: number | undefined
-const instanceFn = { save, zoomAdd, zoomSub }
+const instanceFn = { save, zoomAdd, zoomSub, present }
 
 onMounted(() => {
   groupStore.initGroupJson(JSON.stringify(wGroupSetting))
@@ -289,4 +306,18 @@ defineExpose({
 
 <style lang="less" scoped>
 @import url('@/assets/styles/design.less');
+
+// Sits next to Export as the other thing you do with a finished design, but
+// stays quieter than it — Export is the primary action.
+.present-btn {
+  margin-left: 8px;
+  font-weight: 500;
+
+  &__icon {
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+    fill: currentColor;
+  }
+}
 </style>

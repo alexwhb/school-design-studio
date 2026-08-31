@@ -25,7 +25,7 @@
 </template>
 
 <script lang="ts" setup>
-import { CSSProperties, reactive, ref } from 'vue'
+import { CSSProperties, onMounted, reactive, ref } from 'vue'
 import setting from "./wImageSetting"
 
 type TProps = {
@@ -69,6 +69,18 @@ const state = reactive<TState>({
 const widgetRef = ref<HTMLElement | null>(null)
 const targetRef = ref<HTMLImageElement | null>(null)
 
+// A rotated or flipped image has to look the same here as it does on the
+// canvas, otherwise thumbnails and slides quietly straighten it out. Mirrors
+// what wImage.vue does on mount: the box carries the rotation, the picture
+// inside it carries any crop/zoom transform.
+onMounted(() => {
+  if (props.params.rotate && widgetRef.value) {
+    widgetRef.value.style.transform = `rotate(${props.params.rotate})`
+  }
+  if (props.params.transform && targetRef.value) {
+    targetRef.value.style.transform = props.params.transform
+  }
+})
 </script>
 
 <style lang="less" scoped>
