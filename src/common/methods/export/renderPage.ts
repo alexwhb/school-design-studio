@@ -16,9 +16,23 @@ import type { TdWidgetData } from '@/store/design/widget'
 
 const CANVAS_ID = 'page-design-canvas'
 
-const DECODE_TIMEOUT = 20000
+// These bounds exist to catch a wait that will never end, not to police slow
+// work, so they are set well past anything a working export should need. A
+// healthy machine renders a page in about 200ms; a throttled tab was measured
+// taking ten times that for a heading with no effects at all, and an old laptop
+// exporting a large design at 3× is doing real work in the same range. Cutting
+// one of those off would turn a slow success into a failure, which is the
+// mistake these were added to avoid making in the other direction. The render
+// bound is per page, so a multi-page deck gets it afresh each time.
+const RENDER_TIMEOUT = 120000
+
+// Decoding is the one that degrades quietly rather than loudly: a widget that
+// times out here falls back to html2canvas, which is exactly the wrong render
+// for the outlined and gradient headings this path exists to fix. Worth extra
+// room for that reason.
+const DECODE_TIMEOUT = 30000
+
 const IMAGE_TIMEOUT = 15000
-const RENDER_TIMEOUT = 60000
 
 /** Waits for every font used in the design, so text is not captured mid-swap. */
 async function waitForFonts(): Promise<void> {
