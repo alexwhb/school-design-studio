@@ -261,8 +261,10 @@ const fns: any = {
     tourRef.value.open()
   },
   save,
-  download: () => {
-    optionsRef.value?.download()
+  // The export menu passes the chosen quality; the File menu has no such
+  // choice and leaves it to the default.
+  download: (scale?: number) => {
+    optionsRef.value?.download(scale)
   },
   changeLineGuides,
   newDesign: () => {

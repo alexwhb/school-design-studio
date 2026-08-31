@@ -1,13 +1,14 @@
 # School Design Studio
 
 A drag-and-drop design editor for schools — posters, flyers, newsletters,
-certificates and slides — that exports to PNG and **PowerPoint**.
+certificates and slides — that exports to **PDF**, PNG and **PowerPoint**.
 
 Open it in a browser and you get a canvas, a page-size picker and panels down
 the left for templates, text, elements, photos and uploads. Drag things on,
-type over them, and export a print-ready PNG or an editable `.pptx` deck. There
-is no sign-up and no server to stand up: `npm install && npm start` is the whole
-setup, and the bundled content library ships in the repository as JSON.
+type over them, and export a PDF for the print shop, a PNG for the website, or
+an editable `.pptx` deck. There is no sign-up and no server to stand up:
+`npm install && npm start` is the whole setup, and the bundled content library
+ships in the repository as JSON.
 
 ## Where this came from
 
@@ -220,6 +221,46 @@ Two things to know before adding styles:
   legitimately remains is either artwork (a widget's default colour, a swatch
   palette) or something drawn on top of a photo.
 
+## PDF export, and export quality
+
+**PDF** is the format a design usually leaves in: to a print shop, or attached
+to an email home. Every page of the design becomes a page of the file, sized in
+real inches rather than pixels, so nobody at the other end has to guess how big
+you meant it.
+
+Each page goes in as a picture rather than as rebuilt text and shapes. That is
+deliberate: an editable PDF would need a second renderer kept in step with the
+browser's, and the usual way that goes wrong is a font substituting at the print
+shop. What you see is what prints. The editable route already exists and is
+called PowerPoint.
+
+There is no PDF library in the dependency list. `exportPdf.ts` writes the file
+itself — a catalogue, a page tree, and one JPEG drawn across each page — which
+is about a hundred lines of a stable, thirty-year-old format, against roughly
+350kB for jsPDF on a bundle that is already a megabyte.
+
+**Quality** sits at the top of the Export menu and applies to the image and the
+PDF. It is a resolution multiplier, but it is labelled in the terms the decision
+is actually made in:
+
+| Setting  | Resolution | For                                    |
+| -------- | ---------- | -------------------------------------- |
+| Standard | 150 DPI    | Screen, email, the office copier       |
+| Print    | 300 DPI    | What a print shop asks for             |
+| Large    | 450 DPI    | Something read from across a corridor  |
+
+Those numbers are real, not decorative. The editor stores a page in pixels and
+records nothing about how big it is meant to be, so the paper size has to be
+inferred, and 150 DPI is the convention the page presets are already built on —
+"Letter — portrait" is 1275 × 1650, which is 8.5 × 11 inches at 150. Read back
+at 150, a Letter design produces a PDF that `pdfinfo` reports as
+`612 x 792 pts (letter)`. Read at the CSS-pixel 96 instead, the same design
+would claim to be a 13 × 17 inch sheet.
+
+Turning the quality up puts more pixels on the same sheet rather than making the
+sheet bigger, which is what asking for 300 DPI means. The menu shows both the
+pixel size and the paper size before you commit to either.
+
 ## PowerPoint export
 
 Every page of a design becomes one slide. There are two modes, because they
@@ -244,9 +285,10 @@ Relevant code:
 ```
 src/common/methods/export/
   exportPptx.ts    the mapping from design widgets to slide objects
+  exportPdf.ts     the PDF writer, and the pixels-to-paper conversion
   renderPage.ts    renders any page or element to a PNG, restoring editor state
   utils.ts         unit, colour, HTML-to-text and image helpers
-src/views/components/ExportMenu.vue   the toolbar button
+src/views/components/ExportMenu.vue   the toolbar button, and the quality picker
 ```
 
 ## Using it inside School Planner
