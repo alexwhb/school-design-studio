@@ -29,7 +29,7 @@ graph caches the old chunk hashes.
 `npm run test:parity` opens both apps side by side, drives the same gestures, and
 compares them three ways.
 
-**Pixels** — 19 views, screenshotted at 1440×900 and diffed:
+**Pixels** — 22 views, screenshotted at 1440×900 and diffed:
 
 | view | mismatch |
 | --- | --- |
@@ -38,21 +38,33 @@ compares them three ways.
 | text, shape and QR settings panels | 0.000% / 0.000% / 0.001% |
 | a full template loaded, dark and light | 0.001% |
 | the resize dialog | 0.005% |
-| the animation card, and the picker open | 0.000% |
+| the Animation section, and the picker open | 0.000% |
 | the page strip, expanded | 0.000% |
 | presentation mode | 0.000% |
+| the templates gallery, filtered and searched | 0.000% / 0.010% |
+| a text effect preset applied | 0.005% |
 | `/draw`, `/html` and `/psd` screens | 0.000% |
 
 The non-zero figures are antialiasing: 19 pixels on the QR canvas, 10 on a
 template's artwork, 15 on the dialog's rounded corner.
 
-**Layout** — menus are compared as geometry rather than pixels
+**Layout** — menus and one picker are compared as geometry rather than pixels
 (`tests/parity/menus.spec.ts`): every item's class, label, offset, height and
-padding, plus the popper's size and its offset from the trigger. Menus are
-positioned by their own engine in each app — Element Plus pins a `bottom-end`
-popper's right edge to the trigger, Radix rounds the left edge to a whole pixel —
-so the same text renders a third of a pixel apart. Nobody can see that and a
-pixel diff cannot ignore it, but every number the layout depends on is checked.
+padding, plus the popper's size and its offset from the trigger.
+
+Menus are positioned by their own engine in each app — Element Plus pins a
+`bottom-end` popper's right edge to the trigger, Radix rounds the left edge to a
+whole pixel — so the same text renders a third of a pixel apart. Nobody can see
+that and a pixel diff cannot ignore it, but every number the layout depends on
+is checked.
+
+The text-effect picker is there for a different reason. It is 626px of presets
+opened from a control near the bottom of the panel, and the two engines disagree
+about where that goes: Element Plus lets it hang 283px off the bottom of the
+window, so a third of the presets cannot be reached, while Radix shifts it up
+until it fits. The port keeps Radix's, which is the reason the picker is usable
+at all — so what is checked is that the same presets are laid out the same way,
+not where the box lands.
 
 **Behaviour** — 16 scenarios run against both apps, comparing every widget's
 geometry and computed style, the selection box, the layer list and the zoom
@@ -61,7 +73,7 @@ shift-arrow nudges, delete, QR insertion, zoom stepping and presets, the layers
 tab, resizing a design two ways, adding and duplicating pages, and assigning an
 animation.
 
-On top of that, 72 Playwright tests exercise the port on its own
+On top of that, 79 Playwright tests exercise the port on its own
 (`tests/e2e/`), including ten that assert the embed does not leak into its host.
 
 ### What the tests caught
@@ -88,11 +100,42 @@ Bugs found by the parity and e2e suites while porting main's changes, all fixed:
 - **The eraser never started.** Radix mounts portal content a tick after the
   dialog opens, so the canvas refs were still null when the engine was told to
   start.
+- **The colour picker's hex field could not be typed in.** It was bound straight
+  to the committed value, so React put the old text back on every keystroke —
+  each one is a partial colour the picker does not accept.
+- **The picker forgot the colours you had used**, because Radix unmounts a
+  closed popover and Element Plus does not. The list is held by the control that
+  owns it now.
+- **Two pickers shared their class names.** The image-mask picker's tile size
+  won over the text-effect picker's, so the presets came out at half the width
+  and twice the height.
+- **Three link buttons had Element Plus's padding**, because `&__name` in Less
+  concatenates to one class and ties with `.el-button.is-link` — and one of them
+  was nested two blocks deep, where `& &__name` compiles to a selector that can
+  never match.
+- **The effect rows never laid out**, because the classes that make the toggle
+  flexible and pin the swatch right were on the Vue components and not on the
+  React ones.
+- **The search box had no focus ring and no clear button.**
 
-One bug was found in the Vue app and fixed there: a page's ⋯ button was
-positioned against Element Plus's own dropdown wrapper rather than the
-thumbnail, which put it on top of the collapse chevron where it could not be
-clicked at all.
+Three bugs were found in the Vue app and fixed there, because the port faithfully
+reproduced them and they made the feature untestable:
+
+- A page's ⋯ button was positioned against Element Plus's own dropdown wrapper
+  rather than the thumbnail, which put it on top of the collapse chevron where
+  it could not be clicked at all.
+- Clicking a shape, photo or element in a panel stopped placing it. `Math.abs`
+  around the drag threshold made the pointer's arrival on a thumbnail read as a
+  drag of ninety-nine thousand pixels — the distance from the "no drag" sentinel
+  — so the click that followed was discarded as the end of one.
+- A search that matched nothing left the results' height behind, because
+  `Math.max()` of an empty list is `-Infinity`, which is not a length, so the
+  browser kept the last one. The message saying nothing matched was pushed
+  1,280px down, out of the panel.
+
+One shared bug is left alone, because both apps do it and fixing it is a product
+decision rather than a porting one: clearing the search box re-runs the search
+with the term that was just cleared, so the gallery stays empty.
 
 ## Is it faster?
 
@@ -100,23 +143,26 @@ Production builds, median of five runs (`npm run bench:prod`):
 
 | | Vue | React | |
 | --- | --- | --- | --- |
-| cold load to first canvas | 156 ms | 124 ms | **−21%** |
-| insert 30 text widgets | 649 ms | 550 ms | **−15%** |
+| cold load to first canvas | 150 ms | 122 ms | **−19%** |
+| insert 30 text widgets | 629 ms | 551 ms | **−12%** |
 | drag, mean frame | 8.34 ms | 8.33 ms | — |
-| drag, 95th percentile frame | 10.0 ms | 9.7 ms | −3% |
+| drag, 95th percentile frame | 9.7 ms | 9.7 ms | — |
 | zoom, mean frame | 8.34 ms | 8.34 ms | — |
-| zoom, 95th percentile frame | 9.7 ms | 9.8 ms | +1% |
+| zoom, 95th percentile frame | 9.3 ms | 9.6 ms | +3% |
 | drag and zoom, frames over 32 ms | 0 | 0 | — |
-| switch page | 919 ms | 896 ms | −3% |
-| resize a design | 38 ms | 39 ms | +3% |
-| open the presenter | 309 ms | 46 ms | **−85%** |
-| step through slides | 569 ms | 558 ms | −2% |
+| switch page | 936 ms | 889 ms | −5% |
+| resize a design | 40 ms | 42 ms | +5% |
+| open the presenter | 316 ms | 42 ms | **−87%** |
+| step through slides | 563 ms | 558 ms | −1% |
 
 Benchmark the **production** builds. In dev, React's `jsxDEV` dominates the
 profile and the comparison means nothing.
 
-Bundles: `dist-react` 1558 kB JS (479 kB gzipped) + 280 kB CSS. The eraser is a
-separate 45 kB chunk (15 kB gzipped), loaded when someone opens it — so the
+The two that came out slower are 2ms on a 40ms operation, which is the noise
+floor of the harness.
+
+Bundles: `dist-react` 1561 kB JS (492 kB gzipped) + 281 kB CSS. The eraser is a
+separate 45 kB chunk (16 kB gzipped), loaded when someone opens it — so the
 feature that does the most work costs nothing to everyone who never uses it.
 
 ## How it is put together
@@ -144,6 +190,13 @@ Vue runtime). Radix provides the behaviour for popovers, tooltips, menus and
 dialogs. `react/src/main.tsx` imports element-vars → `index.less` →
 element-components in that order on purpose: it reproduces the order the Vue app
 happens to load them in, and changing it visibly changes the UI.
+
+**The text-effect stack** is one expression, in
+`react/src/components/modules/widgets/wText/effectStyle.ts`, shared by the
+widget, its read-only twin and the preview glyph in the panel. `recolorEffects`
+next to it is what makes the colour swatch work on a widget that has a stack:
+the fill layer paints over the plain text, so without carrying the colour
+through, the swatch appears to do nothing.
 
 **The eraser** (`react/src/packages/image-extraction/`) is 1,300 lines of canvas
 geometry written against Vue refs, with the drawing listeners mutating a shared

@@ -106,6 +106,61 @@ const cases: MenuCase[] = [
   },
 ]
 
+/*
+ * The text-effect picker is compared here rather than as pixels for a different
+ * reason: it is 626px of presets opened from a control near the bottom of the
+ * panel, and the two engines disagree about where that goes. Element Plus lets
+ * it hang 283px off the bottom of the window, so a third of the presets cannot
+ * be reached; Radix shifts it up until it fits. The port keeps Radix's, which is
+ * the reason the picker is usable at all — so what is checked is that the same
+ * presets are laid out the same way, not where the box lands.
+ */
+test('picker parity: text effects', async ({ browser }) => {
+  const open = async (page: Page) => {
+    await page.getByText('Text', { exact: true }).click()
+    await page.waitForTimeout(400)
+    await page.getByText('Heading', { exact: true }).click()
+    await page.waitForTimeout(900)
+    await page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first().click({ position: { x: 20, y: 10 } })
+    await page.waitForTimeout(700)
+    await page.locator('.effects').getByText('Choose', { exact: true }).click()
+    await page.locator('.select__box__select-item img').first().waitFor()
+    await page.waitForTimeout(2500)
+  }
+
+  const read = (page: Page) =>
+    page.evaluate(() => {
+      const box = document.querySelector('.select__box')!
+      const first = box.querySelector('.select__box__select-item') as HTMLElement
+      const round = (n: number) => Math.round(n * 100) / 100
+      const rect = first.getBoundingClientRect()
+      return {
+        width: round(box.getBoundingClientRect().width),
+        tiles: box.querySelectorAll('.select__box__select-item').length,
+        tile: { width: round(rect.width), height: round(rect.height) },
+        covers: Array.from(box.querySelectorAll('img')).map((img) => (img.getAttribute('src') || '').split('/').pop()),
+      }
+    })
+
+  const vuePage = await browser.newPage()
+  const reactPage = await browser.newPage()
+  await prepare(vuePage, VUE_URL, '/home', 'dark')
+  await prepare(reactPage, REACT_URL, '/home', 'dark')
+  await open(vuePage)
+  await open(reactPage)
+
+  const vue = await read(vuePage)
+  const react = await read(reactPage)
+  await vuePage.close()
+  await reactPage.close()
+
+  expect(vue.tiles, 'the picker has presets').toBeGreaterThan(20)
+  expect(react.tiles, 'preset count').toBe(vue.tiles)
+  expect(react.tile, 'tile size').toEqual(vue.tile)
+  expect(react.width, 'picker width').toBe(vue.width)
+  expect(react.covers, 'the same presets, in the same order').toEqual(vue.covers)
+})
+
 for (const item of cases) {
   test(`menu parity: ${item.name}`, async ({ browser }) => {
     const vuePage = await browser.newPage()

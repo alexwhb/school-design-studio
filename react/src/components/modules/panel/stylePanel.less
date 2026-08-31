@@ -1,7 +1,9 @@
-// The animation card is the one control that is not part of a widget's own
-// style component, so it carries its own gutter.
+// The panel already sets the gutter every section shares, so this only owns the
+// space and the rule that mark it off from the element's own settings below.
 #style-panel .animate-slot {
-  padding: 12px 10px 20px;
+  padding: 8px 0 14px;
+  border-bottom: 1px solid @line-soft;
+  margin-bottom: 6px;
 }
 
 #style-panel {

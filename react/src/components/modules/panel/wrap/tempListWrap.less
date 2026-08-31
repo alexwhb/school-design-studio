@@ -20,8 +20,46 @@
     color: @ink-3;
   }
 
+  .cates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 14px 14px 2px;
+  }
+
+  .cates__chip {
+    border: 1px solid @line;
+    background: @surface;
+    color: @ink-2;
+    font-family: inherit;
+    font-size: @text-base;
+    line-height: 1;
+    padding: 6px 11px;
+    border-radius: @radius-pill;
+    cursor: pointer;
+    transition:
+      background-color 0.12s ease,
+      border-color 0.12s ease,
+      color 0.12s ease;
+
+    &:hover {
+      background: @surface-2;
+      color: @ink;
+    }
+
+    &--on,
+    &--on:hover {
+      background: @accent-soft;
+      border-color: @accent-border;
+      color: @accent;
+      font-weight: 600;
+    }
+  }
+
   .upload-psd {
-    margin: 0 1rem;
+    // The divider above it is gone, so the button supplies its own gap under the
+    // search box rather than sitting flush against it.
+    margin: 8px 1rem 0;
     width: calc(100% - 2rem);
   }
 }

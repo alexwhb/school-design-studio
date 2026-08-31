@@ -72,7 +72,10 @@
       align-items: center;
       margin-bottom: 4px;
     }
-    & &__action {
+    // Written out rather than `& &__action`: two blocks deep that compiles to
+    // `.effects .advanced .effects .advanced__action`, which matches nothing.
+    // Three classes, so it beats Element Plus's `.el-button.is-link`.
+    .advanced__action {
       font-size: @text-sm;
       height: auto;
       padding: 4px 0;
@@ -183,7 +186,7 @@
   }
 }
 
-.select__box {
+.ds-effect-picker .select__box {
   display: flex;
   flex-wrap: wrap;
   &__select-item {

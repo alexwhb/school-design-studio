@@ -1,101 +1,92 @@
-.animate-card {
+.animate {
   width: 100%;
 
-  .el-card__header {
-    padding: 12px 16px;
-  }
-
-  .card-header {
+  &__head {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
-
-    .title {
-      font-size: @text-base;
-      color: @ink;
-      font-weight: 500;
-    }
-
-    .current {
-      flex: 1;
-      font-size: @text-sm;
-      color: @ink-3;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .button {
-      flex-shrink: 0;
-    }
+    min-height: 28px;
   }
 
-  .body__hint {
-    margin: 0 0 12px;
+  &__title {
+    .section-label();
+  }
+
+  &__head-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  &__current {
     font-size: @text-sm;
     color: @ink-3;
-    line-height: 1.45;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .body__label {
-    .section-label();
-    margin: 14px 0 6px;
-  }
-
-  .starts {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .starts__item {
-    appearance: none;
-    text-align: left;
-    border: 1px solid @line;
-    background: @surface;
-    border-radius: @radius-sm;
-    padding: 6px 9px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    transition: border-color 0.12s ease, background-color 0.12s ease;
+  & &__choose {
+    font-size: @text-base;
+    height: auto;
+    padding: 0;
+    flex: none;
+    color: @ink-2;
 
     &:hover {
-      background: @surface-2;
-    }
-
-    &.starts__item--on {
-      border-color: @accent-border;
-      background: @accent-soft;
+      color: @accent;
     }
   }
 
-  .starts__name {
-    font-size: @text-sm;
-    color: @ink;
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
   }
 
-  .starts__hint {
+  &__hint,
+  &__note {
+    margin: 0;
     font-size: @text-xs;
     color: @ink-3;
-    line-height: 1.35;
+    line-height: 1.4;
   }
 
-  .body__actions {
+  // The reading of the running order belongs to the control above it, so it
+  // sits tight under the select rather than floating between two controls.
+  &__note {
+    margin-top: -8px;
+  }
+
+  &__sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  &__actions {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 14px;
+    justify-content: space-between;
   }
 
-  .body__play {
-    flex: 1;
+  & &__action {
+    font-size: @text-sm;
+    height: auto;
+    padding: 4px 0;
+    color: @ink-2;
+
+    &:hover {
+      color: @accent;
+    }
   }
 }
 
-// The picker lives in a popover portalled out of the panel, so its styles
-// cannot hang off .animate-card.
+// The picker lives in a popover teleported to the body, so its styles cannot be
+// scoped to this component.
 .animate-popper {
   max-height: 62vh;
   overflow-y: auto;
@@ -139,7 +130,11 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
+}
 
+// The tiles live inside the picker's popover, which is portalled, so they hang
+// off the popper's class rather than the section's.
+.animate-popper {
   .tile {
     appearance: none;
     border: 1px solid @line;

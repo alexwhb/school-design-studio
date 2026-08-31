@@ -8,7 +8,9 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   reporter: [['list']],
-  timeout: 60_000,
+  // Every parity case drives two apps in series, and the slowest opens a picker
+  // of forty-four preset covers in each.
+  timeout: 120_000,
   expect: { timeout: 10_000 },
   use: {
     ...devices['Desktop Chrome'],

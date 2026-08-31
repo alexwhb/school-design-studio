@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { cx } from '@/utils/dom'
 import ColorPicker, { type ColorChangeData } from '@/packages/color-picker/ColorPicker'
 import Popover from '@/components/ui/Popover'
 import { setShowMoveable } from '@/store/control'
@@ -11,14 +12,17 @@ type Props = {
   value?: string
   width?: string
   modes?: string[]
+  className?: string
   onValueChange?: (value: string) => void
   onFinish?: (value: string) => void
   onChange?: (data: ColorChangeData) => void
 }
 
-export default function ColorSelect({ label = '', value = '', width = '100%', modes = ['Solid'], onValueChange, onChange }: Props) {
+export default function ColorSelect({ label = '', value = '', width = '100%', modes = ['Solid'], className, onValueChange, onChange }: Props) {
   const [innerColor, setInnerColor] = useState('')
   const [open, setOpen] = useState(false)
+  // Held here so it survives the popover closing; see ColorPicker.
+  const [history, setHistory] = useState<string[]>([])
 
   useEffect(() => {
     if (!value) return
@@ -47,7 +51,7 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
   }
 
   return (
-    <div className="color__select" style={{ width }}>
+    <div className={cx('color__select', className || '')} style={{ width }}>
       {label ? <p className="input-label">{label}</p> : null}
       <div className="content">
         <Popover
@@ -55,7 +59,16 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
           width="auto"
           open={open}
           onOpenChange={handleOpenChange}
-          content={<ColorPicker value={innerColor} modes={modes} onValueChange={handleValueChange} onChange={onChange} />}
+          content={
+            <ColorPicker
+              value={innerColor}
+              modes={modes}
+              history={history}
+              onHistoryChange={setHistory}
+              onValueChange={handleValueChange}
+              onChange={onChange}
+            />
+          }
         >
           <div className="color__field">
             <span className="color__chip transparent-bg">

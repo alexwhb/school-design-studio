@@ -6,6 +6,7 @@ import Checkbox from '@/components/ui/Checkbox'
 import Popover from '@/components/ui/Popover'
 import { CollapseItem } from '@/components/ui/Collapse'
 import SortableList from '@/components/ui/SortableList'
+import effectStyle from '../../widgets/wText/effectStyle'
 import getGradientOrImg from '../../widgets/wText/getGradientOrImg'
 import ColorSelect, { type colorChangeData } from '../ColorSelect'
 import NumberInput from '../NumberInput'
@@ -15,16 +16,35 @@ import './textWrap.less'
 
 let frozeFontEffectList: TGetCompListResult[] = []
 
+/**
+ * Every feature a layer can carry. A preset only stores the parts it uses, and
+ * an absent part means an absent control — pick the hard-shadow preset and
+ * there would be no way to lean it, because it was saved before Skew existed.
+ * Filling in the blanks on load is what keeps every layer fully editable.
+ */
+const emptyLayer = () => ({
+  filling: { enable: false, type: 0, color: '#000000ff' },
+  stroke: { enable: false, width: 0, color: '#000000ff', type: 'outer' },
+  offset: { enable: false, x: 0, y: 0 },
+  skew: { enable: false, x: 0, y: 0 },
+  shadow: { enable: false, color: '#000000ff', offsetX: 0, offsetY: 0, blur: 0, opacity: 0 },
+})
+
+/** One stored layer, with anything it does not carry filled in and a drag key. */
+const asLayer = (stored: Record<string, any>) => ({ ...emptyLayer(), ...stored, uuid: String(Math.random()) })
+
 type Props = {
   value?: Record<string, any>[]
   data: Record<string, any>
   degree?: string | number
   onValueChange?: (value: Record<string, any>[]) => void
+  /** A preset carries the colour it was drawn around; the widget needs it too. */
+  onSelect?: (data: { key: string; value: string }) => void
 }
 
 const coefficient = Math.round(160 / 27)
 
-export default function TextWrap({ value, data = {}, onValueChange }: Props) {
+export default function TextWrap({ value, data = {}, onValueChange, onSelect }: Props) {
   const [strength, setStrength] = useState(50)
   const [visible, setVisible] = useState(false)
   const [list, setList] = useState<TGetCompListResult[]>([])
@@ -32,36 +52,46 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
   const [unfold, setUnfold] = useState(true)
   const [advancedOpen, setAdvancedOpen] = useState<string[]>([])
   const rawData = useRef<Record<string, any>[]>([])
-  const emitting = useRef(false)
-  const uuidRef = useRef(data.uuid)
+  /**
+   * The stack as it last passed between this panel and the widget. The settings
+   * panel is one instance that is handed a different widget rather than rebuilt,
+   * so the layers cannot be read once on mount — click a plain text widget after
+   * an effect one and it would still be offering the previous widget's layers to
+   * edit. This is what tells a stack arriving from outside apart from the echo
+   * of one this panel just sent out.
+   */
+  const exchanged = useRef('')
 
+  /** Loads a stack into the editable layer list, topmost layer first. */
+  const load = (effects?: unknown) => {
+    const stack = Array.isArray(effects) ? effects : []
+    exchanged.current = JSON.stringify(stack)
+    const next = JSON.parse(exchanged.current).map(asLayer).reverse()
+    setLayers(next)
+    rawData.current = JSON.parse(JSON.stringify(next))
+    setStrength(50)
+  }
+
+  // Recolouring the text rewrites the stack, and so does picking a different
+  // widget; either way the layer controls have to show what is actually there.
   useEffect(() => {
-    if (uuidRef.current === data.uuid && layers.length) return
-    uuidRef.current = data.uuid
-    if (!data.textEffects) {
-      setLayers([])
-      rawData.current = []
-      return
-    }
-    const clone = (JSON.parse(JSON.stringify(data.textEffects)) || [])
-      .map((x: any) => {
-        x.uuid = String(Math.random())
-        return x
-      })
-      .reverse()
-    setLayers(clone)
-    rawData.current = JSON.parse(JSON.stringify(clone))
-  }, [data.uuid, data.textEffects])
+    if (JSON.stringify(Array.isArray(value) ? value : []) === exchanged.current) return
+    load(value)
+  }, [value])
 
   function pushLayers(next: Record<string, any>[]) {
     setLayers(next)
-    emitting.current = true
-    const newEffect = next.map((x) => {
-      const copy = { ...x }
-      delete copy.uuid
-      return copy
-    })
-    onValueChange?.(newEffect.slice().reverse())
+    const newEffect = next
+      .map((x) => {
+        const copy = { ...x }
+        delete copy.uuid
+        return copy
+      })
+      .reverse()
+    const stack = JSON.stringify(newEffect)
+    if (stack === exchanged.current) return
+    exchanged.current = stack
+    onValueChange?.(newEffect)
   }
 
   function strengthChange(x: number) {
@@ -69,6 +99,7 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
     const effectScale = 1 + (x - 50) / 50
     const next = layers.map((item, index) => {
       const copy = { ...item }
+      if (!rawData.current[index]) return copy
       if (copy.stroke && rawData.current[index]?.stroke) {
         copy.stroke = { ...copy.stroke, width: rawData.current[index].stroke.width * effectScale }
       }
@@ -84,18 +115,25 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
     setVisible(false)
     if (id) {
       const { data: detail } = await api.home.getTempDetail({ id, type: 1 })
-      const next = JSON.parse(detail)
-        .textEffects.map((x: Record<string, any>) => {
-          x.uuid = String(Math.random())
-          return x
-        })
-        .reverse()
-      rawData.current = JSON.parse(JSON.stringify(next))
-      pushLayers(next)
+      const preset = JSON.parse(detail)
+      loadAndEmit(preset.textEffects)
+      // A preset is a stack plus the colour it was drawn around, and the plain
+      // text still paints under the stack — so the hollow one is only hollow if
+      // the text below it goes transparent too. Without this it would come out
+      // as black letters inside a red outline.
+      preset.color && onSelect?.({ key: 'color', value: preset.color })
     } else {
-      rawData.current = []
-      pushLayers([])
+      loadAndEmit([])
     }
+  }
+
+  /** Loads a stack into the panel and sends it on to the widget. */
+  function loadAndEmit(effects?: unknown) {
+    const stack = Array.isArray(effects) ? effects : []
+    const next = JSON.parse(JSON.stringify(stack)).map(asLayer).reverse()
+    rawData.current = JSON.parse(JSON.stringify(next))
+    setStrength(50)
+    pushLayers(next)
   }
 
   const removeLayer = (i: number) => {
@@ -106,11 +144,7 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
   }
 
   const addLayer = () => {
-    const filling = { enable: false, type: 0, color: '#000000ff' }
-    const stroke = { enable: false, width: 0, color: '#000000ff', type: 'outer' }
-    const offset = { enable: false, x: 0, y: 0 }
-    const shadow = { enable: false, color: '#000000ff', offsetX: 0, offsetY: 0, blur: 0, opacity: 0 }
-    const next = [{ filling, stroke, shadow, offset, uuid: String(Math.random()) }, ...layers]
+    const next = [asLayer({}), ...layers]
     rawData.current = JSON.parse(JSON.stringify(next))
     pushLayers(next)
   }
@@ -120,7 +154,14 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
     setVisible(next)
     if (!next) return
     if (frozeFontEffectList.length <= 0) {
-      const { list: fetched } = await api.home.getCompList({ cate: 12, type: 1, pageSize: 30 })
+      // The same presets the Text panel offers under "Text with effects". This
+      // asked for category 12 upstream, which is not a list this build ships, so
+      // the picker came up empty and the only way to an effect was to build the
+      // layers by hand.
+      // One page, sized past the list rather than to it: the picker is a grid
+      // with no paging of its own, so anything past the page size is a preset
+      // nobody can reach.
+      const { list: fetched } = await api.home.getCompList({ cate: 'text', type: 1, pageSize: 200 })
       setList(fetched)
       frozeFontEffectList = fetched
     } else setList(frozeFontEffectList)
@@ -147,6 +188,16 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
     }, 100)
   }
 
+  /**
+   * What the swatch opens on. The picker decides its own mode by parsing this
+   * value, so handing it the flat colour of a gradient fill starts it in Solid —
+   * and the change it reports on the way in then flattens the very fill it was
+   * opened to show. Handing it the gradient instead starts it in the right mode
+   * and the round trip leaves the fill alone.
+   */
+  const fillValue = (filling: Record<string, any>) =>
+    filling && Number(filling.type) === 2 && filling.gradient?.stops?.length ? getGradientOrImg({ filling }) : filling?.color
+
   const previewEffects = useMemo(() => value ?? [], [value])
 
   return (
@@ -171,16 +222,7 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
             {previewEffects.map((ef: any, efi: number) => (
               <div
                 key={efi + 'effect'}
-                style={{
-                  color: ef.filling && ef.filling.enable && ef.filling.type === 0 ? ef.filling.color : 'transparent',
-                  WebkitTextStroke: ef.stroke && ef.stroke.enable ? `${ef.stroke.width / coefficient}px ${ef.stroke.color}` : '',
-                  textShadow:
-                    ef.shadow && ef.shadow.enable
-                      ? `${ef.shadow.offsetX / coefficient}px ${ef.shadow.offsetY / coefficient}px ${ef.shadow.blur / coefficient}px ${ef.shadow.color}`
-                      : undefined,
-                  backgroundImage: ef.filling && ef.filling.enable ? (ef.filling.type === 0 ? undefined : getGradientOrImg(ef)) : undefined,
-                  WebkitBackgroundClip: ef.filling && ef.filling.enable ? (ef.filling.type === 0 ? undefined : 'text') : undefined,
-                }}
+                style={effectStyle(ef, 1 / coefficient)}
                 className="demo"
               >
                 A
@@ -190,6 +232,7 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
           </div>
           <Popover
             placement="left"
+            popperClass="ds-effect-picker"
             width={220}
             open={visible}
             onOpenChange={setVisible}
@@ -262,11 +305,13 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
                         <Checkbox
                           value={!!element.filling.enable}
                           label="Fill"
+                          className="feature__toggle"
                           onChange={(next) => patchLayer(index, { filling: { ...element.filling, enable: next } })}
                         />
                         <ColorSelect
-                          value={element.filling.color}
+                          value={fillValue(element.filling)}
                           width="32px"
+                          className="feature__swatch"
                           modes={['Solid', 'Gradient']}
                           label=""
                           onValueChange={(next) => patchLayer(index, { filling: { ...element.filling, color: next } })}
@@ -281,11 +326,13 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
                         <Checkbox
                           value={!!element.stroke.enable}
                           label="Outline"
+                          className="feature__toggle"
                           onChange={(next) => patchLayer(index, { stroke: { ...element.stroke, enable: next } })}
                         />
                         <ColorSelect
                           value={element.stroke.color}
                           width="32px"
+                          className="feature__swatch"
                           label=""
                           onValueChange={(next) => patchLayer(index, { stroke: { ...element.stroke, color: next } })}
                         />
@@ -309,6 +356,7 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
                         <Checkbox
                           value={!!element.offset.enable}
                           label="Offset"
+                          className="feature__toggle"
                           onChange={(next) => patchLayer(index, { offset: { ...element.offset, enable: next } })}
                         />
                       </div>
@@ -332,17 +380,53 @@ export default function TextWrap({ value, data = {}, onValueChange }: Props) {
                       </div>
                     </div>
                   ) : null}
+                  {element.skew ? (
+                    <div className={cx('feature', { 'feature--off': !element.skew.enable })}>
+                      <div className="feature__row">
+                        <Checkbox
+                          value={!!element.skew.enable}
+                          label="Skew"
+                          className="feature__toggle"
+                          onChange={(next) => patchLayer(index, { skew: { ...element.skew, enable: next } })}
+                        />
+                      </div>
+                      <div className="feature__fields">
+                        <label className="field">
+                          <span className="field__label">X</span>
+                          <NumberInput
+                            value={element.skew.x}
+                            minValue={-89}
+                            maxValue={89}
+                            type="simple"
+                            onChange={(next) => patchLayer(index, { skew: { ...element.skew, x: Number(next) } })}
+                          />
+                        </label>
+                        <label className="field">
+                          <span className="field__label">Y</span>
+                          <NumberInput
+                            value={element.skew.y}
+                            minValue={-89}
+                            maxValue={89}
+                            type="simple"
+                            onChange={(next) => patchLayer(index, { skew: { ...element.skew, y: Number(next) } })}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  ) : null}
                   {element.shadow ? (
                     <div className={cx('feature', { 'feature--off': !element.shadow.enable })}>
                       <div className="feature__row">
                         <Checkbox
                           value={!!element.shadow.enable}
                           label="Shadow"
+                          className="feature__toggle"
                           onChange={(next) => patchLayer(index, { shadow: { ...element.shadow, enable: next } })}
                         />
                         <ColorSelect
                           value={element.shadow.color}
                           width="32px"
+                          className="feature__swatch"
                           label=""
                           onValueChange={(next) => patchLayer(index, { shadow: { ...element.shadow, color: next } })}
                         />

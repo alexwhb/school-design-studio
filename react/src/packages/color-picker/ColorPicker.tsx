@@ -28,6 +28,15 @@ type Props = {
   onChange?: (data: ColorChangeData) => void
   onNativePick?: (value: string) => void
   onBlurColor?: (value: string) => void
+  /**
+   * Recently used colours, and where to keep them.
+   *
+   * Element Plus leaves a popover's contents mounted once opened, so the Vue
+   * picker's history outlives the popover; Radix unmounts them, which would
+   * reset the row every time it is opened. The owner holds the list instead.
+   */
+  history?: string[]
+  onHistoryChange?: (history: string[]) => void
 }
 
 const hasEyeDrop = typeof window !== 'undefined' && 'EyeDropper' in window
@@ -42,13 +51,17 @@ export default function ColorPicker({
   onChange,
   onNativePick,
   onBlurColor,
+  history,
+  onHistoryChange,
 }: Props) {
   const [mode, setMode] = useState(() => parseBackgroundValue(value))
   const [angle, setAngle] = useState(90)
   const [gradients, setGradients] = useState<Gradient[]>([])
   const [paletteBackground, setPaletteBackground] = useState('#f00')
   const [hex, setHex] = useState('#000')
-  const [predefine, setPredefine] = useState<string[]>([])
+  const [hexDraft, setHexDraft] = useState(value)
+  const [ownPredefine, setOwnPredefine] = useState<string[]>([])
+  const predefine = history ?? ownPredefine
   const [activeGradient, setActiveGradient] = useState<Gradient | null>(null)
 
   const hsla = useRef({ h: 0, s: 0, l: 0, a: 0 })
@@ -197,15 +210,21 @@ export default function ColorPicker({
     [setColor],
   )
 
+  const historyRef = useRef(predefine)
+  historyRef.current = predefine
+  const onHistoryChangeRef = useRef(onHistoryChange)
+  onHistoryChangeRef.current = onHistoryChange
+
   const addHistory = useRef(
     debounce(300, (next: string) => {
-      setPredefine((prev) => {
-        const history = prev.slice()
-        const index = history.indexOf(next)
-        if (index !== -1) history.splice(index, 1)
-        if (history.length >= 4) history.splice(history.length - 1, 1)
-        return [next].concat(history)
-      })
+      const previous = historyRef.current
+      const list = previous.slice()
+      const index = list.indexOf(next)
+      if (index !== -1) list.splice(index, 1)
+      if (list.length >= 4) list.splice(list.length - 1, 1)
+      const updated = [next].concat(list)
+      if (onHistoryChangeRef.current) onHistoryChangeRef.current(updated)
+      else setOwnPredefine(updated)
     }),
   )
 
@@ -222,6 +241,7 @@ export default function ColorPicker({
     changeMode(nextMode)
     recordValue(value)
     addHistory.current(value)
+    setHexDraft(value)
   }, [value, changeMode, recordValue])
 
   useEffect(() => {
@@ -346,18 +366,6 @@ export default function ColorPicker({
     color !== undefined && updateValue(color)
   }
 
-  function onChangeHex(next: string) {
-    if (/^#(?:[0-9a-f]{3}){1,2}$/i.test(next)) {
-      const rgb = hex2RGB(next)
-      const [h, s, l] = RGB2HSL(rgb[0], rgb[1], rgb[2])
-      hsla.current.h = h
-      hsla.current.s = s
-      hsla.current.l = l
-      applyPointers()
-      setHex(next)
-    }
-  }
-
   async function onClickStraw(nextValue?: string) {
     let result = ''
     if (nextValue) {
@@ -480,7 +488,19 @@ export default function ColorPicker({
         {mode === 'Gradient' ? (
           <input className="input" value={activeGradient?.color ?? ''} readOnly />
         ) : (
-          <input value={value} className="input" onChange={(e) => onChangeHex(e.target.value)} onBlur={onInputBlur} />
+          // A draft, committed on blur, because that is what the original does —
+          // and because binding it straight to `value` makes the field
+          // unwritable: every keystroke is a partial colour, which the picker
+          // does not accept, so React puts the old text straight back.
+          <input
+            value={hexDraft}
+            className="input"
+            onChange={(e) => setHexDraft(e.target.value)}
+            onBlur={(e) => {
+              setHexDraft(value)
+              onInputBlur(e)
+            }}
+          />
         )}
         {mode === 'Solid'
           ? predefine.map((pc) => (

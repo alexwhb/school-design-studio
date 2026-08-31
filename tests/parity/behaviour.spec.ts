@@ -198,7 +198,7 @@ const scenarios: Scenario[] = [
     run: async (page) => {
       await addHeading(page)
       await clickWidget(page)
-      await page.locator('.animate-card').getByText('Choose', { exact: true }).click()
+      await page.locator('.animate').getByText('Choose', { exact: true }).click()
       await page.waitForTimeout(1400)
       await page.locator('.picker__grid .tile', { hasText: 'Rise' }).first().click()
       await page.waitForTimeout(2000)

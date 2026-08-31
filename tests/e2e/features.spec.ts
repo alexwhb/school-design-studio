@@ -182,13 +182,13 @@ test('choosing an animation names it on the card and leaves the widget alone', a
   await selectFirstWidget(page)
   const before = await widgetBox(page)
 
-  await expect(page.locator('.animate-card .current')).toHaveText('None')
-  await page.locator('.animate-card').getByText('Choose', { exact: true }).click()
+  await expect(page.locator('.animate__current')).toHaveText('None')
+  await page.locator('.animate').getByText('Choose', { exact: true }).click()
   await page.waitForTimeout(1200)
   await page.locator('.picker__grid .tile', { hasText: 'Rise' }).first().click()
   await page.waitForTimeout(1800)
 
-  await expect(page.locator('.animate-card .current')).toHaveText('Rise')
+  await expect(page.locator('.animate__current')).toHaveText('Rise')
   // An entrance is played, never baked in: the element at rest is untouched.
   expect(await widgetBox(page)).toEqual(before)
 })
@@ -196,26 +196,26 @@ test('choosing an animation names it on the card and leaves the widget alone', a
 test('removing the animation puts the card back to None', async ({ page }) => {
   await addText(page, 'Heading')
   await selectFirstWidget(page)
-  await page.locator('.animate-card').getByText('Choose', { exact: true }).click()
+  await page.locator('.animate').getByText('Choose', { exact: true }).click()
   await page.waitForTimeout(1200)
   await page.locator('.picker__grid .tile', { hasText: 'Pop' }).first().click()
   await page.waitForTimeout(1600)
-  await expect(page.locator('.animate-card .current')).toHaveText('Pop')
+  await expect(page.locator('.animate__current')).toHaveText('Pop')
 
   await page.getByRole('button', { name: 'Remove' }).click()
   await page.waitForTimeout(600)
-  await expect(page.locator('.animate-card .current')).toHaveText('None')
+  await expect(page.locator('.animate__current')).toHaveText('None')
 })
 
 test('the animation card is not offered for the page itself', async ({ page }) => {
   await expect(page.locator('#page-style')).toBeVisible()
-  await expect(page.locator('.animate-card')).toHaveCount(0)
+  await expect(page.locator('.animate')).toHaveCount(0)
 })
 
 test('the picker groups the presets and offers a way out', async ({ page }) => {
   await addText(page, 'Heading')
   await selectFirstWidget(page)
-  await page.locator('.animate-card').getByText('Choose', { exact: true }).click()
+  await page.locator('.animate').getByText('Choose', { exact: true }).click()
   await page.waitForTimeout(1200)
   const groups = await page.locator('.picker__group').allTextContents()
   expect(groups).toEqual(['Fade', 'Move', 'Scale', 'Reveal', 'Flourish'])
@@ -420,4 +420,135 @@ test('the background remover asks for a picture and keeps it on this computer', 
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText("Choose a picture, then brush away the parts you don't want.")).toBeVisible()
   await expect(dialog.getByText('It stays on this computer. Nothing is uploaded.')).toBeVisible()
+})
+
+/* ------------------------------------------------------------- templates */
+
+test('the gallery is filed into categories', async ({ page }) => {
+  const chips = page.locator('.cates__chip')
+  await expect(chips.first()).toHaveText('All')
+  await expect(chips.first()).toHaveClass(/cates__chip--on/)
+  expect(await chips.count()).toBeGreaterThan(3)
+
+  const all = await page.locator('.img-water-fall .img-box').count()
+  await chips.filter({ hasText: 'Slides' }).click()
+  await page.waitForTimeout(1800)
+  await expect(chips.filter({ hasText: 'Slides' })).toHaveClass(/cates__chip--on/)
+  const slides = await page.locator('.img-water-fall .img-box').count()
+  expect(slides).toBeGreaterThan(0)
+  expect(slides).toBeLessThan(all)
+})
+
+test('a search that matches nothing says so, and names the category', async ({ page }) => {
+  await page.locator('.cates__chip', { hasText: 'Posters' }).click()
+  await page.waitForTimeout(1500)
+  await page.getByPlaceholder('Search templates').fill('zzzznothing')
+  await page.keyboard.press('Enter')
+  await page.waitForTimeout(1800)
+  await expect(page.locator('.temp-list-wrap .loading')).toHaveText('No posters match “zzzznothing”')
+
+  // Clearing empties the box. It does not re-run the search — the Vue app does
+  // not either, and the port matches it; see PORT.md.
+  await page.locator('.temp-list-wrap .el-input__clear').click()
+  await page.waitForTimeout(1500)
+  await expect(page.getByPlaceholder('Search templates')).toHaveValue('')
+})
+
+/* ----------------------------------------------------------- text effects */
+
+test('a text effect preset applies its stack and its colour', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await expect(page.locator(`${WIDGET} .effect-text`)).toHaveCount(0)
+
+  await page.locator('.effects').getByText('Choose', { exact: true }).click()
+  await page.locator('.select__box__select-item img').first().waitFor()
+  await page.waitForTimeout(1500)
+  await page.locator('.select__box__select-item img').first().click()
+  await page.waitForTimeout(1800)
+
+  // The stack is painted as extra copies of the text over the plain one.
+  expect(await page.locator(`${WIDGET} .effect-text`).count()).toBeGreaterThan(0)
+  // A preset carries the colour it was drawn around.
+  await expect(page.locator('#w-text-style .color__field').first()).toBeVisible()
+  const colour = await page.locator(WIDGET).first().evaluate((el) => getComputedStyle(el).color)
+  expect(colour).not.toBe('rgb(0, 0, 0)')
+})
+
+test('recolouring the text carries the effect stack with it', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await page.locator('.effects').getByText('Choose', { exact: true }).click()
+  await page.locator('.select__box__select-item img').first().waitFor()
+  await page.waitForTimeout(1500)
+  await page.locator('.select__box__select-item img').first().click()
+  await page.waitForTimeout(1800)
+
+  // The whole stack, not its first layer: the layers that carry no fill are
+  // transparent in both states, and it is the one that does that has to follow.
+  const stack = () =>
+    page.locator(`${WIDGET} .effect-text`).evaluateAll((els) => els.map((el) => getComputedStyle(el).color))
+  const stackBefore = await stack()
+
+  // Through the picker the Colour swatch opens, as a person would. The hex
+  // field commits on blur, not on Enter.
+  await page.locator('#w-text-style .style-item', { hasText: 'Colour' }).locator('.color__field').click()
+  await page.waitForTimeout(700)
+  const hex = page.locator('.color-picker:visible .input').first()
+  await hex.fill('#FF0000FF')
+  await hex.blur()
+  await page.waitForTimeout(1400)
+
+  const stackAfter = await stack()
+  expect(stackAfter, 'the stack followed the new colour').not.toEqual(stackBefore)
+  expect(stackAfter, 'and it followed it to red').toContain('rgb(255, 0, 0)')
+})
+
+test('an effect layer offers Skew, which older presets did not carry', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await page.locator('.effects').getByText('Choose', { exact: true }).click()
+  await page.locator('.select__box__select-item img').first().waitFor()
+  await page.waitForTimeout(1500)
+  await page.locator('.select__box__select-item img').first().click()
+  await page.waitForTimeout(1800)
+
+  await page.locator('.advanced').getByText('Advanced', { exact: true }).click()
+  await page.waitForTimeout(800)
+  const first = page.locator('.layers .layer').first()
+  await expect(first.locator('.feature', { hasText: 'Skew' })).toHaveCount(1)
+  await expect(first.locator('.feature', { hasText: 'Fill' })).toHaveCount(1)
+  await expect(first.locator('.feature', { hasText: 'Outline' })).toHaveCount(1)
+})
+
+/* ------------------------------------------------------------------ drag */
+
+test('clicking a shape in the Elements panel places it', async ({ page }) => {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.waitForTimeout(2000)
+  await page.locator('.list-wrap').nth(1).locator('.el-image').first().click()
+  await page.waitForTimeout(1800)
+  await expect(page.locator(WIDGET)).toHaveCount(1)
+})
+
+test('the colour picker keeps the colours you have used', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  const swatch = page.locator('#w-text-style .style-item').filter({ hasText: 'Colour' }).locator('.color__field')
+
+  await swatch.click()
+  await page.waitForTimeout(600)
+  await expect(page.locator('.color-picker:visible .item-color')).toHaveCount(1)
+  const hex = page.locator('.color-picker:visible .input').first()
+  await hex.fill('#FF0000FF')
+  await hex.blur()
+  await page.waitForTimeout(800)
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(500)
+
+  // Reopening does not start the row again: Radix unmounts the popover, so the
+  // list is held by the control that owns it.
+  await swatch.click()
+  await page.waitForTimeout(600)
+  await expect(page.locator('.color-picker:visible .item-color')).toHaveCount(2)
 })

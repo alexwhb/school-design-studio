@@ -108,6 +108,11 @@ const mouseup = (e: MouseEvent) => {
 
 const mousemove = (e: MouseEvent) => {
   e.preventDefault()
+  // startPoint only holds a real position between mousedown and mouseup. Without
+  // this the move that carries the pointer onto a thumbnail is measured against
+  // the sentinel, reads as a drag of ninety-nine thousand pixels, and the click
+  // that follows is thrown away as the end of one.
+  if (startPoint.x === 99999) return
   if (Math.abs(e.x - startPoint.x) > 2 || Math.abs(e.y - startPoint.y) > 2) {
     isDrag = true
   }

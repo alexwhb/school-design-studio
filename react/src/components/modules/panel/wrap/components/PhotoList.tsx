@@ -102,7 +102,12 @@ export default function PhotoList({
 
   const mousemove = (e: React.MouseEvent) => {
     e.preventDefault()
-    if (e.clientX - startPoint.current.x > 2 || e.clientY - startPoint.current.y > 2) {
+    // startPoint only holds a real position between mousedown and mouseup. Without
+    // this the move that carries the pointer onto a thumbnail is measured against
+    // the sentinel, reads as a drag of ninety-nine thousand pixels, and the click
+    // that follows is thrown away as the end of one.
+    if (startPoint.current.x === 99999) return
+    if (Math.abs(e.clientX - startPoint.current.x) > 2 || Math.abs(e.clientY - startPoint.current.y) > 2) {
       isDrag.current = true
     }
   }

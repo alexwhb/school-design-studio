@@ -6,19 +6,12 @@
  * @LastEditTime: 2024-04-16 15:37:54
  */
 import fetch from '@/utils/axios'
-import _config from '@/config'
-
-function serialize(obj: any) {
-  return Object.keys(obj).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`).join('&');
-}
-
-// const screenshot_url = window.location.protocol + '//' + window.location.host + '/draw'
-export const download = (params: Type.Object = {}) => `${_config.SCREEN_URL}/api/screenshots?${serialize(params)}`
 
 type IGetTempListParam = {
   search: string
   page: number
   pageSize: number
+  /** A category slug, or '' for every template. */
   cate: number | string
 }
 export type IGetTempListData = {
@@ -77,15 +70,17 @@ export const getTempDetail = (params: TGetTempDetail) => fetch<TTempDetail>('des
 type TGetCategoriesParams = {
   type?: number
 }
+/**
+ * A template category — one chip above the Templates panel. `id` is the slug
+ * carried by each record in `templates/list.json`; the server only answers
+ * with categories that have something filed under them.
+ */
 export type TGetCategoriesData = {
-  id: number
+  id: string
   name: string
-  pid: number
-  type: number
 }
-type TgetCategoriesResult = TCommResResult<TGetCategoriesData>
 
-export const getCategories = (params: TGetCategoriesParams) => fetch<TgetCategoriesResult[]>('design/cate', params, 'get')
+export const getCategories = (params: TGetCategoriesParams = {}) => fetch<TGetCategoriesData[]>('design/cate', params, 'get')
 
 
 // Save template

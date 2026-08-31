@@ -62,7 +62,12 @@ export default function CompListWrap() {
 
   const mousemove = (e: React.MouseEvent) => {
     e.preventDefault()
-    if (e.clientX - startPoint.current.x > 2 || e.clientY - startPoint.current.y > 2) {
+    // startPoint only holds a real position between mousedown and mouseup. Without
+    // this the move that carries the pointer onto a thumbnail is measured against
+    // the sentinel, reads as a drag of ninety-nine thousand pixels, and the click
+    // that follows is thrown away as the end of one.
+    if (startPoint.current.x === 99999) return
+    if (Math.abs(e.clientX - startPoint.current.x) > 2 || Math.abs(e.clientY - startPoint.current.y) > 2) {
       isDrag.current = true
     }
   }
@@ -116,6 +121,10 @@ export default function CompListWrap() {
   }
 
   const dragStart = async (e: React.MouseEvent, { id, width, height, cover }: TGetCompListResult) => {
+    // Stop the browser starting its own image drag on the thumbnail: while a
+    // native drag is running it swallows mousemove and mouseup, so the piece
+    // being dragged sits frozen until the button is released.
+    e.preventDefault()
     startPoint.current = { x: e.clientX, y: e.clientY }
     const img = await setItem2Data({ width, height, url: cover })
     dragHelper.start(e.nativeEvent, img.canvasWidth)
@@ -187,7 +196,7 @@ export default function CompListWrap() {
                     e.stopPropagation()
                     selectItem(item)
                   }}
-                  onDragStart={(e) => dragStart(e as any, item)}
+                  onDragStart={(e) => e.preventDefault()}
                 >
                   <Image className="list__img-thumb" src={item.cover} fit="contain" lazy />
                 </div>
@@ -215,7 +224,7 @@ export default function CompListWrap() {
                   e.stopPropagation()
                   selectItem(item)
                 }}
-                onDragStart={(e) => dragStart(e as any, item)}
+                  onDragStart={(e) => e.preventDefault()}
               >
                 <Image className="list__img" src={item.cover} fit="contain" lazy />
               </div>

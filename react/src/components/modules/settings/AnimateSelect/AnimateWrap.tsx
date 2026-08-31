@@ -3,6 +3,7 @@ import { useSnapshot } from 'valtio'
 import Button from '@/components/ui/Button'
 import Popover from '@/components/ui/Popover'
 import NumberSlider from '../NumberSlider'
+import ValueSelect from '../ValueSelect'
 import PresetTile, { type PresetTileHandle } from './PresetTile'
 import { updateWidgetData } from '@/store/widget/widget'
 import { cancelAll, playWidgetAnimation } from '@/common/animations/play'
@@ -22,17 +23,30 @@ type Props = {
   widget: TdWidgetData
 }
 
-const START_OPTIONS: { value: TWidgetAnimation['start']; name: string; hint: string }[] = [
-  { value: 'after', name: 'After the one before', hint: 'Waits its turn, giving a cascade' },
-  { value: 'with', name: 'At the same time', hint: 'Moves together with the element before it' },
-  { value: 'click', name: 'On click', hint: 'Holds until you advance the slide' },
+/**
+ * The running order, in the panel's own vocabulary. A dropdown rather than three
+ * stacked buttons: it is one choice out of three, which is what every other
+ * choice in this panel looks like, and the reading of it goes on the line below.
+ */
+const STARTS: { value: TWidgetAnimation['start']; label: string; hint: string }[] = [
+  { value: 'after', label: 'After the one before', hint: 'Waits its turn, giving a cascade' },
+  { value: 'with', label: 'At the same time', hint: 'Moves in with the element before it' },
+  { value: 'click', label: 'On click', hint: 'Holds until you advance the slide' },
 ]
+const START_LABELS = STARTS.map((option) => option.label)
 
+/**
+ * Animation is one section of the settings panel, not a card sitting on top of
+ * it: the same left edge, the same uppercase heading and the same
+ * label-above-control rhythm as Size and position or Text effects.
+ */
 export default function AnimateWrap({ widget }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const snap = useSnapshot(widget) as TdWidgetData
   const animation = snap.animation
   const current = getPreset(animation?.preset)
+
+  const startOption = STARTS.find((option) => option.value === animation?.start) || STARTS[0]
 
   // The sliders work in seconds because that is how anyone talks about the pace
   // of a slide; the stored value stays in milliseconds, which is what plays it.
@@ -63,7 +77,6 @@ export default function AnimateWrap({ widget }: Props) {
     if (!el) return
     preview.current = playWidgetAnimation(el, widget.animation)
   }, [widget])
-
 
   useEffect(
     () => () => {
@@ -119,9 +132,10 @@ export default function AnimateWrap({ widget }: Props) {
     write({ ...widget.animation, delay: Math.round(Number(value) * 1000) })
   }
 
-  function commitStart(start: TWidgetAnimation['start']) {
+  function commitStart(label: Record<string, any> | string | number) {
     if (!widget.animation) return
-    write({ ...widget.animation, start })
+    const option = STARTS.find((item) => item.label === label)
+    if (option) write({ ...widget.animation, start: option.value })
   }
 
   const picker = useMemo(
@@ -156,14 +170,14 @@ export default function AnimateWrap({ widget }: Props) {
   )
 
   return (
-    <div className="el-card is-hover-shadow animate-card">
-      <div className="el-card__header">
-        <div className="card-header">
-          <span className="title">Animation</span>
-          <span className="current">{current ? current.name : 'None'}</span>
+    <div className="animate">
+      <div className="animate__head">
+        <span className="animate__title">Animation</span>
+        <div className="animate__head-right">
+          <span className="animate__current">{current ? current.name : 'None'}</span>
           <Popover
             content={picker}
-            placement="bottom-end"
+            placement="left-start"
             width={332}
             popperClass="animate-popper"
             open={pickerOpen}
@@ -173,46 +187,35 @@ export default function AnimateWrap({ widget }: Props) {
               else clearIntro()
             }}
           >
-            <Button className="button" type="primary" link>
+            <Button className="animate__choose" link>
               {pickerOpen ? 'Cancel' : 'Choose'}
             </Button>
           </Popover>
         </div>
       </div>
-      <div className="el-card__body" style={{ padding: current ? '14px 16px 16px' : 0 }}>
-        {current ? (
-          <div className="body">
-            <p className="body__hint">{current.hint}</p>
 
-            <NumberSlider value={speed} label="Speed (seconds)" step={0.05} minValue={0.15} maxValue={3} onFinish={commitSpeed} />
-            <NumberSlider value={wait} label="Wait first (seconds)" step={0.05} minValue={0} maxValue={5} onFinish={commitWait} />
+      {current ? (
+        <div className="animate__body">
+          <p className="animate__hint">{current.hint}</p>
 
-            <p className="body__label">Starts</p>
-            <div className="starts">
-              {START_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={cx('starts__item', { 'starts__item--on': animation?.start === option.value })}
-                  onClick={() => commitStart(option.value)}
-                >
-                  <span className="starts__name">{option.name}</span>
-                  <span className="starts__hint">{option.hint}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="body__actions">
-              <Button className="body__play" plain type="primary" onClick={previewOnCanvas}>
-                Play on canvas
-              </Button>
-              <Button className="body__clear" link onClick={() => choose(null)}>
-                Remove
-              </Button>
-            </div>
+          <div className="animate__sliders">
+            <NumberSlider value={speed} label="Speed" step={0.05} minValue={0.15} maxValue={3} onFinish={commitSpeed} />
+            <NumberSlider value={wait} label="Delay" step={0.05} minValue={0} maxValue={5} onFinish={commitWait} />
           </div>
-        ) : null}
-      </div>
+
+          <ValueSelect value={startOption.label} label="Starts" data={START_LABELS} readonly inputWidth="100%" onFinish={commitStart} />
+          <p className="animate__note">{startOption.hint}</p>
+
+          <div className="animate__actions">
+            <Button className="animate__action" link onClick={previewOnCanvas}>
+              Play on canvas
+            </Button>
+            <Button className="animate__action" link onClick={() => choose(null)}>
+              Remove
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

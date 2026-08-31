@@ -142,7 +142,7 @@ const cases: Case[] = [
     },
   },
   {
-    name: 'animate-card-dark',
+    name: 'animate-section-dark',
     route: '/home',
     theme: 'dark',
     target: '.el-popper.animate-popper, .animate-popper',
@@ -153,12 +153,12 @@ const cases: Case[] = [
       await page.waitForTimeout(900)
       await page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first().click({ position: { x: 20, y: 10 } })
       await page.waitForTimeout(700)
-      await page.locator('.animate-card').getByText('Choose', { exact: true }).click()
+      await page.locator('.animate').getByText('Choose', { exact: true }).click()
       await page.waitForTimeout(2200)
     },
   },
   {
-    name: 'animate-card-chosen-dark',
+    name: 'animate-section-chosen-dark',
     route: '/home',
     theme: 'dark',
     prepareStep: async (page) => {
@@ -168,7 +168,7 @@ const cases: Case[] = [
       await page.waitForTimeout(900)
       await page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first().click({ position: { x: 20, y: 10 } })
       await page.waitForTimeout(700)
-      await page.locator('.animate-card').getByText('Choose', { exact: true }).click()
+      await page.locator('.animate').getByText('Choose', { exact: true }).click()
       await page.waitForTimeout(1600)
       await page.locator('.picker__grid .tile', { hasText: 'Rise' }).first().click()
       await page.waitForTimeout(2200)
@@ -200,6 +200,47 @@ const cases: Case[] = [
       await page.waitForTimeout(2600)
       await page.getByRole('button', { name: 'Present' }).click()
       await page.waitForTimeout(2600)
+    },
+  },
+  {
+    name: 'templates-category-dark',
+    route: '/home',
+    theme: 'dark',
+    prepareStep: async (page) => {
+      await page.waitForTimeout(1400)
+      await page.locator('.cates__chip', { hasText: 'Posters' }).first().click()
+      await page.waitForTimeout(2200)
+    },
+  },
+  {
+    name: 'templates-search-empty-dark',
+    route: '/home',
+    theme: 'dark',
+    prepareStep: async (page) => {
+      await page.waitForTimeout(1200)
+      await page.getByPlaceholder('Search templates').fill('zzzznothing')
+      await page.keyboard.press('Enter')
+      await page.waitForTimeout(2200)
+    },
+  },
+  {
+    name: 'text-effect-applied-dark',
+    route: '/home',
+    theme: 'dark',
+    prepareStep: async (page) => {
+      await page.getByText('Text', { exact: true }).click()
+      await page.waitForTimeout(400)
+      await page.getByText('Heading', { exact: true }).click()
+      await page.waitForTimeout(900)
+      await page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first().click({ position: { x: 20, y: 10 } })
+      await page.waitForTimeout(700)
+      await page.locator('.effects').getByText('Choose', { exact: true }).click()
+      await page.waitForTimeout(1800)
+      await page.locator('.select__box__select-item img').first().click()
+      await page.waitForTimeout(1800)
+      // The Advanced list, so the layers a preset brought with it are on screen.
+      await page.locator('.advanced').getByText('Advanced', { exact: true }).click()
+      await page.waitForTimeout(900)
     },
   },
   {

@@ -98,7 +98,11 @@ watch(
         columnHeights[index] = item.height + columnHeights[index] + gap
       }
     }
-    state.countHeight = Math.max(...columnHeights)
+    // Math.max() of nothing is -Infinity, which is not a length, so the browser
+    // keeps whatever height was set last — a search that matches nothing leaves
+    // a column of empty space where the results were, and pushes the message
+    // saying so off the bottom of the panel.
+    state.countHeight = columnHeights.length ? Math.max(...columnHeights) : 0
     state.list = cloneList
   },
 )

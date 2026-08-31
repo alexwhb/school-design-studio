@@ -1,11 +1,10 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import api from '@/api'
-import type { IGetTempListData } from '@/api/home'
+import type { IGetTempListData, TGetCategoriesData } from '@/api/home'
 import useConfirm from '@/common/methods/confirm'
 import useInfiniteScroll from '@/common/hooks/useInfiniteScroll'
 import { readQuery, replaceQuery } from '@/common/hooks/useRouteQuery'
 import Button from '@/components/ui/Button'
-import Divider from '@/components/ui/Divider'
 import { setShowMoveable } from '@/store/control'
 import { setZoomScreenChange } from '@/store/force'
 import { managerEdit } from '@/store/base'
@@ -14,6 +13,7 @@ import { historyState } from '@/store/state'
 import { selectWidget, setDWidgets, setTemplate } from '@/store/widget'
 import SearchHeader from './components/SearchHeader'
 import ImgWaterFall from './components/ImgWaterFall'
+import { cx } from '@/utils/dom'
 import './tempListWrap.less'
 
 type TPageOptions = {
@@ -23,25 +23,33 @@ type TPageOptions = {
   state?: string
 }
 
+/** Always first, and not content — the server only knows about real categories. */
+const ALL: TGetCategoriesData = { id: '', name: 'All' }
+
 export default function TempListWrap() {
   const listRef = useRef<HTMLUListElement | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadDone, setLoadDone] = useState(false)
   const [list, setList] = useState<IGetTempListData[]>([])
-  const [title, setTitle] = useState('Sample templates')
+  const [cates, setCates] = useState<TGetCategoriesData[]>([ALL])
+  /** The selected chip's slug; '' is "All". */
+  const [cate, setCate] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
 
   const keywordRef = useRef('')
   keywordRef.current = searchKeyword
   const loadingRef = useRef(false)
   const doneRef = useRef(false)
-  const pageOptions = useRef<TPageOptions>({ page: 0, pageSize: 20, cate: 1 })
+  const pageOptions = useRef<TPageOptions>({ page: 0, pageSize: 20, cate: '' })
   const initialised = useRef(false)
 
   if (!initialised.current) {
     initialised.current = true
-    const { cate, edit } = readQuery()
-    cate && (pageOptions.current.cate = cate ?? 1)
+    const { cate: fromQuery, edit } = readQuery()
+    if (fromQuery) {
+      pageOptions.current.cate = fromQuery
+      setCate(String(fromQuery))
+    }
     edit && managerEdit(true)
   }
 
@@ -94,11 +102,41 @@ export default function TempListWrap() {
     load(true, pageOptions.current.state)
   }
 
-  function cateChange(type: any) {
-    setTitle(type.name)
-    const init = pageOptions.current.cate != type.id
-    pageOptions.current.cate = type.id
-    load(init, pageOptions.current.state)
+  const cateChange = useCallback(
+    (type: TGetCategoriesData) => {
+      const init = pageOptions.current.cate !== type.id
+      setCate(type.id)
+      pageOptions.current.cate = type.id
+      load(init, pageOptions.current.state)
+    },
+    [load],
+  )
+
+  useEffect(() => {
+    api.home.getCategories().then((found: TGetCategoriesData[]) => {
+      const all = [ALL, ...(found || [])]
+      setCates(all)
+      // A ?cate= naming something the gallery no longer has would otherwise
+      // leave every chip unselected over an empty list.
+      setCate((current) => {
+        if (current && !all.some((item) => item.id === current)) {
+          cateChange(ALL)
+          return ''
+        }
+        return current
+      })
+    })
+  }, [cateChange])
+
+  /**
+   * Why the list came back empty. A search inside a category is the one case
+   * where the fix is not obvious, so name the category rather than leaving
+   * someone to wonder why a template they can see the name of is missing.
+   */
+  function emptyMessage() {
+    if (!searchKeyword) return 'Nothing here yet'
+    const found = cates.find((item) => item.id === cate)
+    return cate ? `No ${found?.name.toLowerCase()} match \u201C${searchKeyword}\u201D` : `Nothing matches \u201C${searchKeyword}\u201D`
   }
 
   let hideReplacePrompt: any = localStorage.getItem('hide_replace_prompt')
@@ -153,17 +191,31 @@ export default function TempListWrap() {
 
   return (
     <div className="wrap temp-list-wrap">
-      <SearchHeader value={searchKeyword} onChange={setSearchKeyword} onCateChange={cateChange} onSearch={searchChange} />
-
-      {title ? (
-        <Divider style={{ marginTop: '1.7rem' }} contentPosition="left">
-          <span style={{ fontWeight: 'bold' }}>{title}</span>
-        </Divider>
-      ) : null}
+      <SearchHeader type="none" value={searchKeyword} placeholder="Search templates" onChange={setSearchKeyword} onSearch={searchChange} />
 
       <Button className="upload-psd" plain type="primary" onClick={openPSD}>
         Import a PSD file
       </Button>
+
+      {/* Chips rather than the header's dropdown: five categories over a gallery
+          this size are worth showing outright, and the row doubles as a reminder
+          of what the search is currently scoped to. They sit directly above the
+          list because they filter it — the PSD button used to be in between,
+          which read as a divider between the two. */}
+      {cates.length > 1 ? (
+        <div className="cates">
+          {cates.map((item) => (
+            <button
+              key={item.id}
+              className={cx('cates__chip', { 'cates__chip--on': cate === item.id })}
+              type="button"
+              onClick={() => cateChange(item)}
+            >
+              {item.name}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <ul ref={listRef} className="infinite-list" style={{ overflow: 'auto' }}>
         <ImgWaterFall listData={list} onSelect={selectItem} />
@@ -172,7 +224,8 @@ export default function TempListWrap() {
             <i className="el-icon-loading" /> Loading
           </div>
         ) : null}
-        {loadDone ? <div className="loading">That is everything</div> : null}
+        {loadDone && list.length ? <div className="loading">That is everything</div> : null}
+        {loadDone && !list.length ? <div className="loading">{emptyMessage()}</div> : null}
       </ul>
     </div>
   )

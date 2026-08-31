@@ -67,6 +67,11 @@ export default function StylePanel() {
           </Button>
           <IconItemSelect label="" data={alignIconList} onFinish={alignAction} />
         </div>
+        {animatable ? (
+          <div className="animate-slot" style={{ display: showGroupCombined ? 'none' : undefined }}>
+            <AnimateWrap key={activeUuid} widget={widgetState.dActiveElement as TdWidgetData} />
+          </div>
+        ) : null}
         {StyleComp ? (
           // `display: contents` rather than a plain box: every style panel is
           // `height: 100%`, and a percentage height resolves against the nearest
@@ -74,11 +79,6 @@ export default function StylePanel() {
           // their content height.
           <div style={{ display: showGroupCombined ? 'none' : 'contents' }}>
             <StyleComp />
-          </div>
-        ) : null}
-        {animatable ? (
-          <div className="animate-slot" style={{ display: showGroupCombined ? 'none' : undefined }}>
-            <AnimateWrap key={activeUuid} widget={widgetState.dActiveElement as TdWidgetData} />
           </div>
         ) : null}
       </div>

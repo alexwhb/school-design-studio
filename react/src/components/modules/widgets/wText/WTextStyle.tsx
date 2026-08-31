@@ -15,6 +15,7 @@ import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconIte
 import TextInputArea from '../../settings/TextInputArea'
 import ValueSelect from '../../settings/ValueSelect'
 import TextWrap from '../../settings/EffectSelect/TextWrap'
+import recolorEffects from './recolorEffects'
 import './wTextStyle.less'
 
 const FONT_SIZE_LIST = [12, 14, 24, 26, 28, 30, 36, 48, 60, 72, 96, 108, 120, 140, 180, 200, 250, 300, 400, 500]
@@ -74,6 +75,26 @@ export default function WTextStyle() {
 
   function finish(key: string, value: number | Record<string, any> | string) {
     updateWidgetData({ uuid, key: key as any, value })
+  }
+
+  /**
+   * A text effect is painted in the text's own colour, so the colour swatch has
+   * to carry the stack with it — the fill layer sits on top of the plain text
+   * and would otherwise go on showing the old colour, which reads as the swatch
+   * doing nothing at all. See recolorEffects.ts for which parts follow.
+   *
+   * The widget still holds the colour being replaced, which is why the stack is
+   * rewritten before the new colour is written through.
+   */
+  function changeColor(value: string) {
+    const target = widgetState.dActiveElement as any
+    const effects = target?.textEffects
+    // The panel can still be holding the widget that was selected a moment ago.
+    // Recolouring then would write one widget's stack onto another.
+    if (effects?.length && target.uuid === uuid) {
+      finish('textEffects', recolorEffects(JSON.parse(JSON.stringify(effects)), target.color, value) as any)
+    }
+    finish('color', value)
   }
 
   function selectTextEffect({ key, value, style }: any) {
@@ -171,7 +192,7 @@ export default function WTextStyle() {
       </div>
 
       <div style={{ flexWrap: 'nowrap' }} className="line-layout style-item">
-        <ColorSelect value={active.color} label="Colour" onValueChange={(value) => finish('color', value)} />
+        <ColorSelect value={active.color} label="Colour" onValueChange={changeColor} />
       </div>
       <div className="line-layout style-item">
         <TextWrap
@@ -179,6 +200,7 @@ export default function WTextStyle() {
           data={active}
           degree={active.degree}
           onValueChange={(value) => finish('textEffects', value as any)}
+          onSelect={selectTextEffect}
         />
       </div>
       <IconItemSelect className="style-item" data={layerIconList} onFinish={layerAction} />

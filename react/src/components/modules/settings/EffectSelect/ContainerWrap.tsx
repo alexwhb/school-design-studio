@@ -41,6 +41,7 @@ export default function ContainerWrap({ value, onChange }: Props) {
           <span className="title">Image mask</span>
           <Popover
             placement="bottom-end"
+            popperClass="ds-mask-picker"
             width={260}
             open={visible}
             onOpenChange={setVisible}

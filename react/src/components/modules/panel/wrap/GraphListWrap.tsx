@@ -72,7 +72,12 @@ export default function GraphListWrap() {
 
   const mousemove = (e: React.MouseEvent) => {
     e.preventDefault()
-    if (e.clientX - startPoint.current.x > 2 || e.clientY - startPoint.current.y > 2) {
+    // startPoint only holds a real position between mousedown and mouseup. Without
+    // this the move that carries the pointer onto a thumbnail is measured against
+    // the sentinel, reads as a drag of ninety-nine thousand pixels, and the click
+    // that follows is thrown away as the end of one.
+    if (startPoint.current.x === 99999) return
+    if (Math.abs(e.clientX - startPoint.current.x) > 2 || Math.abs(e.clientY - startPoint.current.y) > 2) {
       isDrag.current = true
     }
   }
@@ -177,6 +182,10 @@ export default function GraphListWrap() {
   }
 
   async function dragStart(e: React.MouseEvent, item: TGetListData) {
+    // Stop the browser starting its own image drag on the thumbnail: while a
+    // native drag is running it swallows mousemove and mouseup, so the piece
+    // being dragged sits frozen until the button is released.
+    e.preventDefault()
     startPoint.current = { x: e.clientX, y: e.clientY }
     const { width, height, thumb, url } = item
     const img = await setImageData({ width, height, url: thumb || url })
@@ -205,7 +214,7 @@ export default function GraphListWrap() {
                     e.stopPropagation()
                     selectItem(item)
                   }}
-                  onDragStart={(e) => dragStart(e as any, item)}
+                  onDragStart={(e) => e.preventDefault()}
                 >
                   <Image className={cx('list__img-thumb', `art--${item.type}`)} src={item.thumb} fit="contain" lazy />
                 </div>
@@ -233,7 +242,7 @@ export default function GraphListWrap() {
                   e.stopPropagation()
                   selectItem(item)
                 }}
-                onDragStart={(e) => dragStart(e as any, item)}
+                  onDragStart={(e) => e.preventDefault()}
               >
                 <Image className={cx('list__img', `art--${item.type}`)} src={item.thumb} fit="contain" lazy />
               </div>

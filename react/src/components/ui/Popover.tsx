@@ -45,7 +45,8 @@ export default function Popover({
         <PopoverPrimitive.Content
           side={side}
           align={align}
-          sideOffset={8}
+          // Element Plus's popovers stand 12px off their trigger.
+          sideOffset={12}
           collisionPadding={8}
           onOpenAutoFocus={(e) => e.preventDefault()}
           className={cx('el-popover', 'el-popper', 'is-light', 'ds-popper', popperClass || '')}

@@ -14,7 +14,9 @@
   }
 }
 
-.select__box {
+// Scoped to this picker: the text-effect picker uses the same class names with
+// different tile sizes, and Vue kept the two apart with scoped styles.
+.ds-mask-picker .select__box {
   display: flex;
   flex-wrap: wrap;
   max-height: 220px;
@@ -33,10 +35,10 @@
     background: @surface-2;
   }
 }
-.select__box ::-webkit-scrollbar {
+.ds-mask-picker .select__box ::-webkit-scrollbar {
   display: none;
 }
-.box__header {
+.ds-mask-picker .box__header {
   width: 100%;
   text-align: center;
   padding-bottom: 12px;
