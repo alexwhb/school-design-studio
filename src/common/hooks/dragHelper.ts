@@ -26,10 +26,16 @@ type TQueueFunction = () => void
 export default class DragHelper {
   private cloneEl?: HTMLElement | null
   private dragging: boolean = false
+  private pointerDown: boolean = false
   private initial: Partial<TInitial> = {}
   private queue: TQueueFunction[] = []
 
   constructor() {
+    // Whether the button is still held. Tracked in the capture phase so it is
+    // already true when a panel's own mousedown handler runs, and false again
+    // before its mouseup handler does.
+    window.addEventListener('mousedown', () => { this.pointerDown = true }, true)
+    window.addEventListener('mouseup', () => { this.pointerDown = false }, true)
     window.addEventListener('mousemove', (e) => {
       if (this.dragging && this.cloneEl) {
         const { width, height } = this.initial as TInitial
@@ -70,6 +76,10 @@ export default class DragHelper {
    * 拖动开始 mousedown
    */
   public start(e: MouseEvent, finallySize: number) {
+    // Callers measure the artwork before starting, so the button may already
+    // be back up by the time we get here. Picking the piece up now would leave
+    // it stuck to the cursor with nothing held down.
+    if (!this.pointerDown) return
     if (!this.cloneEl) {
       const controlStore = useControlStore()
       controlStore.setDraging(true)

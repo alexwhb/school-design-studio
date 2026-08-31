@@ -88,7 +88,7 @@ const mouseup = (e: MouseEvent) => {
 
 const mousemove = (e: MouseEvent) => {
   e.preventDefault()
-  if (e.x - startPoint.x > 2 || e.y - startPoint.y > 2) {
+  if (Math.abs(e.x - startPoint.x) > 2 || Math.abs(e.y - startPoint.y) > 2) {
     isDrag = true
   }
 }

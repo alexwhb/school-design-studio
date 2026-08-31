@@ -18,7 +18,7 @@
     <classHeader v-show="!state.currentCategory" :types="state.types" @select="selectTypes">
       <template v-slot="{ index }">
         <div class="list-wrap">
-          <div v-for="(item, i) in state.showList[index]" :key="i + 'sl'" draggable="false" @mousedown="dragStart($event, item)" @mousemove="mousemove" @mouseup="mouseup" @click.stop="selectItem(item)" @dragstart="dragStart($event, item)">
+          <div v-for="(item, i) in state.showList[index]" :key="i + 'sl'" draggable="false" @mousedown="dragStart($event, item)" @mousemove="mousemove" @mouseup="mouseup" @click.stop="selectItem(item)" @dragstart.prevent>
             <el-image class="list__img-thumb" :src="item.cover" fit="contain" lazy loading="lazy"></el-image>
           </div>
         </div>
@@ -28,7 +28,7 @@
     <ul v-if="state.currentCategory" v-infinite-scroll="load" class="infinite-list" :infinite-scroll-distance="150" style="overflow: auto">
       <classHeader :is-back="true" @back="back">{{ state.currentCategory.name }}</classHeader>
       <el-space fill wrap :fillRatio="30" direction="horizontal" class="list">
-        <div v-for="(item, i) in state.list" :key="i + 'i'" class="list__item" draggable="false" @mousedown="dragStart($event, item)" @mousemove="mousemove" @mouseup="mouseup" @click.stop="selectItem(item)" @dragstart="dragStart($event, item)">
+        <div v-for="(item, i) in state.list" :key="i + 'i'" class="list__item" draggable="false" @mousedown="dragStart($event, item)" @mousemove="mousemove" @mouseup="mouseup" @click.stop="selectItem(item)" @dragstart.prevent>
           <!-- <edit-model :isComp="true" @action="action($event, item, i)"> -->
           <el-image class="list__img" :src="item.cover" fit="contain" lazy loading="lazy" />
           <!-- </edit-model> -->
@@ -108,7 +108,7 @@ const mouseup = (e: MouseEvent) => {
 
 const mousemove = (e: MouseEvent) => {
   e.preventDefault()
-  if (e.x - startPoint.x > 2 || e.y - startPoint.y > 2) {
+  if (Math.abs(e.x - startPoint.x) > 2 || Math.abs(e.y - startPoint.y) > 2) {
     isDrag = true
   }
 }
@@ -170,6 +170,10 @@ const back = () => {
 }
 
 const dragStart = async (e: MouseEvent, { id, width, height, cover }: TGetCompListResult) => {
+  // Stop the browser starting its own image drag on the thumbnail: while a
+  // native drag is running it swallows mousemove and mouseup, so the piece
+  // being dragged sits frozen until the button is released.
+  e.preventDefault()
   startPoint = { x: e.x, y: e.y }
   // tempDetail = await api.home.getTempDetail({ id, type: 1 })
   // let finalWidth = tempDetail.width
