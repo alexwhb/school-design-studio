@@ -20,7 +20,7 @@
     </div>
     <div v-show="state.active" class="side-wrap">
       <el-tooltip :show-after="300" :hide-after="0" effect="dark" content="Hide panel" placement="right">
-        <div class="pack__up" @click="state.active = false"><i class="iconfont icon-arrow" /></div>
+        <div class="pack__up" @click="state.active = false"><i class="iconfont icon-right" /></div>
       </el-tooltip>
     </div>
   </div>
