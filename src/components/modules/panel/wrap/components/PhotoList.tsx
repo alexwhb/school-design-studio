@@ -22,6 +22,9 @@ const dragHelper = new DragHelper()
 const marginRight = 6
 const standardHeight = 280
 
+/** Every list this renders — uploads, photos, templates — carries an id. */
+const keyOf = (item: IGetTempListData) => String(item.id ?? item.url)
+
 export default function PhotoList({
   listData = [],
   edit,
@@ -35,60 +38,78 @@ export default function PhotoList({
   const listRef = useRef<HTMLUListElement | null>(null)
   const [loading, setLoading] = useState(true)
   const [list, setList] = useState<IGetTempListData[]>([])
-  const prevData = useRef<IGetTempListData[]>([])
   const isDrag = useRef(false)
   const startPoint = useRef({ x: 99999, y: 99999 })
 
   useEffect(() => {
-    const oldList = prevData.current
-    prevData.current = listData
     if (listData.length <= 0) {
       setList([])
       return
     }
-    let pending = listData.filter((v) => !oldList.includes(v))
-    pending = JSON.parse(JSON.stringify(pending))
 
     const father = listRef.current?.parentElement
     const limitWidth = (father ? father.offsetWidth : 0) - marginRight
     if (limitWidth <= 0) return
 
-    const neatArr: IGetTempListData[][] = []
+    setList((prev) => {
+      // Entries are matched to what is already laid out by id rather than by
+      // object identity. A page of results only ever appends, so identity was
+      // enough for that; but an entry that merely *changed* — one just marked
+      // deleted, say — is a new object too, and identity reads that as another
+      // photo and packs a second copy of it in beside the original.
+      const laidOut = new Map(prev.map((x) => [keyOf(x), x]))
+      const live = new Set(listData.map(keyOf))
+      // Something went away, so the row it sat in no longer fills the width:
+      // pack the whole list again rather than leaving a hole behind.
+      const dropped = prev.some((x) => !live.has(keyOf(x)))
+      const fresh = dropped ? listData : listData.filter((v) => !laidOut.has(keyOf(v)))
+      const pending: IGetTempListData[] = JSON.parse(JSON.stringify(fresh))
 
-    function calculate(cutArr: IGetTempListData[]) {
-      let cumulate = 0
-      for (const iterator of cutArr) {
-        const { width, height } = iterator
-        cumulate += width / height
+      const neatArr: IGetTempListData[][] = []
+
+      function calculate(cutArr: IGetTempListData[]) {
+        let cumulate = 0
+        for (const iterator of cutArr) {
+          const { width, height } = iterator
+          cumulate += width / height
+        }
+        return (limitWidth - marginRight * (cutArr.length - 1)) / cumulate
       }
-      return (limitWidth - marginRight * (cutArr.length - 1)) / cumulate
-    }
 
-    function factory(cutArr: IGetTempListData[]): { height: number; list: IGetTempListData[] } {
-      const lineup = pending.shift()
-      if (!lineup) {
-        return { height: calculate(cutArr), list: cutArr }
+      function factory(cutArr: IGetTempListData[]): { height: number; list: IGetTempListData[] } {
+        const lineup = pending.shift()
+        if (!lineup) {
+          return { height: calculate(cutArr), list: cutArr }
+        }
+        cutArr.push(lineup)
+        const finalHeight = calculate(cutArr)
+        if (finalHeight > standardHeight) {
+          return factory(cutArr)
+        }
+        return { height: finalHeight, list: cutArr }
       }
-      cutArr.push(lineup)
-      const finalHeight = calculate(cutArr)
-      if (finalHeight > standardHeight) {
-        return factory(cutArr)
+
+      while (pending.length > 0) {
+        const { list: rowList, height } = factory([pending.shift() as IGetTempListData])
+        neatArr.push(
+          rowList.map((x, index) => {
+            x.listWidth = (x.width / x.height) * height
+            x.gap = index !== rowList.length - 1 ? marginRight : 0
+            return x
+          }),
+        )
       }
-      return { height: finalHeight, list: cutArr }
-    }
 
-    while (pending.length > 0) {
-      const { list: rowList, height } = factory([pending.shift() as IGetTempListData])
-      neatArr.push(
-        rowList.map((x, index) => {
-          x.listWidth = (x.width / x.height) * height
-          x.gap = index !== rowList.length - 1 ? marginRight : 0
-          return x
-        }),
-      )
-    }
-
-    setList((prev) => prev.concat(neatArr.flat(1)))
+      const packed = new Map(neatArr.flat(1).map((x) => [keyOf(x), x]))
+      return listData.map((item) => {
+        const measured = packed.get(keyOf(item))
+        if (measured) return measured
+        // Already on screen: take the caller's latest copy of it, keeping the
+        // width it was packed at so the rows around it do not jump.
+        const { listWidth, gap } = laidOut.get(keyOf(item)) as IGetTempListData
+        return { ...item, listWidth, gap }
+      })
+    })
     setLoading(false)
   }, [listData])
 
@@ -154,7 +175,10 @@ export default function PhotoList({
       <div className="list">
         {list.map((item, i) => (
           <div
-            key={i + 'i'}
+            // Keyed by the photo, not by the slot: a removal shifts everything
+            // after it up a place, and an index key would hand the next photo
+            // the previous one's loaded/failed state along with the slot.
+            key={keyOf(item)}
             style={{ width: item.listWidth + 'px', marginRight: item.gap + 'px', cursor: canDrag ? 'grab' : 'pointer' }}
             className="list__img"
             draggable={false}

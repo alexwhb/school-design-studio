@@ -24,7 +24,6 @@ export default function UserWrap() {
   const [designList, setDesignList] = useState<IGetTempListData[]>([])
   const [isDone, setIsDone] = useState(false)
   const [tabActiveName, setTabActiveName] = useState('')
-  const [deleted, setDeleted] = useState<Record<number, boolean>>({})
 
   const listRef = useRef<HTMLUListElement | null>(null)
   const loading = useRef(false)
@@ -123,7 +122,7 @@ export default function UserWrap() {
     addWidget(setting)
   }
 
-  const deleteImg = async ({ i, item }: { i: number; item: Required<TItem2DataParam> }) => {
+  const deleteImg = async ({ item }: { i: number; item: Required<TItem2DataParam> }) => {
     setShowMoveable(false)
     const isPass = await useConfirm(
       'Remove this upload?',
@@ -134,8 +133,9 @@ export default function UserWrap() {
       return false
     }
     await deleteUpload(String(item.id))
-    setDeleted((prev) => ({ ...prev, [i]: true }))
-    setImgList((prev) => prev.map((entry, index) => (index === i ? { ...entry, isDelect: true } : entry)))
+    // The record is gone from IndexedDB for good, so the row goes with it —
+    // there is nothing left for a greyed-out "Deleted" tile to stand for.
+    setImgList((prev) => prev.filter((entry) => String(entry.id) !== String(item.id)))
   }
 
   const deleteWorks = async ({ item }: { i: number; item: Required<TItem2DataParam> }) => {
@@ -160,11 +160,7 @@ export default function UserWrap() {
   }
 
   const uploadDone = (res: TUploadDoneData) => {
-    const newList = [res as unknown as IGetTempListData, ...imgListRef.current]
-    setImgList([])
-    setTimeout(() => {
-      setImgList(newList)
-    }, 300)
+    setImgList((prev) => [res as unknown as IGetTempListData, ...prev])
   }
 
   const tabChange = (tabName: string) => {
