@@ -15,7 +15,7 @@ import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconIte
 import TextInputArea from '../../settings/TextInputArea'
 import ValueSelect from '../../settings/ValueSelect'
 import TextWrap from '../../settings/EffectSelect/TextWrap'
-import recolorEffects, { parseColor, replaceEffectColor } from './recolorEffects'
+import recolorEffects, { parseColor, replaceEffectColor, type TColorParts } from './recolorEffects'
 import effectColors, { type TEffectColor } from './effectColors'
 import './wTextStyle.less'
 
@@ -77,6 +77,22 @@ export default function WTextStyle() {
    */
   const palette = useMemo(() => effectColors(active?.textEffects, active?.color), [active?.textEffects, active?.color])
 
+  /**
+   * The palette stands still while one of its pickers is open.
+   *
+   * It is read back out of the stack, and the picker rewrites the stack on
+   * every drag — so the entry a swatch stands for is renamed under it as soon
+   * as the drag starts, which remounts the swatch and takes the picker with
+   * it. Dragging one colour onto another, or onto the text's own, drops an
+   * entry and does the same. So the list is held as it was when the picker
+   * opened, and read afresh once it closes.
+   */
+  const [held, setHeld] = useState<TEffectColor[] | null>(null)
+  const swatches = held || palette
+  // A held list belongs to the widget it was read from, so selecting another
+  // one drops it rather than leaving that widget's colours on show.
+  useEffect(() => setHeld(null), [active?.uuid])
+
   if (!active) return null
 
   const uuid = active.uuid as string
@@ -110,13 +126,15 @@ export default function WTextStyle() {
    * the same move changeColor makes, aimed at a colour the preset brought with
    * it rather than at the text's own.
    */
-  function changeEffectColor(from: TEffectColor, value: string) {
+  function changeEffectColor(from: TColorParts, value: string): TColorParts | null {
     const target = widgetState.dActiveElement as any
     const effects = target?.textEffects
     const now = parseColor(value)
     // As above: the panel can still be holding the widget selected a moment ago.
-    if (!now || !effects?.length || target.uuid !== uuid) return
+    if (!now || !effects?.length || target.uuid !== uuid) return null
     finish('textEffects', replaceEffectColor(JSON.parse(JSON.stringify(effects)), from, now) as any)
+    // What the stack now paints, for the swatch to aim its next change at.
+    return now
   }
 
   function selectTextEffect({ key, value, style }: any) {
@@ -216,17 +234,16 @@ export default function WTextStyle() {
       <div style={{ flexWrap: 'nowrap' }} className="line-layout style-item text-colour">
         <ColorSelect value={active.color} label="Colour" onValueChange={changeColor} />
       </div>
-      {palette.length ? (
+      {swatches.length ? (
         <div className="style-item effect-palette">
           <p className="input-label">Effect colours</p>
           <div className="effect-palette__row">
-            {palette.map((colour) => (
-              <ColorSelect
-                key={colour.rgb}
-                value={colour.value}
-                width="32px"
-                className="effect-palette__swatch"
-                onValueChange={(next) => changeEffectColor(colour, next)}
+            {swatches.map((colour, index) => (
+              <EffectSwatch
+                key={index}
+                colour={colour}
+                onOpenChange={(open) => setHeld(open ? palette : null)}
+                onChange={changeEffectColor}
               />
             ))}
           </div>
@@ -248,5 +265,41 @@ export default function WTextStyle() {
         <TextInputArea value={active.text} onChange={(value) => finish('text', value)} />
       </div>
     </div>
+  )
+}
+
+/**
+ * One colour out of the effect stack.
+ *
+ * The picker sends a colour on every drag and each one is written straight
+ * through, so after the first the swatch no longer stands for the colour it
+ * opened on. It remembers what it last painted and aims the next change there
+ * — otherwise a drag would move the artwork once and then paint nothing.
+ */
+function EffectSwatch({
+  colour,
+  onOpenChange,
+  onChange,
+}: {
+  colour: TEffectColor
+  onOpenChange: (open: boolean) => void
+  onChange: (from: TColorParts, value: string) => TColorParts | null
+}) {
+  const painted = useRef<TColorParts>(colour)
+  useEffect(() => {
+    painted.current = colour
+  }, [colour])
+
+  return (
+    <ColorSelect
+      value={colour.value}
+      width="32px"
+      className="effect-palette__swatch"
+      onOpenChange={onOpenChange}
+      onValueChange={(next) => {
+        const now = onChange(painted.current, next)
+        if (now) painted.current = now
+      }}
+    />
   )
 }

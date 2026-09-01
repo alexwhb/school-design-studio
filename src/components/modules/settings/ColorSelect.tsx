@@ -13,12 +13,22 @@ type Props = {
   width?: string
   modes?: string[]
   className?: string
+  onOpenChange?: (open: boolean) => void
   onValueChange?: (value: string) => void
   onFinish?: (value: string) => void
   onChange?: (data: ColorChangeData) => void
 }
 
-export default function ColorSelect({ label = '', value = '', width = '100%', modes = ['Solid'], className, onValueChange, onChange }: Props) {
+export default function ColorSelect({
+  label = '',
+  value = '',
+  width = '100%',
+  modes = ['Solid'],
+  className,
+  onOpenChange,
+  onValueChange,
+  onChange,
+}: Props) {
   const [innerColor, setInnerColor] = useState('')
   const [open, setOpen] = useState(false)
   // Held here so it survives the popover closing; see ColorPicker.
@@ -48,6 +58,7 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
     setOpen(next)
     if (next) setShowMoveable(false)
     else setShowMoveable(true)
+    onOpenChange?.(next)
   }
 
   return (
