@@ -47,8 +47,10 @@ compares them three ways.
 | a text effect preset applied | 0.005% |
 | `/draw`, `/html` and `/psd` screens | 0.000% |
 
-The non-zero figures are antialiasing: 19 pixels on the QR canvas, 10 on a
-template's artwork, 15 on the dialog's rounded corner.
+The non-zero figures are antialiasing, and none is more than a few hundred
+pixels out of 1.3 million: 19 on the QR canvas, 10 on a template's artwork, 15
+on the resize dialog's rounded corner, 62 and 131 on text the two engines lay
+out a fraction of a pixel apart. The threshold the suite enforces is 0.05%.
 
 **Layout** — menus and one picker are compared as geometry rather than pixels
 (`tests/parity/menus.spec.ts`): every item's class, label, offset, height and
