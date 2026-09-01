@@ -12,6 +12,7 @@ import StylePanel from '@/components/modules/panel/StylePanel'
 import DownloadProgress from '@/components/common/ProgressLoading/DownloadProgress'
 import CreateDesign, { type CreateDesignHandle } from '@/components/business/create-design/CreateDesign'
 import ResizeDesign, { type ResizeDesignHandle } from '@/components/business/resize-design/ResizeDesign'
+import FindReplace, { type FindReplaceHandle } from '@/components/business/find-replace/FindReplace'
 import PresentMode, { type PresentModeHandle } from '@/components/business/presentation/PresentMode'
 import Tour, { type TourHandle } from './components/Tour'
 import HeaderOptions, { type HeaderOptionsHandle } from './components/HeaderOptions'
@@ -51,6 +52,7 @@ export default function Index() {
   const widgetPanelRef = useRef<WidgetPanelHandle | null>(null)
   const createDesignRef = useRef<CreateDesignHandle | null>(null)
   const resizeDesignRef = useRef<ResizeDesignHandle | null>(null)
+  const findReplaceRef = useRef<FindReplaceHandle | null>(null)
   const presentRef = useRef<PresentModeHandle | null>(null)
   const loaded = useRef(false)
   const tourRef = useRef<TourHandle | null>(null)
@@ -98,6 +100,7 @@ export default function Index() {
       zoomAdd: () => zoomControlRef.current?.add(),
       zoomSub: () => zoomControlRef.current?.sub(),
       present: () => presentRef.current?.open(),
+      findReplace: () => findReplaceRef.current?.open(),
     }
     const onKeyDown = handleKeydowm(instanceFn)
     const onKeyUp = handleKeyup()
@@ -164,6 +167,7 @@ export default function Index() {
     changeLineGuides: () => setShowLineGuides((prev) => !prev),
     newDesign: () => createDesignRef.current?.open(),
     resizeDesign: () => resizeDesignRef.current?.open(),
+    findReplace: () => findReplaceRef.current?.open(),
   }
 
   const dealWith = (fnName: string, params?: any) => {
@@ -256,6 +260,7 @@ export default function Index() {
       <Tour ref={tourRef} steps={[step1Ref, step2Ref, step3Ref, step4Ref]} />
       <CreateDesign ref={createDesignRef} />
       <ResizeDesign ref={resizeDesignRef} />
+      <FindReplace ref={findReplaceRef} />
       <PresentMode ref={presentRef} />
     </div>
   )

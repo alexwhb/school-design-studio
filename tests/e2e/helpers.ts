@@ -193,3 +193,48 @@ export async function openGradient(page: Page, swatch: Locator, type: 'linear' |
   await page.keyboard.press('Escape')
   await page.waitForTimeout(500)
 }
+
+/**
+ * Through the File menu, for the same reason the resize dialog is: it works
+ * whatever happens to be selected. Ctrl+F opens the same dialog and is
+ * exercised on its own.
+ */
+export async function openFindReplace(page: Page) {
+  await page.getByText('File', { exact: true }).click()
+  await page.waitForTimeout(300)
+  await page.getByText('Find and replace…', { exact: true }).click()
+  await page.waitForTimeout(600)
+}
+
+/** Retypes a text widget's contents the way someone would: caret in, select all, type. */
+export async function setWidgetText(page: Page, text: string, index = 0) {
+  await page.locator(WIDGET).nth(index).dblclick({ position: { x: 24, y: 12 } })
+  await page.waitForTimeout(400)
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.keyboard.type(text)
+  await page.locator('#page-design').click({ position: { x: 30, y: 30 } })
+  await page.waitForTimeout(500)
+}
+
+/** Adds a page after the current one and moves to it, through the page strip. */
+export async function addPage(page: Page) {
+  await page.locator('.artboards .item-add').click()
+  await page.waitForTimeout(900)
+}
+
+/** Moves to a page by clicking its thumbnail. The strip has to be open already. */
+export async function goToPage(page: Page, index: number) {
+  await page.locator('.artboards .page').nth(index).click()
+  await page.waitForTimeout(700)
+}
+
+/** What a text widget on the current page reads as, markup taken off. */
+export async function widgetText(page: Page, index = 0) {
+  return page.locator(`${WIDGET} .edit-text`).nth(index).innerText()
+}
+
+/** Puts the page strip back into its pill, so it stops covering the board. */
+export async function collapsePageStrip(page: Page) {
+  await page.locator('.artboards .icon-btn').click()
+  await page.waitForTimeout(500)
+}

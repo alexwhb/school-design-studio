@@ -12,6 +12,7 @@
 import { canvasState, widgetState } from '../state'
 import { setDCurrentPage, setDPage } from '../canvas'
 import { setShowMoveable } from '../control'
+import { setLayoutsChange } from '../force'
 import { getWidgets, setDWidgets } from './widget'
 import { selectWidget } from './select'
 import type { TPageState, TdLayout } from '../types'
@@ -45,6 +46,14 @@ function blankPageLike(page: TPageState): TPageState {
  * The order matters: the widget list has to be re-read before the canvas store
  * is pointed at the new page, or the board paints one page's artwork at the
  * other page's size for a frame.
+ *
+ * And the board has to be told the list is a different one. Swapping dWidgets
+ * for another page's array is invisible to valtio's snapshot comparison, which
+ * looks at the values that were read rather than at the object they were read
+ * from: two pages each holding one unhidden top-level layer compare equal, so
+ * the board went on drawing the page you had left. It only looked right because
+ * changing page usually changes the selection too, which is tracked — edit some
+ * text, click away, and switch, and the artwork stayed put.
  */
 export function showPage(index: number) {
   const target = Math.max(0, Math.min(index, widgetState.dLayouts.length - 1))
@@ -52,6 +61,7 @@ export function showPage(index: number) {
   setShowMoveable(false)
   setDCurrentPage(target)
   setDWidgets(getWidgets())
+  setLayoutsChange()
   setDPage(widgetState.dLayouts[target].global)
   selectWidget({ uuid: '-1' })
 }

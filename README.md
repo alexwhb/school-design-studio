@@ -416,6 +416,72 @@ The gradient itself is parsed and written in
 through the same code, so page thumbnails, presentation mode and every export
 draw a shape the way the canvas does.
 
+## Find and replace
+
+**Ctrl+F**, or **File → Find and replace…**. Type what to look for, type what
+goes in its place, and press Replace all.
+
+The designs this exists for are the long ones: a twenty-five slide assembly
+deck, a twelve-page newsletter, a set of certificates. They repeat the same
+handful of strings. The date of the trip, the head teacher's name, the hall the
+concert is in. When the date moves, every one of them has to move with it.
+Visiting twenty-five pages by hand is twenty-five chances to miss one, and the
+one that gets missed is a reprint and a second letter home apologising.
+
+So **the search covers the whole design, not the page you are on**. That is the
+feature. A find that only looked at the current page would leave exactly the
+mistake it was built to prevent. Narrowing it back to one page is offered as a
+choice, off by default.
+
+Both ways of working matter:
+
+- **Replace all** is the common one. It says what it did afterwards, "Replaced
+  11 matches across 6 pages", because most of what it changed is on a page
+  nobody is looking at. A silent sweep through a deck is unnerving.
+- **Previous and Next** are for a string short enough to turn up somewhere it
+  was not meant to. Each press jumps to the match, changing page if it is on
+  another one, and selects the box holding it so it can be read in context.
+
+A whole Replace all is **one undo step**. Ctrl+Z once puts the design back, not
+eleven times.
+
+Hidden and locked layers are searched and replaced like any other: locking is
+about dragging and hiding is about the canvas, and neither is about the words.
+The result says how many of the matches were on a layer like that, because a
+count you cannot see on screen is otherwise baffling.
+
+**Matching runs against the rendered text, never against the markup.** This is
+the part worth knowing before changing anything here. A text widget's `text`
+field is HTML. contentEditable writes back whatever it produced, so the field
+carries `<br>`s, `<ul>`/`<li>` lists and whatever spans a paste dragged in with
+it. The obvious implementation, `text.replace(find, to)`, is wrong twice over.
+Searching for "li" rewrites every bullet's tag, and a replacement that lands
+inside an attribute quietly destroys formatting the author cannot get back.
+Instead the HTML is parsed, its text nodes are walked to build the string a
+reader actually sees, every character keeps a note of the node it came from, and
+a hit is spliced into those particular nodes before the markup is serialised
+again. Tags, attributes and entities are never in the search space at all. That
+is why replacing a date inside a bulleted list leaves the bullets standing.
+
+Three details fall out of the same walk. A `<br>` or the edge of a block
+contributes a newline belonging to no text node, so a match can never straddle a
+line. "Sports&lt;br&gt;Day" does not contain "sD". A non-breaking space folds to
+a plain one for the comparison only, since browsers write `&nbsp;` into
+contentEditable wherever spaces would otherwise collapse and nobody types one on
+purpose. Case folding runs character by character rather than lower-casing the
+whole string, because a few characters lower-case into two. 'İ' is the one
+anybody meets, and it would shift every offset after it and splice the
+replacement into the wrong place.
+
+The markup walk is in `src/utils/widgets/textMatch.ts`; the walk across pages is
+in `src/store/widget/findReplace.ts` and goes through `dLayouts[].layers`. The
+page you are on is not a special case: `getWidgets()` hands back that same array
+by reference, so the current page is covered by the same loop as the rest, and
+grouped elements are in it too.
+
+No regular expressions, no searching of layer or page names, no search across
+saved designs. This is for a school office.
+
 ## Spelling
 
 On by default, and switched off in **File → Check spelling**.

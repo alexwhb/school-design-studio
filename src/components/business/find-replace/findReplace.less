@@ -1,0 +1,89 @@
+.el-dialog.ds-find-replace {
+  // Out of the middle rather than centred over the page. Next jumps to a match
+  // on the canvas and selects the box holding it, which is no help if the
+  // dialog is sitting on top of the thing it just went to find.
+  margin: 84px 32px 0 auto;
+
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    & + .field {
+      margin-top: 8px;
+    }
+    &__label {
+      .section-label();
+      flex: none;
+      // Wide enough for "Replace" at this tracking. It broke over two lines at
+      // 54px, which pushed the two fields out of line with each other.
+      width: 66px;
+      white-space: nowrap;
+    }
+    .el-input {
+      flex: 1;
+    }
+  }
+
+  .options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .scopes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    &__label {
+      .section-label();
+    }
+  }
+
+  .scope {
+    padding: 4px 9px;
+    .control-surface();
+    border-radius: @radius-sm;
+    color: @ink-2;
+    font-family: inherit;
+    font-size: @text-sm;
+    cursor: pointer;
+    &:hover {
+      border-color: @accent;
+      color: @ink;
+    }
+    &.is-on {
+      border-color: @accent;
+      background: @accent-a25;
+      color: @ink;
+    }
+  }
+
+  .tally {
+    margin: 16px 0 0;
+    padding: 8px 10px;
+    .control-surface();
+    background: @surface-2;
+    color: @ink-2;
+    font-size: @text-base;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    &__group {
+      display: flex;
+      gap: 8px;
+    }
+  }
+}
+
+// A dialog's own class only reaches the overlay through :has(), and this is the
+// one dialog that must not dim what it is talking about — the match it has just
+// jumped to is on the canvas behind it.
+.el-overlay:has(.ds-find-replace) {
+  background: transparent;
+}

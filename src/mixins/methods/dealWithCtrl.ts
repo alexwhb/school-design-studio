@@ -10,12 +10,16 @@ export type ShortcutInstance = {
   zoomAdd: () => void
   zoomSub: () => void
   present?: () => void
+  findReplace?: () => void
 }
 
 export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) {
   switch (e.keyCode) {
     case 65:
       selectAll(e)
+      break
+    case 70:
+      find(e, _this)
       break
     case 71:
       e.preventDefault()
@@ -73,6 +77,19 @@ function selectAll(e: KeyboardEvent) {
   if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement.uuid, 'editable')) return
   e.preventDefault()
   selectAllWidgets()
+}
+
+/**
+ * Ctrl+F is the browser's own find bar, so it has to be taken — but only when
+ * the caret is not in a text box. A text widget is edited in a contentEditable
+ * div, which the INPUT/TEXTAREA guard upstream does not catch, so the check
+ * happens here the way select-all does it.
+ */
+function find(e: KeyboardEvent, _this: ShortcutInstance) {
+  if (widgetState.dActiveElement?.editable) return
+  if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement.uuid, 'editable')) return
+  e.preventDefault()
+  _this.findReplace?.()
 }
 
 function copy() {

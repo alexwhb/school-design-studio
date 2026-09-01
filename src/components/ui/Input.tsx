@@ -1,4 +1,4 @@
-import { useState, type InputHTMLAttributes } from 'react'
+import { useState, type InputHTMLAttributes, type Ref } from 'react'
 import { cx } from '@/utils/dom'
 
 export type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'size'> & {
@@ -6,15 +6,18 @@ export type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' 
   size?: 'large' | 'default' | 'small'
   onChange?: (value: string) => void
   wrapperClassName?: string
+  /** The inner <input>, for the callers that have to put the caret in it. */
+  ref?: Ref<HTMLInputElement>
 }
 
-export default function Input({ value, size, onChange, className, wrapperClassName, onFocus, onBlur, ...rest }: InputProps) {
+export default function Input({ value, size, onChange, className, wrapperClassName, onFocus, onBlur, ref, ...rest }: InputProps) {
   const [focused, setFocused] = useState(false)
   return (
     <div className={cx('el-input', size && size !== 'default' ? `el-input--${size}` : '', wrapperClassName || '')}>
       <div className={cx('el-input__wrapper', { 'is-focus': focused })}>
         <input
           {...rest}
+          ref={ref}
           className={cx('el-input__inner', className || '')}
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
