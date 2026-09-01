@@ -126,6 +126,43 @@ export default function Moveable() {
     }
 
     /**
+     * Stops drawing boxes round layers that have been deleted.
+     *
+     * Moveable holds the elements themselves, not their uuids, so a target that
+     * has left the page keeps its box until something hands over a new one. A
+     * single selection is covered by dActiveElement changing as it goes, but a
+     * drag-selection is deleted with the page already active, so that never
+     * fires and the whole template's worth of boxes stays on screen.
+     *
+     * The store is what says a layer has gone: this runs as dWidgets changes,
+     * which is before React has taken the elements out of the DOM.
+     */
+    function dropDeletedTargets() {
+      if (!moveable) return
+      const target = moveable.target
+      const live = new Set(widgetState.dWidgets.map((item) => item.uuid))
+      const isGone = (el: Element) => {
+        const uuid = el?.getAttribute?.('data-uuid')
+        return !el?.isConnected || (!!uuid && !live.has(uuid))
+      }
+
+      if (Array.isArray(target)) {
+        const kept = target.filter((el: Element) => !isGone(el))
+        if (kept.length === target.length) return
+        if (!kept.length) _target = `[id="empty"]`
+        moveable.target = kept.length ? kept : `[id="empty"]`
+        return
+      }
+
+      if (typeof target === 'string' && target !== `[id="empty"]`) {
+        const el = document.querySelector(target)
+        if (el && !isGone(el)) return
+        _target = `[id="empty"]`
+        moveable.target = `[id="empty"]`
+      }
+    }
+
+    /**
      * Puts a dragged layer exactly on the line it snapped to.
      *
      * Moveable rounds its guides to a tenth of a screen pixel, and its own drag
@@ -516,11 +553,15 @@ export default function Moveable() {
       },
     )
 
-    /** Adding or deleting a layer changes what there is to align against. */
+    /**
+     * Adding or deleting a layer changes what there is to align against — and a
+     * deleted one must stop being drawn round.
+     */
     const unsubLayers = subscribeSelector(
       widgetState,
       () => widgetState.dWidgets.map((item) => item.uuid).join(','),
       () => {
+        dropDeletedTargets()
         requestAnimationFrame(buildElementGuidelines)
       },
     )

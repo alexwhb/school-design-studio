@@ -85,6 +85,39 @@ test('backspace deletes the selected widget', async ({ page }) => {
   await expect(page.locator(WIDGET)).toHaveCount(0)
 })
 
+test('deleting a whole template takes its selection boxes with it', async ({ page }) => {
+  // A template is cleared by marqueeing over it, which leaves Moveable holding
+  // a group of elements rather than one selector. The boxes used to outlive the
+  // layers they were drawn round: nothing hands Moveable a new target, because
+  // the page was already the active element before the marquee began.
+  await page.locator('.img-water-fall .img-box').first().click()
+  await page.waitForTimeout(2500)
+  expect(await widgetCount(page)).toBeGreaterThan(2)
+
+  const canvas = (await page.locator('#page-design-canvas').boundingBox())!
+  await page.mouse.move(canvas.x - 60, canvas.y + 2)
+  await page.mouse.down()
+  await page.mouse.move(canvas.x + canvas.width / 2, canvas.y + canvas.height / 2, { steps: 10 })
+  await page.mouse.move(canvas.x + canvas.width + 60, canvas.y + canvas.height - 2, { steps: 10 })
+  await page.mouse.up()
+  await page.waitForTimeout(500)
+  expect(await page.locator('.moveable-control-box').count()).toBeGreaterThan(1)
+
+  await page.keyboard.press('Backspace')
+  await page.waitForTimeout(800)
+  await expect(page.locator(WIDGET)).toHaveCount(0)
+  // The zero-size box around the placeholder Moveable falls back to is fine;
+  // anything with a side to it is a layer that is no longer there.
+  const strayBoxes = await page.evaluate(
+    () =>
+      [...document.querySelectorAll('.moveable-line')].filter((el) => {
+        const rect = el.getBoundingClientRect()
+        return rect.width > 4 || rect.height > 4
+      }).length,
+  )
+  expect(strayBoxes).toBe(0)
+})
+
 test('undo puts a deleted widget back and redo removes it again', async ({ page }) => {
   await addText(page, 'Heading')
   await expect(page.locator(WIDGET)).toHaveCount(1)
