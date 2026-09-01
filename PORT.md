@@ -75,7 +75,7 @@ shift-arrow nudges, delete, QR insertion, zoom stepping and presets, the layers
 tab, resizing a design two ways, adding and duplicating pages, and assigning an
 animation.
 
-On top of that, 79 Playwright tests exercise the port on its own
+On top of that, 82 Playwright tests exercise the port on its own
 (`tests/e2e/`), including ten that assert the embed does not leak into its host.
 
 ### What the tests caught
@@ -119,6 +119,11 @@ Bugs found by the parity and e2e suites while porting main's changes, all fixed:
   flexible and pin the swatch right were on the Vue components and not on the
   React ones.
 - **The search box had no focus ring and no clear button.**
+- **No entrance ever played in the presenter.** The set of drawn slides was
+  rebuilt on every pass, so the effect that starts a slide watched a dependency
+  that changed each time it ran — and cancelled, on the way out, the frame it
+  had queued to begin that slide's build. The pixel-parity shot could not see
+  it: by the time it is taken the animation has finished in both apps.
 
 Three bugs were found in the Vue app and fixed there, because the port faithfully
 reproduced them and they made the feature untestable:
