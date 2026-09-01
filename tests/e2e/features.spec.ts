@@ -641,6 +641,110 @@ test('the Photos panel shows the photographs, not just their placeholders', asyn
     .toBe(true)
 })
 
+/* ------------------------------------------------------------------ crop */
+
+async function addPhoto(page: Page) {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Photos' }).click()
+  await page.waitForTimeout(1200)
+  await page.locator('.photo-list-wrap .list__img').first().click()
+  await page.waitForTimeout(1500)
+  await expect(page.locator(WIDGET)).toHaveCount(1)
+}
+
+async function startCrop(page: Page) {
+  await page.locator('#w-image-style button', { hasText: 'Crop' }).click()
+  await page.waitForTimeout(400)
+}
+
+/** The frame's picture and the faded whole one behind it, to the nearest pixel. */
+function croppedBoxes(page: Page) {
+  return page.evaluate(() => {
+    const round = (el: Element | null) => {
+      if (!el) return null
+      const r = el.getBoundingClientRect()
+      return [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)]
+    }
+    return {
+      model: round(document.querySelector('.svg__edit__wrap')),
+      target: round(document.querySelector('.w-image .target')),
+      transform: (document.querySelector('.w-image .target') as HTMLElement)?.style.transform,
+    }
+  })
+}
+
+test('the crop scale reaches the picture the moment the slider moves', async ({ page }) => {
+  await addPhoto(page)
+  await startCrop(page)
+
+  const runway = page.locator('.inner-tool-bar .el-slider__runway')
+  const track = (await runway.boundingBox())!
+  await page.mouse.click(track.x + track.width / 2, track.y + track.height / 2)
+  await page.waitForTimeout(400)
+
+  await expect(page.locator('.inner-bar .value')).toHaveText('2')
+  const { model, target, transform } = await croppedBoxes(page)
+  expect(transform).toContain('scale(2)')
+  // The faded picture is what you aim with, so it has to sit exactly where the
+  // framed one does. They came apart when the slider moved and the frame did not.
+  expect(model).toEqual(target)
+})
+
+test('the crop grips reframe the picture without moving it', async ({ page }) => {
+  await addPhoto(page)
+  await startCrop(page)
+  await expect(page.locator('.crop__grip')).toHaveCount(8)
+
+  const before = await croppedBoxes(page)
+  const frameBefore = (await page.locator(WIDGET).first().boundingBox())!
+
+  // The grip on the right edge, pulled in towards the middle.
+  const grip = (await page.locator('.crop__grip').nth(4).boundingBox())!
+  const gx = grip.x + grip.width / 2
+  const gy = grip.y + grip.height / 2
+  await page.mouse.move(gx, gy)
+  await page.mouse.down()
+  await page.mouse.move(gx - 40, gy, { steps: 5 })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+
+  const frameAfter = (await page.locator(WIDGET).first().boundingBox())!
+  expect(frameAfter.width).toBeLessThan(frameBefore.width - 20)
+  expect(Math.round(frameAfter.height)).toBe(Math.round(frameBefore.height))
+
+  // Cropping narrows the window, it does not shove the photograph about.
+  const after = await croppedBoxes(page)
+  expect(after.target).toEqual(before.target)
+  expect(after.model).toEqual(after.target)
+})
+
+test('leaving an image mid-crop and coming back offers to crop it again', async ({ page }) => {
+  await addPhoto(page)
+  await startCrop(page)
+  await expect(page.locator('.inner-tool-bar')).toBeVisible()
+
+  await page.locator('#page-design').click({ position: { x: 40, y: 40 } })
+  await page.waitForTimeout(400)
+  await page.locator(WIDGET).first().click({ position: { x: 20, y: 10 } })
+  await page.waitForTimeout(400)
+
+  await expect(page.locator('.inner-tool-bar')).toHaveCount(0)
+  await expect(page.locator('.svg__edit__wrap')).toHaveCount(0)
+  await expect(page.locator('#w-image-style button', { hasText: 'Crop' })).toHaveCount(1)
+})
+
+test('cropping gives a flipped image its flip back', async ({ page }) => {
+  await addPhoto(page)
+  const box = page.locator('.w-image .img__box').first()
+  await page.locator('#w-image-style .icon.sd-zuoyoufanzhuan').click()
+  await page.waitForTimeout(300)
+  await expect(box).toHaveCSS('transform', /matrix/)
+
+  await startCrop(page)
+  await page.locator('#w-image-style button', { hasText: 'Done' }).click()
+  await page.waitForTimeout(400)
+  await expect(box).toHaveCSS('transform', /matrix/)
+})
+
 test('clicking a shape in the Elements panel places it', async ({ page }) => {
   await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
   await page.waitForTimeout(2000)

@@ -3,14 +3,44 @@ import { useSnapshot } from 'valtio'
 import { canvasState, controlState, widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import { setUpdateRect } from '@/store/force'
-import { lockWidgets, updateWidgetData } from '@/store/widget/widget'
+import { lockWidgets, updateWidgetData, updateWidgetMultiple } from '@/store/widget/widget'
 import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
 import './wImage.less'
 
+// A crop already made lives in the widget's own transform. It has to be read
+// back when the widget mounts again — a page switch, a design reopened — since
+// the first render writes the held position straight back out: starting from
+// zero would quietly undo the crop.
+function readHeldPosition(transform: string | undefined, zoomX: number, zoomY: number) {
+  const found = /translate\(\s*(-?[\d.]+)px\s*,\s*(-?[\d.]+)px\s*\)/.exec(transform || '')
+  if (!found) return { left: 0, top: 0 }
+  return { left: Number(found[1]) * (zoomX || 1), top: Number(found[2]) * (zoomY || 1) }
+}
+
+/** The corner and edge grips of the crop frame, by the way each one moves it. */
+const CROP_GRIPS: { dir: [number, number]; cursor: string }[] = [
+  { dir: [-1, -1], cursor: 'nwse-resize' },
+  { dir: [0, -1], cursor: 'ns-resize' },
+  { dir: [1, -1], cursor: 'nesw-resize' },
+  { dir: [-1, 0], cursor: 'ew-resize' },
+  { dir: [1, 0], cursor: 'ew-resize' },
+  { dir: [-1, 1], cursor: 'nesw-resize' },
+  { dir: [0, 1], cursor: 'ns-resize' },
+  { dir: [1, 1], cursor: 'nwse-resize' },
+]
+
+/** Design pixels. Small enough to crop hard, large enough to still grab. */
+const MIN_CROP = 20
+
+function clamp(value: number, low: number, high: number) {
+  return Math.min(Math.max(value, low), Math.max(low, high))
+}
+
 function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) {
   const p = useSnapshot(params) as any
   const control = useSnapshot(controlState)
+  const canvas = useSnapshot(canvasState)
   const dropOverUuid = useSnapshot(widgetState).dDropOverUuid
 
   const widgetRef = useRef<HTMLDivElement | null>(null)
@@ -18,7 +48,14 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
   const editBoxRef = useRef<HTMLDivElement | null>(null)
   const editBoxStyle = useRef<{ left: string; top: string; transform: string }>({ left: '', top: '', transform: '' })
   const cropWidgetXY = useRef({ x: 0, y: 0 })
-  const holdPosition = useRef({ left: 0, top: 0 })
+  const holdPosition = useRef(readHeldPosition(params.transform, params.zoom, params.zoomY ?? params.zoom))
+  const cropResize = useRef<{
+    dir: [number, number]
+    startX: number
+    startY: number
+    frame: { left: number; top: number; width: number; height: number }
+    picture: { left: number; top: number; width: number; height: number }
+  } | null>(null)
   const rotateTemp = useRef<any>(null)
   const flipTemp = useRef<string | null>(null)
 
@@ -29,6 +66,14 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
     updateRecord()
     setUpdateRect()
   })
+
+  // The crop scale is written straight to the widget's data and read back only
+  // from callbacks, so nothing in the markup names it. Naming it here is what
+  // subscribes this component to it: without that the slider moves, the number
+  // changes and the picture keeps being drawn at the scale it had before.
+  useEffect(() => {
+    updateRecord()
+  }, [p.zoom, p.zoomY])
 
   useEffect(() => {
     document.addEventListener('mouseup', touchend, false)
@@ -57,7 +102,7 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
     } else {
       el?.removeEventListener('mousedown', touchstart, false)
     }
-    fixRotate()
+    fixRotate(cropEdit)
     lockOthers(cropEdit)
     return () => {
       el?.removeEventListener('mousedown', touchstart, false)
@@ -72,7 +117,9 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
     el.style.transform = editBoxStyle.current.transform
   }
 
-  function touchstart() {
+  function touchstart(e: MouseEvent) {
+    // A grip is for reframing, not for sliding the picture about underneath.
+    if ((e.target as HTMLElement)?.classList?.contains('crop__grip')) return
     const editBox = document.getElementById(params.uuid + '_ebox')
     cropWidgetXY.current = {
       x: Number(editBox?.style.left.replace('px', '')) || 0,
@@ -95,7 +142,7 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
     editBoxStyle.current.left = left + 'px'
     editBoxStyle.current.top = top + 'px'
     applyEditBox()
-    changeFinish(left / params.zoom, top / params.zoom)
+    changeFinish(left / (params.zoom || 1), top / ((params.zoomY ?? params.zoom) || 1))
   }
 
   function changeFinish(x: number, y: number) {
@@ -163,26 +210,116 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
   }
 
   function updateZoom() {
-    setEditBox('scale', params.zoom)
-    setTransform('scale', params.zoom)
+    // Cropping with the grips can leave the picture wanting a different scale on
+    // each axis, so the pair is written whenever the two differ.
+    const zoomY = params.zoomY ?? params.zoom
+    const scale = zoomY === params.zoom ? String(params.zoom) : `${params.zoom}, ${zoomY}`
+    setEditBox('scale', scale)
+    setTransform('scale', scale)
     handlemousemove()
   }
 
-  function fixRotate() {
-    if (rotateTemp.current) {
-      widgetRef.current && (widgetRef.current.style.transform = `rotate(${rotateTemp.current})`)
-      params.flip = flipTemp.current
-      rotateTemp.current = null
-    } else {
+  /** Where the picture sits on the page, in design pixels, frame aside. */
+  function pictureRect() {
+    const width = params.width * (params.zoom || 1)
+    const height = params.height * ((params.zoomY ?? params.zoom) || 1)
+    return {
+      width,
+      height,
+      left: params.left + params.width / 2 + holdPosition.current.left - width / 2,
+      top: params.top + params.height / 2 + holdPosition.current.top - height / 2,
+    }
+  }
+
+  function cropResizeStart(e: React.MouseEvent, dir: [number, number]) {
+    e.preventDefault()
+    cropResize.current = {
+      dir,
+      startX: e.pageX,
+      startY: e.pageY,
+      frame: { left: params.left, top: params.top, width: params.width, height: params.height },
+      picture: pictureRect(),
+    }
+    document.addEventListener('mousemove', cropResizeMove, true)
+    document.addEventListener('mouseup', cropResizeEnd, true)
+  }
+
+  function cropResizeMove(e: MouseEvent) {
+    const drag = cropResize.current
+    if (!drag) return
+    e.stopPropagation()
+    e.preventDefault()
+    const { dir, frame, picture } = drag
+    const dx = ((e.pageX - drag.startX) * 100) / canvasState.dZoom
+    const dy = ((e.pageY - drag.startY) * 100) / canvasState.dZoom
+
+    let { left, top, width, height } = frame
+    if (dir[0] === -1) {
+      left = clamp(frame.left + dx, picture.left, frame.left + frame.width - MIN_CROP)
+      width = frame.left + frame.width - left
+    } else if (dir[0] === 1) {
+      width = clamp(frame.width + dx, MIN_CROP, picture.left + picture.width - frame.left)
+    }
+    if (dir[1] === -1) {
+      top = clamp(frame.top + dy, picture.top, frame.top + frame.height - MIN_CROP)
+      height = frame.top + frame.height - top
+    } else if (dir[1] === 1) {
+      height = clamp(frame.height + dy, MIN_CROP, picture.top + picture.height - frame.top)
+    }
+
+    // The picture is what stays still; the frame is the window moving over it.
+    // That fixes the scale on each axis, and what is held is simply the distance
+    // between the two centres.
+    holdPosition.current = {
+      left: picture.left + picture.width / 2 - (left + width / 2),
+      top: picture.top + picture.height / 2 - (top + height / 2),
+    }
+    updateWidgetMultiple({
+      uuid: params.uuid,
+      data: [
+        { key: 'left', value: left },
+        { key: 'top', value: top },
+        { key: 'width', value: width },
+        { key: 'height', value: height },
+        { key: 'zoom', value: picture.width / width },
+        { key: 'zoomY', value: picture.height / height },
+      ],
+    })
+  }
+
+  function cropResizeEnd() {
+    cropResize.current = null
+    document.removeEventListener('mousemove', cropResizeMove, true)
+    document.removeEventListener('mouseup', cropResizeEnd, true)
+    setUpdateRect()
+  }
+
+  // Cropping is done on a straight, unflipped picture, so the turn and the flip
+  // are held aside and handed back on the way out. Which way round that goes has
+  // to follow the crop state: an image sitting at zero degrees was reading its
+  // own held angle as "nothing held", straightening a second time and dropping
+  // the flip for good.
+  function fixRotate(isCrop: boolean) {
+    if (isCrop) {
       rotateTemp.current = params.rotate
       widgetRef.current && (widgetRef.current.style.transform = `rotate(0deg)`)
       flipTemp.current = params.flip ?? null
       params.flip = null
+    } else {
+      widgetRef.current &&
+        (widgetRef.current.style.transform = rotateTemp.current ? `rotate(${rotateTemp.current})` : '')
+      params.flip = flipTemp.current
+      rotateTemp.current = null
     }
+    // The selection box stays away for the whole crop: its edges sit above the
+    // grips and would take the mouse press meant for them, and the crop frame
+    // draws its own outline anyway.
     setShowMoveable(false)
-    setTimeout(() => {
-      setShowMoveable(true)
-    }, 100)
+    if (!isCrop) {
+      setTimeout(() => {
+        setShowMoveable(true)
+      }, 100)
+    }
   }
 
   function lockOthers(isCrop: boolean) {
@@ -214,6 +351,25 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
       {cropEdit ? (
         <div id={params.uuid + '_ebox'} ref={editBoxRef} className="svg__edit__wrap" style={{ transformOrigin: 'center' }}>
           <img className="edit__model" src={p.imgUrl} />
+        </div>
+      ) : null}
+      {cropEdit ? (
+        <div className="crop__grips" style={{ boxShadow: `0 0 0 ${100 / (canvas.dZoom || 100)}px #6ccfff` }}>
+          {CROP_GRIPS.map(({ dir, cursor }) => (
+            <div
+              key={dir.join(',')}
+              className="crop__grip"
+              style={{
+                left: `${(dir[0] + 1) * 50}%`,
+                top: `${(dir[1] + 1) * 50}%`,
+                cursor,
+                // The canvas is scaled by the editor's zoom, so the grips are
+                // scaled back out of it and stay the same size to grab at any zoom.
+                transform: `scale(${100 / (canvas.dZoom || 100)})`,
+              }}
+              onMouseDown={(e) => cropResizeStart(e, dir)}
+            />
+          ))}
         </div>
       ) : null}
       <div

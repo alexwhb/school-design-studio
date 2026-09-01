@@ -6,10 +6,10 @@ import { getImage } from '@/common/methods/getImgDetail'
 import Button from '@/components/ui/Button'
 import Collapse, { CollapseItem } from '@/components/ui/Collapse'
 import PictureSelector, { type PictureSelectorHandle } from '@/components/business/picture-selector/PictureSelector'
-import { canvasState, widgetState } from '@/store/state'
+import { canvasState, controlState, widgetState } from '@/store/state'
 import { setCropUuid, setShowRotatable } from '@/store/control'
 import { setUpdateRect } from '@/store/force'
-import { updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
+import { updateAlign, updateLayerIndex, updateWidgetData, updateWidgetMultiple } from '@/store/widget'
 import type { TGetImageListResult } from '@/api/material'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
@@ -26,6 +26,12 @@ const FLIP_ICONS: TIconItemSelectData[] = [
 export default function WImageStyle() {
   const snap = useSnapshot(widgetState)
   const active = snap.dActiveElement as any
+  // Whether this image is being cropped is the canvas's business, and the canvas
+  // keeps it here. Reading a flag off the widget instead let the two drift apart:
+  // deselecting the image left the flag set, so selecting it again brought back
+  // the Done button and the Scale slider with no crop editor behind them.
+  const cropping = useSnapshot(controlState).dCropUuid === active?.uuid
+  const canvasZoom = useSnapshot(canvasState).dZoom
   const [activeNames, setActiveNames] = useState<string[]>(['2', '3', '4'])
   const [toolBarStyle, setToolBarStyle] = useState<Record<string, any>>({})
   const picBoxRef = useRef<PictureSelectorHandle | null>(null)
@@ -40,6 +46,16 @@ export default function WImageStyle() {
     }
     lastUuid.current = active.uuid
   }, [active?.uuid])
+
+  // The bar is fixed to the viewport, so it has to be told where the frame is
+  // every time the frame moves — the grips reshape it as you crop.
+  useEffect(() => {
+    if (!cropping) return
+    const el = document.getElementById(active?.uuid || '')
+    if (!el) return
+    const { left, top } = el.getBoundingClientRect()
+    setToolBarStyle({ left: left + 'px', top: top + 'px' })
+  }, [cropping, active?.uuid, active?.left, active?.top, active?.width, active?.height, canvasZoom])
 
   useEffect(() => {
     return () => {
@@ -89,13 +105,25 @@ export default function WImageStyle() {
   }
 
   function imgCrop(val: boolean) {
-    const el = document.getElementById(uuid || '')
-    if (!el) return
-    const { left, top } = el.getBoundingClientRect()
-    setToolBarStyle({ left: left + 'px', top: top + 'px' })
-    finish('cropEdit', val)
     setShowRotatable(!val)
     setCropUuid(val ? uuid : '-1')
+  }
+
+  // Cropping with the grips can leave the picture on a different scale each way,
+  // and the slider is a single number: it moves both by the same factor, off the
+  // tighter of the two, so the shape the grips gave the crop is kept.
+  function changeScale(value: number) {
+    const zoomX = Number(active.zoom) || 1
+    const zoomY = Number(active.zoomY ?? active.zoom) || 1
+    const factor = value / Math.min(zoomX, zoomY)
+    if (!Number.isFinite(factor) || factor <= 0) return
+    updateWidgetMultiple({
+      uuid,
+      data: [
+        { key: 'zoom', value: zoomX * factor },
+        { key: 'zoomY', value: zoomY * factor },
+      ],
+    })
   }
 
   function openPicBox() {
@@ -120,7 +148,7 @@ export default function WImageStyle() {
             Replace image
           </Button>
           <div className="options">
-            {active.cropEdit ? (
+            {cropping ? (
               <Button plain type="primary" onClick={() => imgCrop(false)}>
                 Done
               </Button>
@@ -175,16 +203,16 @@ export default function WImageStyle() {
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
       </Collapse>
-      {active.cropEdit ? (
+      {cropping ? (
         <InnerToolBar style={toolBarStyle}>
           <NumberSlider
-            value={active.zoom}
+            value={Math.min(Number(active.zoom) || 1, Number(active.zoomY ?? active.zoom) || 1)}
             className="inner-bar"
             label="Scale"
             step={0.01}
             minValue={1}
             maxValue={3}
-            onChange={(value) => finish('zoom', value)}
+            onChange={changeScale}
           />
           <i style={{ padding: '0 8px', cursor: 'pointer' }} className="icon sd-queren" onClick={() => imgCrop(false)} />
         </InnerToolBar>

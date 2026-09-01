@@ -7,6 +7,8 @@ export type TImageSetting = {
   left: number
   top: number
   zoom: number
+  /** The crop's vertical scale, when the grips have left it unlike the horizontal one. */
+  zoomY?: number
   transform: string
   radius: number
   opacity: number
