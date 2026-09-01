@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 import { cx } from '@/utils/dom'
 import { ArrowRightIcon } from './icons'
 
@@ -8,18 +8,37 @@ export type CollapseItemProps = {
   children: ReactNode
 }
 
-export function CollapseItem({ name, title, children, active, onToggle }: CollapseItemProps & { active?: boolean; onToggle?: (name: string) => void }) {
+/**
+ * What the surrounding Collapse knows: which sections are open, and how to
+ * toggle one. Passed down rather than injected into the children, so a single
+ * item, a conditional item and an item nested in a wrapper all behave alike.
+ */
+const CollapseContext = createContext<{ open: string[]; toggle: (name: string) => void } | null>(null)
+
+export function CollapseItem({
+  name,
+  title,
+  children,
+  active,
+  onToggle,
+}: CollapseItemProps & { active?: boolean; onToggle?: (name: string) => void }) {
+  // Used on its own (Advanced, inside the text-effect panel) an item drives
+  // itself through these props; inside a Collapse the section list decides.
+  const group = useContext(CollapseContext)
+  const isActive = typeof active === 'boolean' ? active : !!group?.open.includes(name)
+  const toggle = onToggle || group?.toggle
+
   return (
-    <div className={cx('el-collapse-item', { 'is-active': !!active })}>
+    <div className={cx('el-collapse-item', { 'is-active': isActive })}>
       <div role="tab">
-        <button type="button" className={cx('el-collapse-item__header', { 'is-active': !!active })} onClick={() => onToggle?.(name)}>
+        <button type="button" className={cx('el-collapse-item__header', { 'is-active': isActive })} onClick={() => toggle?.(name)}>
           {title}
-          <i className={cx('el-collapse-item__arrow', 'el-icon', { 'is-active': !!active })}>
+          <i className={cx('el-collapse-item__arrow', 'el-icon', { 'is-active': isActive })}>
             <ArrowRightIcon />
           </i>
         </button>
       </div>
-      <div className="el-collapse-item__wrap" role="tabpanel" style={{ display: active ? undefined : 'none' }}>
+      <div className="el-collapse-item__wrap" role="tabpanel" style={{ display: isActive ? undefined : 'none' }}>
         <div className="el-collapse-item__content">{children}</div>
       </div>
     </div>
@@ -41,15 +60,11 @@ export default function Collapse({
     onChange(value.includes(name) ? value.filter((v) => v !== name) : [...value, name])
   }
   return (
-    <div className={cx('el-collapse', className || '')} role="tablist">
-      {Array.isArray(children)
-        ? children.map((child: any, i: number) =>
-            child && child.props?.name
-              ? { ...child, props: { ...child.props, active: value.includes(child.props.name), onToggle: toggle }, key: child.key ?? i }
-              : child,
-          )
-        : children}
-    </div>
+    <CollapseContext.Provider value={{ open: value, toggle }}>
+      <div className={cx('el-collapse', className || '')} role="tablist">
+        {children}
+      </div>
+    </CollapseContext.Provider>
   )
 }
 
