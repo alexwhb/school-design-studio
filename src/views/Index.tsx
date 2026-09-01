@@ -23,6 +23,7 @@ import Button from '@/components/ui/Button'
 import useHistory from '@/common/hooks/history'
 import useAutosave from '@/common/hooks/autosave'
 import { handleKeydowm, handleKeyup } from '@/mixins/shortcuts'
+import { watchOverlayEscape } from '@/mixins/overlayEscape'
 import { wGroupSetting } from '@/components/modules/widgets/wGroup/groupSetting'
 import { canvasState, historyState } from '@/store/state'
 import { readQuery } from '@/common/hooks/useRouteQuery'
@@ -100,6 +101,7 @@ export default function Index() {
     }
     const onKeyDown = handleKeydowm(instanceFn)
     const onKeyUp = handleKeyup()
+    const unwatchOverlayEscape = watchOverlayEscape()
     document.addEventListener('keydown', onKeyDown, false)
     document.addEventListener('keyup', onKeyUp, false)
 
@@ -119,6 +121,7 @@ export default function Index() {
 
     return () => {
       window.removeEventListener('scroll', fixTopBarScroll)
+      unwatchOverlayEscape()
       document.removeEventListener('keydown', onKeyDown, false)
       document.removeEventListener('keyup', onKeyUp, false)
       document.oncontextmenu = null

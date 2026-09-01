@@ -100,3 +100,33 @@ export function selectAllWidgets() {
   }
   widgetState.dSelectWidgets = selectable
 }
+
+/**
+ * A drag box that caught a single layer leaves a selection of one, which is a
+ * shape nothing else in the editor produces: clicking a layer makes it the
+ * active element instead, and the panels read the two states differently.
+ * Settle it the way a click would, so one layer is one layer however it was
+ * chosen.
+ */
+export function settleSingleSelection() {
+  const items = widgetState.dSelectWidgets
+  if (items.length !== 1) return
+  widgetState.dActiveElement = items[0]
+  widgetState.dSelectWidgets = []
+}
+
+/**
+ * Drops the selection, whatever shape it is in, and puts the page back in its
+ * place — which is what the panels read when nothing is chosen.
+ *
+ * The page may already be the active element, as it is after Ctrl/Cmd + A:
+ * valtio does not report a write that changes nothing, so nothing watching
+ * dActiveElement hears about this. Emptying dSelectWidgets is what the drawn
+ * selection is taken down by.
+ */
+export function clearSelection() {
+  widgetState.dSelectWidgets = []
+  if (widgetState.dActiveElement?.uuid !== '-1') {
+    widgetState.dActiveElement = canvasState.dPage
+  }
+}

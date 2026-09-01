@@ -134,3 +134,47 @@ export function pageCanvas(page: Page) {
     return { width: el.style.width, height: el.style.height, transform: el.style.transform }
   })
 }
+
+/**
+ * How many transform boxes are drawn over the workspace. Moveable keeps one for
+ * the stand-in it is handed when nothing is selected, parked far off to the
+ * left, so only the boxes that are actually on screen are counted.
+ */
+export async function drawnSelectionBoxes(page: Page) {
+  return page.evaluate(
+    () => [...document.querySelectorAll('.moveable-control-box')].filter((el) => el.getBoundingClientRect().x > -1000).length,
+  )
+}
+
+/** Clicks the bare board around the page — the nearest thing to clicking away. */
+export async function clickPasteboard(page: Page) {
+  const point = await page.evaluate(() => {
+    const board = document.getElementById('page-design')!.getBoundingClientRect()
+    const canvas = document.getElementById('page-design-canvas')!.getBoundingClientRect()
+    return { x: canvas.x + canvas.width / 2, y: (canvas.bottom + Math.min(board.bottom, window.innerHeight)) / 2 }
+  })
+  await page.mouse.click(point.x, point.y)
+  await page.waitForTimeout(500)
+}
+
+/** Pulls a selection box round every layer on the page, starting off all of them. */
+export async function boxSelectAll(page: Page) {
+  const bounds = await page.evaluate((selector) => {
+    const rects = [...document.querySelectorAll(selector)].map((el) => el.getBoundingClientRect())
+    return {
+      left: Math.min(...rects.map((r) => r.x)),
+      top: Math.min(...rects.map((r) => r.y)),
+      right: Math.max(...rects.map((r) => r.right)),
+      bottom: Math.max(...rects.map((r) => r.bottom)),
+    }
+  }, WIDGET)
+  const from = { x: bounds.left - 30, y: bounds.top - 30 }
+  const to = { x: bounds.right + 30, y: bounds.bottom + 30 }
+  await page.mouse.move(from.x, from.y)
+  await page.mouse.down()
+  for (let step = 1; step <= 10; step++) {
+    await page.mouse.move(from.x + ((to.x - from.x) * step) / 10, from.y + ((to.y - from.y) * step) / 10)
+  }
+  await page.mouse.up()
+  await page.waitForTimeout(600)
+}

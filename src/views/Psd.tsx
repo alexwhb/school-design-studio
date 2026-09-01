@@ -11,6 +11,7 @@ import { UploadFilledIcon } from '@/components/ui/icons'
 import useLoading from '@/common/methods/loading'
 import { readQuery } from '@/common/hooks/useRouteQuery'
 import { handleKeydowm, handleKeyup } from '@/mixins/shortcuts'
+import { watchOverlayEscape } from '@/mixins/overlayEscape'
 import WebWorker from '@/utils/plugins/webWorker'
 import psdWorker from '../utils/plugins/worker/loadPSD.worker?worker'
 import { createBase64 } from '@/utils/plugins/psd'
@@ -53,9 +54,11 @@ export default function Psd() {
     const instanceFn = { save: () => {}, zoomAdd: () => zoomControlRef.current?.add(), zoomSub: () => zoomControlRef.current?.sub() }
     const onKeyDown = handleKeydowm(instanceFn)
     const onKeyUp = handleKeyup()
+    const unwatchOverlayEscape = watchOverlayEscape()
     document.addEventListener('keydown', onKeyDown, false)
     document.addEventListener('keyup', onKeyUp, false)
     return () => {
+      unwatchOverlayEscape()
       document.removeEventListener('keydown', onKeyDown, false)
       document.removeEventListener('keyup', onKeyUp, false)
       document.oncontextmenu = null

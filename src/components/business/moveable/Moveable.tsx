@@ -7,7 +7,8 @@ import { canvasState, controlState, forceState, widgetState } from '@/store/stat
 import { setShowMoveable } from '@/store/control'
 import { resize } from '@/store/widget/resize'
 import { updateWidgetData, updateWidgetMultiple } from '@/store/widget/widget'
-import useSelecto from './Selecto'
+import { clearSelection, selectWidget } from '@/store/widget/select'
+import useSelecto, { isBoxingSelection } from './Selecto'
 import getSnapPositions, { snapBox } from '@/common/methods/snapping'
 import './style/index.less'
 
@@ -45,6 +46,8 @@ export default function Moveable() {
     let resetRatio = 0
     let resizeTempData: { width: number; height: number } | null = null
     let resizeStartWidth = 0
+    /** See drawActiveTarget: the delayed insistence that nothing is selected. */
+    let emptyTimer: any = null
 
     const moveableOptions = {
       target: document.querySelector(`[id="empty"]`),
@@ -418,8 +421,30 @@ export default function Moveable() {
       .on('resizeGroupStart', () => {})
       .on('resizeGroup', () => {})
       .on('resizeGroupEnd', () => {})
+      /**
+       * Clicking inside a multi-selection picks out the one layer clicked, or
+       * drops the selection when the click lands on bare canvas — which is what
+       * clicking does everywhere else, and what a design tool does here.
+       *
+       * The group is dragged by an area laid over the whole selection, so these
+       * clicks never reach the canvas underneath and the board's own handler
+       * never sees them. Moveable reports what was under the pointer instead.
+       */
+      .on('clickGroup', ({ inputTarget }: any) => {
+        const layer = (inputTarget as HTMLElement)?.closest?.('[data-uuid]')
+        const uuid = layer?.getAttribute('data-uuid')
+        if (!uuid || uuid === '-1') {
+          clearSelection()
+          return
+        }
+        // A layer inside a group is chosen as the group, the way clicking it is
+        const widget = widgetState.dWidgets.find((item) => item.uuid === uuid)
+        selectWidget({ uuid: widget && widget.parent !== '-1' ? String(widget.parent) : uuid })
+      })
 
-    const selecto = useSelecto(moveable)
+    // A drag box is let go: whatever it caught, or stopped catching, is now what
+    // the selection is, and the box drawn round it is worked out from scratch.
+    const selecto = useSelecto(moveable, { onBoxEnd: () => syncSelectionBox() })
 
     const onScroll = () => {
       if (!moveable) return
@@ -428,16 +453,17 @@ export default function Moveable() {
     const mainEl = document.getElementById('main')
     mainEl?.addEventListener('scroll', onScroll)
 
-    const unsubActive = subscribeKey(widgetState, 'dActiveElement', (val) => {
-      setTimeout(() => {
-        checkMouseEvent()
-      }, 10)
-      if (!val || !val.record) {
-        return
-      }
+    /**
+     * Draws the box round one layer, or round nothing when the page is what is
+     * active. Both a change of active element and a selection coming back down
+     * to one end up here, so the handles a single layer gets are described in
+     * one place.
+     */
+    function drawActiveTarget(val: any) {
       if (!moveable) return
-      if (Number(val.uuid) != -1) {
-        const target = `[id="${val.uuid}"]`
+      // Whatever is drawn now outranks a pending order to draw nothing
+      clearTimeout(emptyTimer)
+      if (val && val.record && Number(val.uuid) != -1) {
         _target = `[id="${val.uuid}"]`
         moveable.rotatable = true
         switch (val.type) {
@@ -458,18 +484,31 @@ export default function Moveable() {
           checkMouseEvent()
         })
         setShowMoveable(true)
-        // Everything else on the page becomes something to align against
-        buildElementGuidelines()
       } else {
+        _target = `[id="empty"]`
         moveable.target = `[id="empty"]`
         if (moveable.target !== `[id="empty"]`) {
-          setTimeout(() => {
+          // Said again once Moveable has settled, in case it took the first one
+          // while it was busy. Cancelled if something is selected in between —
+          // a drag box can be pulled and let go well inside this wait.
+          emptyTimer = setTimeout(() => {
             if (!moveable) return
             moveable.target = `[id="empty"]`
           }, 210)
         }
-        buildElementGuidelines()
       }
+      // Everything else on the page becomes something to align against
+      buildElementGuidelines()
+    }
+
+    const unsubActive = subscribeKey(widgetState, 'dActiveElement', (val) => {
+      setTimeout(() => {
+        checkMouseEvent()
+      }, 10)
+      if (!val || !val.record) {
+        return
+      }
+      drawActiveTarget(val)
     })
 
     const unsubShowMoveable = subscribeKey(controlState, 'showMoveable', (val) => {
@@ -513,16 +552,19 @@ export default function Moveable() {
       }, 400)
     })
 
-    const unsubSelectWidgets = subscribeSelector(
-      widgetState,
-      () => widgetState.dSelectWidgets.map((item) => item.uuid).join(','),
-      () => {
+    /**
+     * Draws the box round what is selected: one box round the lot when there is
+     * more than one layer, the single layer's own box when there is one, and
+     * none at all when the selection has been dropped.
+     */
+    function syncSelectionBox() {
       if (!moveable) return
+      clearTimeout(emptyTimer)
       const items = widgetState.dSelectWidgets
-      const alt = controlState.dAltDown
-      // A multi-selection can also arrive without a modifier held — Ctrl/Cmd + A
-      // makes one outright, and by the time this runs the keys may be back up.
-      if (alt || items.length > 1) {
+      // What is selected is what says a group box is wanted, not which keys are
+      // held: Ctrl/Cmd + A makes a multi-selection outright, and a modifier-click
+      // that takes the last layer back out leaves one behind or none.
+      if (items.length > 1) {
         // Selecto marks what a drag box caught and leaves the mark on; the marks
         // added here are only a way to gather the nodes, so they are taken off
         // again and anything already marked is left as it was found.
@@ -538,9 +580,32 @@ export default function Moveable() {
         const targetCollector = [].slice.call(document.querySelectorAll('.widget-selected'))
         moveable.target = targetCollector
         marked.forEach((el) => el.classList.remove('widget-selected'))
+        // A multi-selection moves as one, so none of it aligns to the rest of itself
+        buildElementGuidelines()
+        return
       }
-      // A multi-selection moves as one, so none of it aligns to the rest of itself
-      buildElementGuidelines()
+      // The selection has come down to one layer or to none — clicking away,
+      // Escape, or a modifier-click taking the last one back out. The box drawn
+      // round the group is not taken down by anything else: the page is often
+      // active already by the time this runs, so dActiveElement never changes
+      // and the boxes would stay on screen with nothing left to move.
+      //
+      // Selecto marks what its drag box caught and leaves the mark on, which is
+      // how the group was gathered; the marks and Selecto's own idea of what is
+      // selected both have to go, or the next box drags the old layers along.
+      document.querySelectorAll('.widget-selected').forEach((el) => el.classList.remove('widget-selected'))
+      selecto.setSelectedTargets([])
+      drawActiveTarget(items.length === 1 ? items[0] : widgetState.dActiveElement)
+    }
+
+    const unsubSelectWidgets = subscribeSelector(
+      widgetState,
+      () => widgetState.dSelectWidgets.map((item) => item.uuid).join(','),
+      () => {
+        // Mid-box the selection is still being gathered; Selecto is drawing the
+        // box itself until it is let go, and onBoxEnd picks it up from there.
+        if (isBoxingSelection()) return
+        syncSelectionBox()
       },
     )
 
@@ -580,6 +645,7 @@ export default function Moveable() {
     })
 
     return () => {
+      clearTimeout(emptyTimer)
       mainEl?.removeEventListener('scroll', onScroll)
       unsubActive()
       unsubShowMoveable()

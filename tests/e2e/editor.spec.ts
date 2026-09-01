@@ -2,6 +2,9 @@ import { expect, test } from '@playwright/test'
 import {
   WIDGET,
   addText,
+  boxSelectAll,
+  clickPasteboard,
+  drawnSelectionBoxes,
   expandPageStrip,
   openEditor,
   openPageMenu,
@@ -437,4 +440,115 @@ test('ctrl+A while editing text leaves the editor alone', async ({ page }) => {
   // Still one text being edited, not two widgets selected.
   await expect(page.locator('.gounp__btn')).toBeHidden()
   await expect(page.locator('#page-design-canvas .w-text.editing')).toHaveCount(1)
+})
+
+test('clicking away from the canvas drops a select-all selection', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+  await addText(page, 'Subheading')
+
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.waitForTimeout(600)
+  await expect(page.locator('.gounp__btn')).toBeVisible()
+
+  await clickPasteboard(page)
+
+  await expect(page.locator('.gounp__btn')).toBeHidden()
+  await expect(page.locator('#page-style')).toBeVisible()
+  expect(await drawnSelectionBoxes(page)).toBe(0)
+})
+
+test('escape drops the selection, one layer or all of them', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+
+  await selectFirstWidget(page)
+  expect(await drawnSelectionBoxes(page)).toBe(1)
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(500)
+  await expect(page.locator('#page-style')).toBeVisible()
+  expect(await drawnSelectionBoxes(page)).toBe(0)
+
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.waitForTimeout(600)
+  await expect(page.locator('.gounp__btn')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(500)
+  await expect(page.locator('.gounp__btn')).toBeHidden()
+  expect(await drawnSelectionBoxes(page)).toBe(0)
+})
+
+test('escape ends a text edit before it drops the selection', async ({ page }) => {
+  await addText(page, 'Heading')
+
+  await page.locator(WIDGET).first().dblclick()
+  await page.waitForTimeout(500)
+  await expect(page.locator('#page-design-canvas .w-text.editing')).toHaveCount(1)
+
+  // The layer is still chosen, it is just no longer being typed into.
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(500)
+  await expect(page.locator('#page-design-canvas .w-text.editing')).toHaveCount(0)
+  expect(await drawnSelectionBoxes(page)).toBe(1)
+
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(500)
+  expect(await drawnSelectionBoxes(page)).toBe(0)
+})
+
+test('a drag box round nothing drops what was selected', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+
+  await boxSelectAll(page)
+  await expect(page.locator('.gounp__btn')).toBeVisible()
+
+  const canvas = (await page.locator('#page-design-canvas').boundingBox())!
+  await page.mouse.move(canvas.x + 10, canvas.y + 10)
+  await page.mouse.down()
+  for (let step = 1; step <= 8; step++) {
+    await page.mouse.move(canvas.x + 10 + step * 10, canvas.y + 10 + step * 5)
+  }
+  await page.mouse.up()
+  await page.waitForTimeout(600)
+
+  await expect(page.locator('.gounp__btn')).toBeHidden()
+  expect(await drawnSelectionBoxes(page)).toBe(0)
+})
+
+test('a drag box round one layer selects that layer outright', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+
+  const first = (await page.locator(WIDGET).first().boundingBox())!
+  await page.mouse.move(first.x - 25, first.y - 25)
+  await page.mouse.down()
+  for (let step = 1; step <= 8; step++) {
+    await page.mouse.move(first.x - 25 + ((first.width + 50) * step) / 8, first.y - 25 + ((first.height / 2 + 25) * step) / 8)
+  }
+  await page.mouse.up()
+  await page.waitForTimeout(700)
+
+  // One layer is one layer however it was chosen: its own settings, not Group.
+  await expect(page.locator('.gounp__btn')).toBeHidden()
+  await expect(page.locator('#w-text-style')).toBeVisible()
+  expect(await drawnSelectionBoxes(page)).toBe(1)
+})
+
+test('clicking one layer of a multi-selection picks it out', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+  await addText(page, 'Subheading')
+
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.waitForTimeout(600)
+  await expect(page.locator('.gounp__btn')).toBeVisible()
+
+  const first = (await page.locator(WIDGET).first().boundingBox())!
+  await page.mouse.click(first.x + 20, first.y + first.height / 2)
+  await page.waitForTimeout(600)
+
+  await expect(page.locator('.gounp__btn')).toBeHidden()
+  await expect(page.locator('#w-text-style')).toBeVisible()
+  expect(await drawnSelectionBoxes(page)).toBe(1)
 })

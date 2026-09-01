@@ -1,9 +1,23 @@
 import Selecto from 'selecto'
 import { getElementInfo } from 'moveable'
 import { controlState } from '@/store/state'
-import { selectWidgetsInOut } from '@/store/widget/select'
+import { selectWidgetsInOut, settleSingleSelection } from '@/store/widget/select'
 
-export default function useSelecto(moveable: any) {
+/**
+ * True while a drag box is being pulled.
+ *
+ * The box builds its selection a layer at a time — it passes over one before it
+ * reaches the rest — and marks the elements itself as it goes. Anything else
+ * that draws from the selection has to leave those half-made states alone and
+ * wait until the box is let go, which is what onBoxEnd is for.
+ */
+let boxing = false
+
+export function isBoxingSelection() {
+  return boxing
+}
+
+export default function useSelecto(moveable: any, { onBoxEnd }: { onBoxEnd?: () => void } = {}) {
   const selecto = new Selecto({
     container: document.getElementById('page-design'),
     selectableTargets: ['.layer'],
@@ -38,7 +52,14 @@ export default function useSelecto(moveable: any) {
       const target = e.inputEvent?.target as HTMLElement | null
       if (controlState.dSpaceDown || target?.closest?.('.page-resize')) {
         e.stop()
+        return
       }
+      boxing = true
+    })
+    .on('dragEnd', () => {
+      boxing = false
+      settleSingleSelection()
+      onBoxEnd?.()
     })
   return selecto
 }
