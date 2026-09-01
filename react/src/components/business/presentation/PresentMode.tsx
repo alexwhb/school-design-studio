@@ -26,6 +26,34 @@ const REACH = 2
 const NEXT_KEYS = ['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Spacebar', 'Enter', 'n', 'N']
 const PREV_KEYS = ['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace', 'p', 'P']
 
+/**
+ * The talk's running time.
+ *
+ * Its own component because it ticks once a second, and the presenter's tree
+ * has a mounted slide in it for every page within reach. Every one of those is
+ * memoised and would skip the render, but there is no reason to ask.
+ */
+function Elapsed({ startedAt, onReset }: { startedAt: number; onReset: () => void }) {
+  const [seconds, setSeconds] = useState(0)
+
+  useEffect(() => {
+    setSeconds(0)
+    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1000)
+    return () => clearInterval(timer)
+  }, [startedAt])
+
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  return (
+    <button type="button" className="present__timer" title="Time on this presentation — click to reset" onClick={onReset}>
+      {h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`}
+    </button>
+  )
+}
+
 function pageLabel(page: TdLayout | undefined, position: number) {
   const name = page?.global?.name
   return name && name !== 'New page' ? name : `Page ${position + 1}`
@@ -56,7 +84,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [curtain, setCurtain] = useState<'' | 'black' | 'white'>('')
   const [stage, setStage] = useState({ width: 0, height: 0 })
-  const [elapsed, setElapsed] = useState(0)
+  const [startedAt, setStartedAt] = useState(0)
   /** Slides drawn so far. Only ever grows, so going back is instant. */
   const [mounted, setMounted] = useState<Set<number>>(() => new Set())
 
@@ -78,7 +106,6 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   /** The mounted SlideView for each slide, so its build can be driven from here. */
   const slides = useRef(new Map<number, SlideViewHandle | null>())
   const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const clockTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const lastWheel = useRef(0)
   const touchStartX = useRef(0)
   /** Set while we ourselves are leaving full screen, to tell that apart from Esc. */
@@ -197,8 +224,6 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
     setIsOverview(false)
     setCurtain('')
     clearTimeout(idleTimer.current)
-    clearInterval(clockTimer.current)
-    clockTimer.current = undefined
     exitFullscreen()
     // Put the editor on the slide the talk finished on. The store owns the
     // order these have to happen in.
@@ -217,19 +242,16 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
       setIsOverview(false)
       setCurtain('')
       setIsIdle(false)
-      setElapsed(0)
+      setStartedAt(Date.now())
       setMounted(new Set())
       reach(start)
       setIsOpen(true)
-      clockTimer.current = setInterval(() => setElapsed((value) => value + 1), 1000)
       wake()
     },
     [clamp, reach, wake],
   )
 
   useImperativeHandle(ref, () => ({ open, close }), [open, close])
-
-  useEffect(() => () => clearInterval(clockTimer.current), [])
 
   // Focus, measure and go full screen once the stage is actually in the document.
   useEffect(() => {
@@ -389,14 +411,6 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
 
   const progress = pages.length < 2 ? 100 : (index / (pages.length - 1)) * 100
 
-  const elapsedLabel = useMemo(() => {
-    const h = Math.floor(elapsed / 3600)
-    const m = Math.floor((elapsed % 3600) / 60)
-    const s = elapsed % 60
-    const pad = (n: number) => String(n).padStart(2, '0')
-    return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`
-  }, [elapsed])
-
   function onStageClick() {
     if (live.current.isOverview) return
     if (live.current.curtain) {
@@ -506,9 +520,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
 
           <span className="present__divider" />
 
-          <button type="button" className="present__timer" title="Time on this presentation — click to reset" onClick={() => setElapsed(0)}>
-            {elapsedLabel}
-          </button>
+          <Elapsed startedAt={startedAt} onReset={() => setStartedAt(Date.now())} />
           <button
             type="button"
             className={cx('present__btn', { 'is-on': isOverview })}

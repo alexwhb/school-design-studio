@@ -193,9 +193,12 @@ and silently never fire.
 **Rendering.** `Layers` is memoised and takes primitives, so a zoom step
 re-renders the page container and nothing else; each widget subscribes only to
 its own object. The page strip memoises each thumbnail against valtio's own
-snapshot, so editing one page repaints one thumbnail. Dragging and resizing write
-to the DOM directly and commit to the store on release, exactly as the original
-does.
+snapshot, so editing one page repaints one thumbnail. The presenter's clock is
+its own component, so the second hand does not go through the stage, and the
+set of drawn slides keeps its identity when nothing new needs drawing —
+returning a fresh one made the effect that starts a slide re-run and cancel
+itself. Dragging and resizing write to the DOM directly and commit to the store
+on release, exactly as the original does.
 
 **Chrome.** Element Plus is a Vue library, so the controls are reimplemented in
 React with the same DOM and class names, over Element Plus's own plain CSS (no
