@@ -31,7 +31,7 @@ graph caches the old chunk hashes.
 `npm run test:parity` opens both apps side by side, drives the same gestures, and
 compares them three ways.
 
-**Pixels** — 22 views, screenshotted at 1440×900 and diffed:
+**Pixels** — 23 views, screenshotted at 1440×900 and diffed:
 
 | view | mismatch |
 | --- | --- |
@@ -43,6 +43,7 @@ compares them three ways.
 | the Animation section, and the picker open | 0.000% |
 | the page strip, expanded | 0.000% |
 | presentation mode | 0.000% |
+| the rulers, with a guide pulled onto the page | 0.000% |
 | the templates gallery, filtered and searched | 0.000% / 0.010% |
 | a text effect preset applied | 0.005% |
 | `/draw`, `/html` and `/psd` screens | 0.000% |
@@ -70,14 +71,15 @@ until it fits. The port keeps Radix's, which is the reason the picker is usable
 at all — so what is checked is that the same presets are laid out the same way,
 not where the box lands.
 
-**Behaviour** — 16 scenarios run against both apps, comparing every widget's
+**Behaviour** — 19 scenarios run against both apps, comparing every widget's
 geometry and computed style, the selection box, the layer list and the zoom
 readout: inserting text, cascading repeat inserts, selection, arrow and
 shift-arrow nudges, delete, QR insertion, zoom stepping and presets, the layers
-tab, resizing a design two ways, adding and duplicating pages, and assigning an
-animation.
+tab, resizing a design two ways, adding and duplicating pages, assigning an
+animation, and three that drag an element onto a neighbour's edge and onto the
+centre of the page — with snapping on, and with it off.
 
-On top of that, 82 Playwright tests exercise the port on its own
+On top of that, 88 Playwright tests exercise the port on its own
 (`tests/e2e/`), including ten that assert the embed does not leak into its host.
 
 ### What the tests caught
@@ -153,26 +155,30 @@ Production builds, median of five runs (`npm run bench:prod`):
 
 | | Vue | React | |
 | --- | --- | --- | --- |
-| cold load to first canvas | 154 ms | 128 ms | **−17%** |
-| insert 30 text widgets | 616 ms | 545 ms | **−12%** |
-| drag, mean frame | 8.34 ms | 8.33 ms | — |
-| drag, 95th percentile frame | 10.1 ms | 9.9 ms | −2% |
-| zoom, mean frame | 8.34 ms | 8.33 ms | — |
-| zoom, 95th percentile frame | 9.9 ms | 9.8 ms | −1% |
+| cold load to first canvas | 165 ms | 131 ms | **−21%** |
+| insert 30 text widgets | 695 ms | 580 ms | **−17%** |
+| drag, mean frame | 8.33 ms | 8.32 ms | — |
+| drag, 95th percentile frame | 10.2 ms | 10.3 ms | +1% |
+| zoom, mean frame | 8.35 ms | 8.35 ms | — |
+| zoom, 95th percentile frame | 10.1 ms | 10.0 ms | −1% |
 | drag and zoom, frames over 32 ms | 0 | 0 | — |
-| select one element after another | 572 ms | 568 ms | −1% |
-| switch page | 890 ms | 874 ms | −2% |
-| resize a design | 28 ms | 30 ms | +7% |
-| open the presenter | 309 ms | 43 ms | **−86%** |
-| step through slides | 561 ms | 558 ms | −1% |
+| select one element after another | 582 ms | 570 ms | −2% |
+| switch page | 892 ms | 861 ms | −3% |
+| resize a design | 40 ms | 28 ms | −30% |
+| open the presenter | 329 ms | 42 ms | **−87%** |
+| step through slides | 563 ms | 565 ms | — |
 
 Benchmark the **production** builds. In dev, React's `jsxDEV` dominates the
 profile and the comparison means nothing.
 
-Resizing is the one that reads slower, and it is not: over five runs Vue spans
-21–46ms and the port 23–42ms, so the 2ms between the medians is inside the
-harness's own spread. The presenter is the one that is genuinely different —
-309ms against 43ms, with no overlap between the two sets of runs at all.
+Resizing a design is the noisiest line here — it read +7% on the run before this
+one and −30% on this one, on a job that takes about 30ms. Read the spread rather
+than the median for that one. The presenter is the opposite: 329ms against 42ms,
+with no overlap between the two sets of runs at all.
+
+Dragging is measured with snapping on, which is the default in both apps. It
+costs nothing: 8.32ms a frame and no frame over 32ms, against 8.33ms before
+snapping existed.
 
 Selecting is measured because the Animation section is now built on every
 selection; it costs nothing.
@@ -236,6 +242,27 @@ immer, microdiff, nanoid.
 See `EMBEDDING.md`. `npm run build:embed` produces `dist-embed/design-studio.js`
 plus a stylesheet whose every rule is scoped to the editor's own root, so it can
 be dropped into the school planner without an iframe.
+
+## Ported ahead of main
+
+**Snapping and ruler guides** come from `t3code/smart-alignment-snapping-guides`,
+which is not on main yet. The Vue branch is merged into this one so the two can
+be compared; if it changes before it lands, the delta gets re-ported the same way
+everything else here did.
+
+What it adds: dragging and resizing snap to other objects, to the page and to the
+page's centre, with equal-spacing hints; the rulers produce real guides (their
+`changeGuides` handler was two `console.log`s); the rulers' zero point agrees
+with the page rather than being 35px out; and `snapBox` finishes the snap
+Moveable leaves a fraction short — it rounds guides to a tenth of a *screen*
+pixel, which at 37% zoom is nearly three page pixels, invisible until you zoom
+back in. Snapping is a File-menu toggle, remembered in localStorage.
+
+The one piece that needed rethinking for React rather than translating: ruler
+guides are handed to Moveable as invisible zero-thickness boxes rendered inside
+the page (`SnapGuides`), not as Moveable's own `verticalGuidelines` — those are
+measured in the container's screen pixels, and the page is CSS-scaled by the
+zoom.
 
 ## Not carried over
 

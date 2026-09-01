@@ -15,6 +15,7 @@ import { widgetComponents } from '../../widgets/registry'
 import { cx } from '@/utils/dom'
 import ResizePage from './comps/ResizePage'
 import PageWatermark from './comps/PageWatermark'
+import SnapGuides from './comps/SnapGuides'
 import './designBoard.less'
 
 type Props = {
@@ -406,6 +407,8 @@ export default function DesignBoard({
                 parentTop={dPage.top}
                 widgets={renderDWidgets}
               />
+              {/* What Moveable snaps to when a ruler guide is in the way */}
+              {needTools ? <SnapGuides /> : null}
             </div>
           </PageWatermark>
         </div>

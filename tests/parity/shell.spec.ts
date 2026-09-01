@@ -244,6 +244,25 @@ const cases: Case[] = [
     },
   },
   {
+    name: 'rulers-and-guides-dark',
+    route: '/home',
+    theme: 'dark',
+    prepareStep: async (page) => {
+      await page.getByText('File', { exact: true }).click()
+      await page.waitForTimeout(400)
+      await page.getByText('Rulers and guides', { exact: true }).click()
+      await page.waitForTimeout(1400)
+      // A guide dragged onto the page, so its casing and readout are on screen.
+      const ruler = (await page.locator('.my-horizontal').boundingBox())!
+      const canvas = (await page.locator('#page-design-canvas').boundingBox())!
+      await page.mouse.move(canvas.x + canvas.width / 2, ruler.y + ruler.height / 2)
+      await page.mouse.down()
+      await page.mouse.move(canvas.x + canvas.width / 2, canvas.y + 120, { steps: 12 })
+      await page.mouse.up()
+      await page.waitForTimeout(1200)
+    },
+  },
+  {
     name: 'panel-uploads-dark',
     route: '/home',
     theme: 'dark',

@@ -36,6 +36,44 @@ async function setResizeSize(page: Page, width: number, height: number) {
   await page.waitForTimeout(400)
 }
 
+/** The page's CSS scale, read off the canvas rather than the zoom readout. */
+function zoomOf(page: Page) {
+  return page.evaluate(() => {
+    const el = document.getElementById('page-design-canvas')!
+    return el.getBoundingClientRect().width / el.offsetWidth
+  })
+}
+
+function widgetLeft(page: Page, index: number) {
+  return page.evaluate((i) => {
+    const el = document.querySelectorAll('#page-design-canvas [data-uuid]:not([data-uuid="-1"])')[i] as HTMLElement
+    return Number.parseFloat(el.style.left)
+  }, index)
+}
+
+/** Drags the nth widget by a distance in screen pixels. */
+async function dragWidget(page: Page, index: number, dx: number, dy = 0) {
+  const widget = page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').nth(index)
+  await widget.click({ position: { x: 20, y: 10 } })
+  await page.waitForTimeout(400)
+  const box = (await widget.boundingBox())!
+  await page.mouse.move(box.x + 40, box.y + 10)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 40 + dx, box.y + 10 + dy, { steps: 14 })
+  await page.mouse.up()
+  await page.waitForTimeout(600)
+}
+
+/**
+ * Puts the second heading a few screen pixels short of `target` page-x, which
+ * is close enough for snapping to finish the job if it is going to.
+ */
+async function dragNear(page: Page, target: number, slack = 3) {
+  const zoom = await zoomOf(page)
+  const current = await widgetLeft(page, 1)
+  await dragWidget(page, 1, (target - current) * zoom + slack)
+}
+
 async function clickWidget(page: Page) {
   const widget = page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first()
   await widget.click({ position: { x: 20, y: 10 } })
@@ -189,6 +227,46 @@ const scenarios: Scenario[] = [
       await page.waitForTimeout(500)
       await page.getByText('Duplicate', { exact: true }).click()
       await page.waitForTimeout(1200)
+    },
+  },
+  {
+    // Dragged within a few pixels of the heading above it, the second heading
+    // should land exactly on that edge — not near it. `snapBox` is what makes
+    // it exact; Moveable's own rounding leaves it a fraction out.
+    name: 'snap-to-a-neighbours-edge',
+    run: async (page) => {
+      await addHeading(page)
+      await page.getByText('Heading', { exact: true }).click()
+      await page.waitForTimeout(600)
+      // Away from every target first, so the snap back is the thing measured.
+      await dragWidget(page, 1, 120)
+      await dragNear(page, 661)
+    },
+  },
+  {
+    name: 'snap-to-the-page-centre',
+    run: async (page) => {
+      await addHeading(page)
+      // 1920 wide, a 599px heading: its left edge sits at 660.5 when centred.
+      await dragWidget(page, 0, 140)
+      const zoom = await zoomOf(page)
+      const current = await widgetLeft(page, 0)
+      await dragWidget(page, 0, (660.5 - current) * zoom + 3)
+    },
+  },
+  {
+    // Off, a drag lands where you put it. Same gesture as the first scenario.
+    name: 'snapping-off-leaves-it-where-you-put-it',
+    run: async (page) => {
+      await page.getByText('File', { exact: true }).click()
+      await page.waitForTimeout(400)
+      await page.getByText('Snap to objects', { exact: true }).click()
+      await page.waitForTimeout(500)
+      await addHeading(page)
+      await page.getByText('Heading', { exact: true }).click()
+      await page.waitForTimeout(600)
+      await dragWidget(page, 1, 120)
+      await dragNear(page, 661)
     },
   },
   {

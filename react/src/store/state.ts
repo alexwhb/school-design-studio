@@ -43,6 +43,19 @@ export const widgetState = proxy<TWidgetState>({
   dCopyElement: [],
 })
 
+/** Remembers the snapping toggle between sessions, like the theme does. */
+export const SNAP_STORAGE_KEY = 'ds_snap'
+
+function readStoredSnap(): boolean {
+  try {
+    // Absence of a choice means on, which is what every design tool does.
+    return localStorage.getItem(SNAP_STORAGE_KEY) !== 'off'
+  } catch {
+    // Private browsing, or storage disabled by policy. Not a reason to fail.
+    return true
+  }
+}
+
 export const controlState = proxy<TControlState>({
   dMoving: false,
   dDraging: false,
@@ -53,6 +66,7 @@ export const controlState = proxy<TControlState>({
   dAltDown: false,
   dCropUuid: '-1',
   dSpaceDown: false,
+  dSnapEnabled: readStoredSnap(),
 })
 
 export const forceState = proxy<TForceState>({

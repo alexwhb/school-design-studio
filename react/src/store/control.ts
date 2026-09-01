@@ -1,4 +1,4 @@
-import { controlState } from './state'
+import { SNAP_STORAGE_KEY, controlState } from './state'
 
 export function setdMoving(bool: boolean) {
   controlState.dMoving = bool
@@ -42,4 +42,19 @@ export function setCropUuid(uuid: string) {
 
 export function setSpaceDown(val: boolean) {
   controlState.dSpaceDown = val
+}
+
+export function setSnapEnabled(enabled: boolean) {
+  controlState.dSnapEnabled = enabled
+  try {
+    // Stored as a word rather than a boolean so an older build, which knows
+    // nothing of this key, still reads the default.
+    localStorage.setItem(SNAP_STORAGE_KEY, enabled ? 'on' : 'off')
+  } catch {
+    /* see readStoredSnap */
+  }
+}
+
+export function toggleSnapEnabled() {
+  setSnapEnabled(!controlState.dSnapEnabled)
 }

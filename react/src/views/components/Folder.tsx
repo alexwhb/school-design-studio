@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react'
+import { useSnapshot } from 'valtio'
 import Dropdown, { DropdownItem } from '@/components/ui/DropdownMenu'
 import { CheckIcon } from '@/components/ui/icons'
 import useSpellcheck from '@/common/hooks/useSpellcheck'
+import { controlState } from '@/store/state'
+import { toggleSnapEnabled } from '@/store/control'
 import './folder.less'
 
 type Props = {
@@ -25,6 +28,10 @@ export default function Folder({ onSelect, showGuides, children }: Props) {
   // every text widget already reads the same one, and threading it through the
   // toolbar would only give it a second source of truth.
   const { enabled: spellcheck, toggleSpellcheck } = useSpellcheck()
+
+  // Snapping is the editor's own state, so unlike the rulers above it needs no
+  // help from the toolbar to know whether it is on.
+  const { dSnapEnabled: snapEnabled } = useSnapshot(controlState)
 
   const openPSD = () => {
     window.open('/psd', '_blank')
@@ -54,6 +61,16 @@ export default function Folder({ onSelect, showGuides, children }: Props) {
             <div className="item item--toggle">
               <span>Rulers and guides</span>
               {showGuides ? (
+                <i className="el-icon tick">
+                  <CheckIcon />
+                </i>
+              ) : null}
+            </div>
+          </DropdownItem>
+          <DropdownItem onSelect={toggleSnapEnabled}>
+            <div className="item item--toggle">
+              <span>Snap to objects</span>
+              {snapEnabled ? (
                 <i className="el-icon tick">
                   <CheckIcon />
                 </i>

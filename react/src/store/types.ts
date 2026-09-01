@@ -5,6 +5,7 @@ export type TScreeData = {
   height: number
 }
 
+/** Ruler guides, in page coordinates. Vertical lines are x, horizontal are y. */
 export type TGuidelinesData = {
   verticalGuidelines: number[]
   horizontalGuidelines: number[]
@@ -111,6 +112,8 @@ export type TControlState = {
   dAltDown: boolean
   dSpaceDown: boolean
   dCropUuid: string
+  /** Snap moves and resizes to other objects, the page and the guides */
+  dSnapEnabled: boolean
 }
 
 export type TForceState = {

@@ -8,7 +8,31 @@ import { setShowMoveable } from '@/store/control'
 import { resize } from '@/store/widget/resize'
 import { updateWidgetData, updateWidgetMultiple } from '@/store/widget/widget'
 import useSelecto from './Selecto'
+import getSnapPositions, { snapBox } from '@/common/methods/snapping'
 import './style/index.less'
+
+/**
+ * How close, in screen pixels, an edge has to come before it is pulled into
+ * line. Adobe XD sits around here: close enough to feel eager, loose enough
+ * that you can still put something a few pixels off deliberately.
+ */
+const SNAP_THRESHOLD = 5
+
+/**
+ * How far, in screen pixels, the tidy-up after a drag may move something. Well
+ * under SNAP_THRESHOLD on purpose — see tidySnappedPosition.
+ */
+const SNAP_TIDY_PX = 1.5
+
+/** One thing Moveable can align against, and which of its lines count. */
+type TElementGuideline = {
+  element: Element
+  top?: boolean
+  left?: boolean
+  right?: boolean
+  bottom?: boolean
+}
+
 
 export default function Moveable() {
   useEffect(() => {
@@ -41,19 +65,94 @@ export default function Moveable() {
       defaultGroupOrigin: '0% 0%',
       rotationPosition: 'bottom',
       className: 'zk-moveable-style',
-      snappable: true,
-      elementGuidelines: [],
-      verticalGuidelines: [],
-      horizontalGuidelines: [],
-      snapThreshold: 4,
+      snappable: controlState.dSnapEnabled,
+      elementGuidelines: [] as TElementGuideline[],
+      snapThreshold: SNAP_THRESHOLD,
       isDisplaySnapDigit: true,
-      snapGap: false,
+      // Equal-spacing hints: drag a third object between two and it holds the gap
+      snapGap: true,
       snapElement: true,
       snapVertical: true,
       snapHorizontal: true,
-      snapCenter: false,
+      // Centre-to-centre and middle-to-middle, which is most of what makes this
+      // feel like a design tool rather than a grid
+      snapCenter: true,
       snapDigit: 0,
       triggerAblesSimultaneously: true,
+    }
+
+    /**
+     * Hands Moveable everything worth aligning to: the page itself — which is
+     * where snapping to the centre of the canvas comes from — every other
+     * top-level layer, and the ruler guides. The selection is left out, or it
+     * would snap to where it already is.
+     *
+     * Only the list of elements is set here; Moveable re-measures them when a
+     * drag starts, so this does not need to run as things move.
+     */
+    function buildElementGuidelines() {
+      if (!moveable) return
+      const canvas = document.getElementById('page-design-canvas')
+      if (!canvas) {
+        moveable.elementGuidelines = []
+        return
+      }
+
+      const selected = new Set<string>()
+      widgetState.dSelectWidgets.forEach((item) => item?.uuid && selected.add(item.uuid))
+      const active = widgetState.dActiveElement?.uuid
+      if (active && active !== '-1') selected.add(active)
+
+      const values: TElementGuideline[] = [{ element: canvas }]
+
+      canvas.querySelectorAll(':scope > .layer').forEach((el) => {
+        const uuid = el.getAttribute('data-uuid')
+        if (uuid && selected.has(uuid)) return
+        values.push({ element: el })
+      })
+
+      // A guide is a line, not a box: suppress the edges of the stand-in that
+      // lie across it, which would otherwise duplicate the edges of the page.
+      // In this version of Moveable `top`/`bottom` name the vertical lines an
+      // element contributes and `left`/`right` the horizontal ones, not its sides.
+      canvas.querySelectorAll('.snap-guide-v').forEach((element) => {
+        values.push({ element, left: false, right: false })
+      })
+      canvas.querySelectorAll('.snap-guide-h').forEach((element) => {
+        values.push({ element, top: false, bottom: false })
+      })
+
+      moveable.elementGuidelines = values
+    }
+
+    /**
+     * Puts a dragged layer exactly on the line it snapped to.
+     *
+     * Moveable rounds its guides to a tenth of a screen pixel, and its own drag
+     * distance to a whole one, so a snapped edge can still land a fraction out —
+     * at 25% zoom that fraction is four times as large in page coordinates, and
+     * it is what you see when you zoom back in. The correction taken is the
+     * smallest one available and far tighter than Moveable's own threshold, so
+     * it can only finish the snap that happened, never start a different one.
+     */
+    function tidySnappedPosition(position: { left: number; top: number }) {
+      const widget = widgetState.dActiveElement
+      // Rotated layers snap against their turned bounds, which is not the box
+      // this works from; leave those to Moveable.
+      if (!controlState.dSnapEnabled || !widget || (widget.rotate && parseFloat(String(widget.rotate)) !== 0)) {
+        return position
+      }
+      const zoom = canvasState.dZoom / 100
+      if (!zoom) return position
+      const positions = getSnapPositions(widgetState.dWidgets, canvasState.dPage, {
+        exclude: widget.uuid,
+        guides: canvasState.guidelines,
+      })
+      return snapBox(
+        { left: position.left, top: position.top, width: Number(widget.width), height: Number(widget.height) },
+        positions,
+        SNAP_TIDY_PX / zoom,
+      )
     }
 
     const containerEl = document.querySelector('#main') as HTMLElement
@@ -101,6 +200,12 @@ export default function Moveable() {
         inputEvent.stopPropagation()
         inputEvent.preventDefault()
         if (holdPosition) {
+          holdPosition = tidySnappedPosition(holdPosition)
+          const target = document.getElementById(widgetState.dActiveElement?.uuid || '')
+          if (target) {
+            target.style.left = `${holdPosition.left}px`
+            target.style.top = `${holdPosition.top}px`
+          }
           updateWidgetData({
             uuid: widgetState.dActiveElement?.uuid || '',
             key: 'left',
@@ -136,7 +241,6 @@ export default function Moveable() {
       })
       .on('resizeStart', (args: any) => {
         if (!moveable) return
-        moveable.snappable = false
         const active = widgetState.dActiveElement
         if (active?.type === 'w-text') {
           if (String(args.direction) === '1,0') {
@@ -181,7 +285,7 @@ export default function Moveable() {
       .on('resizeEnd', (e: any) => {
         if (!moveable) return
         moveable.resizable = true
-        moveable.snappable = true
+        moveable.snappable = controlState.dSnapEnabled
         const active = widgetState.dActiveElement
         if (e.lastEvent) {
           const left = e.lastEvent.drag.translate[0]
@@ -317,9 +421,8 @@ export default function Moveable() {
           checkMouseEvent()
         })
         setShowMoveable(true)
-        if (moveable.elementGuidelines && !moveable.elementGuidelines.includes(target)) {
-          moveable.elementGuidelines.push(target)
-        }
+        // Everything else on the page becomes something to align against
+        buildElementGuidelines()
       } else {
         moveable.target = `[id="empty"]`
         if (moveable.target !== `[id="empty"]`) {
@@ -328,7 +431,7 @@ export default function Moveable() {
             moveable.target = `[id="empty"]`
           }, 210)
         }
-        moveable.elementGuidelines && (moveable.elementGuidelines.length = 0)
+        buildElementGuidelines()
       }
     })
 
@@ -392,19 +495,41 @@ export default function Moveable() {
           document.getElementById(items[i].uuid)?.classList.remove('widget-selected')
         }
       }
+      // A multi-selection moves as one, so none of it aligns to the rest of itself
+      buildElementGuidelines()
       },
     )
 
+    /*
+     * Ruler guides.
+     *
+     * Moveable's own verticalGuidelines/horizontalGuidelines are measured in the
+     * container's screen pixels, which is the wrong space here — the page is
+     * CSS-scaled by the zoom. DesignBoard renders an invisible box inside the
+     * page for each guide instead, and those get measured like any other object.
+     */
     const unsubGuides = subscribeSelector(
       canvasState,
-      () => [canvasState.guidelines.verticalGuidelines.join(), canvasState.guidelines.horizontalGuidelines.join()],
+      () => [canvasState.guidelines.verticalGuidelines.join(), canvasState.guidelines.horizontalGuidelines.join()].join('|'),
       () => {
-        if (!moveable) return
-        const lines = canvasState.guidelines
-        moveable.verticalGuidelines = lines.verticalGuidelines
-        moveable.horizontalGuidelines = lines.horizontalGuidelines
+        requestAnimationFrame(buildElementGuidelines)
       },
     )
+
+    /** Adding or deleting a layer changes what there is to align against. */
+    const unsubLayers = subscribeSelector(
+      widgetState,
+      () => widgetState.dWidgets.map((item) => item.uuid).join(','),
+      () => {
+        requestAnimationFrame(buildElementGuidelines)
+      },
+    )
+
+    /** Snapping is a preference, and it is allowed to be off. */
+    const unsubSnap = subscribeKey(controlState, 'dSnapEnabled', (enabled) => {
+      if (!moveable) return
+      moveable.snappable = enabled
+    })
 
     return () => {
       mainEl?.removeEventListener('scroll', onScroll)
@@ -415,6 +540,8 @@ export default function Moveable() {
       unsubUpdateSelect()
       unsubSelectWidgets()
       unsubGuides()
+      unsubLayers()
+      unsubSnap()
       moveable?.destroy()
       moveable = null
     }
