@@ -6,12 +6,15 @@
  * was the browser's "leave site?" prompt — switched off in dev. Refreshing the
  * tab lost the lot.
  *
- * Saving is debounced rather than immediate because a design is saved whole:
- * every keystroke in a text box would otherwise rewrite every page, and a
- * design carrying pasted photographs runs to megabytes. Two seconds of quiet is
- * long enough to coalesce typing and short enough that little is ever at risk.
+ * Saving is debounced rather than immediate: every keystroke in a text box
+ * would otherwise be a write, and a design carrying pasted photographs runs to
+ * megabytes. Two seconds of quiet is long enough to coalesce typing and short
+ * enough that little is ever at risk.
  *
- * Where the bytes go is localDesigns.ts's business, not this file's.
+ * It also saves a page at a time. This file's job in that is to work out which
+ * pages moved — it holds each page's JSON from the last write and compares —
+ * so that editing page one of a fifty-page deck writes page one. Where the
+ * bytes then go is localDesigns.ts's business, not this file's.
  */
 import { useEffect, useMemo, useRef } from 'react'
 import { subscribe } from 'valtio'
@@ -48,29 +51,45 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
 
   const autosave = useMemo<Autosave & { dispose: () => void }>(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
-    /** The last thing written, as JSON, so an idle canvas writes nothing. */
-    let saved = ''
+    /** The design as of the last write, or as first seen — what "unsaved" measures against. */
+    let baseline = ''
+    /**
+     * Each page as JSON as it now stands in the database, or null when the
+     * database holds some other design — the draft the last session left, or
+     * one the editor was opened past by id. The first write of a session is
+     * therefore a whole one; after that only the pages that moved are written.
+     */
+    let stored: string[] | null = null
     let watching = false
     let unsubscribe: (() => void) | undefined
 
-    function snapshot(): string {
-      return JSON.stringify({ title: options.current.getTitle(), layouts: widgetState.dLayouts })
+    function pageJson(): string[] {
+      return widgetState.dLayouts.map((layout) => JSON.stringify(layout))
+    }
+
+    function snapshot(pages: string[]): string {
+      return JSON.stringify([options.current.getTitle(), ...pages])
     }
 
     /** True when the canvas has moved on from the last write. */
     function isDirty(): boolean {
-      return watching && snapshot() !== saved
+      return watching && snapshot(pageJson()) !== baseline
     }
 
     async function write(): Promise<boolean> {
-      const current = snapshot()
-      const { title, layouts } = JSON.parse(current) as { title: string; layouts: TdLayout[] }
-      if (!layouts?.length) return false
-      // `layouts` here is already a plain deep copy, straight out of JSON.parse,
-      // which is exactly what IndexedDB needs and saves cloning it twice.
-      const record = await saveDraft(title, layouts)
-      if (!record) return false
-      saved = current
+      const title = options.current.getTitle()
+      const pages = pageJson()
+      if (!pages.length) return false
+      // Only the pages that actually moved are handed over. JSON.parse gives a
+      // plain deep copy of each, which is exactly what IndexedDB needs — the
+      // valtio proxies underneath dLayouts are not structured-cloneable.
+      const changed = pages
+        .map((json, index) => ({ json, index }))
+        .filter(({ json, index }) => !stored || stored[index] !== json)
+        .map(({ json, index }) => ({ index, layout: JSON.parse(json) as TdLayout }))
+      if (!(await saveDraft(title, changed, pages.length))) return false
+      baseline = snapshot(pages)
+      stored = pages
       return true
     }
 
@@ -93,7 +112,7 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
     }
 
     function start() {
-      saved = snapshot()
+      baseline = snapshot(pageJson())
       watching = true
       unsubscribe = subscribe(widgetState, schedule)
     }

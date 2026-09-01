@@ -21,8 +21,10 @@ import type { TPageState, TdLayout } from '../types'
  *
  * Upstream stopped at nine, which is too few for anything presentation-shaped —
  * a term's worth of assembly slides is more than nine. Every page is held in
- * memory and written into the autosave, so a design of a thousand pages would
- * be a way to run the browser out of storage rather than a feature.
+ * memory whether or not it is on screen, so a design of a thousand pages would
+ * be a way to run the browser out of memory rather than a feature. The autosave
+ * writes only the pages that changed (see localDesigns.ts), so the ceiling is
+ * about what the editor holds, not about what it saves.
  */
 export const MAX_PAGES = 50
 

@@ -367,24 +367,31 @@ test('the design is written to the browser as it is edited', async ({ page }) =>
   // Autosave settles two seconds after the last change.
   await page.waitForTimeout(3200)
 
+  // The title and page count live in `designs`; the artwork is one row per page
+  // in `designPages`, so that a save rewrites only the page that changed.
   const draft = await page.evaluate(async () => {
     const db: IDBDatabase = await new Promise((resolve, reject) => {
       const request = indexedDB.open('design-studio')
       request.onsuccess = () => resolve(request.result)
       request.onerror = () => reject(request.error)
     })
-    if (!db.objectStoreNames.contains('designs')) return null
-    return new Promise<any>((resolve) => {
-      const request = db.transaction('designs', 'readonly').objectStore('designs').get('draft')
-      request.onsuccess = () => resolve(request.result ?? null)
-      request.onerror = () => resolve(null)
-    })
+    if (!db.objectStoreNames.contains('designs') || !db.objectStoreNames.contains('designPages')) return null
+    const read = (store: string, key: any) =>
+      new Promise<any>((resolve) => {
+        const request = db.transaction(store, 'readonly').objectStore(store).get(key)
+        request.onsuccess = () => resolve(request.result ?? null)
+        request.onerror = () => resolve(null)
+      })
+    const meta = await read('designs', 'draft')
+    if (!meta) return null
+    return { meta, page: await read('designPages', 'draft:0') }
   })
 
   expect(draft, 'a draft was saved').not.toBeNull()
-  expect(draft.layouts.length).toBe(1)
-  expect(draft.layouts[0].layers.length).toBe(1)
-  expect(draft.layouts[0].layers[0].text).toContain('Add a heading')
+  expect(draft!.meta.pageCount).toBe(1)
+  expect(draft!.page, 'the page was saved').not.toBeNull()
+  expect(draft!.page.layout.layers.length).toBe(1)
+  expect(draft!.page.layout.layers[0].text).toContain('Add a heading')
 })
 
 test('a saved design is offered back on the next visit', async ({ page }) => {

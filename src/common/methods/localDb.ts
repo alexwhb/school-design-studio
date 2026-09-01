@@ -15,13 +15,16 @@
  */
 
 const DB_NAME = 'design-studio'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 export const STORES = {
   /** Uploaded and pasted pictures, keyed by a generated id. */
   uploads: 'uploads',
-  /** Saved designs. Today that is one row, the autosaved draft. */
+  /** Saved designs, without their artwork: title, page count, timestamp. */
   designs: 'designs',
+  /** One row per page of a saved design, so a save can rewrite just the page
+   *  that changed rather than the whole deck. See localDesigns.ts. */
+  designPages: 'designPages',
 } as const
 
 export type StoreName = (typeof STORES)[keyof typeof STORES]
@@ -56,6 +59,33 @@ export function openDb(): Promise<IDBDatabase> {
     })
   }
   return dbPromise
+}
+
+/**
+ * Runs several requests across several stores as one transaction.
+ *
+ * `run` is one request and one store, which is all a read needs. A save is not:
+ * the meta row and every changed page have to land together or not at all, or a
+ * crash mid-write leaves a page count that does not match the pages. Resolves
+ * when the transaction commits, so the caller knows the bytes are down.
+ */
+export function runBatch(stores: StoreName[], mode: IDBTransactionMode, work: (store: (name: StoreName) => IDBObjectStore) => void): Promise<void> {
+  return openDb().then(
+    (db) =>
+      new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(stores, mode)
+        tx.oncomplete = () => resolve()
+        // A failed request aborts the transaction, so this covers quota too.
+        tx.onerror = () => reject(tx.error)
+        tx.onabort = () => reject(tx.error ?? new Error('The write was aborted.'))
+        try {
+          work((name) => tx.objectStore(name))
+        } catch (error) {
+          tx.abort()
+          reject(error)
+        }
+      }),
+  )
 }
 
 /** Runs one request against one store and resolves with its result. */
