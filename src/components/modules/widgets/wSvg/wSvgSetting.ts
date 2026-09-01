@@ -12,6 +12,9 @@ export type TWSvgSetting = {
   transform: string
   radius: number
   opacity: number
+  borderWidth: number
+  borderColor: string
+  borderStyle: string
   parent: string
   svgUrl: string
   setting: [],
@@ -42,6 +45,9 @@ export const wSvgSetting = {
   transform: '',
   radius: 0,
   opacity: 1,
+  borderWidth: 0,
+  borderColor: '#000000ff',
+  borderStyle: 'solid',
   parent: '-1',
   svgUrl: '',
   setting: [],

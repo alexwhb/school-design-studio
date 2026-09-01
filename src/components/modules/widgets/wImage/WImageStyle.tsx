@@ -11,6 +11,7 @@ import { setCropUuid, setShowRotatable } from '@/store/control'
 import { setUpdateRect } from '@/store/force'
 import { updateAlign, updateLayerIndex, updateWidgetData, updateWidgetMultiple } from '@/store/widget'
 import type { TGetImageListResult } from '@/api/material'
+import BorderControls from '../../settings/BorderControls'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
@@ -32,7 +33,7 @@ export default function WImageStyle() {
   // the Done button and the Scale slider with no crop editor behind them.
   const cropping = useSnapshot(controlState).dCropUuid === active?.uuid
   const canvasZoom = useSnapshot(canvasState).dZoom
-  const [activeNames, setActiveNames] = useState<string[]>(['2', '3', '4'])
+  const [activeNames, setActiveNames] = useState<string[]>(['2', '3', '4', '5'])
   const [toolBarStyle, setToolBarStyle] = useState<Record<string, any>>({})
   const picBoxRef = useRef<PictureSelectorHandle | null>(null)
   const lastUuid = useRef<string | undefined>(undefined)
@@ -180,6 +181,14 @@ export default function WImageStyle() {
               onChange={(value) => finish('radius', value)}
             />
           </div>
+        </CollapseItem>
+        <CollapseItem name="5" title="Border">
+          <BorderControls
+            width={active.borderWidth}
+            color={active.borderColor}
+            style={active.borderStyle}
+            onChange={finish}
+          />
         </CollapseItem>
         {active.isNinePatch ? (
           <CollapseItem name="3" title="Nine-patch settings">

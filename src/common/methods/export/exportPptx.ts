@@ -51,6 +51,10 @@ function needsRaster(widget: TdWidgetData): boolean {
   if (type === 'w-group') return false // a container; its children are placed individually
   if (!NATIVE_TYPES.has(type)) return true
   if (type === 'w-image' && (widget as any).mask) return true
+  // A PowerPoint picture has no keyline of its own to set, so a photograph
+  // wearing one goes in as a picture of itself rather than as a bare photograph
+  // with the outline quietly dropped.
+  if (type === 'w-image' && Number((widget as any).borderWidth) > 0) return true
   if (type === 'w-text' && hasUnsupportedTextEffects(widget)) return true
   // A PowerPoint text box runs in a straight line, and the WordArt shapes that
   // do not are a different object with none of this one's styling, so a curved

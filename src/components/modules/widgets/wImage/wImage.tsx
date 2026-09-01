@@ -6,6 +6,7 @@ import { setUpdateRect } from '@/store/force'
 import { lockWidgets, updateWidgetData, updateWidgetMultiple } from '@/store/widget/widget'
 import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
+import ImageKeyline from './ImageKeyline'
 import './wImage.less'
 
 // A crop already made lives in the widget's own transform. It has to be read
@@ -393,6 +394,7 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
           <img ref={targetRef} className="target" style={{ transformOrigin: 'center' }} src={p.imgUrl} />
         )}
       </div>
+      <ImageKeyline params={p} />
       {isMask ? (
         <div className="drop__mask">
           <div {...({ putIn: 'true' } as any)} style={{ fontSize: p.width / 12 + 'px' }} className="drop__btn">

@@ -906,3 +906,117 @@ test('there is nothing to distribute below three widgets', async ({ page }) => {
 
   expect(await verticalBands(page)).toEqual(before)
 })
+
+/* -------------------------------------------------------------- outlines */
+
+/**
+ * Places the first shape the Elements panel finds under `search`.
+ *
+ * Only the SVG results: the library answers "apple" with a photographic sticker
+ * as well as the line drawing, and a picture would land on the canvas as an
+ * image widget with no outline settings on it at all.
+ */
+async function addShape(page: Page, search: string) {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.waitForTimeout(1500)
+  await page.locator('.graph-list-wrap input').first().fill(search)
+  await page.waitForTimeout(1800)
+  await page.locator('.graph-list-wrap .list__item.art--svg').first().click()
+  await page.waitForTimeout(1500)
+}
+
+/** Puts a slider a fraction of the way along its run, and reads back where it landed. */
+async function dragSlider(page: Page, panel: string, label: string, fraction: number) {
+  const slider = page.locator(`${panel} #number-slider`, { hasText: label })
+  const runway = slider.locator('.el-slider__runway')
+  const box = (await runway.boundingBox())!
+  await page.mouse.move(box.x + Math.min(box.width * fraction, box.width - 1), box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.waitForTimeout(500)
+  return Number(await slider.locator('.value').innerText())
+}
+
+/** What the outline was written onto the shape's own geometry as. */
+function outlinedShape(page: Page) {
+  return page.evaluate((selector) => {
+    const el = document.querySelector(`${selector} svg [data-border]`)
+    if (!el) return null
+    return {
+      stroke: el.getAttribute('stroke'),
+      width: Number(el.getAttribute('stroke-width')),
+      effect: el.getAttribute('vector-effect'),
+      clipped: /^url\(#/.test(el.getAttribute('clip-path') || ''),
+    }
+  }, WIDGET)
+}
+
+test('a shape can be outlined, and the outline does not grow it', async ({ page }) => {
+  await addShape(page, 'Rectangle')
+  await selectFirstWidget(page)
+  expect(await outlinedShape(page)).toBeNull()
+  const before = await widgetBox(page)
+
+  const thickness = await dragSlider(page, '.ds-svg-style', 'Thickness', 0.25)
+  expect(thickness).toBeGreaterThan(0)
+
+  const outline = (await outlinedShape(page))!
+  // Twice what was asked for, clipped back to the shape: a stroke straddles the
+  // edge it follows, so half of a double-width one lands inside it.
+  expect(outline.width).toBe(thickness * 2)
+  expect(outline.clipped, 'the half that would hang outside is cut away').toBe(true)
+  // Measured in the shape's own viewport, so stretching the shape does not
+  // stretch its outline with it.
+  expect(outline.effect).toBe('non-scaling-stroke')
+  expect(await widgetBox(page)).toEqual(before)
+})
+
+test('taking the thickness back to nothing leaves no trace of the outline', async ({ page }) => {
+  await addShape(page, 'Circle')
+  await selectFirstWidget(page)
+  await dragSlider(page, '.ds-svg-style', 'Thickness', 0.4)
+  expect(await outlinedShape(page)).not.toBeNull()
+
+  expect(await dragSlider(page, '.ds-svg-style', 'Thickness', 0)).toBe(0)
+  expect(await outlinedShape(page)).toBeNull()
+  // Every pass undoes the one before it, so dragging the slider cannot stack
+  // clip paths up in the markup.
+  expect(await page.locator(`${WIDGET} svg [data-border-clip]`).count()).toBe(0)
+})
+
+test('outlining leaves a line drawing alone rather than repainting it', async ({ page }) => {
+  await addShape(page, 'apple')
+  await selectFirstWidget(page)
+  await dragSlider(page, '.ds-svg-style', 'Thickness', 0.4)
+
+  // A sticker is drawn as strokes, not fills. Adding to that stroke would not
+  // outline the apple, it would fatten it and take its colour off.
+  expect(await outlinedShape(page)).toBeNull()
+  await expect(page.locator(`${WIDGET} svg`)).toHaveAttribute('stroke', /#/)
+})
+
+test('a photograph can be given a keyline, and it follows the corners', async ({ page }) => {
+  await addPhoto(page)
+  await selectFirstWidget(page)
+  await expect(page.locator(`${WIDGET} .img__keyline`)).toHaveCount(0)
+  const before = await widgetBox(page)
+
+  const thickness = await dragSlider(page, '.ds-image-style', 'Thickness', 0.2)
+  const keyline = page.locator(`${WIDGET} .img__keyline`)
+  await expect(keyline).toHaveCSS('border-top-width', `${thickness}px`)
+  // Laid over the picture rather than around it, so the photograph is still the
+  // size it was set to.
+  expect(await widgetBox(page)).toEqual(before)
+
+  const radius = await dragSlider(page, '.ds-image-style', 'Corner radius', 0.2)
+  await expect(keyline).toHaveCSS('border-top-left-radius', `${radius}px`)
+})
+
+test('the outline is drawn in the page thumbnails too', async ({ page }) => {
+  await addShape(page, 'Rectangle')
+  await selectFirstWidget(page)
+  await dragSlider(page, '.ds-svg-style', 'Thickness', 0.25)
+
+  await expandPageStrip(page)
+  expect(await page.locator('.artboards svg [data-border]').count()).toBeGreaterThan(0)
+})

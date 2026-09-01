@@ -12,6 +12,9 @@ export type TImageSetting = {
   transform: string
   radius: number
   opacity: number
+  borderWidth: number
+  borderColor: string
+  borderStyle: string
   parent: string
   imgUrl: string
   mask: string
@@ -46,6 +49,9 @@ const setting: TImageSetting = {
   transform: '',
   radius: 0,
   opacity: 1,
+  borderWidth: 0,
+  borderColor: '#000000ff',
+  borderStyle: 'solid',
   parent: '-1',
   imgUrl: '',
   mask: '',

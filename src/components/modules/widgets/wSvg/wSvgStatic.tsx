@@ -1,5 +1,7 @@
 import { memo, useEffect, useRef } from 'react'
 import type { WidgetProps } from '../types'
+import { widgetBorder } from '../widgetBorder'
+import applySvgBorder from './svgBorder'
 
 /**
  * Read-only twin of wSvg.
@@ -14,6 +16,7 @@ function WSvgStatic({ params, parent, className, ...rest }: WidgetProps) {
   const p = params as any
   const widgetRef = useRef<HTMLDivElement | null>(null)
   const loaded = useRef(false)
+  const svgRoot = useRef<SVGSVGElement | null>(null)
 
   useEffect(() => {
     // Keep any rotation the shape was given on the canvas.
@@ -55,9 +58,17 @@ function WSvgStatic({ params, parent, className, ...rest }: WidgetProps) {
       el.childNodes?.forEach((child: Record<string, any>) => applyColours(child))
     }
     applyColours(svgNode)
+    svgRoot.current = svgNode
 
     widgetRef.current.appendChild(svgNode)
   }, [p.svgUrl, p.colors, p.rotate, p.transform])
+
+  // As on the canvas — see wSvg — an outline is written onto the parsed markup
+  // rather than rendered. It needs an effect of its own because the parse above
+  // is deliberately guarded against running a second time.
+  useEffect(() => {
+    if (svgRoot.current) applySvgBorder(svgRoot.current, widgetBorder(p))
+  }, [p.svgUrl, p.borderWidth, p.borderColor, p.borderStyle])
 
   return (
     <div

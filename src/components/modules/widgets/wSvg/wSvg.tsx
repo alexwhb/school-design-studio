@@ -5,6 +5,8 @@ import { setUpdateRect } from '@/store/force'
 import { updateWidgetData } from '@/store/widget/widget'
 import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
+import { widgetBorder } from '../widgetBorder'
+import applySvgBorder from './svgBorder'
 import './wSvg.less'
 
 function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
@@ -14,6 +16,7 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
   const svgElements = useRef<Record<string, any>[] | null>(null)
   const viewBox = useRef({ width: 0, height: 0 })
   const svgImg = useRef<Record<string, any> | null>(null)
+  const svgRoot = useRef<SVGSVGElement | null>(null)
   const editBoxStyle = useRef<{ left: string; top: string; transform: string }>({ left: '', top: '', transform: '' })
   const cropWidgetXY = useRef<Record<string, any>>({})
   const loaded = useRef(false)
@@ -74,6 +77,14 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
     svgImg.current.attr({ 'xlink:href': params.imgUrl })
   }, [p.imgUrl, params])
 
+  // The markup is parsed once and then lives in the DOM rather than in the
+  // render, so an outline has to be written onto it by hand rather than drawn
+  // by React. Effects run in the order they are declared and the parse above is
+  // synchronous, so there is a node to write to by the time this first runs.
+  useEffect(() => {
+    drawBorder()
+  }, [p.borderWidth, p.borderColor, p.borderStyle])
+
   function touchstart() {
     const editBox = document.getElementById(params.uuid + '_ebox')
     if (editBox) {
@@ -103,6 +114,10 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
     }
     changeFinish('x', next.x)
     changeFinish('y', next.y)
+  }
+
+  function drawBorder() {
+    if (svgRoot.current) applySvgBorder(svgRoot.current, widgetBorder(params))
   }
 
   function loadSvg() {
@@ -149,6 +164,7 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
       if (widgetRef.current) {
         widgetRef.current.appendChild(svgNode)
       }
+      svgRoot.current = svgNode
       resolve()
     })
   }

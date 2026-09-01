@@ -278,6 +278,38 @@ go of it, because there is nothing left on the canvas for the selection box to
 hold. Both toggles belong to the design, so they are saved with it and undo
 puts them back.
 
+## Outlines and keylines
+
+Shapes and photographs both take a **Border** in the settings panel: a
+thickness, a colour, and a choice of solid, dashed or dotted. Nothing is drawn
+until the thickness leaves zero, and the colour and the style only appear once
+there is a line for them to apply to.
+
+The line is always drawn inside the element's own edge, so outlining something
+never makes it bigger. The selection box still fits what you can see, a shape on
+the edge of the page keeps its outline when the page is exported, and turning
+the thickness up does not nudge anything else out of the way.
+
+- **A shape is outlined along its own geometry**, so a circle gets a ring and a
+  speech bubble keeps its tail. The stroke is measured in the shape's own
+  viewport rather than in the stretched coordinates it is drawn in. Without
+  that, a square pulled into a wide banner would come out with a fat top edge
+  and thin sides.
+- **A photograph gets a ring laid over it**, sharing its corner radius so the
+  two curve together. A photograph poured into a container shape is outlined in
+  that shape rather than in a rectangle. The ring is cut from the mask itself,
+  so it narrows a little where the silhouette comes to a point.
+- **Line drawings are left alone.** The stickers in the Elements panel are drawn
+  as strokes rather than as fills, and adding to that stroke would fatten the
+  drawing and take its colour off rather than outline it. The setting does
+  nothing to them.
+
+An outline belongs to the design, so it is saved with it, undo puts it back, and
+the page thumbnails draw it as well as the canvas. It survives the PNG, the PDF
+and both PowerPoint exports. A photograph wearing a keyline goes into a .pptx as
+a picture of itself, because a PowerPoint picture has no keyline of its own to
+set.
+
 ## Curved text
 
 What a badge, a crest or a Sports Day header is set on. Select a text box and

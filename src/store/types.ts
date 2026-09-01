@@ -92,6 +92,16 @@ export type TdWidgetData = TPageState &
     writingMode?: string
     /** Text widgets: 'bullet', 'number' or 'none'. See wText/listMarkup.ts. */
     listStyle?: string
+    /**
+     * Shapes and images: an outline drawn wholly inside the element's own
+     * edge, in design pixels. 0 is the default and means no outline, and a
+     * design saved before outlines existed has none of these keys at all — so
+     * every reader has to treat absent and 0 the same. `widgetBorder` does.
+     */
+    borderWidth?: number
+    borderColor?: string
+    /** 'solid', 'dashed' or 'dotted'. Absent reads as solid. */
+    borderStyle?: string
     record?: TWidgetRecord
     /** Entrance animation, played in the presenter. Absent means the element is simply there. */
     animation?: TWidgetAnimation

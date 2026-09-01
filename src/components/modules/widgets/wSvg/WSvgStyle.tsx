@@ -5,6 +5,7 @@ import layerIconList from '@/assets/data/LayerIconList'
 import Collapse, { CollapseItem } from '@/components/ui/Collapse'
 import { widgetState } from '@/store/state'
 import { updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
+import BorderControls from '../../settings/BorderControls'
 import ColorSelect from '../../settings/ColorSelect'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
@@ -59,6 +60,14 @@ export default function WSvgStyle() {
           <div className="slide-wrap">
             <NumberSlider value={active.opacity} label="Opacity" step={0.01} maxValue={1} onChange={(value) => finish('opacity', value)} />
           </div>
+        </CollapseItem>
+        <CollapseItem name="3" title="Border">
+          <BorderControls
+            width={active.borderWidth}
+            color={active.borderColor}
+            style={active.borderStyle}
+            onChange={finish}
+          />
         </CollapseItem>
         <br />
         <IconItemSelect className="style-item" label="" data={layerIconList} onFinish={layerAction} />

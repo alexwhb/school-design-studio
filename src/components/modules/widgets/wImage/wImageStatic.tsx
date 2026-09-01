@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef } from 'react'
 import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
+import ImageKeyline from './ImageKeyline'
 
 function WImageStatic({ params, parent, className, ...rest }: WidgetProps) {
   const p = params as any
@@ -51,6 +52,7 @@ function WImageStatic({ params, parent, className, ...rest }: WidgetProps) {
           <img ref={targetRef} className="target" style={{ transformOrigin: 'center' }} src={p.imgUrl} />
         )}
       </div>
+      <ImageKeyline params={p} />
     </div>
   )
 }
