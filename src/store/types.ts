@@ -66,6 +66,12 @@ export type TdWidgetData = TPageState &
     parent?: string
     isContainer?: boolean
     text?: string
+    /**
+     * What the user named this layer. Absent means unnamed, and the layer list
+     * falls back to the element's own text, then to the kind of thing it is —
+     * so an untouched name keeps following the artwork.
+     */
+    label?: string
     editable?: boolean
     lock?: boolean
     imgUrl?: string

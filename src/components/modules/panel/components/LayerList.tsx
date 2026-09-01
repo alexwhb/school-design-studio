@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import Sortable from 'sortablejs'
 import { widgetState } from '@/store/state'
-import { selectWidget, updateHoverUuid, updateWidgetData } from '@/store/widget'
+import { renameWidget, selectWidget, updateHoverUuid, updateWidgetData } from '@/store/widget'
+import { recordHistory } from '@/common/hooks/history'
+import Input from '@/components/ui/Input'
 import { cx } from '@/utils/dom'
 import type { TdWidgetData } from '@/store/types'
 import './layerList.less'
@@ -31,6 +33,15 @@ function buildWidgets(data: readonly TdWidgetData[]): TdWidgetData[] {
   return widgets
 }
 
+/** What a layer is called: the name it was given, else its own text, else its kind. */
+function layerLabel(element: TdWidgetData) {
+  return element.label || element.text || element.name || ''
+}
+
+function stopEvent(e: { stopPropagation: () => void }) {
+  e.stopPropagation()
+}
+
 function layerThumb(element: any) {
   const source: string = element.svgUrl || element.imgUrl || ''
   if (!source.trimStart().startsWith('<')) return source
@@ -42,6 +53,8 @@ export default function LayerList({ data, onChange }: Props) {
   const snap = useSnapshot(widgetState)
   const listRef = useRef<HTMLUListElement | null>(null)
   const [drag, setDrag] = useState(false)
+  const [renamingUuid, setRenamingUuid] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
   const [widgets, setWidgets] = useState<TdWidgetData[]>(() => buildWidgets(data))
   const widgetsRef = useRef(widgets)
   widgetsRef.current = widgets
@@ -59,6 +72,10 @@ export default function LayerList({ data, onChange }: Props) {
       animation: 300,
       ghostClass: 'ghost',
       chosenClass: 'choose',
+      // The name a layer is being renamed to is typed in place, so a press on
+      // that input has to reach it rather than pick the row up.
+      filter: '.widget-rename',
+      preventOnFilter: false,
       onStart: () => setDrag(true),
       onMove: (evt: any) => {
         const relatedElement = widgetsRef.current[Array.prototype.indexOf.call(evt.to.children, evt.related)]
@@ -99,6 +116,22 @@ export default function LayerList({ data, onChange }: Props) {
     return drag === true && item.parent != '-1' ? false : true
   }
 
+  function startRename(item: TdWidgetData) {
+    setRenamingUuid(item.uuid)
+    setDraft(layerLabel(item))
+  }
+
+  function commitRename() {
+    const uuid = renamingUuid
+    setRenamingUuid(null)
+    if (!uuid) return
+    const widget = widgetState.dWidgets.find((item) => item.uuid === uuid)
+    // Leaving the name as it reads changes nothing — including leaving an
+    // unnamed layer alone, which keeps following its own text.
+    if (!widget || draft.trim() === layerLabel(widget)) return
+    recordHistory(() => renameWidget(uuid, draft))
+  }
+
   function lockLayer(item: TdWidgetData) {
     updateWidgetData({
       uuid: item.uuid,
@@ -115,6 +148,7 @@ export default function LayerList({ data, onChange }: Props) {
           data-index={index}
           className={cx('widget', { active: getIsActive(element.uuid), disable: !showItem(element) }, 'item-one')}
           onClick={() => selectWidget({ uuid: element.uuid })}
+          onDoubleClick={() => startRename(element)}
           onMouseOver={() => updateHoverUuid(element.uuid)}
           onMouseOut={() => updateHoverUuid('-1')}
         >
@@ -124,18 +158,48 @@ export default function LayerList({ data, onChange }: Props) {
           ) : (
             <span className={cx('widget-type', 'icon', `sd-${element.type}`, element.type)} />
           )}
-          <span className={cx('widget-name', 'line-clamp-1', element.type)}>
-            {element.text || element.name} {element.mask ? '(container)' : ''}
-          </span>
-          <div className="widget-out" data-type={element.type} data-uuid={element.uuid}>
-            <i
-              className={cx('icon', element.lock ? 'sd-suoding' : 'sd-jiesuo')}
-              onClick={(e) => {
-                e.stopPropagation()
-                lockLayer(element)
+          {renamingUuid === element.uuid ? (
+            <Input
+              wrapperClassName="widget-rename"
+              size="small"
+              value={draft}
+              autoFocus
+              onFocus={(e) => e.target.select()}
+              onChange={setDraft}
+              onClick={stopEvent}
+              onDoubleClick={stopEvent}
+              onBlur={commitRename}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitRename()
+                if (e.key === 'Escape') setRenamingUuid(null)
               }}
             />
-          </div>
+          ) : (
+            <>
+              <span className={cx('widget-name', 'line-clamp-1', element.type)}>
+                {layerLabel(element)} {element.mask ? '(container)' : ''}
+              </span>
+              <div className="widget-out" data-type={element.type} data-uuid={element.uuid}>
+                <i
+                  className="icon sd-edit"
+                  title="Rename"
+                  onDoubleClick={stopEvent}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    startRename(element)
+                  }}
+                />
+                <i
+                  className={cx('icon', element.lock ? 'sd-suoding' : 'sd-jiesuo')}
+                  onDoubleClick={stopEvent}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    lockLayer(element)
+                  }}
+                />
+              </div>
+            </>
+          )}
         </li>
       ))}
     </ul>

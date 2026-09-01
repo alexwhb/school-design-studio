@@ -57,6 +57,18 @@ export function updateWidgetData({ uuid, key, value }: TUpdateWidgetPayload) {
   }
 }
 
+/**
+ * Names a layer. Blank means unnamed, which shows the element's own text or the
+ * kind of thing it is instead, so clearing a name hands the label back to the
+ * artwork.
+ */
+export function renameWidget(uuid: string, label: string) {
+  const name = label.trim()
+  const widget = widgetState.dWidgets.find((item) => item.uuid === uuid)
+  if (!widget || (widget.label || '') === name) return
+  updateWidgetData({ uuid, key: 'label', value: name || null })
+}
+
 export type TUpdateWidgetMultiplePayload = {
   uuid: string
   data: {

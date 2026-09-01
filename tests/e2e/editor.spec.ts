@@ -265,6 +265,40 @@ test('the layers tab lists what is on the page', async ({ page }) => {
   expect(names.map((n) => n.trim())).toEqual(['Add a little bit of body text', 'Add a heading'])
 })
 
+test('a layer can be renamed, and undo puts the old name back', async ({ page }) => {
+  await addText(page, 'Heading')
+  await page.getByText('Layers', { exact: true }).click()
+  await page.waitForTimeout(400)
+  const name = page.locator('.widget-list .widget-name').first()
+  await expect(name).toHaveText(/Add a heading/)
+
+  await page.locator('.widget-list .widget').first().dblclick()
+  await page.locator('.widget-rename input').fill('Title')
+  await page.keyboard.press('Enter')
+  await expect(name).toHaveText(/Title/)
+
+  await page.locator('.operation-item', { has: page.locator('.icon-undo') }).click()
+  await page.waitForTimeout(500)
+  await expect(name).toHaveText(/Add a heading/)
+})
+
+test('clearing a layer name hands it back to the text on the page', async ({ page }) => {
+  await addText(page, 'Heading')
+  await page.getByText('Layers', { exact: true }).click()
+  await page.waitForTimeout(400)
+  const name = page.locator('.widget-list .widget-name').first()
+
+  await page.locator('.widget-list .widget').first().dblclick()
+  await page.locator('.widget-rename input').fill('Title')
+  await page.keyboard.press('Enter')
+  await expect(name).toHaveText(/Title/)
+
+  await page.locator('.widget-list .widget').first().dblclick()
+  await page.locator('.widget-rename input').fill('')
+  await page.keyboard.press('Enter')
+  await expect(name).toHaveText(/Add a heading/)
+})
+
 test('resizing the design changes the canvas and refits the zoom', async ({ page }) => {
   const before = await pageCanvas(page)
   await openResizeDialog(page)

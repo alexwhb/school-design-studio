@@ -16,6 +16,18 @@ function noPutHistory(target: any) {
   return classList.filter((v: any) => blackClass.includes(v)).length > 0
 }
 
+/**
+ * Records a change no pointer or key event brackets — one committed from an
+ * inline editor or a dialog, which the mousedown/mouseup pair below would
+ * otherwise never see, leaving it out of the undo stack.
+ */
+export function recordHistory(change: () => void) {
+  clearTimeout(historyTimer)
+  diffLayouts.postMessage({ op: 'diff', data: JSON.stringify(widgetState.dLayouts) })
+  change()
+  diffLayouts.postMessage({ op: 'done', data: JSON.stringify(widgetState.dLayouts) })
+}
+
 export default function useHistory() {
   useEffect(() => {
     diffLayouts.onmessage((changes: any) => {

@@ -36,7 +36,11 @@
     .widget-name {
       flex: 1;
       font-size: 14px;
-      padding-right: 22px;
+      padding-right: 46px;
+    }
+    .widget-rename {
+      flex: 1;
+      margin-right: 4px;
     }
     .widget-out {
       height: 100%;
@@ -46,7 +50,8 @@
       display: flex;
       align-items: center;
     }
-    .widget-out:hover > .sd-jiesuo {
+    .widget-out:hover > .sd-jiesuo,
+    .widget-out:hover > .sd-edit {
       opacity: 1;
     }
   }
@@ -76,6 +81,17 @@
   }
   .sd-jiesuo {
     opacity: 0;
+  }
+  .sd-edit {
+    position: absolute;
+    right: 36px;
+    font-size: 16px;
+    opacity: 0;
+    cursor: pointer;
+    color: @ink-2;
+  }
+  .sd-edit:hover {
+    color: @accent;
   }
   .sd-xiaji {
     margin: 0 -4px 0 32px !important;
