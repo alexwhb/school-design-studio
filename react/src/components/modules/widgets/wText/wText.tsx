@@ -74,7 +74,10 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     }
   }, [params, p.fontClass.value, p.fontClass.url, isDraw])
 
+  const lastEditable = useRef(editable)
   useEffect(() => {
+    if (lastEditable.current === editable) return
+    lastEditable.current = editable
     updateWidgetData({ uuid: String(params.uuid), key: 'editable', value: editable })
   }, [editable, params.uuid])
 

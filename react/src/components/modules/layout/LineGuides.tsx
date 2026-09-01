@@ -156,15 +156,22 @@ export default function LineGuides({ show }: { show: boolean }) {
     changeScroll()
   }
 
+  const wasShown = useRef<boolean | null>(null)
   useEffect(() => {
     if (show) {
+      wasShown.current = true
       render()
       return destroy
     }
     destroy()
     // Hidden guides that objects still stuck to would be baffling, so putting
-    // the rulers away puts the guides away with them.
-    updateGuidelines({ verticalGuidelines: [], horizontalGuidelines: [] })
+    // the rulers away puts the guides away with them. Only on the way out
+    // though: this effect also runs on mount and on a theme change, and a
+    // design's saved guides are not ours to throw away.
+    if (wasShown.current) {
+      updateGuidelines({ verticalGuidelines: [], horizontalGuidelines: [] })
+    }
+    wasShown.current = false
     return undefined
   }, [show, resolved])
 

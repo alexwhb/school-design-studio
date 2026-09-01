@@ -305,3 +305,47 @@ test('bold toggles the selected text', async ({ page }) => {
   const after = await page.evaluate((s) => (document.querySelector(s) as HTMLElement).style.fontWeight, WIDGET)
   expect(after).toBe('bold')
 })
+
+test('a rubber band selects into the store, not just onto the canvas', async ({ page }) => {
+  const crashes: string[] = []
+  page.on('pageerror', (e) => crashes.push(e.message))
+
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+
+  const canvas = (await page.locator('#page-design-canvas').boundingBox())!
+  await page.mouse.move(canvas.x + 4, canvas.y + 4)
+  await page.mouse.down()
+  await page.mouse.move(canvas.x + canvas.width - 4, canvas.y + canvas.height - 4, { steps: 15 })
+  await page.mouse.up()
+  await page.waitForTimeout(600)
+
+  await expect(page.locator(`${WIDGET}.widget-selected`)).toHaveCount(2)
+  // Group only appears once the store agrees more than one widget is selected.
+  await expect(page.locator('.gounp__btn')).toBeVisible()
+  expect(crashes).toEqual([])
+})
+
+test('an element you place stays clickable on the canvas', async ({ page }) => {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.waitForTimeout(2000)
+  // Section 0 places a w-image, which is the one that used to lock the canvas.
+  await page.locator('.list-wrap').first().locator('.el-image').first().click()
+  await page.waitForTimeout(1800)
+  await expect(page.locator(WIDGET)).toHaveCount(1)
+
+  // Nothing was locked, so nothing has had its pointer events taken away.
+  await expect(page.locator('#page-design-canvas .layer-lock')).toHaveCount(0)
+
+  const placed = page.locator(WIDGET).first()
+  const uuid = await placed.getAttribute('data-uuid')
+  const box = (await placed.boundingBox())!
+  const canvas = (await page.locator('#page-design-canvas').boundingBox())!
+
+  await page.mouse.click(canvas.x + 20, canvas.y + canvas.height - 20)
+  await page.waitForTimeout(500)
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+  await page.waitForTimeout(600)
+
+  await expect(page.locator('#page-design-canvas .layer.layer-no-hover')).toHaveAttribute('data-uuid', uuid!)
+})

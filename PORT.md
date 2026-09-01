@@ -129,6 +129,57 @@ Bugs found by the parity and e2e suites while porting main's changes, all fixed:
   had queued to begin that slide's build. The pixel-parity shot could not see
   it: by the time it is taken the animation has finished in both apps.
 
+Two more came out of using the editor rather than testing it. Both have tests of
+their own now:
+
+- **A placed element was locked, so it could not be clicked again.** Vue watches
+  `cropEdit` to lock the other layers while you crop, and a `watch` only fires on
+  a change. The ported `useEffect` fires on mount as well, so a guard was added
+  to skip the first run — but a `useRef` flag does not survive React invoking an
+  effect twice in development: the first run clears the flag and the second sails
+  past it. Every image mounting therefore called `lockWidgets`, which locks the
+  whole canvas. `.layer-lock` is `pointer-events: none`, so the element you had
+  just dropped ignored the mouse and could only be reached from the layer list.
+  `lockWidgets` toggles, so a second image undid it — which is why it came and
+  went. The same broken guard was in the page strip, where it fired a
+  fit-to-screen zoom on mount, and in the SVG widget. All three now compare the
+  value rather than counting runs, which is what a Vue `watch` actually does.
+- **Dragging something onto the page could zoom the whole view and leave the new
+  object unselectable.** React runs an effect twice in development. The canvas
+  effect built a Selecto each time but only ever destroyed the Moveable, so a
+  second Selecto stayed attached to the page driving a Moveable that was gone.
+  Both handled the same rubber band, and both called `selectWidgetsInOut` for
+  the same widget — that is a toggle, so the two cancelled out: the DOM came out
+  marked as selected while the store believed nothing was. Moveable reads its
+  targets straight out of the DOM, so it then framed widgets the store did not
+  think were selected, and a resize wrote the new size onto whatever the store
+  did think was active — the page. Page size is the input to fit-to-screen zoom.
+
+Two smaller leaks of the same shape were fixed alongside them: the wheel-zoom
+listener could not be removed and so was registered twice, which zoomed two
+steps per notch, and the photo panel built a `DragHelper` on every render — the
+argument to `useRef` is evaluated whether it is kept or not — each one adding
+five window listeners that nothing ever took off again.
+
+The lesson worth carrying: a Vue `watch` is lazy and `useEffect` is eager, and
+the obvious fix — a ref that remembers whether this is the first run — is wrong
+under `StrictMode`, because the first run clears the flag and the second acts on
+it. Compare the value instead.
+
+That was worth sweeping for. Every effect with a dependency list that called a
+store action was checked against the `watch` it came from, which turned up three
+more firing once too early:
+
+- The rulers cleared the design's saved guides on mount and on every theme
+  change, rather than only when you actually put the rulers away.
+- Every text widget wrote `editable: false` into its own data as it mounted.
+- The eraser handed the selection handles back as it mounted, rather than when
+  it closed.
+
+Sweeping the other way — effects that build something and never take it down —
+found one more: the QR code widget appended its canvas without removing it, so
+in development it drew two, one on top of the other.
+
 Three bugs were found in the Vue app and fixed there. The port had reproduced
 all three faithfully, which is how they were found; two of them are broken
 features rather than cosmetic:

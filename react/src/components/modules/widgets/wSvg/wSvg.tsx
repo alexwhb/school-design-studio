@@ -48,12 +48,10 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
   })
 
   const cropEdit = p.cropEdit
-  const firstCrop = useRef(true)
+  const lastCropEdit = useRef(cropEdit)
   useEffect(() => {
-    if (firstCrop.current) {
-      firstCrop.current = false
-      return
-    }
+    if (lastCropEdit.current === cropEdit) return
+    lastCropEdit.current = cropEdit
     const el = document.getElementById(params.uuid)
     if (cropEdit) {
       el?.addEventListener('mousedown', touchstart, false)

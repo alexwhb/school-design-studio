@@ -45,12 +45,10 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
     params.rotate && (el.style.transform += `rotate(${params.rotate})`)
   }, [params])
 
-  const firstCropRun = useRef(true)
+  const lastCropEdit = useRef(cropEdit)
   useEffect(() => {
-    if (firstCropRun.current) {
-      firstCropRun.current = false
-      return
-    }
+    if (lastCropEdit.current === cropEdit) return
+    lastCropEdit.current = cropEdit
     const el = document.getElementById(`${params.uuid}`)
     if (cropEdit) {
       el?.addEventListener('mousedown', touchstart, false)

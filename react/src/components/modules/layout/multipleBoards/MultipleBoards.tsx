@@ -191,12 +191,10 @@ export default function MultipleBoards() {
     if (mainElRef.current) mainElRef.current.scrollTop = 0
   }, [canvas.dZoom])
 
-  const firstFold = useRef(true)
+  const lastFold = useRef(isFold)
   useEffect(() => {
-    if (firstFold.current) {
-      firstFold.current = false
-      return
-    }
+    if (lastFold.current === isFold) return
+    lastFold.current = isFold
     setBottomHeight(isFold ? 0 : 112)
     const timer = setTimeout(() => {
       setZoomScreenChange()

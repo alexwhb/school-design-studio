@@ -93,7 +93,10 @@ const ImageCutout = forwardRef<ImageCutoutHandle, Props>(function ImageCutout({ 
     [clear, handleUploaderLoad],
   )
 
+  const lastShow = useRef(show)
   useEffect(() => {
+    if (lastShow.current === show) return
+    lastShow.current = show
     if (!show) setShowMoveable(true)
   }, [show])
 
