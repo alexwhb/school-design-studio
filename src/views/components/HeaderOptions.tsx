@@ -12,6 +12,7 @@ import { useEditorMode } from '@/common/hooks/useEditorMode'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { canvasState, userState, widgetState } from '@/store/state'
+import type { TdWidgetData } from '@/store/types'
 import { setShowMoveable } from '@/store/control'
 import { managerEdit } from '@/store/base'
 import { setDPage, getDPage } from '@/store/canvas'
@@ -60,24 +61,29 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
     let res: any = null
     const data = widgetState.dLayouts
     if (Number(type) == 1) {
-      if (widgetState.dWidgets[0].type === 'w-group') {
-        const group = widgetState.dWidgets.shift()
+      // Saving an element wants the group last and its recorded size cleared.
+      // That is a fact about the payload, not about the canvas, so it happens
+      // to a plain copy — reordering the live store moved the element the
+      // author had selected out from under them every time they pressed Save.
+      const widgets: TdWidgetData[] = JSON.parse(JSON.stringify(widgetState.dWidgets))
+      if (widgets[0]?.type === 'w-group') {
+        const group = widgets.shift()
         if (!group) return
         // A page carries no `record`, so the type allows it to be missing.
         if (!group.record) return
         group.record.width = 0
         group.record.height = 0
-        widgetState.dWidgets.push(group)
+        widgets.push(group)
       }
-      if (!widgetState.dWidgets.some((x) => x.type === 'w-group')) {
-        alert('An element must be grouped before you can save it.')
+      if (!widgets.some((x) => x.type === 'w-group')) {
+        useNotification('Nothing to save', 'An element must be grouped before you can save it.', { type: 'warning' })
         return
       }
       res = await api.home.saveTemp({
         id: tempid,
         type,
         title: titleRef.current || 'Untitled element',
-        data: JSON.stringify(widgetState.dWidgets),
+        data: JSON.stringify(widgets),
         width: canvasState.dPage.width,
         height: canvasState.dPage.height,
       })
