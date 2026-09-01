@@ -27,6 +27,12 @@
             <el-icon v-show="showGuides" class="tick"><Check /></el-icon>
           </div>
         </el-dropdown-item>
+        <el-dropdown-item @click="controlStore.toggleSnapEnabled()">
+          <div class="item item--toggle">
+            <span>Snap to objects</span>
+            <el-icon v-show="snapEnabled" class="tick"><Check /></el-icon>
+          </div>
+        </el-dropdown-item>
         <el-dropdown-item @click="toggleSpellcheck">
           <div class="item item--toggle">
             <span>Check spelling</span>
@@ -42,7 +48,9 @@
 import { useRouter } from 'vue-router'
 import { ElDropdown, ElDropdownItem, ElDropdownMenu, ElIcon } from 'element-plus'
 import { Check } from '@element-plus/icons-vue'
+import { storeToRefs } from 'pinia'
 import useSpellcheck from '@/common/hooks/useSpellcheck'
+import { useControlStore } from '@/store'
 
 type TProps = {
   /** Ticked state for the rulers, which the editor owns. */
@@ -58,6 +66,11 @@ defineEmits<{
 // text widget already reads the same one, and threading it through the toolbar
 // would only give it a second source of truth.
 const { enabled: spellcheck, toggleSpellcheck } = useSpellcheck()
+
+// Snapping is the editor's own state, so unlike the rulers above it needs no
+// help from the toolbar to know whether it is on.
+const controlStore = useControlStore()
+const { dSnapEnabled: snapEnabled } = storeToRefs(controlStore)
 
 const router = useRouter()
 

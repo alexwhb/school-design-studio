@@ -55,6 +55,9 @@
               </template>
             </component>
 
+            <!-- What Moveable snaps to when a ruler guide is in the way -->
+            <snap-guides v-if="needTools" />
+
             <!-- <ref-line v-if="dSelectWidgets.length === 0" /> -->
           </div>
         </watermark>
@@ -77,6 +80,7 @@ import { storeToRefs } from 'pinia'
 import { TPageState } from '@/store/design/canvas/d'
 import resizePage from './comps/resize.vue'
 import watermark from './comps/pageWatermark.vue'
+import snapGuides from './comps/snapGuides.vue'
 import { TdWidgetData } from '@/store/design/widget'
 import { useRoute } from 'vue-router'
 const route = useRoute()

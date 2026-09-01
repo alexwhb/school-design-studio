@@ -12,6 +12,7 @@ export type TScreeData = {
   height: number
 }
 
+/** Ruler guides, in page coordinates. Vertical lines are x, horizontal are y. */
 export type TGuidelinesData = {
   verticalGuidelines: number[]
   horizontalGuidelines: number[]
@@ -44,7 +45,7 @@ export type TStoreAction = {
   /** 更新编辑界面的宽高 */
   updateScreen: (data: TScreeData) => void
   /** 修改标尺线 */
-  updateGuidelines: (lines: TGuidelinesData) => void
+  updateGuidelines: (lines: Partial<TGuidelinesData>) => void
   /** 强制重绘画布 */
   reChangeCanvas: () => void
   /** 更新Page数据 */

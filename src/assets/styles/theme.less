@@ -80,6 +80,18 @@
   // The chequerboard that means "transparent" behind a page or a thumbnail.
   --ds-checker-a: #e8eef1;
   --ds-checker-b: #ffffff;
+  // Alignment guides, drawn by Moveable while you drag. Deliberately unlike
+  // the accent: the selection box is already accent-coloured, and "this edge
+  // is lined up with that one" has to read at a glance against artwork.
+  --ds-snap-line: #e0218a;
+  // Ruler guides, and the hairline casing both they and the snap lines carry.
+  // No colour survives every background — a red guide over a red poster is
+  // invisible — so the line is cased instead, and the casing is what you see
+  // wherever the colour underneath happens to match. One value for both
+  // themes, like --ds-scrim: this is drawn over the user's artwork, which does
+  // not change with the theme, rather than over app chrome.
+  --ds-guide-line: #f33;
+  --ds-guide-casing: rgba(255, 255, 255, 0.92);
   // Ruler gutter (see lineGuides.vue, which reads these through getComputedStyle).
   --ds-ruler-bg: #f3f8fa;
   --ds-ruler-line: #acbac1;
@@ -136,6 +148,7 @@ html.dark {
   --ds-scroll-thumb-hover: hsl(0 0% 38%);
   --ds-checker-a: hsl(0 0% 13%);
   --ds-checker-b: hsl(0 0% 18%);
+  --ds-snap-line: hsl(330 90% 66%);
   --ds-ruler-bg: hsl(0 0% 7%);
   --ds-ruler-line: hsl(0 0% 30%);
   --ds-ruler-text: hsl(0 0% 55%);

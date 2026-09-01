@@ -10,6 +10,19 @@
 import { useHistoryStore } from "@/store";
 import { Store, defineStore } from "pinia";
 
+/** Remembers the snapping toggle between sessions, like the theme does. */
+const SNAP_STORAGE_KEY = 'ds_snap'
+
+function readStoredSnap(): boolean {
+  try {
+    // Absence of a choice means on, which is what every design tool does.
+    return localStorage.getItem(SNAP_STORAGE_KEY) !== 'off'
+  } catch {
+    // Private browsing, or storage disabled by policy. Not a reason to fail.
+    return true
+  }
+}
+
 type TControlState = {
   /** Whether an element is being moved */
   dMoving: boolean 
@@ -29,6 +42,8 @@ type TControlState = {
   dSpaceDown: boolean
   /** 正在编辑or裁剪的组件id */
   dCropUuid: string
+  /** Snap moves and resizes to other objects, the page and the guides */
+  dSnapEnabled: boolean
 }
 
 type TControlAction = {
@@ -46,6 +61,9 @@ type TControlAction = {
   /** 设置正在裁剪or编辑的组件 */
   setCropUuid: (uuid: string) => void
   setSpaceDown: (uuid: boolean) => void // Track whether space is held
+  /** Turn smart snapping on or off */
+  setSnapEnabled: (enabled: boolean) => void
+  toggleSnapEnabled: () => void
 }
 
 /** 全局控制配置 */
@@ -60,6 +78,7 @@ const ControlStore =  defineStore<"controlStore", TControlState, {}, TControlAct
     dAltDown: false, // Track whether thealt键 / 或ctrl
     dCropUuid: '-1', // 正在编辑or裁剪的组件id
     dSpaceDown: false, // Track whether space is held
+    dSnapEnabled: readStoredSnap(), // Snap to objects, the page and the guides
   }),
   getters: {},
   actions: {
@@ -112,6 +131,19 @@ const ControlStore =  defineStore<"controlStore", TControlState, {}, TControlAct
     },
     setSpaceDown(val: boolean) {
       this.dSpaceDown = val
+    },
+    setSnapEnabled(enabled: boolean) {
+      this.dSnapEnabled = enabled
+      try {
+        // Stored as a word rather than a boolean so an older build, which
+        // knows nothing of this key, still reads the default.
+        localStorage.setItem(SNAP_STORAGE_KEY, enabled ? 'on' : 'off')
+      } catch {
+        /* see readStoredSnap */
+      }
+    },
+    toggleSnapEnabled() {
+      this.setSnapEnabled(!this.dSnapEnabled)
     }
   }
 })
