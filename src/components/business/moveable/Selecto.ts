@@ -33,7 +33,10 @@ export default function useSelecto(moveable: any) {
       moveable.target = [].slice.call(document.querySelectorAll('.widget-selected'))
     })
     .on('dragStart', (e) => {
-      if (controlState.dSpaceDown) {
+      // The page resize bars sit inside the selecto container, so grabbing one
+      // would otherwise drag a selection box across the canvas as well.
+      const target = e.inputEvent?.target as HTMLElement | null
+      if (controlState.dSpaceDown || target?.closest?.('.page-resize')) {
         e.stop()
       }
     })
