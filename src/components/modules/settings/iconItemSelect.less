@@ -26,9 +26,22 @@
       i {
         font-size: 17px;
       }
+      .svg-icon {
+        width: 17px;
+        height: 17px;
+      }
       &:hover {
         background-color: @surface-2;
         color: @ink;
+      }
+    }
+
+    .list-item.disabled {
+      color: @ink-4;
+      cursor: default;
+      &:hover {
+        background-color: transparent;
+        color: @ink-4;
       }
     }
 

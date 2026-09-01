@@ -670,3 +670,61 @@ test('the colour picker keeps the colours you have used', async ({ page }) => {
   await page.waitForTimeout(600)
   await expect(page.locator('.color-picker:visible .item-color')).toHaveCount(2)
 })
+
+/* ----------------------------------------------------------- distributing */
+
+/** Every widget's top edge and drawn height, in page pixels, top to bottom. */
+async function verticalBands(page: import('@playwright/test').Page) {
+  const bands = await page.evaluate(
+    (selector) =>
+      [...document.querySelectorAll(selector)].map((el) => ({
+        top: Number.parseFloat((el as HTMLElement).style.top),
+        height: (el as HTMLElement).offsetHeight,
+      })),
+    WIDGET,
+  )
+  return bands.sort((a, b) => a.top - b.top)
+}
+
+async function selectEverything(page: import('@playwright/test').Page) {
+  await page.locator('#page-design-canvas').click({ position: { x: 4, y: 4 } })
+  await page.waitForTimeout(300)
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.waitForTimeout(600)
+  await expect(page.locator('.gounp__btn')).toBeVisible()
+}
+
+test('distributing evens out the gaps and leaves the outermost alone', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+  await addText(page, 'Subheading')
+  await expect(page.locator(WIDGET)).toHaveCount(3)
+
+  const before = await verticalBands(page)
+  await selectEverything(page)
+  await page.getByLabel('Distribute vertically').click()
+  await page.waitForTimeout(400)
+
+  const after = await verticalBands(page)
+  // The two that were on the outside are exactly where they were left.
+  expect(after[0].top).toBe(before[0].top)
+  expect(after[2].top + after[2].height).toBe(before[2].top + before[2].height)
+  // And the widget between them has moved to the middle of what is left over.
+  const gaps = [after[1].top - (after[0].top + after[0].height), after[2].top - (after[1].top + after[1].height)]
+  expect(Math.abs(gaps[0] - gaps[1])).toBeLessThanOrEqual(1)
+  expect(after[1].top).not.toBe(before[1].top)
+})
+
+test('there is nothing to distribute below three widgets', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+  await expect(page.locator(WIDGET)).toHaveCount(2)
+
+  const before = await verticalBands(page)
+  await selectEverything(page)
+  await expect(page.getByLabel('Distribute vertically')).toHaveClass(/disabled/)
+  await page.getByLabel('Distribute vertically').click()
+  await page.waitForTimeout(400)
+
+  expect(await verticalBands(page)).toEqual(before)
+})

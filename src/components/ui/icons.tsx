@@ -84,3 +84,21 @@ export function UploadFilledIcon({ className, width = '1em', height = '1em', sty
     </svg>
   )
 }
+
+/** Three evenly spaced columns: the gaps are the point, so they are drawn equal. */
+export function DistributeHorizontalIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" d="M96 112h128v800H96zM448 336h128v352H448zM800 112h128v800H800z" />
+    </svg>
+  )
+}
+
+/** The same three, stacked. */
+export function DistributeVerticalIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" d="M112 96h800v128H112zM336 448h352v128H336zM112 800h800v128H112z" />
+    </svg>
+  )
+}

@@ -1,17 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
 import IconItemSelect, { type TIconItemSelectData } from '../settings/IconItemSelect'
 import AnimateWrap from '../settings/AnimateSelect/AnimateWrap'
 import Button from '@/components/ui/Button'
+import { DistributeHorizontalIcon, DistributeVerticalIcon } from '@/components/ui/icons'
 import { widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import { getCombined, realCombined } from '@/store/group'
-import { setDWidgets, updateAlign } from '@/store/widget'
+import { distributeGeometry, setDWidgets, updateAlign } from '@/store/widget'
 import type { TdWidgetData } from '@/store/types'
 import LayerList from './components/LayerList'
 import { styleComponents } from './styleRegistry'
 import './stylePanel.less'
+
+/** Evening out the gaps needs a gap on either side of something, so three widgets. */
+const DISTRIBUTE_MINIMUM = 3
+
+const distributeIconList: TIconItemSelectData[] = [
+  { key: 'distribute', Icon: DistributeHorizontalIcon, tip: 'Distribute horizontally', value: 'horizontal' },
+  { key: 'distribute', Icon: DistributeVerticalIcon, tip: 'Distribute vertically', value: 'vertical' },
+]
 
 export default function StylePanel() {
   const [activeTab, setActiveTab] = useState(0)
@@ -34,7 +43,16 @@ export default function StylePanel() {
     realCombined()
   }
 
+  const alignItems = useMemo(
+    () => [...alignIconList, ...distributeIconList.map((item) => ({ ...item, disabled: selectCount < DISTRIBUTE_MINIMUM }))],
+    [selectCount],
+  )
+
   function alignAction(item: TIconItemSelectData) {
+    if (item.key === 'distribute') {
+      distributeGeometry({ distribute: item.value as any, uuids: widgetState.dSelectWidgets.map((widget) => widget.uuid) })
+      return
+    }
     const sWidgets: TdWidgetData[] = JSON.parse(JSON.stringify(widgetState.dSelectWidgets))
     getCombined().then((group) => {
       sWidgets.forEach((element) => {
@@ -65,7 +83,7 @@ export default function StylePanel() {
           <Button plain type="primary" className="gounp__btn" onClick={handleCombine}>
             Group
           </Button>
-          <IconItemSelect label="" data={alignIconList} onFinish={alignAction} />
+          <IconItemSelect label="" data={alignItems} onFinish={alignAction} />
         </div>
         {animatable ? (
           <div className="animate-slot" style={{ display: showGroupCombined ? 'none' : undefined }}>
