@@ -6,6 +6,8 @@
  * @LastEditTime: 2024-11-14 16:41:19
  */
 
+import type { ComponentType } from 'react'
+import { BulletListIcon, NumberListIcon } from '@/components/ui/icons'
 import { AlignListData } from "./AlignListData"
 
 export type TStyleIconData = {
@@ -57,7 +59,9 @@ export const styleIconList1 = [
 
 export type TStyleIconData2 = {
   key: string
-  icon: string
+  /** A glyph from the icon font, or `Icon` when the font has none. */
+  icon?: string
+  Icon?: ComponentType<{ className?: string }>
   tip: string
   value: string
   select: boolean
@@ -97,6 +101,20 @@ export const styleIconList2 = [
     icon: 'icon-align-justify-text',
     tip: 'Justify all',
     value: 'justify',
+    select: false,
+  },
+  {
+    key: 'listStyle',
+    Icon: BulletListIcon,
+    tip: 'Bulleted list',
+    value: 'bullet',
+    select: false,
+  },
+  {
+    key: 'listStyle',
+    Icon: NumberListIcon,
+    tip: 'Numbered list',
+    value: 'number',
     select: false,
   },
 ] as TStyleIconData2[]

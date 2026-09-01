@@ -473,6 +473,97 @@ test('bold toggles the selected text', async ({ page }) => {
   expect(after).toBe('bold')
 })
 
+/*
+ * The two list toggles are the only buttons in the text panel drawn as SVG
+ * rather than as an icon-font glyph, which is what makes them findable without
+ * leaning on their position in the row.
+ */
+const LIST_TOGGLE = '#w-text-style .list-item:has(svg)'
+
+test('the bullet toggle turns the text into a list and back', async ({ page }) => {
+  await addText(page, 'Body text')
+  await selectFirstWidget(page)
+  await page.locator(LIST_TOGGLE).first().click()
+  await page.waitForTimeout(400)
+
+  const bullets = page.locator(`${WIDGET} .edit-text ul li`)
+  await expect(bullets).toHaveCount(1)
+  await expect(bullets.first()).toHaveText('Add a little bit of body text')
+  await expect(page.locator(LIST_TOGGLE).first()).toHaveClass(/active/)
+
+  await page.locator(LIST_TOGGLE).first().click()
+  await page.waitForTimeout(400)
+  await expect(page.locator(`${WIDGET} .edit-text ul`)).toHaveCount(0)
+  await expect(page.locator(`${WIDGET} .edit-text`).first()).toHaveText('Add a little bit of body text')
+})
+
+test('the numbered toggle replaces the bullets rather than nesting inside them', async ({ page }) => {
+  await addText(page, 'Body text')
+  await selectFirstWidget(page)
+  await page.locator(LIST_TOGGLE).first().click()
+  await page.waitForTimeout(400)
+  await page.locator(LIST_TOGGLE).nth(1).click()
+  await page.waitForTimeout(400)
+
+  await expect(page.locator(`${WIDGET} .edit-text ul`)).toHaveCount(0)
+  await expect(page.locator(`${WIDGET} .edit-text ol li`)).toHaveCount(1)
+})
+
+test('pressing Enter inside a list starts the next bullet', async ({ page }) => {
+  await addText(page, 'Body text')
+  await selectFirstWidget(page)
+  await page.locator(LIST_TOGGLE).first().click()
+  await page.waitForTimeout(400)
+
+  const widget = page.locator(WIDGET).first()
+  await widget.dblclick()
+  await page.waitForTimeout(400)
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.keyboard.type('Bring a water bottle')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('Wear trainers')
+  await page.locator('#page-design').click({ position: { x: 30, y: 30 } })
+  await page.waitForTimeout(400)
+
+  const bullets = page.locator(`${WIDGET} .edit-text ul li`)
+  await expect(bullets).toHaveCount(2)
+  await expect(bullets.nth(0)).toHaveText('Bring a water bottle')
+  await expect(bullets.nth(1)).toHaveText('Wear trainers')
+})
+
+test('undo takes a list back off in one step, markers and all', async ({ page }) => {
+  await addText(page, 'Body text')
+  await selectFirstWidget(page)
+  await page.locator(LIST_TOGGLE).first().click()
+  await page.waitForTimeout(600)
+  await expect(page.locator(`${WIDGET} .edit-text ul li`)).toHaveCount(1)
+
+  await page.locator('.operation-item', { has: page.locator('.icon-undo') }).click()
+  await page.waitForTimeout(600)
+  // The markers live in the text, so a half-undone toggle would leave the list
+  // on screen with the button showing off.
+  await expect(page.locator(`${WIDGET} .edit-text ul`)).toHaveCount(0)
+  // Undo drops the selection, so the panel has to be brought back to read it.
+  await selectFirstWidget(page)
+  await expect(page.locator(LIST_TOGGLE).first()).not.toHaveClass(/active/)
+})
+
+test('the panel textarea shows a list as its lines, not as its markup', async ({ page }) => {
+  await addText(page, 'Body text')
+  await selectFirstWidget(page)
+  await page.locator(LIST_TOGGLE).first().click()
+  await page.waitForTimeout(400)
+
+  const box = page.locator('#text-input-area .real-input')
+  await expect(box).toHaveValue('Add a little bit of body text')
+  await box.fill('Pack a lunch\nBring a hat')
+  await page.waitForTimeout(400)
+
+  const bullets = page.locator(`${WIDGET} .edit-text ul li`)
+  await expect(bullets).toHaveCount(2)
+  await expect(bullets.nth(1)).toHaveText('Bring a hat')
+})
+
 test('a rubber band selects into the store, not just onto the canvas', async ({ page }) => {
   const crashes: string[] = []
   page.on('pageerror', (e) => crashes.push(e.message))

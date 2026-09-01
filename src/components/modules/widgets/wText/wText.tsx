@@ -11,6 +11,7 @@ import CurvedText from './CurvedText'
 import layoutCurvedText, { forgetMeasurements } from './arcLayout'
 import useFontTick from './useFontTick'
 import effectStyle from './effectStyle'
+import { applyListStyle, matchesListStyle, type TListStyle } from './listMarkup'
 import type { WidgetProps } from '../types'
 import './wText.less'
 
@@ -29,6 +30,8 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   const loadFontDone = useRef('')
 
   const fontFamily = `'${p.fontClass.value}'`
+  const listStyle = (p.listStyle ?? 'none') as TListStyle
+  const isList = listStyle !== 'none'
 
   /**
    * The arc, when there is one. Editing drops it, the way the text effects are
@@ -161,10 +164,26 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   }
 
   function updateText(e?: { target: HTMLElement }) {
-    const value = e && e.target ? e.target.innerHTML : params.text
+    const written = e && e.target ? e.target.innerHTML : params.text
+    // Chromium's list editing leaves markup the model does not describe — a
+    // nested <ul> after Tab, a bare <div> after Enter on an empty bullet. Put
+    // it back into one flat list before anything else reads it.
+    const value = matchesListStyle(written as string, listStyle) ? written : applyListStyle(written as string, listStyle)
     if (value !== params.text) {
       updateWidgetData({ uuid: String(params.uuid), key: 'text', value: value as string })
     }
+  }
+
+  /**
+   * A list has to be edited as real markup, so the field cannot be
+   * plaintext-only there and a paste would otherwise bring its source's HTML
+   * with it. execCommand keeps the caret and the browser's own undo stack for
+   * the field, which writing innerHTML would throw away.
+   */
+  function pasteAsText(e: React.ClipboardEvent<HTMLDivElement>) {
+    if (!isList) return
+    e.preventDefault()
+    document.execCommand('insertText', false, e.clipboardData.getData('text/plain'))
   }
 
   function writingText() {
@@ -251,9 +270,10 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
           style={{ fontFamily }}
           className="edit-text"
           spellCheck={spellcheck}
-          contentEditable={editable ? 'plaintext-only' : false}
+          contentEditable={editable ? (isList ? true : 'plaintext-only') : false}
           suppressContentEditableWarning
           onInput={() => writingText()}
+          onPaste={pasteAsText}
           onBlur={writeDone}
         />
       )}

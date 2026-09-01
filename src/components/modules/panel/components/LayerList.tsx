@@ -6,6 +6,7 @@ import { renameWidget, selectWidget, setLayerHidden, updateHoverUuid, updateWidg
 import { recordHistory } from '@/common/hooks/history'
 import Input from '@/components/ui/Input'
 import { cx } from '@/utils/dom'
+import { textToLines } from '../../widgets/wText/listMarkup'
 import type { TdWidgetData } from '@/store/types'
 import './layerList.less'
 
@@ -33,9 +34,13 @@ function buildWidgets(data: readonly TdWidgetData[]): TdWidgetData[] {
   return widgets
 }
 
-/** What a layer is called: the name it was given, else its own text, else its kind. */
+/**
+ * What a layer is called: the name it was given, else its own text, else its
+ * kind. A text widget's text is markup — a bulleted one is a whole <ul> — so it
+ * is read back as lines rather than printed raw.
+ */
 function layerLabel(element: TdWidgetData) {
-  return element.label || element.text || element.name || ''
+  return element.label || (element.text ? textToLines(element.text).join(' ') : '') || element.name || ''
 }
 
 function stopEvent(e: { stopPropagation: () => void }) {

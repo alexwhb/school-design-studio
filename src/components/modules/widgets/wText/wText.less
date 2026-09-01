@@ -11,6 +11,28 @@
   white-space: pre-wrap;
   margin: 0;
 }
+/*
+ * Bulleted and numbered lists. The markers sit outside the text, in the
+ * padding, so a line that wraps lines up under its own first character rather
+ * than under the bullet.
+ */
+.edit-text ul,
+.edit-text ol {
+  margin: 0;
+  padding-left: 1.4em;
+}
+.edit-text li {
+  margin: 0;
+  /* main.less strips the marker off every li in the app; artwork wants it. */
+  list-style: inherit;
+}
+.edit-text ul {
+  list-style: disc;
+}
+.edit-text ol {
+  list-style: decimal;
+}
+
 .effect-text {
   position: absolute;
   top: 0;

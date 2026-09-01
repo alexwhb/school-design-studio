@@ -87,6 +87,21 @@ function frame(widget: TdWidgetData, scale: number) {
   }
 }
 
+/**
+ * A bulleted or numbered widget, as one PowerPoint paragraph per line so the
+ * deck gets real bullets rather than the marker characters baked into a string.
+ * Null for text that is not a list, which goes in as the plain string.
+ */
+function bulletRuns(widget: TdWidgetData, text: string): PptxGenJS.TextProps[] | null {
+  const listStyle = (widget as any).listStyle
+  if (listStyle !== 'bullet' && listStyle !== 'number') return null
+  const bullet = listStyle === 'number' ? ({ type: 'number' } as const) : true
+  return text.split('\n').map((line, index, lines) => ({
+    text: line,
+    options: { bullet, breakLine: index < lines.length - 1 },
+  }))
+}
+
 function addTextWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: number) {
   const text = htmlToText((widget as any).text)
   if (!text.trim()) return
@@ -97,7 +112,7 @@ function addTextWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: numb
   const align = ((widget as any).textAlign || 'left') as 'left' | 'center' | 'right' | 'justify'
   const fill = (widget as any).backgroundColor
 
-  slide.addText(text, {
+  slide.addText(bulletRuns(widget, text) ?? text, {
     ...frame(widget, scale),
     fontFace: (widget as any).fontClass?.value || 'Inter',
     fontSize,

@@ -4,6 +4,7 @@ import layoutCurvedText from './arcLayout'
 import useFontTick from './useFontTick'
 import effectStyle from './effectStyle'
 import type { WidgetProps } from '../types'
+import './wText.less'
 
 function WTextStatic({ params, parent, className, ...rest }: WidgetProps) {
   const p = params as any

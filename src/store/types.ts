@@ -90,6 +90,8 @@ export type TdWidgetData = TPageState &
     /** Text only: how far a curved run sweeps, in degrees. 0 is straight. */
     curve?: number
     writingMode?: string
+    /** Text widgets: 'bullet', 'number' or 'none'. See wText/listMarkup.ts. */
+    listStyle?: string
     record?: TWidgetRecord
     /** Entrance animation, played in the presenter. Absent means the element is simply there. */
     animation?: TWidgetAnimation

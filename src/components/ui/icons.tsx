@@ -102,3 +102,47 @@ export function DistributeVerticalIcon({ className, width = '1em', height = '1em
     </svg>
   )
 }
+
+/*
+ * The editor's two icon fonts have no list icons, so the text panel's list
+ * toggles are drawn here instead. Both sit on the same 1024 grid as the rest.
+ */
+
+/** The three lines of text, from `x` across to the right edge of the grid. */
+const listRows = (x: number) =>
+  [208, 464, 720].map((y) => `M${x} ${y}h${928 - x}a48 48 0 0 1 0 96H${x}a48 48 0 0 1 0-96z`).join('')
+
+export function BulletListIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" d={listRows(384)} />
+      <circle fill="currentColor" cx="152" cy="256" r="60" />
+      <circle fill="currentColor" cx="152" cy="512" r="60" />
+      <circle fill="currentColor" cx="152" cy="768" r="60" />
+    </svg>
+  )
+}
+
+export function NumberListIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      {/* The numerals are wider than the bullets, so the lines start further in. */}
+      <path fill="currentColor" d={listRows(440)} />
+      {['1', '2', '3'].map((digit, index) => (
+        <text
+          key={digit}
+          x="160"
+          y={256 + index * 256}
+          fill="currentColor"
+          fontSize="330"
+          fontWeight="700"
+          fontFamily="system-ui, -apple-system, sans-serif"
+          textAnchor="middle"
+          dominantBaseline="central"
+        >
+          {digit}
+        </text>
+      ))}
+    </svg>
+  )
+}

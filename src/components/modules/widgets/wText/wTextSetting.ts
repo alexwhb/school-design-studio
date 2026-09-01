@@ -1,3 +1,5 @@
+import type { TListStyle } from './listMarkup'
+
 export type TwTextData = {
   name: string
   type: string
@@ -24,6 +26,8 @@ export type TwTextData = {
   color: string
   textAlign: StyleProperty.TextAlign
   textAlignLast?: StyleProperty.TextAlign
+  /** Bulleted, numbered or neither — the whole widget, never part of it. */
+  listStyle: TListStyle
   text: string
   /** How far a curved run sweeps, in degrees. 0, or absent, is straight. */
   curve?: number
@@ -91,6 +95,7 @@ export const wTextSetting: TwTextData = {
   textDecoration: 'none',
   color: '#000000ff',
   textAlign: 'left',
+  listStyle: 'none',
   text: '',
   curve: 0,
   opacity: 1,

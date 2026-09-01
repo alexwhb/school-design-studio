@@ -17,6 +17,7 @@ import ValueSelect from '../../settings/ValueSelect'
 import TextWrap from '../../settings/EffectSelect/TextWrap'
 import recolorEffects, { parseColor, replaceEffectColor, type TColorParts } from './recolorEffects'
 import effectColors, { type TEffectColor } from './effectColors'
+import { applyListStyle, textToLines, type TListStyle } from './listMarkup'
 import './wTextStyle.less'
 
 const FONT_SIZE_LIST = [12, 14, 24, 26, 28, 30, 36, 48, 60, 72, 96, 108, 120, 140, 180, 200, 250, 300, 400, 500]
@@ -66,9 +67,12 @@ export default function WTextStyle() {
     if (!active) return styleIconList2
     return styleIconList2.map((item) => ({
       ...item,
-      select: ['textAlign', 'textAlignLast'].includes(item.key) && active[item.key] === item.value,
+      select: ['textAlign', 'textAlignLast', 'listStyle'].includes(item.key) && active[item.key] === item.value,
+      // An arc is laid out character by character, so there is nowhere on it
+      // for a marker to sit. See arcLayout.ts.
+      disabled: item.key === 'listStyle' && Boolean(active.curve),
     }))
-  }, [active?.textAlign, active?.textAlignLast, active])
+  }, [active?.textAlign, active?.textAlignLast, active?.listStyle, active?.curve, active])
 
   /**
    * The colours the stack paints that the Colour swatch does not already
@@ -96,6 +100,7 @@ export default function WTextStyle() {
   if (!active) return null
 
   const uuid = active.uuid as string
+  const listStyle = (active.listStyle ?? 'none') as TListStyle
 
   function finish(key: string, value: number | Record<string, any> | string) {
     updateWidgetData({ uuid, key: key as any, value })
@@ -148,9 +153,25 @@ export default function WTextStyle() {
     updateLayerIndex({ uuid, value: Number(item.value) })
   }
 
+  /**
+   * A list is markup, not a CSS property, so the toggle rewrites the widget's
+   * text alongside its listStyle — see listMarkup.ts for why the markers live
+   * in the text itself. Pressing the style that is already on turns it off.
+   */
+  function changeListStyle(value: TListStyle) {
+    const target = widgetState.dActiveElement as any
+    // The panel can still be holding the widget that was selected a moment ago.
+    if (!target || target.uuid !== uuid) return
+    const next = (target.listStyle ?? 'none') === value ? 'none' : value
+    finish('text', applyListStyle(target.text, next))
+    finish('listStyle', next)
+    requestAnimationFrame(() => setUpdateRect())
+  }
+
   function textStyleAction(item: TIconItemSelectData) {
     const target = widgetState.dActiveElement as any
     if (!target) return
+    if (item.key === 'listStyle') return changeListStyle(item.value as TListStyle)
     let value: any = ['textAlign', 'textAlignLast'].includes(item.key || '')
       ? item.value
       : (item.value as any[])[item.select ? 1 : 0]
@@ -273,7 +294,7 @@ export default function WTextStyle() {
       <IconItemSelect className="style-item" data={alignIconList} onFinish={alignAction} />
 
       <div style={{ marginTop: 10 }} className="line-layout style-item">
-        <TextInputArea value={active.text} onChange={(value) => finish('text', value)} />
+        <TextInputArea value={textToLines(active.text).join('\n')} onChange={(value) => finish('text', applyListStyle(value, listStyle))} />
       </div>
     </div>
   )
