@@ -6,7 +6,9 @@
  * @LastEditTime: 2024-04-18 16:17:36
  */
 
-import { useControlStore, useWidgetStore } from "@/store"
+import { controlState } from '@/store/state'
+import { setSelectItem } from '@/store/widget/select'
+import { getAppRoot } from './appRoot'
 
 type TInitial = {
   offsetX: number
@@ -47,7 +49,7 @@ export default class DragHelper {
     })
     // 鼠标抬起
     window.addEventListener('mouseup', (e) => {
-      const el = window.document.getElementById('app')
+      const el = getAppRoot()
       if (!el || !e.target) return
       el.classList.remove('drag_active')
       const target = e.target as HTMLElement
@@ -81,11 +83,9 @@ export default class DragHelper {
     // it stuck to the cursor with nothing held down.
     if (!this.pointerDown) return
     if (!this.cloneEl) {
-      const controlStore = useControlStore()
-      controlStore.setDraging(true)
-      // store.commit('setDraging', true)
+      controlState.dDraging = true
 
-      const app = window.document.getElementById('app')
+      const app = getAppRoot()
       if (!app || !e) return
       app.classList.add('drag_active') // Show the grab cursor everywhere
       const target = e.target as HTMLElement
@@ -152,14 +152,10 @@ export default class DragHelper {
       return
     }
 
-    const controlStore = useControlStore()
-    const widgetStore = useWidgetStore()
     this.dragging = false
-    controlStore.setDraging(false)
-    // store.commit('setDraging', false)
+    controlState.dDraging = false
 
-    widgetStore.setSelectItem({})
-    // store.commit('selectItem', {})
+    setSelectItem({})
 
     if (!done) {
       const { pageX, offsetX, pageY, offsetY } = this.initial as TInitial

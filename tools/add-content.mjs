@@ -71,7 +71,7 @@ function svgSize(markup) {
 /**
  * Swaps literal colours for the editor's `{{colors[N]}}` placeholders.
  *
- * This is what makes a shape recolourable: wSvg.vue walks the parsed SVG and
+ * This is what makes a shape recolourable: wSvg.tsx walks the parsed SVG and
  * substitutes each placeholder with the matching entry from the widget's
  * `colors`. A shape with hard-coded hex still draws, but the colour picker
  * does nothing to it.

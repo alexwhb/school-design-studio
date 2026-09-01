@@ -46,5 +46,4 @@ function serve(root, port, label) {
 }
 
 const root = process.cwd()
-serve(path.join(root, 'dist'), 4874, 'vue-prod')
-serve(path.join(root, 'dist-react'), 4873, 'react-prod')
+serve(path.join(root, 'dist'), 4873, 'app-prod')

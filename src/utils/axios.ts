@@ -7,11 +7,11 @@
  */
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosStatic } from 'axios'
 import app_config, { LocalStorageKey } from '@/config'
-import { useBaseStore, useUserStore } from '@/store/index';
+import { baseState, userState } from '@/store/state'
 
 axios.defaults.timeout = 30000
 // const version = app_config.VERSION;
-const baseUrl = app_config.API_URL
+const baseUrl = () => app_config.API_URL
 
 // 请求拦截器
 axios.interceptors.request.use(
@@ -19,7 +19,7 @@ axios.interceptors.request.use(
     const url = config.url ?? ""
     const values = {}
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      config.url = url.startsWith('/') ? baseUrl + url : config.url = baseUrl + '/' + url
+      config.url = url.startsWith('/') ? baseUrl() + url : (config.url = baseUrl() + '/' + url)
     }
 
     if (config.method === 'get') {
@@ -54,7 +54,7 @@ axios.interceptors.response.use((res: AxiosResponse<any>) => {
     }
     if (res.data.code === 401) {
       console.log('Signed out')
-      useUserStore().changeOnline(false)
+      userState.online = false
       // store.commit('changeOnline', false)
     }
 
@@ -67,7 +67,9 @@ axios.interceptors.response.use((res: AxiosResponse<any>) => {
     }
   },
   (error) => {
-    useBaseStore().hideLoading()
+    setTimeout(() => {
+      baseState.loading = false
+    }, 600)
 
     // No `response` means the request never reached a server: the optional
     // content backend is not running. That is a supported way to use the
@@ -96,7 +98,7 @@ function warnBackendOffline() {
   if (warnedOffline) return
   warnedOffline = true
   console.info(
-    `[Design Studio] No content backend at ${baseUrl || 'the configured API URL'}. ` +
+    `[Design Studio] No content backend at ${baseUrl() || 'the configured API URL'}. ` +
       'Templates and stock photos are unavailable; everything else works normally.',
   )
 }

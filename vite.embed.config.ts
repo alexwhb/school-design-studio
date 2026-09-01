@@ -12,15 +12,15 @@ export default defineConfig({
   plugins: [react(), inlineIconfont(resolve('public/iconfont/iconfont.css'))],
   resolve: {
     alias: {
-      '@': resolve('react/src'),
-      '~data': resolve('react/src/assets/data'),
+      '@': resolve('src'),
+      '~data': resolve('src/assets/data'),
     },
   },
   css: {
     preprocessorOptions: {
       less: {
         modifyVars: {
-          color: `true; @import "${resolve('react/src/assets/styles/color.less')}";`,
+          color: `true; @import "${resolve('src/assets/styles/color.less')}";`,
         },
         javascriptEnabled: true,
       },
@@ -37,7 +37,7 @@ export default defineConfig({
     emptyOutDir: true,
     cssCodeSplit: false,
     lib: {
-      entry: resolve('react/src/index.ts'),
+      entry: resolve('src/index.ts'),
       name: 'DesignStudio',
       formats: ['es'],
       fileName: () => 'design-studio.js',

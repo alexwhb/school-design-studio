@@ -447,8 +447,8 @@ test('a search that matches nothing says so, and names the category', async ({ p
   await page.waitForTimeout(1800)
   await expect(page.locator('.temp-list-wrap .loading')).toHaveText('No posters match “zzzznothing”')
 
-  // Clearing empties the box. It does not re-run the search — the Vue app does
-  // not either, and the port matches it; see PORT.md.
+  // Clearing empties the box. It deliberately does not re-run the search,
+  // which would only repeat the one that just came back empty.
   await page.locator('.temp-list-wrap .el-input__clear').click()
   await page.waitForTimeout(1500)
   await expect(page.getByPlaceholder('Search templates')).toHaveValue('')

@@ -7,10 +7,8 @@
  */
 // import store from '@/store'
 // import { getImage } from '../getImgDetail'
-import setImageData from '@/common/methods/DesignFeatures/setImage'
-// import wText from '@/components/modules/widgets/wText/wText.vue'
+import setImageData, { type TItem2DataParam } from '@/common/methods/DesignFeatures/setImage'
 import { wTextSetting } from '@/components/modules/widgets/wText/wTextSetting'
-// import wImage from '@/components/modules/widgets/wImage/wImage.vue'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
 import { wSvgSetting } from '@/components/modules/widgets/wSvg/wSvgSetting'
 
@@ -25,7 +23,7 @@ export default async function(type: string, item: TCommonItemData, data: Record<
   }
   if (type === 'image' || type === 'mask') {
     setting = JSON.parse(JSON.stringify(wImageSetting))
-    const img = await setImageData(item.value)
+    const img = await setImageData(item.value as TItem2DataParam)
     setting.width = img.width
     setting.height = img.height // parseInt(100 / item.value.ratio, 10)
     setting.imgUrl = item.value.url
@@ -35,7 +33,7 @@ export default async function(type: string, item: TCommonItemData, data: Record<
   }
   if (type === 'svg') {
     setting = JSON.parse(JSON.stringify(wSvgSetting))
-    const img = await setImageData(item.value)
+    const img = await setImageData(item.value as TItem2DataParam)
     setting.width = img.width
     setting.height = img.height // parseInt(100 / item.value.ratio, 10)
     setting.svgUrl = item.value.url

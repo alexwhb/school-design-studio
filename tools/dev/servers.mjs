@@ -5,8 +5,7 @@ import net from 'node:net'
 const ROOT = process.cwd()
 
 const SERVERS = [
-  { name: 'vue', port: 5174, args: ['run', 'dev'], log: '/tmp/vue-dev.log' },
-  { name: 'react', port: 5273, args: ['run', 'dev:react'], log: '/tmp/react-dev.log' },
+  { name: 'app', port: 5273, args: ['run', 'dev'], log: '/tmp/app-dev.log' },
   { name: 'embed-demo', port: 5373, args: ['run', 'dev:embed-demo'], log: '/tmp/embed-demo.log' },
 ]
 

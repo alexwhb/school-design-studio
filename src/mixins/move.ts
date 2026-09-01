@@ -1,85 +1,54 @@
-/*
- * @Author: ShawnPhang
- * @Date: 2021-08-19 18:43:22
- * @Description:
- * @LastEditors: ShawnPhang <https://m.palxp.cn>
- * @LastEditTime: 2024-04-16 19:10:18
- */
-import { useControlStore, useWidgetStore } from '@/store'
-// import store from '@/store'
+import { ref } from 'valtio'
+import { controlState, widgetState } from '@/store/state'
+import { dMove, initDMove } from '@/store/widget/move'
+import { stopDMove } from '@/store/control'
 
-const move = {
-  methods: {
-    initmovement(e: any) {
-      // let target = store.state.pageDesign.dActiveElement
-      const widgetStore = useWidgetStore()
-      const target = widgetStore.dActiveElement
-      if (!target) return
-      // 设置移动状态初始值
-      widgetStore.initDMove({
-        startX: e.pageX,
-        startY: e.pageY,
-        originX: target.left,
-        originY: target.top,
-      })
+function handlemousemove(e: MouseEvent) {
+  e.stopPropagation()
+  e.preventDefault()
+  dMove({ x: e.pageX, y: e.pageY })
+}
 
-      // 绑定鼠标移动事件
-      document.addEventListener('mousemove', this.handlemousemove, true)
+function handlemouseup() {
+  document.removeEventListener('mousemove', handlemousemove, true)
+  document.removeEventListener('mouseup', handlemouseup, true)
+  stopDMove()
+}
 
-      // 取消鼠标移动事件
-      document.addEventListener('mouseup', this.handlemouseup, true)
-    },
-
-    handlemousemove(e: MouseEvent) {
-      const widgetStore = useWidgetStore()
-      e.stopPropagation()
-      e.preventDefault()
-
-      widgetStore.dMove({
-        x: e.pageX,
-        y: e.pageY,
-      })
-    },
-
-    handlemouseup() {
-      const controlStore = useControlStore()
-      document.removeEventListener('mousemove', this.handlemousemove, true)
-      document.removeEventListener('mouseup', this.handlemouseup, true)
-      controlStore.stopDMove()
-    },
+export const move = {
+  initmovement(e: MouseEvent) {
+    const target = widgetState.dActiveElement
+    if (!target) return
+    initDMove({
+      startX: e.pageX,
+      startY: e.pageY,
+      originX: target.left,
+      originY: target.top,
+    })
+    document.addEventListener('mousemove', handlemousemove, true)
+    document.addEventListener('mouseup', handlemouseup, true)
   },
 }
 
-const moveInit = {
-  methods: {
-    initmovement(e: MouseEvent) {
-      const controlStore = useControlStore()
-      const widgetStore = useWidgetStore()
-      if (!controlStore.dAltDown) {
-        // 设置mouseevent给moveable初始
-        // 在组合操作时排除
-        widgetStore.setMouseEvent(e)
-      }
+export const moveInit = {
+  initmovement(e: MouseEvent) {
+    if (!controlState.dAltDown) {
+      widgetState.activeMouseEvent = ref(e) as MouseEvent
+    }
 
-      const target = widgetStore.dActiveElement
-      if (!target) return
-      widgetStore.initDMove({
-        startX: e.pageX,
-        startY: e.pageY,
-        originX: target.left,
-        originY: target.top,
-      })
+    const target = widgetState.dActiveElement
+    if (!target) return
+    initDMove({
+      startX: e.pageX,
+      startY: e.pageY,
+      originX: target.left,
+      originY: target.top,
+    })
 
-      const handlemouseup = () => {
-        const widgetStore = useWidgetStore()
-        // 销毁选中即刻移
-        widgetStore.setMouseEvent(null)
-        
-        document.removeEventListener('mouseup', handlemouseup, true)
-      }
-      document.addEventListener('mouseup', handlemouseup, true)
-    },
+    const onUp = () => {
+      widgetState.activeMouseEvent = null
+      document.removeEventListener('mouseup', onUp, true)
+    }
+    document.addEventListener('mouseup', onUp, true)
   },
 }
-
-export { move, moveInit }

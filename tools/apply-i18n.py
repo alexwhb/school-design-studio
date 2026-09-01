@@ -59,7 +59,7 @@ def main():
     for dp, dirs, fns in os.walk(os.path.join(ROOT, 'src')):
         dirs[:] = [d for d in dirs if d != 'node_modules']
         for fn in fns:
-            if not fn.endswith(('.vue', '.ts', '.js')):
+            if not fn.endswith(('.tsx', '.ts', '.js')):
                 continue
             path = os.path.join(dp, fn)
             rel = os.path.relpath(path, ROOT)

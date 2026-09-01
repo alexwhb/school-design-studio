@@ -5,7 +5,7 @@
  * @LastEditors: ShawnPhang <site: book.palxp.com>, Jeremy Yu <https://github.com/JeremyYu-cn>
  * @LastEditTime: 2024-03-02 11:50:00
  */
-import { useControlStore } from '@/store'
+import { controlState } from '@/store/state'
 // import store from '@/store'
 
 type TAddEventCb = (e: Event) => void
@@ -15,9 +15,8 @@ type TAddEventObj = {
 
 export default function(el: HTMLElement | string, cb: Function, altLimit: boolean = true) {
   const box = typeof el === 'string' ? document.getElementById(el) : el
-  const controlStore = useControlStore()
-  if (!box) return;
-  addEvent(box, 'mousewheel', (e: any) => {
+  if (!box) return () => {};
+  const onWheel = (e: any) => {
     const ev = e || window.event
     const down = ev.wheelDelta ? ev.wheelDelta < 0 : ev.detail > 0
     // if (down) {
@@ -25,12 +24,14 @@ export default function(el: HTMLElement | string, cb: Function, altLimit: boolea
     // } else {
     //   console.log('鼠标滚轮向上++++++++++')
     // }
-    if ((altLimit && controlStore.dAltDown) || !altLimit) {
+    if ((altLimit && controlState.dAltDown) || !altLimit) {
       ev.preventDefault()
       cb(down)
     }
     return false
-  })
+  }
+  addEvent(box, 'mousewheel', onWheel)
+  return () => box.removeEventListener('mousewheel' as keyof HTMLElementEventMap, onWheel, false)
 }
 
 function addEvent(obj: TAddEventObj, xEvent: keyof HTMLElementEventMap, fn: TAddEventCb) {

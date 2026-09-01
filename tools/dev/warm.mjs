@@ -1,7 +1,6 @@
 import { chromium } from '@playwright/test'
 
 const targets = [
-  ['http://127.0.0.1:5174/home', '#page-design-canvas'],
   ['http://127.0.0.1:5273/home', '#page-design-canvas'],
   ['http://127.0.0.1:5373/embed-demo/index.html', '.ds-root #page-design-canvas'],
 ]

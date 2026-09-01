@@ -16,7 +16,7 @@
  *    editable, but it is guaranteed to look exactly like the editor.
  */
 import PptxGenJS from 'pptxgenjs'
-import type { TdLayout, TdWidgetData } from '@/store/design/widget'
+import type { TdLayout, TdWidgetData } from '@/store/types'
 import { htmlToText, imageToDataUrl, isInvisible, pxToInches, pxToPoints, readRotation, safeFileName, toPptxColor } from './utils'
 
 export type PptxMode = 'editable' | 'picture'

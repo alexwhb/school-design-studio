@@ -10,7 +10,7 @@
  * `scale` is what the preview needs: it draws at 22px, so every distance has
  * to come down with the type or a 14px outline swallows the glyph.
  */
-import { type CSSProperties } from 'vue'
+import type { CSSProperties } from 'react'
 import getGradientOrImg from './getGradientOrImg'
 
 export type TTextEffect = {

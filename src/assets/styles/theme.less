@@ -20,7 +20,7 @@
 //
 // The planner states its palette in oklch; these are the sRGB hexes for the
 // same values, because the ruler tokens are handed to a canvas (see
-// lineGuides.vue) and canvas colour parsing is less forgiving than CSS.
+// LineGuides.tsx) and canvas colour parsing is less forgiving than CSS.
 
 :root {
   color-scheme: light;
@@ -92,7 +92,7 @@
   // not change with the theme, rather than over app chrome.
   --ds-guide-line: #f33;
   --ds-guide-casing: rgba(255, 255, 255, 0.92);
-  // Ruler gutter (see lineGuides.vue, which reads these through getComputedStyle).
+  // Ruler gutter (see LineGuides.tsx, which reads these through getComputedStyle).
   --ds-ruler-bg: #f3f8fa;
   --ds-ruler-line: #acbac1;
   --ds-ruler-text: #75838a;

@@ -1,6 +1,6 @@
 import { chromium } from '@playwright/test'
 const browser = await chromium.launch()
-for (const [name, base] of [['vue', 'http://127.0.0.1:5174'], ['react', 'http://127.0.0.1:5273']]) {
+for (const [name, base] of [['app', process.env.APP_URL || 'http://127.0.0.1:5273']]) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   page.on('pageerror', (e) => console.log(name, 'PAGEERROR', e.message))
   await page.addInitScript(() => localStorage.setItem('ds_theme', 'dark'))

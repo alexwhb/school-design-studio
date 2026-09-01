@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 
-export const REACT_URL = process.env.REACT_URL || 'http://127.0.0.1:5273'
+export const APP_URL = process.env.APP_URL || 'http://127.0.0.1:5273'
 
 export const WIDGET = '#page-design-canvas [data-uuid]:not([data-uuid="-1"])'
 
@@ -12,7 +12,7 @@ export async function openEditor(page: Page, theme: 'dark' | 'light' = 'dark') {
     },
     [theme],
   )
-  await page.goto(REACT_URL + '/home')
+  await page.goto(APP_URL + '/home')
   await page.waitForSelector('#page-design-canvas')
   // The editor is ready once it has measured the workspace and scaled the page
   // to fit. Waiting for that rather than for a fixed delay takes about three

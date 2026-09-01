@@ -6,7 +6,7 @@
  * @LastEditTime: 2024-03-01 20:55:51
  */
 
-import { TIconItemSelectData } from "@/components/modules/settings/iconItemSelect.vue"
+import type { TIconItemSelectData } from '@/components/modules/settings/IconItemSelect'
 
 export default [
   {

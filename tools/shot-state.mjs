@@ -3,7 +3,7 @@ const out = process.argv[2] || '/tmp/state.png'
 const panel = process.argv[3] || 'Text'
 const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } })
-await page.goto('http://127.0.0.1:5173/home', { waitUntil: 'domcontentloaded' })
+await page.goto('http://127.0.0.1:5273/home', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(3000)
 await page.getByText('Text', { exact: true }).first().click()
 await page.waitForTimeout(700)

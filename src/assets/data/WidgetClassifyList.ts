@@ -6,14 +6,14 @@
  * @LastEditTime: 2024-03-01 20:55:51
  */
 
-import { StyleValue } from "vue"
+import type { CSSProperties } from 'react'
 
 export type TWidgetClassifyData = {
   name: string
   icon: string
   show: boolean
   component: string
-  style?: StyleValue
+  style?: CSSProperties
 }
 
 export default [

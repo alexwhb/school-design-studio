@@ -4,7 +4,7 @@
  * The gallery lays its grid out from the width/height in list.json and fills
  * each cell with the cover image, so a template with no cover is an invisible
  * one. There is no way to render a page outside the editor — the widgets are
- * Vue components and the fonts load as web fonts — so this drives the real app
+ * React components and the fonts load as web fonts — so this drives the real app
  * and screenshots the canvas.
  *
  * Start the app first, then:

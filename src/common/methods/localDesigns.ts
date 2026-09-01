@@ -14,7 +14,7 @@
  * is the seam for it — keep the four functions, change what is inside them.
  */
 import { run, STORES } from './localDb'
-import type { TdLayout } from '@/store/design/widget'
+import type { TdLayout } from '@/store/types'
 
 /** The autosaved draft's fixed key. One canvas, one row. */
 const DRAFT_ID = 'draft'
@@ -43,7 +43,7 @@ export async function readDraft(): Promise<LocalDesign | null> {
  * Writes the draft, replacing whatever was there.
  *
  * `layouts` must be plain data, not the widget store's own array: IndexedDB
- * structured-clones what it is given, and a Pinia state object carries reactive
+ * structured-clones what it is given, and the valtio store carries reactive
  * proxies that clone rejects with DataCloneError. The caller has usually just
  * been through JSON to decide whether anything changed, so it holds a plain
  * copy already and cloning again here would only double the work on a design

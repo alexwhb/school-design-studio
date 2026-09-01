@@ -21,7 +21,7 @@
  */
 import downloadBlob from '@/common/methods/download/downloadBlob'
 import { safeFileName } from './utils'
-import type { TdLayout } from '@/store/design/widget'
+import type { TdLayout } from '@/store/types'
 
 /**
  * How many design pixels make an inch of paper.

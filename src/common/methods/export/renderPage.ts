@@ -8,11 +8,14 @@
  */
 import html2canvas from 'html2canvas'
 import FontFaceObserver from 'fontfaceobserver'
-import { nextTick } from 'vue'
-import { useCanvasStore, useControlStore, useWidgetStore } from '@/store'
+import { canvasState, widgetState } from '@/store/state'
+import { setShowMoveable } from '@/store/control'
+import { setDPage, updateZoom } from '@/store/canvas'
+import { getWidgets, setDWidgets } from '@/store/widget/widget'
+import { selectWidget } from '@/store/widget/select'
 import { rasterizeElement, subtreeNeedsRasterizing } from './rasterizeElement'
 import { withTimeout } from './utils'
-import type { TdWidgetData } from '@/store/design/widget'
+import type { TdWidgetData } from '@/store/types'
 
 const CANVAS_ID = 'page-design-canvas'
 
@@ -34,11 +37,29 @@ const DECODE_TIMEOUT = 30000
 
 const IMAGE_TIMEOUT = 15000
 
+/**
+ * Lets React flush the re-render a page switch just queued.
+ *
+ * A frame, with a timer behind it: a hidden tab does not run
+ * requestAnimationFrame at all, and a background export must not stop dead.
+ */
+function nextTick(): Promise<void> {
+  return new Promise((resolve) => {
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      resolve()
+    }
+    requestAnimationFrame(finish)
+    setTimeout(finish, 200)
+  })
+}
+
 /** Waits for every font used in the design, so text is not captured mid-swap. */
 async function waitForFonts(): Promise<void> {
-  const widgetStore = useWidgetStore()
   const families = new Set<string>()
-  for (const page of widgetStore.dLayouts || []) {
+  for (const page of widgetState.dLayouts || []) {
     for (const widget of page.layers || []) {
       const family = (widget as any)?.fontClass?.value
       if (family) families.add(family)
@@ -190,7 +211,7 @@ async function capture(el: HTMLElement, scale: number): Promise<string | null> {
         // Firefox throws InvalidModificationError from `FontFaceSet.add()` for any
         // face that came from an @font-face rule, and html2canvas lets that escape
         // the whole export. Those faces are already in the clone, which carries
-        // the same stylesheets; only the ones registered from JS (wText.vue) need
+        // the same stylesheets; only the ones registered from JS (wText) need
         // copying, so skip whatever the set refuses.
         onclone: (doc: Document) =>
           fonts.forEach((font) => {
@@ -224,25 +245,21 @@ export type PageRenderer = {
  * the editor back exactly as it was — same page, same selection, same zoom.
  */
 export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Promise<T>): Promise<T> {
-  const canvasStore = useCanvasStore()
-  const widgetStore = useWidgetStore()
-  const controlStore = useControlStore()
-
-  const originalPage = canvasStore.dCurrentPage
-  const originalZoom = canvasStore.dZoom
+  const originalPage = canvasState.dCurrentPage
+  const originalZoom = canvasState.dZoom
 
   // Deselect first: the selection outline would otherwise be baked into the
   // exported image.
-  controlStore.setShowMoveable(false)
-  widgetStore.selectWidget({ uuid: '-1' })
+  setShowMoveable(false)
+  selectWidget({ uuid: '-1' })
   await waitForFonts()
 
   const goTo = async (pageIndex: number) => {
-    if (canvasStore.dCurrentPage !== pageIndex) {
-      canvasStore.dCurrentPage = pageIndex
-      widgetStore.setDWidgets(widgetStore.getWidgets())
-      canvasStore.setDPage(widgetStore.dLayouts[pageIndex].global)
-      widgetStore.selectWidget({ uuid: '-1' })
+    if (canvasState.dCurrentPage !== pageIndex) {
+      canvasState.dCurrentPage = pageIndex
+      setDWidgets(getWidgets())
+      setDPage(widgetState.dLayouts[pageIndex].global)
+      selectWidget({ uuid: '-1' })
       await nextTick()
       await afterPaint()
     }
@@ -250,7 +267,7 @@ export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Prom
 
   // Capture at 100% so the output is the design's true pixel size regardless
   // of how far the user happens to be zoomed in.
-  const scaleForZoom = () => 100 / (canvasStore.dZoom || 100)
+  const scaleForZoom = () => 100 / (canvasState.dZoom || 100)
 
   const renderer: PageRenderer = {
     async renderPage(pageIndex, scale = 1) {
@@ -268,11 +285,11 @@ export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Prom
   try {
     return await work(renderer)
   } finally {
-    canvasStore.dCurrentPage = originalPage
-    widgetStore.setDWidgets(widgetStore.getWidgets())
-    canvasStore.setDPage(widgetStore.dLayouts[originalPage].global)
-    canvasStore.updateZoom(originalZoom)
-    widgetStore.selectWidget({ uuid: '-1' })
+    canvasState.dCurrentPage = originalPage
+    setDWidgets(getWidgets())
+    setDPage(widgetState.dLayouts[originalPage].global)
+    updateZoom(originalZoom)
+    selectWidget({ uuid: '-1' })
     await nextTick()
   }
 }

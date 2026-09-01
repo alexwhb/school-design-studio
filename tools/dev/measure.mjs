@@ -22,7 +22,7 @@ const script = () => {
 }
 
 const browser = await chromium.launch()
-for (const [name, url] of [['vue', 'http://127.0.0.1:5174/home'], ['react', 'http://127.0.0.1:5273/home']]) {
+for (const [name, url] of [['app', (process.env.APP_URL || 'http://127.0.0.1:5273') + '/home']]) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   await page.addInitScript(() => localStorage.setItem('ds_theme', 'dark'))
   await page.goto(url)

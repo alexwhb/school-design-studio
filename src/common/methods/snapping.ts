@@ -9,8 +9,7 @@
  * at 25% zoom "snapped" can still leave two edges a couple of page pixels
  * apart, which shows the moment you zoom in.
  */
-import type { TdWidgetData } from '@/store/design/widget'
-import type { TGuidelinesData, TPageState } from '@/store/design/canvas/d'
+import type { TGuidelinesData, TPageState, TdWidgetData } from '@/store/types'
 
 export type TSnapPositions = {
   /** Vertical lines: left, centre and right of everything on the page */

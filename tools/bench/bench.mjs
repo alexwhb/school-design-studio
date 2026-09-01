@@ -2,15 +2,29 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { chromium } from '@playwright/test'
 
-const TARGETS = [
-  { name: 'vue', url: process.env.VUE_URL || 'http://127.0.0.1:5174' },
-  { name: 'react', url: process.env.REACT_URL || 'http://127.0.0.1:5273' },
-]
+const TARGET = process.env.APP_URL || 'http://127.0.0.1:5273'
 
 const RUNS = Number(process.env.BENCH_RUNS || 5)
 // Not under test-results/: Playwright empties that directory at the start of
 // every run, which would take the baseline with it.
 const OUT = path.resolve(process.cwd(), 'bench-results')
+const LATEST = path.join(OUT, 'latest.json')
+
+/**
+ * The previous run, which this one is compared against.
+ *
+ * Read before the new numbers are written, because that write replaces it. A
+ * first run on a fresh checkout has nothing to compare to and just prints its
+ * own medians.
+ */
+function readBaseline() {
+  try {
+    const previous = JSON.parse(fs.readFileSync(LATEST, 'utf8'))
+    return previous?.coldLoadMs?.median === undefined ? null : previous
+  } catch {
+    return null
+  }
+}
 
 function stats(values) {
   const sorted = values.slice().sort((a, b) => a - b)
@@ -244,71 +258,71 @@ async function benchResize(page) {
 
 async function run() {
   fs.mkdirSync(OUT, { recursive: true })
+  const baseline = readBaseline()
   const browser = await chromium.launch()
-  const report = {}
 
-  for (const target of TARGETS) {
-    const cold = []
-    for (let i = 0; i < RUNS; i++) {
-      cold.push((await benchColdLoad(browser, target.url)).canvasReady)
-    }
+  const cold = []
+  for (let i = 0; i < RUNS; i++) {
+    cold.push((await benchColdLoad(browser, TARGET)).canvasReady)
+  }
 
-    const addWidgets = []
-    const drag = []
-    const zoom = []
-    const pageSwitch = []
-    const present = []
-    const resize = []
-    const select = []
+  const addWidgets = []
+  const drag = []
+  const zoom = []
+  const pageSwitch = []
+  const present = []
+  const resize = []
+  const select = []
 
-    for (let i = 0; i < RUNS; i++) {
-      const page = await newPage(browser, target.url)
-      addWidgets.push(await benchAddWidgets(page, 30))
-      const dragResult = await benchDrag(page)
-      dragResult && drag.push(dragResult)
-      const zoomResult = await benchZoom(page)
-      zoomResult && zoom.push(zoomResult)
-      const selectResult = await benchSelect(page)
-      selectResult && select.push(selectResult)
-      pageSwitch.push(await benchPageSwitch(page))
-      resize.push(await benchResize(page))
-      present.push(await benchPresent(page))
-      await page.close()
-    }
+  for (let i = 0; i < RUNS; i++) {
+    const page = await newPage(browser, TARGET)
+    addWidgets.push(await benchAddWidgets(page, 30))
+    const dragResult = await benchDrag(page)
+    dragResult && drag.push(dragResult)
+    const zoomResult = await benchZoom(page)
+    zoomResult && zoom.push(zoomResult)
+    const selectResult = await benchSelect(page)
+    selectResult && select.push(selectResult)
+    pageSwitch.push(await benchPageSwitch(page))
+    resize.push(await benchResize(page))
+    present.push(await benchPresent(page))
+    await page.close()
+  }
 
-    report[target.name] = {
-      coldLoadMs: stats(cold),
-      add30WidgetsMs: stats(addWidgets),
-      dragMeanFrameMs: stats(drag.map((d) => d.meanFrameMs)),
-      dragP95FrameMs: stats(drag.map((d) => d.p95FrameMs)),
-      dragLongFrames: stats(drag.map((d) => d.longFrames)),
-      zoomMeanFrameMs: stats(zoom.map((d) => d.meanFrameMs)),
-      zoomP95FrameMs: stats(zoom.map((d) => d.p95FrameMs)),
-      zoomLongFrames: stats(zoom.map((d) => d.longFrames)),
-      selectWidgetMs: stats(select),
-      pageSwitchMs: stats(pageSwitch),
-      resizeDesignMs: stats(resize),
-      presentOpenMs: stats(present.map((p) => p.openMs)),
-      presentStepMs: stats(present.map((p) => p.stepMs)),
-    }
+  const report = {
+    coldLoadMs: stats(cold),
+    add30WidgetsMs: stats(addWidgets),
+    dragMeanFrameMs: stats(drag.map((d) => d.meanFrameMs)),
+    dragP95FrameMs: stats(drag.map((d) => d.p95FrameMs)),
+    dragLongFrames: stats(drag.map((d) => d.longFrames)),
+    zoomMeanFrameMs: stats(zoom.map((d) => d.meanFrameMs)),
+    zoomP95FrameMs: stats(zoom.map((d) => d.p95FrameMs)),
+    zoomLongFrames: stats(zoom.map((d) => d.longFrames)),
+    selectWidgetMs: stats(select),
+    pageSwitchMs: stats(pageSwitch),
+    resizeDesignMs: stats(resize),
+    presentOpenMs: stats(present.map((p) => p.openMs)),
+    presentStepMs: stats(present.map((p) => p.stepMs)),
   }
 
   await browser.close()
 
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
   fs.writeFileSync(path.join(OUT, `bench-${stamp}.json`), JSON.stringify(report, null, 2))
-  fs.writeFileSync(path.join(OUT, 'latest.json'), JSON.stringify(report, null, 2))
+  fs.writeFileSync(LATEST, JSON.stringify(report, null, 2))
 
-  const metrics = Object.keys(report.vue)
   const pad = (s, n) => String(s).padEnd(n)
   console.log('')
-  console.log(pad('metric', 22), pad('vue (median)', 16), pad('react (median)', 16), 'delta')
+  console.log(pad('metric', 22), pad('median', 16), pad('previous', 16), 'delta')
   console.log('-'.repeat(72))
-  for (const metric of metrics) {
-    const v = report.vue[metric].median
-    const r = report.react[metric].median
-    const delta = v === 0 ? 'n/a' : `${r <= v ? '' : '+'}${round(((r - v) / v) * 100)}%`
-    console.log(pad(metric, 22), pad(v, 16), pad(r, 16), delta)
+  for (const metric of Object.keys(report)) {
+    const now = report[metric].median
+    const before = baseline?.[metric]?.median
+    let delta = '—'
+    if (before !== undefined) {
+      delta = before === 0 ? 'n/a' : `${now <= before ? '' : '+'}${round(((now - before) / before) * 100)}%`
+    }
+    console.log(pad(metric, 22), pad(now, 16), pad(before ?? '—', 16), delta)
   }
   console.log('')
 }

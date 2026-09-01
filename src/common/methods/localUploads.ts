@@ -28,12 +28,6 @@
 
 import { run, STORES } from './localDb'
 
-/** Longest edge kept for an uploaded photo, in pixels. */
-const MAX_EDGE = 2400
-/** Above this, re-encode as JPEG; below it, keep the original bytes. */
-const REENCODE_ABOVE_BYTES = 600 * 1024
-const JPEG_QUALITY = 0.85
-
 export type LocalUpload = {
   id: string
   /** Data URL. Named `url` to match what the panels and widgets already read. */
@@ -44,6 +38,12 @@ export type LocalUpload = {
   title: string
   created_time: string
 }
+
+/** Longest edge kept for an uploaded photo, in pixels. */
+const MAX_EDGE = 2400
+/** Above this, re-encode as JPEG; below it, keep the original bytes. */
+const REENCODE_ABOVE_BYTES = 600 * 1024
+const JPEG_QUALITY = 0.85
 
 function readAsDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {

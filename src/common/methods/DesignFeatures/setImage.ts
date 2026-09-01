@@ -7,7 +7,7 @@
  */
 // import store from '@/store'
 import { getImage } from '../getImgDetail'
-import { useCanvasStore } from '@/store'
+import { canvasState } from '@/store/state'
 
 export type TItem2DataParam = {
   id?: string | number
@@ -25,9 +25,8 @@ export type TItem2DataResult = {
 }
 
 export default async function setItem2Data(item: TItem2DataParam): Promise<Required<TItem2DataParam>> {
-  const canvasStore = useCanvasStore()
   const cloneItem = JSON.parse(JSON.stringify(item))
-  const { width: screenWidth, height: screenHeight } = canvasStore.dPage
+  const { width: screenWidth, height: screenHeight } = canvasState.dPage
   let { width: imgWidth, height: imgHeight } = item
   if (!imgWidth || !imgHeight) {
     const actual = await getImage(item.url)
@@ -41,11 +40,11 @@ export default async function setItem2Data(item: TItem2DataParam): Promise<Requi
   }
   // 根据画布缩放比例再进行一次调整
   if (ratio < 1) {
-    cloneItem.width = cloneItem.width * ratio * (canvasStore.dZoom / 100)
-    cloneItem.height = cloneItem.height * ratio * (canvasStore.dZoom / 100)
+    cloneItem.width = cloneItem.width * ratio * (canvasState.dZoom / 100)
+    cloneItem.height = cloneItem.height * ratio * (canvasState.dZoom / 100)
   }
 
-  cloneItem.canvasWidth = cloneItem.width * (canvasStore.dZoom / 100)
+  cloneItem.canvasWidth = cloneItem.width * (canvasState.dZoom / 100)
   // cloneItem.canvasHeight = cloneItem.height * (store.getters.dZoom / 100)
   return cloneItem
 }

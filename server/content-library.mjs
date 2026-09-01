@@ -57,7 +57,7 @@ export const hasUnsplashKey = Boolean(UNSPLASH_ACCESS_KEY)
 /**
  * The browse rows in the Photos panel. `cate` in the request is one of these
  * ids; each is really a stored Unsplash search. Names are duplicated in
- * `PhotoListWrap.vue`, which shows them before any request goes out.
+ * `PhotoListWrap.tsx`, which shows them before any request goes out.
  */
 const BROWSE_CATEGORIES = {
   1: 'school classroom students learning',

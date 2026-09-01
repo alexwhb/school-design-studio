@@ -24,7 +24,7 @@ import 'design-studio/style.css'
 | `homeUrl`       | `'/'`    | Where the app name in the toolbar links back to.                              |
 | `appName`       | `'Design Studio'` | Name shown in the toolbar.                                          |
 | `theme`         | `'host'` | `host` follows the `dark` class on `<html>`; `light`/`dark` pin it.           |
-| `config`        | —        | Anything else from `react/src/config.ts`.                                     |
+| `config`        | —        | Anything else from `src/config.ts`.                                     |
 
 ## Building it
 
@@ -51,7 +51,7 @@ already-scoped `design-studio.css`; nothing scopes their own stylesheets.
 Menus, tooltips, dialogs and toasts are portalled into `.ds-root` rather than
 `document.body` for the same reason — outside that root the scoped rules would
 not match and they would render unstyled. See
-`react/src/common/hooks/appRoot.ts`.
+`src/common/hooks/appRoot.ts`.
 
 The editor never writes to `document.documentElement`. In `theme="host"` it
 watches the host's `dark` class and paints its own root.

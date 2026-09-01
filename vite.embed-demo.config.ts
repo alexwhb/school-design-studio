@@ -23,20 +23,18 @@ function contentLibraryPlugin() {
 
 export default defineConfig({
   cacheDir: resolve('node_modules/.vite-embed-demo'),
-  root: resolve('react'),
-  publicDir: resolve('public'),
   plugins: [react(), contentLibraryPlugin()],
   resolve: {
     alias: {
-      '@': resolve('react/src'),
-      '~data': resolve('react/src/assets/data'),
+      '@': resolve('src'),
+      '~data': resolve('src/assets/data'),
     },
   },
   css: {
     preprocessorOptions: {
       less: {
         modifyVars: {
-          color: `true; @import "${resolve('react/src/assets/styles/color.less')}";`,
+          color: `true; @import "${resolve('src/assets/styles/color.less')}";`,
         },
         javascriptEnabled: true,
       },

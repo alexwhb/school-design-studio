@@ -8,7 +8,7 @@ import { chromium } from '/Users/alexblack/Projects/Personal/Websites/school-pla
 import fs from 'node:fs/promises'
 import { execSync } from 'node:child_process'
 
-const URL = process.argv[2] || 'http://127.0.0.1:5173/home'
+const URL = process.argv[2] || 'http://127.0.0.1:5273/home'
 const MODE = process.argv[3] || 'pptx-editable'
 const OUT = '/tmp/pptx-test'
 

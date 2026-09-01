@@ -1,6 +1,6 @@
 import { chromium } from '/Users/alexblack/Projects/Personal/Websites/school-planner/node_modules/playwright/index.mjs'
 
-const url = process.argv[2] || 'http://127.0.0.1:5173/home'
+const url = process.argv[2] || 'http://127.0.0.1:5273/home'
 const out = process.argv[3] || '/tmp/shot.png'
 const w = Number(process.argv[4] || 1600)
 const h = Number(process.argv[5] || 1000)

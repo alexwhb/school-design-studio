@@ -35,13 +35,14 @@ perfectly well on its own, which is why it lives in its own repository.
 
 | Path | What it is |
 | --- | --- |
-| `src/` | The editor — Vue 3, Pinia, TypeScript, built with Vite |
+| `src/` | The editor — React 19, valtio, TypeScript, built with Vite |
 | `public/` | Bundled fonts, stickers, masks and template thumbnails |
 | `service/src/mock/` | The content library: templates, elements and photos, as plain JSON |
 | `server/`, `serve.mjs` | A small Node server that answers the read-only content lookups so no backend is needed |
 | `service/` | Upstream's full Express backend, kept for saving designs (optional, not required to run) |
-| `packages/` | Upstream sub-packages — the colour picker and the background-removal tool |
 | `tools/` | Scripts that generated the fonts, stickers and templates in this fork ([details](#developer-tooling)) |
+| `tests/` | Playwright end-to-end tests for the editor and the embed |
+| `embed-demo/` | A host page that mounts the editor as a component, for checking [embedding](EMBEDDING.md) |
 
 ## Run it
 
@@ -53,7 +54,7 @@ npm start          # builds, then serves on http://127.0.0.1:4173
 For development with hot reload:
 
 ```bash
-npm run dev        # http://127.0.0.1:5173
+npm run dev        # http://127.0.0.1:5273
 ```
 
 Other scripts:
@@ -62,7 +63,9 @@ Other scripts:
 | --- | --- |
 | `npm run build` | Production build into `dist/` |
 | `npm run serve` | Serves an existing `dist/` (no rebuild) |
-| `npm run typecheck` | `vue-tsc --noEmit` |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run test:e2e` | Playwright end-to-end tests (needs `npm run dev:servers`) |
+| `npm run build:embed` | Builds the embeddable component into `dist-embed/` (see [EMBEDDING.md](EMBEDDING.md)) |
 | `npm run fetch-fonts` | Re-downloads the bundled fonts (see below) |
 
 ### Stock photos
@@ -89,7 +92,7 @@ message in the panel rather than an empty grid.
 
 The three browse rows are stored searches. Change what they cover by editing
 `BROWSE_CATEGORIES` in `server/content-library.mjs` (the queries) and the list
-of the same name in `src/components/modules/panel/wrap/PhotoListWrap.vue` (the
+of the same name in `src/components/modules/panel/wrap/PhotoListWrap.tsx` (the
 headings shown before any request goes out).
 
 Unsplash's API terms ask that apps credit photographers and report when a photo
@@ -288,7 +291,7 @@ Two things to know before adding styles:
   to one. `fade(@accent, 25%)` fails the build with *"Argument cannot be
   evaluated to a color"*. Use `@accent-a25` / `@accent-a45`, or add a token.
 - Never hardcode a hex for chrome. `tools/` has no lint for this; the check is
-  `grep -rn '#[0-9a-f]\{3,8\}' src --include='*.vue'`, and everything that
+  `grep -rn '#[0-9a-f]\{3,8\}' src --include='*.tsx'`, and everything that
   legitimately remains is either artwork (a widget's default colour, a swatch
   palette) or something drawn on top of a photo.
 
@@ -359,7 +362,7 @@ src/common/methods/export/
   exportPdf.ts     the PDF writer, and the pixels-to-paper conversion
   renderPage.ts    renders any page or element to a PNG, restoring editor state
   utils.ts         unit, colour, HTML-to-text and image helpers
-src/views/components/ExportMenu.vue   the toolbar button, and the quality picker
+src/views/components/ExportMenu.tsx   the toolbar button, and the quality picker
 ```
 
 ## Using it inside School Planner
@@ -369,19 +372,22 @@ school planning tool for events, tasks and staff assignments. It is a separate,
 closed-source codebase, so nothing here depends on it; this section is a record
 of how the two would be joined, and of what a real deployment still needs.
 
-School Planner is React Router 7; this is Vue 3. The two do not share a runtime,
-so the practical options are:
+School Planner is React Router 7 and so is this, so the two can share a runtime.
+The options, most joined-up first:
 
-1. **Iframe it** at a route like `/design`, and set `HOME_URL` in
-   `src/config.ts` so the app name links back into the planner. Simplest, and
-   the editor is already self-contained. Its dark palette is the planner's admin
+1. **Mount it as a component.** `npm run build:embed` produces an embeddable
+   `<DesignStudio />` that renders into a `<div>` in the host — no iframe, no
+   second React root, and the host's copy of React is the only one on the page.
+   Its CSS is scoped so it cannot leak into the surrounding chrome.
+   [EMBEDDING.md](EMBEDDING.md) is the reference, and `embed-demo/` is a working
+   host page to check it against.
+2. **Iframe it** at a route like `/design`, and set `HOME_URL` in
+   `src/config.ts` so the app name links back into the planner. Cruder, but it
+   isolates the editor completely. Its dark palette is the planner's admin
    theme, so an iframe on an `/admin/*` route matches the chrome around it —
    drive the theme from the host by setting `ds_theme` in `localStorage` on the
    same origin, or by dropping the `dark` class on `<html>` directly.
-2. **Serve it as a separate app** on a subdomain, sharing a session cookie.
-3. **Port the editor surface** to React. Realistic only if the design data model
-   is what you want long term — the store is plain Pinia and the widget schema
-   is straightforward, but it is a large job.
+3. **Serve it as a separate app** on a subdomain, sharing a session cookie.
 
 Either way, the things a real deployment still needs:
 

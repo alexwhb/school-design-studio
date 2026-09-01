@@ -1,106 +1,92 @@
-/*
- * @Author: ShawnPhang
- * @Date: 2022-03-09 16:29:54
- * @Description: 处理和ctrl建相关的操作
- * @LastEditors: ShawnPhang <https://m.palxp.cn>
- * @LastEditTime: 2025-03-22 12:56:29
- */
-// import store from '@/store'
 import handlePaste from './handlePaste'
-import { useGroupStore, useHistoryStore, useWidgetStore } from '@/store'
+import { widgetState } from '@/store/state'
+import { realCombined } from '@/store/group'
+import { handleHistory } from '@/store/history'
+import { copyWidget, pasteWidget } from '@/store/widget/clone'
 
-export default function dealWithCtrl(e: KeyboardEvent, _this: any) {
-  const groupStore = useGroupStore()
+export type ShortcutInstance = {
+  save: () => void
+  zoomAdd: () => void
+  zoomSub: () => void
+  present?: () => void
+}
+
+export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) {
   switch (e.keyCode) {
-    case 71: // g
+    case 71:
       e.preventDefault()
-      groupStore.realCombined()
-      // store.dispatch('realCombined')
+      realCombined()
       break
-    case 67: // c
+    case 67:
       copy()
       break
-    case 86: // v
+    case 86:
       paste()
       break
-    case 90: // z
+    case 90:
       undo(e.shiftKey)
       break
-    case 13: // Enter
+    case 13:
       e.preventDefault()
       _this.present?.()
       break
-    case 83: // s
+    case 83:
       e.preventDefault()
       _this.save()
       break
-    case 187: // +
+    case 187:
       e.preventDefault()
       _this.zoomAdd()
       break
-    case 189: // -
+    case 189:
       e.preventDefault()
       _this.zoomSub()
       break
   }
 }
 
-/**
- * 对组合的子元素某个值进行判断
- */
 function checkGroupChild(pid: number | string, key: any) {
-  const widgetStore = useWidgetStore()
   let itHas = false
-  const childs = widgetStore.dWidgets.filter((x) => x.parent === pid) || []
+  const childs = widgetState.dWidgets.filter((x) => x.parent === pid) || []
   childs.forEach((element: any) => {
     element[key] && (itHas = true)
   })
   return itHas
 }
-/**
- * 复制元素
- */
+
 function copy() {
-  const widgetStore = useWidgetStore()
-  if (widgetStore.dActiveElement?.uuid === '-1') {
+  if (widgetState.dActiveElement?.uuid === '-1') {
     return
-  } else if (widgetStore.dActiveElement?.isContainer && checkGroupChild(widgetStore.dActiveElement?.uuid, 'editable')) {
+  } else if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement?.uuid, 'editable')) {
     return
   }
-  !widgetStore.dActiveElement?.editable && widgetStore.copyWidget()
-  // !widgetStore.dActiveElement?.editable && store.dispatch('copyWidget')
+  !widgetState.dActiveElement?.editable && copyWidget()
 }
-/**
- * Paste
- */
+
 let pasteImageFile: any = null
-document.addEventListener('paste', async (e: any) => {
-  const file = e.clipboardData.files[0]
-  pasteImageFile = file && file.type.startsWith('image') ? file : null
-})
+if (typeof document !== 'undefined') {
+  document.addEventListener('paste', async (e: any) => {
+    const file = e.clipboardData.files[0]
+    pasteImageFile = file && file.type.startsWith('image') ? file : null
+  })
+}
+
 async function paste() {
   setTimeout(() => {
     handlePaste(pasteImageFile).then(() => {
-      const widgetStore = useWidgetStore()
-      if (widgetStore.dCopyElement.length === 0) {
+      if (widgetState.dCopyElement.length === 0) {
         return
-      } else if (widgetStore.dActiveElement?.isContainer && checkGroupChild(widgetStore.dActiveElement?.uuid, 'editable')) {
+      } else if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement?.uuid, 'editable')) {
         return
       }
-      !widgetStore.dActiveElement?.editable && widgetStore.pasteWidget()
+      !widgetState.dActiveElement?.editable && pasteWidget()
     })
   }, 10)
 }
-/**
- * Undo
- */
-function undo(shiftKey: any) {
-  const widgetStore = useWidgetStore()
-  const historyStore = useHistoryStore()
 
-  const { type, editable }: any = widgetStore.dActiveElement
+function undo(shiftKey: any) {
+  const { type, editable }: any = widgetState.dActiveElement || {}
   if (type === 'w-text') {
-    // 不在编辑状态则执行撤销操作
-    !editable && (shiftKey ? historyStore.handleHistory('redo') : historyStore.handleHistory('undo'))
-  } else shiftKey ? historyStore.handleHistory('redo') : historyStore.handleHistory('undo')
+    !editable && (shiftKey ? handleHistory('redo') : handleHistory('undo'))
+  } else shiftKey ? handleHistory('redo') : handleHistory('undo')
 }

@@ -13,11 +13,16 @@
  *
  * Where the bytes go is localDesigns.ts's business, not this file's.
  */
-import { onBeforeUnmount, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { useCanvasStore, useWidgetStore } from '@/store'
+import { useEffect, useMemo, useRef } from 'react'
+import { subscribe } from 'valtio'
+import { widgetState } from '@/store/state'
+import { setDPage, getDPage } from '@/store/canvas'
+import { getWidgets, setDLayouts, setDWidgets } from '@/store/widget/widget'
+import { selectWidget } from '@/store/widget/select'
 import { clearDraft, describeAge, readDraft, saveDraft } from '@/common/methods/localDesigns'
-import type { TdLayout } from '@/store/design/widget'
+import { confirmChoice } from '@/common/methods/confirm'
+import message from '@/components/ui/message'
+import type { TdLayout } from '@/store/types'
 
 /** Quiet time before a save, in ms. */
 const DEBOUNCE = 2000
@@ -29,107 +34,126 @@ type TOptions = {
   setTitle: (title: string) => void
 }
 
-export default function useAutosave({ getTitle, setTitle }: TOptions) {
-  const widgetStore = useWidgetStore()
-  const pageStore = useCanvasStore()
+export type Autosave = {
+  restoreThenWatch: (isBlankEditor: boolean) => Promise<void>
+  saveNow: () => Promise<void>
+  isDirty: () => boolean
+  /** Call when something outside the widget store changes, such as the title. */
+  schedule: () => void
+}
 
-  let timer: ReturnType<typeof setTimeout> | undefined
-  /** The last thing written, as JSON, so an idle canvas writes nothing. */
-  let saved = ''
-  let watching = false
+export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave {
+  const options = useRef({ getTitle, setTitle })
+  options.current = { getTitle, setTitle }
 
-  function snapshot(): string {
-    return JSON.stringify({ title: getTitle(), layouts: widgetStore.dLayouts })
-  }
+  const autosave = useMemo<Autosave & { dispose: () => void }>(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    /** The last thing written, as JSON, so an idle canvas writes nothing. */
+    let saved = ''
+    let watching = false
+    let unsubscribe: (() => void) | undefined
 
-  /** True when the canvas has moved on from the last write. */
-  function isDirty(): boolean {
-    return watching && snapshot() !== saved
-  }
-
-  async function write(): Promise<boolean> {
-    const current = snapshot()
-    const { title, layouts } = JSON.parse(current) as { title: string; layouts: TdLayout[] }
-    if (!layouts?.length) return false
-    // `layouts` here is already a plain deep copy, straight out of JSON.parse,
-    // which is exactly what IndexedDB needs and saves cloning it twice.
-    const record = await saveDraft(title, layouts)
-    if (!record) return false
-    saved = current
-    return true
-  }
-
-  function schedule() {
-    clearTimeout(timer)
-    timer = setTimeout(() => {
-      void write()
-    }, DEBOUNCE)
-  }
-
-  /** Writes immediately: File → Save, and Ctrl/Cmd-S. */
-  async function saveNow() {
-    clearTimeout(timer)
-    const ok = await write()
-    ok
-      ? ElMessage.success('Saved on this computer.')
-      : ElMessage.error('This design could not be saved. It may be too large for the browser to store.')
-  }
-
-  function start() {
-    saved = snapshot()
-    watching = true
-    watch(() => [widgetStore.dLayouts, getTitle()], schedule, { deep: true })
-  }
-
-  /**
-   * Asks whether to pick up the last design, then starts watching.
-   *
-   * Only for a blank editor. Opening a template or a saved work by id is an
-   * explicit request for that design, and interrupting it with a question about
-   * a different one would be wrong.
-   */
-  async function restoreThenWatch(isBlankEditor: boolean) {
-    const draft = isBlankEditor ? await readDraft() : null
-    if (!draft) {
-      start()
-      return
+    function snapshot(): string {
+      return JSON.stringify({ title: options.current.getTitle(), layouts: widgetState.dLayouts })
     }
-    try {
-      await ElMessageBox.confirm(`You were working on “${draft.title || 'Untitled design'}” ${describeAge(draft.savedAt)}.`, 'Pick up where you left off?', {
-        confirmButtonText: 'Restore it',
-        cancelButtonText: 'Start fresh',
-        type: 'info',
-        // Dismissing with Escape or the X is neither answer, and quietly
-        // throwing the design away because someone hit Escape would be the
-        // exact failure this whole file exists to prevent.
-        distinguishCancelAndClose: true,
+
+    /** True when the canvas has moved on from the last write. */
+    function isDirty(): boolean {
+      return watching && snapshot() !== saved
+    }
+
+    async function write(): Promise<boolean> {
+      const current = snapshot()
+      const { title, layouts } = JSON.parse(current) as { title: string; layouts: TdLayout[] }
+      if (!layouts?.length) return false
+      // `layouts` here is already a plain deep copy, straight out of JSON.parse,
+      // which is exactly what IndexedDB needs and saves cloning it twice.
+      const record = await saveDraft(title, layouts)
+      if (!record) return false
+      saved = current
+      return true
+    }
+
+    function schedule() {
+      if (!watching) return
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        void write()
+      }, DEBOUNCE)
+    }
+
+    /** Writes immediately: File → Save, and Ctrl/Cmd-S. */
+    async function saveNow() {
+      clearTimeout(timer)
+      const ok = await write()
+      message({
+        message: ok ? 'Saved on this computer.' : 'This design could not be saved. It may be too large for the browser to store.',
+        type: ok ? 'success' : 'error',
       })
-      widgetStore.setDLayouts(draft.layouts)
-      widgetStore.setDWidgets(widgetStore.getWidgets())
-      pageStore.setDPage(pageStore.getDPage())
-      setTitle(draft.title)
-      widgetStore.selectWidget({ uuid: '-1' })
-      ElMessage.success('Restored.')
-    } catch (action) {
-      // 'cancel' is Start fresh — an answer, so the old draft goes. 'close' is
-      // Escape or the X, which decides nothing: leave the draft where it is.
-      if (action === 'cancel') await clearDraft()
     }
-    start()
-  }
 
-  // A tab being hidden is the last reliable moment to write: on mobile it is
-  // often the only warning before the browser discards the page, and unlike
-  // beforeunload it fires on every platform.
-  const onHide = () => {
-    if (document.visibilityState === 'hidden' && isDirty()) void write()
-  }
-  document.addEventListener('visibilitychange', onHide)
+    function start() {
+      saved = snapshot()
+      watching = true
+      unsubscribe = subscribe(widgetState, schedule)
+    }
 
-  onBeforeUnmount(() => {
-    document.removeEventListener('visibilitychange', onHide)
-    clearTimeout(timer)
-  })
+    /**
+     * Asks whether to pick up the last design, then starts watching.
+     *
+     * Only for a blank editor. Opening a template or a saved work by id is an
+     * explicit request for that design, and interrupting it with a question
+     * about a different one would be wrong.
+     */
+    async function restoreThenWatch(isBlankEditor: boolean) {
+      const draft = isBlankEditor ? await readDraft() : null
+      if (!draft) {
+        start()
+        return
+      }
+      const answer = await confirmChoice(
+        'Pick up where you left off?',
+        `You were working on “${draft.title || 'Untitled design'}” ${describeAge(draft.savedAt)}.`,
+        'info',
+        { confirmButtonText: 'Restore it', cancelButtonText: 'Start fresh' },
+      )
+      if (answer === 'confirm') {
+        setDLayouts(draft.layouts)
+        setDWidgets(getWidgets())
+        setDPage(getDPage())
+        options.current.setTitle(draft.title)
+        selectWidget({ uuid: '-1' })
+        message({ message: 'Restored.', type: 'success' })
+      } else if (answer === 'cancel') {
+        // Start fresh is an answer, so the old draft goes. Escape and the X
+        // decide nothing: leave the draft where it is.
+        await clearDraft()
+      }
+      start()
+    }
 
-  return { restoreThenWatch, saveNow, isDirty }
+    // A tab being hidden is the last reliable moment to write: on mobile it is
+    // often the only warning before the browser discards the page, and unlike
+    // beforeunload it fires on every platform.
+    const onHide = () => {
+      if (document.visibilityState === 'hidden' && isDirty()) void write()
+    }
+    document.addEventListener('visibilitychange', onHide)
+
+    return {
+      restoreThenWatch,
+      saveNow,
+      isDirty,
+      schedule,
+      dispose() {
+        document.removeEventListener('visibilitychange', onHide)
+        unsubscribe?.()
+        clearTimeout(timer)
+      },
+    }
+  }, [])
+
+  useEffect(() => autosave.dispose, [autosave])
+
+  return autosave
 }

@@ -1,11 +1,14 @@
+declare namespace Type {
+  type Object = Record<string, any>
+}
 
-
-/** 公共API返回结果 */
 type TCommResResult<T> = {
   code: number
   msg: string
   result: T
 }
+
+type TItem2DataParam = Record<string, any>
 
 type TCommonItemData = {
   type: string
@@ -20,28 +23,20 @@ type TCommonItemData = {
   value: TItem2DataParam
 }
 
-/** 分页查询公共返回 */
 type TPageRequestResult<T> = {
   list: T
   total: number
 }
 
 interface HTMLElementEventMap {
-  "mousewheel": MouseEvent
+  mousewheel: MouseEvent
 }
 
-interface MouseEvent {
-  layerX: number
-  layerY: number
+interface Window {
+  loadFinishToInject?: (msg: string) => void
 }
 
-interface Document {
-  selection?: Selection
-}
-
-interface HTMLElement {
-  createTextRange(): {
-    moveToElementText(el: HTMLElement): void
-    select(): void
-  }
+declare namespace StyleProperty {
+  type TextAlign = 'center' | 'end' | 'left' | 'right' | 'start' | 'justify'
+  type WritingMode = 'horizontal-tb' | 'sideways-lr' | 'sideways-rl' | 'vertical-lr' | 'vertical-rl'
 }

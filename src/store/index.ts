@@ -1,27 +1,18 @@
-/*
- * @Author: Jeremy Yu
- * @Date: 2024-03-18 21:00:00
- * @Description: Store方法export
- * @LastEditors: Jeremy Yu <https://github.com/JeremyYu-cn>
- * @LastEditTime: 2024-03-18 21:00:00
- */
+export * from './state'
+export * from './types'
 
-import useBaseStore from "./base";
-import useUserStore from "./base/user";
-import useCanvasStore from "./design/canvas"
-import useControlStore from './design/control'
-import useHistoryStore from './design/history'
-import useWidgetStore from './design/widget'
-import useGroupStore from './design/group'
-import useForceStore from './design/force'
+import * as canvas from './canvas'
+import * as control from './control'
+import * as force from './force'
+import * as history from './history'
+import * as base from './base'
+import * as group from './group'
+import * as widget from './widget'
 
-export {
-  useBaseStore,
-  useUserStore,
-  useCanvasStore,
-  useControlStore,
-  useHistoryStore,
-  useWidgetStore,
-  useGroupStore,
-  useForceStore,
-}
+export const canvasStore = canvas
+export const controlStore = control
+export const forceStore = force
+export const historyStore = history
+export const baseStore = base
+export const groupStore = group
+export const widgetStore = widget
