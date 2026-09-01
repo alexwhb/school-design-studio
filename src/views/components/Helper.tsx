@@ -13,8 +13,10 @@ export default function Helper({ onSelect, children }: { onSelect: (name: string
     setOpen(false)
   }
 
+  // This fork's own tracker, not upstream's: a teacher reporting a problem with
+  // the school editor should not land on palxiao/poster-design.
   const openIssues = () => {
-    window.open('https://github.com/palxiao/poster-design/issues', '_blank')
+    window.open('https://github.com/alexwhb/school-design-studio/issues', '_blank')
   }
 
   return (
