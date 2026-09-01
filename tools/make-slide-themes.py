@@ -1610,10 +1610,11 @@ BUILDERS = [
     pastel_year_ahead,
 ]
 
-# The category the Templates panel files this pack under — one chip for the
-# whole set, since a theme is only worth picking once and then followed through
-# all five layouts. The slugs are named in templates/cates.json.
-CATE = 'slide-theme'
+# The category the Templates panel files this pack under. These sit under the
+# same Slides chip as the school pack's slides: a themed slide and a plain one
+# are the same thing to someone looking for a slide. The slugs are named in
+# templates/cates.json.
+CATE = 'slide'
 
 
 # -------------------------------------------------------------------- write --

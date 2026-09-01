@@ -176,9 +176,8 @@ Then add to `templates/list.json`:
 
 ### Categories
 
-The chips above the Templates panel — All, Posters, Flyers, Slides, Slide
-themes, Awards, Signs — come from `templates/cates.json`, which is only names
-and order:
+The chips above the Templates panel — All, Posters, Flyers, Slides, Awards,
+Signs — come from `templates/cates.json`, which is only names and order:
 
 ```json
 { "id": "flyer", "name": "Flyers" }
@@ -281,10 +280,11 @@ the year in numbers, results, facilities, and the year ahead. A school picks a
 theme and gets five slides that already agree with each other, which is the
 thing that is tedious to do by hand.
 
-All twenty-five sit under one **Slide themes** chip, set by `CATE` near the top
-of the script. One chip rather than five is the bet that a theme is picked once
-and then followed through all five layouts; splitting it per theme is a matter
-of making `CATE` a per-builder field the way the school pack does it.
+All twenty-five sit under the **Slides** chip, alongside the school pack's own
+slides, set by `CATE` near the top of the script. A themed slide and a plain one
+are the same thing to someone looking for a slide, so they share a chip;
+splitting the themes out again is a matter of making `CATE` a per-builder field
+the way the school pack does it.
 
 The layouts are denser than the school pack's: real tables, four-up figures,
 two-column body copy, and a ruled placeholder where a photograph goes. Three

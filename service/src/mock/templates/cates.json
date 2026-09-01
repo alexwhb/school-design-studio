@@ -2,7 +2,6 @@
   { "id": "poster", "name": "Posters" },
   { "id": "flyer", "name": "Flyers" },
   { "id": "slide", "name": "Slides" },
-  { "id": "slide-theme", "name": "Slide themes" },
   { "id": "award", "name": "Awards" },
   { "id": "sign", "name": "Signs" }
 ]
