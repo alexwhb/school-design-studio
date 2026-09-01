@@ -32,9 +32,17 @@ export default function PageStyle() {
   const localTempBG = useRef<string | null>(null)
 
   useEffect(() => {
-    setMode(MODES[0])
-    if (active?.backgroundImage) setMode(MODES[1])
+    setMode(active?.backgroundImage ? MODES[1] : MODES[0])
   }, [active?.uuid])
+
+  // The Vue original watched the active element deeply, so the tab followed the
+  // background however it was set. Keying only on the page missed the library,
+  // which sets the background from its own panel: you came back to the Colour
+  // tab, with nothing to show that the picture you had just chosen had been
+  // applied — and no way to reach the buttons that work on it.
+  useEffect(() => {
+    if (active?.backgroundImage) setMode(MODES[1])
+  }, [active?.backgroundImage])
 
   if (!active) return null
 
