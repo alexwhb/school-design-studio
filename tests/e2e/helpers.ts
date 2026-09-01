@@ -14,7 +14,14 @@ export async function openEditor(page: Page, theme: 'dark' | 'light' = 'dark') {
   )
   await page.goto(REACT_URL + '/home')
   await page.waitForSelector('#page-design-canvas')
-  await page.waitForTimeout(800)
+  // The editor is ready once it has measured the workspace and scaled the page
+  // to fit. Waiting for that rather than for a fixed delay takes about three
+  // quarters of a second off every test in the suite.
+  await page.waitForFunction(() => {
+    const el = document.getElementById('page-design-canvas')
+    return !!el && /scale\([\d.]+\)/.test(el.style.transform)
+  })
+  await page.locator('#widget-panel .classify-item').first().waitFor()
 }
 
 /**

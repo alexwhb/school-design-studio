@@ -5,8 +5,10 @@ export const REACT_URL = process.env.REACT_URL || 'http://127.0.0.1:5273'
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,
-  workers: 1,
+  fullyParallel: true,
+  // Each test gets its own context, so they do not share a design; the limit is
+  // how many copies of two dev servers one machine will answer for at once.
+  workers: 4,
   reporter: [['list']],
   // Every parity case drives two apps in series, and the slowest opens a picker
   // of forty-four preset covers in each.
