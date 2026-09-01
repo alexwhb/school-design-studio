@@ -87,6 +87,8 @@ export type TdWidgetData = TPageState &
     flip?: string | null
     cropEdit?: boolean
     fontClass?: Record<string, any>
+    /** Text only: how far a curved run sweeps, in degrees. 0 is straight. */
+    curve?: number
     writingMode?: string
     record?: TWidgetRecord
     /** Entrance animation, played in the presenter. Absent means the element is simply there. */

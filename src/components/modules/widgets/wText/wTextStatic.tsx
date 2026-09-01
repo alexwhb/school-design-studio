@@ -1,4 +1,7 @@
-import { memo, useEffect, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
+import CurvedText from './CurvedText'
+import layoutCurvedText from './arcLayout'
+import useFontTick from './useFontTick'
 import effectStyle from './effectStyle'
 import type { WidgetProps } from '../types'
 
@@ -14,6 +17,24 @@ function WTextStatic({ params, parent, className, ...rest }: WidgetProps) {
   }, [p.transform, p.rotate])
 
   const fontFamily = `'${p.fontClass.value}'`
+  const fontTick = useFontTick(fontFamily)
+
+  // The box this draws in was fitted to the arc by the editor, so the layout
+  // only has to be rebuilt, not measured back into the widget.
+  const curved = useMemo(
+    () =>
+      layoutCurvedText({
+        text: p.text,
+        curve: p.curve,
+        fontSize: p.fontSize,
+        lineHeight: p.lineHeight,
+        letterSpacing: p.letterSpacing,
+        fontFamily,
+        fontWeight: p.fontWeight,
+        fontStyle: p.fontStyle,
+      }),
+    [p.text, p.curve, p.fontSize, p.lineHeight, p.letterSpacing, fontFamily, p.fontWeight, p.fontStyle, fontTick],
+  )
 
   return (
     <div
@@ -43,17 +64,25 @@ function WTextStatic({ params, parent, className, ...rest }: WidgetProps) {
       }}
     >
       {p.textEffects
-        ? p.textEffects.map((ef: any, efi: number) => (
-            <div
-              key={efi + 'effect'}
-              style={{ fontFamily, ...effectStyle(ef) }}
-              className="edit-text effect-text"
-              spellCheck={false}
-              dangerouslySetInnerHTML={{ __html: p.text ?? '' }}
-            />
-          ))
+        ? p.textEffects.map((ef: any, efi: number) =>
+            curved ? (
+              <CurvedText key={efi + 'effect'} layout={curved} className="effect-text" style={{ fontFamily, ...effectStyle(ef) }} />
+            ) : (
+              <div
+                key={efi + 'effect'}
+                style={{ fontFamily, ...effectStyle(ef) }}
+                className="edit-text effect-text"
+                spellCheck={false}
+                dangerouslySetInnerHTML={{ __html: p.text ?? '' }}
+              />
+            ),
+          )
         : null}
-      <div style={{ fontFamily }} className="edit-text" spellCheck={false} dangerouslySetInnerHTML={{ __html: p.text ?? '' }} />
+      {curved ? (
+        <CurvedText layout={curved} style={{ fontFamily }} />
+      ) : (
+        <div style={{ fontFamily }} className="edit-text" spellCheck={false} dangerouslySetInnerHTML={{ __html: p.text ?? '' }} />
+      )}
     </div>
   )
 }

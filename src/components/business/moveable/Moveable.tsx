@@ -468,7 +468,11 @@ export default function Moveable() {
         moveable.rotatable = true
         switch (val.type) {
           case 'w-text':
-            moveable.renderDirections = ['e', 'se']
+            // The side handle sets how wide the text may run before it wraps,
+            // which a curved run has no use for: its box is fitted to the arc
+            // and would take the width straight back off you. The corner, which
+            // scales the type, works on both.
+            moveable.renderDirections = Number(val.curve) ? ['se'] : ['e', 'se']
             break
           case 'w-image':
             moveable.renderDirections = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']

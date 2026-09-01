@@ -619,6 +619,80 @@ test('an effect layer offers Skew, which older presets did not carry', async ({ 
   await expect(first.locator('.feature', { hasText: 'Outline' })).toHaveCount(1)
 })
 
+/* ------------------------------------------------------------ curved text */
+
+/** Puts the Curve slider a fraction of the way along its run: 1 is a half turn. */
+async function setCurve(page: import('@playwright/test').Page, fraction: number) {
+  const runway = page.locator('#w-text-style #number-slider', { hasText: 'Curve' }).locator('.el-slider__runway')
+  const box = (await runway.boundingBox())!
+  await page.mouse.move(box.x + Math.min(box.width * fraction, box.width - 1), box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.waitForTimeout(600)
+}
+
+/** How far each character of the arc is turned, in reading order. */
+function glyphAngles(page: import('@playwright/test').Page) {
+  return page.locator(`${WIDGET} .curved-text__glyph`).evaluateAll((els) =>
+    els.map((el) => Number((el as HTMLElement).style.transform.match(/rotate\((-?[\d.]+)deg\)/)?.[1] ?? 0)),
+  )
+}
+
+test('the Curve slider bends a heading into an arc', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await expect(page.locator(`${WIDGET} .curved-text`)).toHaveCount(0)
+  const before = (await widgetBox(page))!
+
+  await setCurve(page, 1)
+
+  const angles = await glyphAngles(page)
+  expect(angles.length, 'a character apiece, bar the spaces').toBeGreaterThan(3)
+  // Turned as they travel: the first character leans back, the last leans on.
+  expect(angles[0]).toBeLessThan(-20)
+  expect(angles[angles.length - 1]).toBeGreaterThan(20)
+  for (let i = 1; i < angles.length; i++) expect(angles[i], 'each one further round than the last').toBeGreaterThan(angles[i - 1])
+
+  const after = (await widgetBox(page))!
+  // The box is fitted to the arc, which is taller and narrower than the line.
+  expect(parseFloat(after.height)).toBeGreaterThan(parseFloat(before.height))
+  expect(parseFloat(after.width)).toBeLessThan(parseFloat(before.width))
+  const centre = (box: typeof before) => parseFloat(box.left) + parseFloat(box.width) / 2
+  expect(Math.abs(centre(after) - centre(before)), 'and it bent where it stood').toBeLessThan(2)
+})
+
+test('a curved heading straightens out to be typed in, and curves back', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await setCurve(page, 1)
+  await expect(page.locator(`${WIDGET} .curved-text`)).toHaveCount(1)
+
+  // Into a corner of the box: the middle of a selected widget is under the
+  // selection's own rotation handle, which takes the click instead.
+  await page.locator(WIDGET).first().dblclick({ position: { x: 24, y: 24 } })
+  await page.waitForTimeout(500)
+  // There is nowhere to put a cursor in an arc, so the caret gets the plain run.
+  await expect(page.locator(`${WIDGET} .curved-text`)).toHaveCount(0)
+  await expect(page.locator(`${WIDGET} [contenteditable]`)).toHaveCount(1)
+
+  await page.keyboard.type('Sports Day')
+  await page.locator('#page-design-canvas').click({ position: { x: 4, y: 4 } })
+  await page.waitForTimeout(800)
+
+  await expect(page.locator(`${WIDGET} .curved-text`)).toHaveCount(1)
+  const chars = await page.locator(`${WIDGET} .curved-text__glyph`).allTextContents()
+  expect(chars.join(''), 'the new words, on the arc, spaces drawing nothing').toBe('SportsDay')
+})
+
+test('the page thumbnail draws the arc too', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await setCurve(page, 0)
+
+  await expandPageStrip(page)
+  expect(await page.locator('.artboards .curved-text__glyph').count()).toBeGreaterThan(3)
+})
+
 /* ------------------------------------------------------------------ drag */
 
 test('the Photos panel shows the photographs, not just their placeholders', async ({ page }) => {

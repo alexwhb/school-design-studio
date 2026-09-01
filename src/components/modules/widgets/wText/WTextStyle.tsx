@@ -229,6 +229,17 @@ export default function WTextStyle() {
           maxValue={2.5}
           onChange={(value) => finish('lineHeight', value)}
         />
+        {/* How far the line sweeps, in degrees: half a turn each way is as far
+            as a badge or a crest ever goes, and past it the text meets itself. */}
+        <NumberSlider
+          value={active.curve || 0}
+          style={{ fontSize: 14 }}
+          label="Curve"
+          step={1}
+          minValue={-180}
+          maxValue={180}
+          onChange={(value) => finish('curve', value)}
+        />
       </div>
 
       <div style={{ flexWrap: 'nowrap' }} className="line-layout style-item text-colour">

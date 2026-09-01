@@ -18,6 +18,29 @@
   width: 100%;
   height: 100%;
 }
+/**
+ * A curved run. Each character is placed by arcLayout.ts, so the block only
+ * has to be something they can be positioned inside. The size is set inline,
+ * from the arc — including on the effect layers, whose own rule would otherwise
+ * stretch them to a box the arc does not fill.
+ */
+.curved-text {
+  position: relative;
+
+  // An effect layer is one of these as well, and the rule that lifts it out of
+  // the flow is above this one in the file, so it loses. Said here it wins, and
+  // the layer stays over the text instead of stacking under it.
+  &.effect-text {
+    position: absolute;
+  }
+
+  &__glyph {
+    position: absolute;
+    display: block;
+    text-align: center;
+    white-space: pre;
+  }
+}
 .w-text__loading {
   position: absolute;
   inset: 0;

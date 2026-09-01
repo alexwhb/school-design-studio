@@ -25,6 +25,8 @@ export type TwTextData = {
   textAlign: StyleProperty.TextAlign
   textAlignLast?: StyleProperty.TextAlign
   text: string
+  /** How far a curved run sweeps, in degrees. 0, or absent, is straight. */
+  curve?: number
   opacity: number
   backgroundColor: string
   parent: string
@@ -90,6 +92,7 @@ export const wTextSetting: TwTextData = {
   color: '#000000ff',
   textAlign: 'left',
   text: '',
+  curve: 0,
   opacity: 1,
   backgroundColor: '',
   parent: '-1',

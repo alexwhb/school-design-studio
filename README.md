@@ -193,6 +193,8 @@ below.
 listing pages) are replaced with sizes a school actually uses: slides, Letter,
 A4, flyers, name badges, display boards.
 
+**Curved text.** New. See below.
+
 **PowerPoint export.** New. See below.
 
 **Defaults.** The app name links to `HOME_URL` rather than the original
@@ -275,6 +277,46 @@ Hiding a group hides what is inside it. Hiding the layer you had selected lets
 go of it, because there is nothing left on the canvas for the selection box to
 hold. Both toggles belong to the design, so they are saved with it and undo
 puts them back.
+
+## Curved text
+
+What a badge, a crest or a Sports Day header is set on. Select a text box and
+drag **Curve**, under Line height in the settings panel.
+
+The slider is the sweep of the arc in degrees, not a radius: half a turn is half
+a turn whether the line is one word or six, where a fixed radius would bend a
+long line round on itself and barely touch a short one. Positive arcs over,
+negative hangs under, and the middle of the slider is straight.
+
+- **The box is fitted to the arc**, so the selection, snapping and the exported
+  crop all follow the shape rather than the line it was before. That is also why
+  the side handle goes away while a run is curved: how wide the text may run
+  before it wraps is no longer yours to set. The corner handle, which scales the
+  type, works as usual.
+- **Deepening the curve keeps the text where it stands.** The ends of a line
+  draw in as it bends, so the box loses width; half of what it loses is given
+  back to the left edge instead of letting the text creep across the page.
+- **Text effects follow it.** Every layer of an outline, a fill or a shadow is
+  drawn along the same arc, so a curved heading can carry the same presets a
+  straight one can.
+- **Typing straightens it out.** There is nowhere to put a cursor in an arc —
+  each character is its own element — so double-clicking gives you the plain
+  line to edit, and it curves again when you click away. Text effects already
+  behaved this way.
+- **Two lines are drawn concentrically**, on one circle, a line's height apart.
+  Each keeps its own letter spacing, so the inner one sweeps further than the
+  outer one rather than being squeezed to match it.
+
+Exports need nothing special: html2canvas draws the turned characters as the
+browser does, to within antialiasing, and a curved heading that also carries an
+outline or a gradient goes down the same pre-render path those already use. A
+PowerPoint export is the exception — a text box there runs in a straight line,
+so a curved one is placed as a picture of itself rather than as text that has
+quietly straightened out.
+
+The layout is in `src/components/modules/widgets/wText/arcLayout.ts`, apart from
+the drawing, so the canvas, the page thumbnails and the presenter all place the
+characters the same way.
 
 ## Spelling
 

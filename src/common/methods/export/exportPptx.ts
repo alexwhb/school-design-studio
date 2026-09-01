@@ -52,6 +52,11 @@ function needsRaster(widget: TdWidgetData): boolean {
   if (!NATIVE_TYPES.has(type)) return true
   if (type === 'w-image' && (widget as any).mask) return true
   if (type === 'w-text' && hasUnsupportedTextEffects(widget)) return true
+  // A PowerPoint text box runs in a straight line, and the WordArt shapes that
+  // do not are a different object with none of this one's styling, so a curved
+  // run goes in as a picture of itself rather than as text that has quietly
+  // straightened out.
+  if (type === 'w-text' && Number((widget as any).curve)) return true
   return false
 }
 
