@@ -47,6 +47,42 @@ export async function widgetCount(page: Page) {
   return page.locator(WIDGET).count()
 }
 
+/**
+ * Drags the selection box's rotation handle a quarter turn clockwise. The sweep
+ * is an arc around the widget's centre rather than a straight line, because
+ * Moveable takes the angle from where the pointer is, not how far it has moved.
+ */
+export async function rotateWidget(page: Page, index = 0) {
+  const handle = page.locator('.moveable-rotation .moveable-control').first()
+  await handle.waitFor()
+  const grip = await handle.boundingBox()
+  const box = await page.locator(WIDGET).nth(index).boundingBox()
+  const cx = box!.x + box!.width / 2
+  const cy = box!.y + box!.height / 2
+  const radius = Math.hypot(grip!.x + grip!.width / 2 - cx, grip!.y + grip!.height / 2 - cy)
+
+  await page.mouse.move(grip!.x + grip!.width / 2, grip!.y + grip!.height / 2)
+  await page.mouse.down()
+  for (let step = 1; step <= 12; step++) {
+    const angle = Math.PI / 2 + (Math.PI / 2) * (step / 12)
+    await page.mouse.move(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius)
+  }
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+}
+
+/** The rotation the widget is actually drawn with, in degrees, or 0 for none. */
+export async function widgetRotation(page: Page, index = 0) {
+  return page.evaluate(
+    ([selector, i]) => {
+      const el = document.querySelectorAll(selector as string)[i as number] as HTMLElement
+      const match = el?.style.transform.match(/rotate\(([-\d.]+)deg\)/)
+      return match ? Number.parseFloat(match[1]) : 0
+    },
+    [WIDGET, index] as const,
+  )
+}
+
 export async function widgetBox(page: Page, index = 0) {
   return page.evaluate(
     ([selector, i]) => {

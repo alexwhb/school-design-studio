@@ -73,6 +73,7 @@ export const forceState = proxy<TForceState>({
   zoomScreenChange: null,
   updateRect: null,
   updateSelect: null,
+  layoutsChange: null,
 })
 
 export const historyState = proxy<THistoryState>({

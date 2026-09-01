@@ -120,6 +120,8 @@ export type TForceState = {
   zoomScreenChange: number | null
   updateRect: number | null
   updateSelect: number | null
+  /** Bumped when dLayouts is replaced outright; see setLayoutsChange. */
+  layoutsChange: number | null
 }
 
 export type THistoryParamData = {

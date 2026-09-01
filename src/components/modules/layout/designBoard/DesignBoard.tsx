@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { useSnapshot } from 'valtio'
-import { canvasState, controlState, widgetState } from '@/store/state'
+import { canvasState, controlState, forceState, widgetState } from '@/store/state'
 import { updateScreen } from '@/store/canvas'
 import { setShowMoveable, setDraging } from '@/store/control'
 import { addGroup, addWidget } from '@/store/widget'
@@ -44,6 +44,7 @@ const Layers = memo(function Layers({
   widgets?: TdWidgetData[]
 }) {
   const snap = useSnapshot(widgetState)
+  const layoutsChange = useSnapshot(forceState).layoutsChange
   const hoverUuid = snap.dHoverUuid
   const activeUuid = snap.dActiveElement?.uuid
   const activeParent = snap.dActiveElement?.parent
@@ -58,7 +59,7 @@ const Layers = memo(function Layers({
       if (snap.dWidgets[i].parent === pageUuid) out.push(raw[i])
     }
     return out
-  }, [snap.dWidgets, pageUuid, widgets])
+  }, [snap.dWidgets, pageUuid, widgets, layoutsChange])
 
   return (
     <>
@@ -100,6 +101,7 @@ function Children({
   widgets?: TdWidgetData[]
 }) {
   const snap = useSnapshot(widgetState)
+  const layoutsChange = useSnapshot(forceState).layoutsChange
   const childs = useMemo(() => {
     if (widgets) return widgets.filter((item) => item.parent === parentLayer.uuid)
     const raw = widgetState.dWidgets
@@ -108,7 +110,7 @@ function Children({
       if (snap.dWidgets[i].parent === parentLayer.uuid) out.push(raw[i])
     }
     return out
-  }, [snap.dWidgets, parentLayer.uuid, widgets])
+  }, [snap.dWidgets, parentLayer.uuid, widgets, layoutsChange])
 
   return (
     <>

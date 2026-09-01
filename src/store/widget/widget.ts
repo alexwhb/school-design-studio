@@ -1,6 +1,7 @@
 import { customAlphabet } from 'nanoid/non-secure'
 import { canvasState, widgetState } from '../state'
 import { setDPage } from '../canvas'
+import { setLayoutsChange } from '../force'
 import type { TdLayout, TdWidgetData } from '../types'
 import { updateGroupSize } from './move'
 import { selectWidget } from './select'
@@ -188,6 +189,7 @@ export function setDWidgets(e: TdWidgetData[]) {
 export function setDLayouts(data: TdLayout[]) {
   widgetState.dLayouts = data
   widgetState.dWidgets = getWidgets()
+  setLayoutsChange()
   setDPage(data[canvasState.dCurrentPage].global)
   setTimeout(() => {
     widgetState.dActiveElement = canvasState.dPage

@@ -7,10 +7,12 @@ import {
   openPageMenu,
   openResizeDialog,
   pageCanvas,
+  rotateWidget,
   selectFirstWidget,
   setResizeSize,
   widgetBox,
   widgetCount,
+  widgetRotation,
 } from './helpers'
 
 test.beforeEach(async ({ page }) => {
@@ -98,6 +100,39 @@ test('undo puts a deleted widget back and redo removes it again', async ({ page 
   await page.locator('.operation-item', { has: page.locator('.icon-redo') }).click()
   await page.waitForTimeout(500)
   await expect(page.locator(WIDGET)).toHaveCount(0)
+})
+
+test('undo takes a rotation back off and redo puts it on again', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  expect(await widgetRotation(page)).toBe(0)
+
+  await rotateWidget(page)
+  const turned = await widgetRotation(page)
+  expect(turned).toBeGreaterThan(45)
+
+  await page.locator('.operation-item', { has: page.locator('.icon-undo') }).click()
+  await page.waitForTimeout(500)
+  expect(await widgetRotation(page)).toBe(0)
+
+  await page.locator('.operation-item', { has: page.locator('.icon-redo') }).click()
+  await page.waitForTimeout(500)
+  expect(await widgetRotation(page)).toBeCloseTo(turned, 1)
+})
+
+test('undo takes a rotation off a QR code too', async ({ page }) => {
+  await page.getByText('Tools', { exact: true }).click()
+  await page.waitForTimeout(300)
+  await page.getByText('QR code', { exact: true }).click()
+  await page.waitForTimeout(900)
+  await selectFirstWidget(page)
+
+  await rotateWidget(page)
+  expect(await widgetRotation(page)).toBeGreaterThan(45)
+
+  await page.locator('.operation-item', { has: page.locator('.icon-undo') }).click()
+  await page.waitForTimeout(500)
+  expect(await widgetRotation(page)).toBe(0)
 })
 
 test('dragging a widget moves it and the move survives the drop', async ({ page }) => {
