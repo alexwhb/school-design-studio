@@ -101,14 +101,23 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
     }, IDLE_AFTER)
   }, [])
 
-  /** Draws the current slide and its neighbours, keeping everything drawn before. */
+  /**
+   * Draws the current slide and its neighbours, keeping everything drawn before.
+   *
+   * Returns the same Set when there is nothing new to draw. A fresh one every
+   * time would change the identity of a dependency of the arrival effect below,
+   * which would then re-run, call this again, and cancel the frame it had
+   * queued to start the slide's entrances — so nothing would ever play.
+   */
   const reach = useCallback((centre: number) => {
     setMounted((previous) => {
-      const next = new Set(previous)
+      let next: Set<number> | null = null
       for (let i = centre - REACH; i <= centre + REACH; i++) {
-        if (i >= 0 && i < live.current.pages.length) next.add(i)
+        if (i < 0 || i >= live.current.pages.length || previous.has(i)) continue
+        next = next ?? new Set(previous)
+        next.add(i)
       }
-      return next
+      return next ?? previous
     })
   }, [])
 
