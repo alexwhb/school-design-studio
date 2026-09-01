@@ -519,6 +519,26 @@ test('an effect layer offers Skew, which older presets did not carry', async ({ 
 
 /* ------------------------------------------------------------------ drag */
 
+test('the Photos panel shows the photographs, not just their placeholders', async ({ page }) => {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Photos' }).click()
+  await page.waitForTimeout(1200)
+  const thumbs = page.locator('.photo-list-wrap img')
+  await expect(thumbs.first()).toBeVisible()
+
+  // A thumbnail hidden with display: none is never near enough to the viewport
+  // for loading="lazy" to fetch it, so it would sit on its placeholder forever.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const imgs = Array.from(document.querySelectorAll('.photo-list-wrap img')) as HTMLImageElement[]
+          return imgs.length > 0 && imgs.every((img) => img.complete && img.naturalWidth > 0)
+        }),
+      { timeout: 15000 },
+    )
+    .toBe(true)
+})
+
 test('clicking a shape in the Elements panel places it', async ({ page }) => {
   await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
   await page.waitForTimeout(2000)
