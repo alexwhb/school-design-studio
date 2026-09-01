@@ -37,9 +37,17 @@ export default function QrCode({ width = 300, height = 300, image, value, dotsOp
   )
 
   useEffect(() => {
-    qrCodeRef.current = new QRCodeStyling({})
+    const instance = new QRCodeStyling({})
+    qrCodeRef.current = instance
     renderRef.current()
-    domRef.current && qrCodeRef.current.append(domRef.current)
+    const host = domRef.current
+    host && instance.append(host)
+    return () => {
+      qrCodeRef.current = null
+      // The canvas is the library's, not React's, so React will not take it
+      // away again — and a second run would append a second one on top.
+      while (host?.firstChild) host.removeChild(host.firstChild)
+    }
   }, [])
 
   useEffect(() => {

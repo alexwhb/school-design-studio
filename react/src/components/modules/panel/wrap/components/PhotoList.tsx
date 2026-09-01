@@ -18,6 +18,7 @@ type Props = {
   onDrag?: (index: number) => void
 }
 
+const dragHelper = new DragHelper()
 const marginRight = 6
 const standardHeight = 280
 
@@ -35,7 +36,6 @@ export default function PhotoList({
   const [loading, setLoading] = useState(true)
   const [list, setList] = useState<IGetTempListData[]>([])
   const prevData = useRef<IGetTempListData[]>([])
-  const dragHelper = useRef(new DragHelper())
   const isDrag = useRef(false)
   const startPoint = useRef({ x: 99999, y: 99999 })
 
@@ -135,7 +135,7 @@ export default function PhotoList({
         model: list[i].model,
       }
       const img = await setImageData(setImageParams)
-      dragHelper.current.start(e.nativeEvent, img.canvasWidth)
+      dragHelper.start(e.nativeEvent, img.canvasWidth)
       onDrag?.(i)
     }
   }

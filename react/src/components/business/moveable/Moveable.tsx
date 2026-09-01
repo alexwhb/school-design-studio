@@ -382,7 +382,7 @@ export default function Moveable() {
       .on('resizeGroup', () => {})
       .on('resizeGroupEnd', () => {})
 
-    useSelecto(moveable)
+    const selecto = useSelecto(moveable)
 
     const onScroll = () => {
       if (!moveable) return
@@ -542,6 +542,7 @@ export default function Moveable() {
       unsubGuides()
       unsubLayers()
       unsubSnap()
+      selecto.destroy()
       moveable?.destroy()
       moveable = null
     }

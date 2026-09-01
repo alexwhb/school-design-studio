@@ -17,6 +17,7 @@ export default function useSelecto(moveable: any) {
   } as any)
   selecto
     .on('select', (e) => {
+      if (!moveable?.innerMoveable) return
       e.added.forEach((el) => {
         if (!Array.from(el.classList).includes('layer-lock') && !el.hasAttribute('child')) {
           el.classList.add('widget-selected')

@@ -170,7 +170,7 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
       setActiveZoomIndex(ZoomList.length - 1)
     }
 
-    addMouseWheel('page-design', (isDown: boolean) => {
+    const removeMouseWheel = addMouseWheel('page-design', (isDown: boolean) => {
       mousewheelZoom(isDown)
     })
 
@@ -197,6 +197,8 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
     return () => {
       window.removeEventListener('click', close)
       window.removeEventListener('resize', changeScreen)
+      removeMouseWheel()
+      clearTimeout(resizeTimer.current)
       unsubCanvas()
       unsubForce()
     }
