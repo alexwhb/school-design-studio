@@ -78,6 +78,13 @@
 @style-panel-width: 288px; // settings panel on the right
 @topbar-height: 56px;
 
+// The zoom pill floats over the bottom-right of the board. Anything else that
+// sits along that bottom edge measures itself against @zoom-control-slot so the
+// two never end up on top of each other.
+@zoom-control-width: 170px;
+@zoom-control-inset: 12px;
+@zoom-control-slot: @zoom-control-width + @zoom-control-inset;
+
 // A section heading: small, upper case, quiet.
 .section-label() {
   font-size: @text-xs;

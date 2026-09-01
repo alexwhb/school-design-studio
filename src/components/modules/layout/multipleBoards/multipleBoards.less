@@ -143,7 +143,9 @@
 }
 
 .unfold {
-  width: calc(100% - 155px);
+  // The zoom pill floats over the same bottom-right corner, so the strip stops
+  // short of it; .artboards' own 12px padding keeps the two from touching.
+  width: calc(100% - @zoom-control-slot);
   height: 112px;
   .wrap {
     padding: 8px 10px;
@@ -182,7 +184,9 @@
   cursor: pointer;
   width: max-content;
   min-width: 130px;
-  max-width: min(320px, 100%);
+  // The folded pill stops short of the zoom pill too. Escaped because Less
+  // folds an unescaped min() with a calc() argument down to its first term.
+  max-width: ~"min(320px, calc(100% - @{zoom-control-slot}))";
   text-align: center;
   height: 34px;
   margin-bottom: 12px;

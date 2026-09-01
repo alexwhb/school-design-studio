@@ -1,13 +1,17 @@
 #zoom-control {
-  bottom: 12px;
+  bottom: @zoom-control-inset;
   position: absolute;
-  right: @style-panel-width + 12px;
+  right: @style-panel-width + @zoom-control-inset;
+  // Pinned rather than sized by its longest label, so the bottom strip can
+  // reserve the room it takes.
+  width: @zoom-control-width;
   z-index: 1000;
 
   .zoom-control-wrap {
     display: flex;
     flex-direction: row;
     align-items: center;
+    width: 100%;
     height: 34px;
     background: @surface;
     border: 1px solid @line;
@@ -19,6 +23,7 @@
       color: @ink-2;
       cursor: pointer;
       display: flex;
+      flex: none;
       justify-content: center;
       width: 32px;
       height: 100%;
@@ -44,8 +49,9 @@
       color: @ink-2;
       cursor: pointer;
       display: flex;
+      flex: 1;
       justify-content: center;
-      min-width: 104px;
+      min-width: 0;
       padding: 0 10px;
       height: 100%;
       font-size: @text-base;
