@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import {
   WIDGET,
   addText,
@@ -488,7 +488,7 @@ test('recolouring the text carries the effect stack with it', async ({ page }) =
 
   // Through the picker the Colour swatch opens, as a person would. The hex
   // field commits on blur, not on Enter.
-  await page.locator('#w-text-style .style-item', { hasText: 'Colour' }).locator('.color__field').click()
+  await page.locator('#w-text-style .text-colour .color__field').click()
   await page.waitForTimeout(700)
   const hex = page.locator('.color-picker:visible .input').first()
   await hex.fill('#FF0000FF')
@@ -498,6 +498,101 @@ test('recolouring the text carries the effect stack with it', async ({ page }) =
   const stackAfter = await stack()
   expect(stackAfter, 'the stack followed the new colour').not.toEqual(stackBefore)
   expect(stackAfter, 'and it followed it to red').toContain('rgb(255, 0, 0)')
+})
+
+/**
+ * Applies one named preset out of the Choose grid. The covers are served as
+ * `sample-<id>.png`, which is the only thing on screen that says which preset a
+ * tile is — picking by position would be picking by list order.
+ */
+async function applyEffectPreset(page: Page, id: number) {
+  await page.locator('.effects').getByText('Choose', { exact: true }).click()
+  await page.locator('.select__box__select-item img').first().waitFor()
+  await page.waitForTimeout(1500)
+  await page.locator(`.select__box__select-item img[src*="sample-${id}."]`).click()
+  await page.waitForTimeout(1800)
+}
+
+/** What the fill layer of the stack actually paints, lowercased. */
+function fillPaint(page: Page) {
+  return page.locator(`${WIDGET} .effect-text`).evaluateAll((els) =>
+    els
+      .map((el) => decodeURIComponent(getComputedStyle(el).backgroundImage))
+      .join(' ')
+      .toLowerCase(),
+  )
+}
+
+async function setColorTo(page: Page, field: Locator, value: string) {
+  await field.click()
+  await page.waitForTimeout(700)
+  const hex = page.locator('.color-picker:visible .input').first()
+  await hex.fill(value)
+  await hex.blur()
+  await page.waitForTimeout(1400)
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(400)
+}
+
+test('a patterned preset is recoloured by both the Colour swatch and the palette', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  // Checker fill: a navy-and-brass tile. Its colours used to be pixels inside a
+  // baked data URI, so neither swatch could reach them and the panel offered no
+  // control for the second tone at all.
+  await applyEffectPreset(page, 65)
+
+  const before = await fillPaint(page)
+  expect(before, 'the tile paints both of its tones').toContain('#1e3a5f')
+  expect(before).toContain('#e1a731')
+
+  // The preset is drawn around navy, so navy is the text's own colour and the
+  // Colour swatch carries it — into the tile as well as under it.
+  await setColorTo(page, page.locator('#w-text-style .text-colour .color__field'), '#FF0000FF')
+  const recoloured = await fillPaint(page)
+  expect(recoloured, 'the navy squares followed the text colour').toContain('#ff0000')
+  expect(recoloured).not.toContain('#1e3a5f')
+
+  // Brass was never the text's colour, so it gets a swatch of its own.
+  const palette = page.locator('#w-text-style .effect-palette .color__field')
+  await expect(palette, 'one swatch for the one colour Colour does not carry').toHaveCount(1)
+  await setColorTo(page, palette.first(), '#00FF00FF')
+  const repalletted = await fillPaint(page)
+  expect(repalletted, 'the brass squares followed the palette swatch').toContain('#00ff00')
+  expect(repalletted).not.toContain('#e1a731')
+  expect(repalletted, 'and the squares Colour owns were left alone').toContain('#ff0000')
+})
+
+test('the palette reaches the second colour of a preset that is not patterned', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await applyEffectPreset(page, 17) // Stripe fill: a two-tone gradient
+
+  const stripes = () =>
+    page.locator(`${WIDGET} .effect-text`).evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundImage).join(' '))
+  expect(await stripes()).toContain('rgb(225, 167, 49)')
+
+  const palette = page.locator('#w-text-style .effect-palette .color__field')
+  await expect(palette).toHaveCount(1)
+  await setColorTo(page, palette.first(), '#00FF00FF')
+
+  const after = await stripes()
+  expect(after, 'the brass stripes followed').toContain('rgb(0, 255, 0)')
+  expect(after).not.toContain('rgb(225, 167, 49)')
+  expect(after, 'the navy stripes did not').toContain('rgb(30, 58, 95)')
+})
+
+test('a patterned effect layer offers a swatch for each tone of its tile', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await applyEffectPreset(page, 65)
+
+  await page.locator('.advanced').getByText('Advanced', { exact: true }).click()
+  await page.waitForTimeout(800)
+  // A tiling fill used to be the one layer the panel drew no Fill row for.
+  const fill = page.locator('.layers .layer').first().locator('.feature', { hasText: 'Fill' })
+  await expect(fill).toHaveCount(1)
+  await expect(fill.locator('.color__field')).toHaveCount(2)
 })
 
 test('an effect layer offers Skew, which older presets did not carry', async ({ page }) => {
@@ -550,7 +645,7 @@ test('clicking a shape in the Elements panel places it', async ({ page }) => {
 test('the colour picker keeps the colours you have used', async ({ page }) => {
   await addText(page, 'Heading')
   await selectFirstWidget(page)
-  const swatch = page.locator('#w-text-style .style-item').filter({ hasText: 'Colour' }).locator('.color__field')
+  const swatch = page.locator('#w-text-style .text-colour .color__field')
 
   await swatch.click()
   await page.waitForTimeout(600)

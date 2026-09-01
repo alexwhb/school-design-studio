@@ -8,6 +8,7 @@ import { CollapseItem } from '@/components/ui/Collapse'
 import SortableList from '@/components/ui/SortableList'
 import effectStyle from '../../widgets/wText/effectStyle'
 import getGradientOrImg from '../../widgets/wText/getGradientOrImg'
+import type { TPatternFill } from '../../widgets/wText/patternFill'
 import ColorSelect, { type colorChangeData } from '../ColorSelect'
 import NumberInput from '../NumberInput'
 import NumberSlider from '../NumberSlider'
@@ -198,6 +199,25 @@ export default function TextWrap({ value, data = {}, onValueChange, onSelect }: 
   const fillValue = (filling: Record<string, any>) =>
     filling && Number(filling.type) === 2 && filling.gradient?.stops?.length ? getGradientOrImg({ filling }) : filling?.color
 
+  /** The palette of a tiling fill, or nothing if this fill is not one. */
+  const patternOf = (filling: Record<string, any>): TPatternFill | undefined =>
+    Number(filling?.type) === 1 ? filling.imageContent?.pattern : undefined
+
+  /**
+   * A tiling fill has as many colours as its tile has slots, so it gets a
+   * swatch each where a solid or gradient fill gets one. `color` follows the
+   * leading tone; see recolorEffects.ts for why it is kept in step.
+   */
+  function patternColorChange(index: number, slot: number, value: string) {
+    const filling = layers[index]?.filling
+    const pattern = patternOf(filling)
+    if (!pattern) return
+    const colors = pattern.colors.map((color, i) => (i === slot ? value : color))
+    patchLayer(index, {
+      filling: { ...filling, color: colors[0], imageContent: { ...filling.imageContent, pattern: { ...pattern, colors } } },
+    })
+  }
+
   const previewEffects = useMemo(() => value ?? [], [value])
 
   return (
@@ -299,7 +319,7 @@ export default function TextWrap({ value, data = {}, onValueChange, onSelect }: 
                   <i className="icon sd-delete" onClick={() => removeLayer(index)} />
                 </div>
                 <div className="layer__body" style={{ display: unfold ? undefined : 'none' }}>
-                  {element.filling && [0, 2, '0', '2'].includes(element.filling.type) ? (
+                  {element.filling && ([0, 2, '0', '2'].includes(element.filling.type) || patternOf(element.filling)) ? (
                     <div className={cx('feature', { 'feature--off': !element.filling.enable })}>
                       <div className="feature__row">
                         <Checkbox
@@ -308,15 +328,28 @@ export default function TextWrap({ value, data = {}, onValueChange, onSelect }: 
                           className="feature__toggle"
                           onChange={(next) => patchLayer(index, { filling: { ...element.filling, enable: next } })}
                         />
-                        <ColorSelect
-                          value={fillValue(element.filling)}
-                          width="32px"
-                          className="feature__swatch"
-                          modes={['Solid', 'Gradient']}
-                          label=""
-                          onValueChange={(next) => patchLayer(index, { filling: { ...element.filling, color: next } })}
-                          onChange={(e) => colorChange(e, index, 'filling')}
-                        />
+                        {patternOf(element.filling) ? (
+                          patternOf(element.filling)!.colors.map((color, slot) => (
+                            <ColorSelect
+                              key={slot}
+                              value={color}
+                              width="32px"
+                              className="feature__swatch"
+                              label=""
+                              onValueChange={(next) => patternColorChange(index, slot, next)}
+                            />
+                          ))
+                        ) : (
+                          <ColorSelect
+                            value={fillValue(element.filling)}
+                            width="32px"
+                            className="feature__swatch"
+                            modes={['Solid', 'Gradient']}
+                            label=""
+                            onValueChange={(next) => patchLayer(index, { filling: { ...element.filling, color: next } })}
+                            onChange={(e) => colorChange(e, index, 'filling')}
+                          />
+                        )}
                       </div>
                     </div>
                   ) : null}

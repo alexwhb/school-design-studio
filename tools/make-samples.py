@@ -27,7 +27,6 @@ written out below, so they are self-contained and recolourable.
 Run make-sample-covers.mjs afterwards to size the text and regenerate the
 thumbnails.
 """
-import base64
 import json
 import math
 import os
@@ -152,7 +151,7 @@ def gradient(angle, *stops):
     }
 
 
-def pattern(markup, size):
+def pattern(markup, size, colours):
     """A fill painted with a tiling image and clipped to the glyphs.
 
     The editor's gradient fill is one linear gradient with stops, which cannot
@@ -160,28 +159,32 @@ def pattern(markup, size):
     into `background-image`, and a background repeats by default, so a tile the
     size of one cell is all it takes.
 
-    The trade is that the settings panel only offers a colour swatch for solid
-    and gradient fills, so a layer filled this way is not recolourable there.
-    That is why it is used for the three presets whose pattern *is* the preset
-    and nowhere else.
+    The tile goes out as markup and a palette, not as a finished image. Baked
+    into a data URI its colours were pixels by the time the editor saw them,
+    which made these the presets where changing the colour did visibly nothing.
+    `{0}`, `{1}` in the markup name a slot in `colors`; see patternFill.ts,
+    which paints the tile from whatever the palette says at the time.
+
+    `color` is the flat fallback, as it is for a gradient, and tracks the
+    leading tone of the palette.
     """
-    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" '
-           f'viewBox="0 0 {size} {size}">{markup}</svg>')
-    uri = 'data:image/svg+xml;base64,' + base64.b64encode(svg.encode()).decode()
-    return {'enable': True, 'type': 1, 'color': NAVY, 'imageContent': {'image': uri}}
+    return {
+        'enable': True, 'type': 1, 'color': colours[0],
+        'imageContent': {'pattern': {'size': size, 'markup': markup, 'colors': list(colours)}},
+    }
 
 
 def dot_tile(size, radius, colour, ground=None):
-    back = f'<rect width="{size}" height="{size}" fill="{ground}"/>' if ground else ''
-    return pattern(f'{back}<circle cx="{size / 2}" cy="{size / 2}" r="{radius}" fill="{colour}"/>', size)
+    back = f'<rect width="{size}" height="{size}" fill="{{1}}"/>' if ground else ''
+    markup = f'{back}<circle cx="{size / 2}" cy="{size / 2}" r="{radius}" fill="{{0}}"/>'
+    return pattern(markup, size, [colour] + ([ground] if ground else []))
 
 
 def check_tile(cell, a, b):
-    return pattern(
-        f'<rect width="{cell * 2}" height="{cell * 2}" fill="{b}"/>'
-        f'<rect width="{cell}" height="{cell}" fill="{a}"/>'
-        f'<rect x="{cell}" y="{cell}" width="{cell}" height="{cell}" fill="{a}"/>',
-        cell * 2)
+    markup = (f'<rect width="{cell * 2}" height="{cell * 2}" fill="{{1}}"/>'
+              f'<rect width="{cell}" height="{cell}" fill="{{0}}"/>'
+              f'<rect x="{cell}" y="{cell}" width="{cell}" height="{cell}" fill="{{0}}"/>')
+    return pattern(markup, cell * 2, [a, b])
 
 
 def text_widget(text, *, font_, size, colour=INK, weight=400, align='center',

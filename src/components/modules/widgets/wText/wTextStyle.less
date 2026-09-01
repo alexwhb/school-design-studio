@@ -19,6 +19,23 @@
     justify-content: space-between;
     width: 100%;
   }
+  // One swatch per colour the effect stack brought with it, sitting under the
+  // Colour row it supplements. The label is repeated here rather than handed to
+  // ColorSelect because it names the row, not any one swatch.
+  .effect-palette {
+    width: 100%;
+    .input-label {
+      user-select: none;
+      padding: 0 0 6px;
+      font-size: @text-base;
+      color: @ink-2;
+    }
+    &__row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
   .slide-wrap {
     width: 100%;
     display: flex;

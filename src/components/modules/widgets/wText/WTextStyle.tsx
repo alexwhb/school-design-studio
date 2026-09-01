@@ -15,7 +15,8 @@ import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconIte
 import TextInputArea from '../../settings/TextInputArea'
 import ValueSelect from '../../settings/ValueSelect'
 import TextWrap from '../../settings/EffectSelect/TextWrap'
-import recolorEffects from './recolorEffects'
+import recolorEffects, { parseColor, replaceEffectColor } from './recolorEffects'
+import effectColors, { type TEffectColor } from './effectColors'
 import './wTextStyle.less'
 
 const FONT_SIZE_LIST = [12, 14, 24, 26, 28, 30, 36, 48, 60, 72, 96, 108, 120, 140, 180, 200, 250, 300, 400, 500]
@@ -69,6 +70,13 @@ export default function WTextStyle() {
     }))
   }, [active?.textAlign, active?.textAlignLast, active])
 
+  /**
+   * The colours the stack paints that the Colour swatch does not already
+   * carry. See effectColors.ts — without these a two-tone preset has one
+   * control for two colours, and a patterned one has none at all.
+   */
+  const palette = useMemo(() => effectColors(active?.textEffects, active?.color), [active?.textEffects, active?.color])
+
   if (!active) return null
 
   const uuid = active.uuid as string
@@ -95,6 +103,20 @@ export default function WTextStyle() {
       finish('textEffects', recolorEffects(JSON.parse(JSON.stringify(effects)), target.color, value) as any)
     }
     finish('color', value)
+  }
+
+  /**
+   * One colour out of the stack, changed wherever the stack paints it. This is
+   * the same move changeColor makes, aimed at a colour the preset brought with
+   * it rather than at the text's own.
+   */
+  function changeEffectColor(from: TEffectColor, value: string) {
+    const target = widgetState.dActiveElement as any
+    const effects = target?.textEffects
+    const now = parseColor(value)
+    // As above: the panel can still be holding the widget selected a moment ago.
+    if (!now || !effects?.length || target.uuid !== uuid) return
+    finish('textEffects', replaceEffectColor(JSON.parse(JSON.stringify(effects)), from, now) as any)
   }
 
   function selectTextEffect({ key, value, style }: any) {
@@ -191,9 +213,25 @@ export default function WTextStyle() {
         />
       </div>
 
-      <div style={{ flexWrap: 'nowrap' }} className="line-layout style-item">
+      <div style={{ flexWrap: 'nowrap' }} className="line-layout style-item text-colour">
         <ColorSelect value={active.color} label="Colour" onValueChange={changeColor} />
       </div>
+      {palette.length ? (
+        <div className="style-item effect-palette">
+          <p className="input-label">Effect colours</p>
+          <div className="effect-palette__row">
+            {palette.map((colour) => (
+              <ColorSelect
+                key={colour.rgb}
+                value={colour.value}
+                width="32px"
+                className="effect-palette__swatch"
+                onValueChange={(next) => changeEffectColor(colour, next)}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
       <div className="line-layout style-item">
         <TextWrap
           value={active.textEffects}

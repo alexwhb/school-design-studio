@@ -12,9 +12,10 @@
  */
 import type { CSSProperties } from 'react'
 import getGradientOrImg from './getGradientOrImg'
+import type { TPatternFill } from './patternFill'
 
 export type TTextEffect = {
-  filling?: { enable: boolean; type: number | string; color: string; gradient?: Record<string, any>; imageContent?: Record<string, any> }
+  filling?: { enable: boolean; type: number | string; color: string; gradient?: Record<string, any>; imageContent?: { image?: string; pattern?: TPatternFill } }
   stroke?: { enable: boolean; width: number; color: string; type?: string }
   shadow?: { enable: boolean; color: string; offsetX: number; offsetY: number; blur: number }
   offset?: { enable: boolean; x: number; y: number }
