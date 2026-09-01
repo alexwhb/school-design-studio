@@ -264,7 +264,7 @@ test('switching panels shows the matching content', async ({ page }) => {
 
   await page.getByText('Tools', { exact: true }).click()
   await page.waitForTimeout(400)
-  await expect(page.getByText('Remove background', { exact: true })).toBeVisible()
+  await expect(page.getByText('QR code', { exact: true })).toBeVisible()
 
   await page.getByText('Uploads', { exact: true }).click()
   await page.waitForTimeout(400)

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import api from '@/api'
-import type { TGetImageListResult, TImageListError } from '@/api/material'
+import type { TGetImageListResult } from '@/api/material'
 import setImageData from '@/common/methods/DesignFeatures/setImage'
 import { canvasState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import { addWidget, setSelectItem } from '@/store/widget'
 import wImageSetting from '../../widgets/wImage/wImageSetting'
+import { PHOTO_NOTICES } from './components/photoNotices'
 import SearchHeader from './components/SearchHeader'
 import ClassHeader from './components/ClassHeader'
 import PhotoList from './components/PhotoList'
@@ -21,14 +22,6 @@ const BROWSE_CATEGORIES: TCurrentCategory[] = [
   { id: 2, name: 'Backgrounds' },
   { id: 3, name: 'Sports' },
 ]
-
-const NOTICES: Record<TImageListError, string> = {
-  unsplash_key_missing:
-    'Photo search needs an Unsplash access key. Add UNSPLASH_ACCESS_KEY to .env.local and restart the server — see README.md.',
-  unsplash_key_invalid: 'Unsplash rejected the access key. Check UNSPLASH_ACCESS_KEY in .env.local.',
-  unsplash_rate_limited: 'Unsplash’s hourly request limit is used up. Try again in a little while.',
-  unsplash_unavailable: 'Could not reach Unsplash just now. Check the connection and try again.',
-}
 
 export default function PhotoListWrap() {
   const [recommendImgList, setRecommendImgList] = useState<TGetImageListResult[]>([])
@@ -58,7 +51,7 @@ export default function PhotoListWrap() {
       let firstNotice = ''
       for (const iterator of BROWSE_CATEGORIES) {
         const { list = [], error } = await api.material.getImagesList({ cate: iterator.id, pageSize: 2 })
-        if (error && !firstNotice) firstNotice = NOTICES[error]
+        if (error && !firstNotice) firstNotice = PHOTO_NOTICES[error]
         collected.push(list)
       }
       if (cancelled) return
@@ -100,7 +93,7 @@ export default function PhotoListWrap() {
       pageSize: 30,
     })
     if (error) {
-      setNotice(NOTICES[error])
+      setNotice(PHOTO_NOTICES[error])
       doneRef.current = true
       setLoadDone(true)
     } else if (list.length <= 0) {

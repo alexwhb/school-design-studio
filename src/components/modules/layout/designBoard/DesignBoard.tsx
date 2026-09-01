@@ -6,6 +6,7 @@ import { setShowMoveable, setDraging } from '@/store/control'
 import { addGroup, addWidget } from '@/store/widget'
 import { setDropOver, setSelectItem, selectWidget } from '@/store/widget'
 import { getTarget } from '@/common/methods/target'
+import { pageBackgroundStyle } from '@/common/methods/pageBackground'
 import setWidgetData from '@/common/methods/DesignFeatures/setWidgetData'
 import getComponentsData from '@/common/methods/DesignFeatures/setComponents'
 import { moveInit } from '@/mixins/move'
@@ -389,11 +390,7 @@ export default function DesignBoard({
               height: dPage.height + 'px',
               transform: 'scale(' + dZoom / 100 + ')',
               transformOrigin: (dZoom >= 100 ? 'center' : 'left') + ' top',
-              backgroundColor: dPage.backgroundGradient ? undefined : dPage.backgroundColor,
-              backgroundImage: dPage.backgroundImage ? `url(${dPage?.backgroundImage})` : dPage.backgroundGradient || undefined,
-              backgroundSize: dPage.backgroundTransform?.x ? 'auto' : 'cover',
-              backgroundPositionX: (dPage.backgroundTransform?.x || 0) + 'px',
-              backgroundPositionY: (dPage.backgroundTransform?.y || 0) + 'px',
+              ...pageBackgroundStyle(dPage),
               opacity: dPage.opacity + (dZoom < 100 ? dPage.tag : 0),
             }}
             onMouseMove={dropOver}

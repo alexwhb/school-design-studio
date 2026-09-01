@@ -1,0 +1,58 @@
+.background-crop {
+
+  &__page {
+    margin: 0 auto;
+    border-radius: @radius-sm;
+    border: 1px solid @line;
+    background-color: @surface-3;
+    outline: none;
+    touch-action: none;
+
+    &:focus-visible {
+      border-color: @accent;
+      box-shadow: 0 0 0 2px @accent-a25;
+    }
+    &.is-movable {
+      cursor: grab;
+    }
+    &.is-dragging {
+      cursor: grabbing;
+    }
+  }
+
+  &__hint {
+    margin: 0.6rem 0 0;
+    text-align: center;
+    color: @ink-3;
+    font-size: @text-sm;
+  }
+
+  &__zoom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 0.8rem;
+
+    .label {
+      color: @ink-2;
+      font-size: @text-base;
+    }
+    .value {
+      color: @ink-3;
+      font-size: @text-sm;
+      // Widest reading is "300%", so the slider does not jump as it is dragged.
+      width: 34px;
+      text-align: right;
+    }
+  }
+
+  &__slider {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__reset {
+    display: block;
+    margin: 0.4rem auto 0;
+  }
+}

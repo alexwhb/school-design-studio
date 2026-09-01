@@ -1,13 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
-import api from '@/api'
 import _dl from '@/common/methods/download'
-import { canvasState, widgetState } from '@/store/state'
+import { widgetState } from '@/store/state'
 import { updatePageData } from '@/store/canvas'
 import { selectWidget } from '@/store/widget/select'
 import Button from '@/components/ui/Button'
 import Collapse, { CollapseItem } from '@/components/ui/Collapse'
-import Image from '@/components/ui/Image'
 import Tooltip from '@/components/ui/Tooltip'
 import { DeleteIcon, DownloadIcon } from '@/components/ui/icons'
 import Uploader, { type TUploadDoneData } from '@/components/common/Uploader/Uploader'
@@ -16,7 +14,9 @@ import ColorSelect, { type colorChangeData } from '@/components/modules/settings
 import ResizeDesign, { type ResizeDesignHandle } from '@/components/business/resize-design/ResizeDesign'
 import BgImgListWrap from '@/components/modules/panel/wrap/BgImgListWrap'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
+import type { TBackgroundTransform } from '@/common/methods/pageBackground'
 import type { TPageState } from '@/store/types'
+import BackgroundCrop from './comps/BackgroundCrop'
 import './pageStyle.less'
 
 const MODES = ['Colour', 'Image']
@@ -44,6 +44,10 @@ export default function PageStyle() {
     if (active?.backgroundImage) setMode(MODES[1])
   }, [active?.backgroundImage])
 
+  const changeTransform = useCallback((transform: TBackgroundTransform) => {
+    updatePageData({ key: 'backgroundTransform', value: transform })
+  }, [])
+
   if (!active) return null
 
   function colorChange(e: colorChangeData) {
@@ -67,13 +71,16 @@ export default function PageStyle() {
   }
 
   async function uploadImgDone(img: TUploadDoneData) {
-    updatePageData({ key: 'backgroundTransform', value: {} })
+    // The picture's shape is what lets the crop control zoom past the size that
+    // just covers the page, and an upload is the one place it arrives for free.
+    updatePageData({ key: 'backgroundTransform', value: img.width && img.height ? { ratio: img.width / img.height } : {} })
     finish('backgroundImage', img.url)
   }
 
   async function deleteBg() {
     localTempBG.current = null
     updatePageData({ key: 'backgroundImage', value: '' })
+    updatePageData({ key: 'backgroundTransform', value: {} })
     setMode(MODES[1])
   }
 
@@ -101,11 +108,11 @@ export default function PageStyle() {
   return (
     <div id="page-style">
       {showBgLib ? (
-        <div style={{ width: 256, height: '100%' }}>
+        <div className="bg-library">
           <span className="header-back" onClick={() => setShowBgLib(false)}>
             <i className="iconfont icon-right" /> Choose a background
           </span>
-          <BgImgListWrap style={{ paddingTop: '2rem' }} model="stylePanel" />
+          <BgImgListWrap model="stylePanel" />
         </div>
       ) : (
         <Collapse value={activeNames} onChange={setActiveNames}>
@@ -120,8 +127,9 @@ export default function PageStyle() {
             </div>
           </CollapseItem>
           <CollapseItem name="2" title="Background">
-            <Button style={{ width: '100%', margin: '0 0 1rem 0' }} type="primary" link onClick={() => setShowBgLib(true)}>
-              Choose from the background library
+            <Button className="bg-library-open" plain onClick={() => setShowBgLib(true)}>
+              <i className="iconfont icon-gallery" />
+              Browse the background library
             </Button>
             <Tabs value={mode} labels={MODES} onChange={onChangeMode} />
             <div style={{ display: mode === 'Colour' ? undefined : 'none' }}>
@@ -133,35 +141,31 @@ export default function PageStyle() {
               />
             </div>
             {mode === 'Image' && backgroundImage ? (
-              <div style={{ marginTop: '1.2rem' }}>
+              <>
                 <div className="backgroud-wrap">
-                  <Image style={{ height: '100%' }} src={backgroundImage} fit="contain" />
-                  <div className="bg-control">
-                    <div className="btns">
-                      <Uploader style={{ width: '47%' }} onDone={uploadImgDone}>
-                        <Button style={{ width: '100%' }} plain>
-                          Upload image
-                        </Button>
-                      </Uploader>
-                      <Button style={{ width: '47%' }} onClick={() => setShowBgLib(true)} plain>
-                        Backgrounds
-                      </Button>
-                    </div>
-                  </div>
+                  <BackgroundCrop page={active} onChange={changeTransform} />
                   <div className="bg-options">
                     <Tooltip content="Download image" placement="top" showAfter={300}>
                       <div onClick={downloadBG} className="btn-item">
                         <DownloadIcon width={16} height={16} />
                       </div>
                     </Tooltip>
-                    <Tooltip content="Delete" placement="top" showAfter={300}>
+                    <Tooltip content="Remove" placement="top" showAfter={300}>
                       <div onClick={deleteBg} className="btn-item">
                         <DeleteIcon width={16} height={16} />
                       </div>
                     </Tooltip>
                   </div>
                 </div>
-              </div>
+                <div className="bg-actions">
+                  <Uploader onDone={uploadImgDone}>
+                    <Button plain>Replace image</Button>
+                  </Uploader>
+                  <Button plain onClick={() => setShowBgLib(true)}>
+                    Backgrounds
+                  </Button>
+                </div>
+              </>
             ) : null}
             <Uploader
               className="btn-wrap"

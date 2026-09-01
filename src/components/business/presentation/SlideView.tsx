@@ -1,5 +1,6 @@
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { PENDING_CLASS, buildSchedule, cancelAll, playWidgetAnimation } from '@/common/animations/play'
+import { pageBackgroundStyle } from '@/common/methods/pageBackground'
 import { staticWidgetComponents } from '@/components/modules/widgets/registry'
 import { cx } from '@/utils/dom'
 import type { TdLayout, TdWidgetData, TPageState } from '@/store/types'
@@ -121,11 +122,7 @@ const SlideView = forwardRef<SlideViewHandle, Props>(function SlideView({ page, 
           height: global.height + 'px',
           transform: `scale(${scale})`,
           opacity: global.opacity,
-          backgroundColor: global.backgroundGradient ? undefined : global.backgroundColor,
-          backgroundImage: global.backgroundImage ? `url(${global.backgroundImage})` : global.backgroundGradient || undefined,
-          backgroundSize: global.backgroundTransform?.x ? 'auto' : 'cover',
-          backgroundPositionX: (global.backgroundTransform?.x || 0) + 'px',
-          backgroundPositionY: (global.backgroundTransform?.y || 0) + 'px',
+          ...pageBackgroundStyle(global),
         }}
       >
         {rootLayers.map((layer) => {

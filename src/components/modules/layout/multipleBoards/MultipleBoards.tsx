@@ -9,6 +9,7 @@ import Dropdown, { DropdownItem } from '@/components/ui/DropdownMenu'
 import Tooltip from '@/components/ui/Tooltip'
 import message from '@/components/ui/message'
 import confirm, { promptText } from '@/common/methods/confirm'
+import { pageBackgroundStyle } from '@/common/methods/pageBackground'
 import { staticWidgetComponents } from '../../widgets/registry'
 import { cx } from '@/utils/dom'
 import type { TdLayout, TdWidgetData, TPageState } from '@/store/types'
@@ -103,11 +104,7 @@ const Page = memo(function Page({ layout, index, isCurrent, isFirst, isLast, onC
             transform: getTransform(global),
             width: global.width + 'px',
             height: global.height + 'px',
-            backgroundColor: global.backgroundGradient ? undefined : global.backgroundColor,
-            backgroundImage: global.backgroundImage ? `url(${global.backgroundImage})` : global.backgroundGradient || undefined,
-            backgroundSize: global.backgroundTransform?.x ? 'auto' : 'cover',
-            backgroundPositionX: (global.backgroundTransform?.x || 0) + 'px',
-            backgroundPositionY: (global.backgroundTransform?.y || 0) + 'px',
+            ...pageBackgroundStyle(global),
           }}
         >
           <StaticLayers layers={layout.layers} global={global} />

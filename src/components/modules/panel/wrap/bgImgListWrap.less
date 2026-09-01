@@ -1,10 +1,36 @@
 .bg-img-list-wrap {
   width: 100%;
   height: 100%;
+  // A column, so the search box and the swatches stay put and only the pictures
+  // scroll under them.
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  .search__wrap,
+  .color__box,
+  .search__summary {
+    flex-shrink: 0;
+  }
+
+  .search__summary {
+    padding: 0.9rem 0 0.4rem;
+    color: @ink-3;
+    font-size: @text-sm;
+  }
+
+  .notice {
+    color: @ink-3;
+    font-size: @text-base;
+    line-height: 1.5;
+    padding: 1.5rem 0.25rem;
+    margin: 0;
+  }
 
   .infinite-list {
-    height: 100%;
-    padding-bottom: 150px;
+    flex: 1;
+    min-height: 0;
+    padding-bottom: 24px;
   }
   .list {
     width: 100%;

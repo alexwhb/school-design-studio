@@ -70,8 +70,10 @@ Other scripts:
 
 ### Stock photos
 
-The Photos panel is backed by [Unsplash](https://unsplash.com). Searching and
-the three browse rows both go through the Unsplash API, so it needs a key:
+The Photos panel is backed by [Unsplash](https://unsplash.com), and so is the
+background library behind the page's **Browse the background library** button.
+Searching and the browse rows both go through the Unsplash API, so it needs a
+key:
 
 1. Register a free application at
    <https://unsplash.com/oauth/applications> and copy the **Access Key**.
@@ -85,7 +87,7 @@ capped at 50 requests an hour, which an infinite-scrolling grid would otherwise
 spend in a couple of minutes. Apply for production access on the Unsplash
 dashboard to raise it to 5000.
 
-Without a key, the panel falls back to the sample images bundled in
+Without a key, both panels fall back to the sample images bundled in
 `service/src/mock/materials/photos`, and search says so instead of pretending.
 The same goes for a rejected key or a spent rate limit — each gets its own
 message in the panel rather than an empty grid.
@@ -93,7 +95,9 @@ message in the panel rather than an empty grid.
 The three browse rows are stored searches. Change what they cover by editing
 `BROWSE_CATEGORIES` in `server/content-library.mjs` (the queries) and the list
 of the same name in `src/components/modules/panel/wrap/PhotoListWrap.tsx` (the
-headings shown before any request goes out).
+headings shown before any request goes out). The background library browses the
+second of them; `BACKGROUND_CATE` in
+`src/components/modules/panel/wrap/BgImgListWrap.tsx` picks which.
 
 Unsplash's API terms ask that apps credit photographers and report when a photo
 is used. Hovering a thumbnail shows the photographer, and placing one pings the

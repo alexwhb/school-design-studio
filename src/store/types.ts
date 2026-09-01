@@ -1,4 +1,5 @@
 import type { TWidgetAnimation } from '@/common/animations/presets'
+import type { TBackgroundTransform } from '@/common/methods/pageBackground'
 
 export type TScreeData = {
   width: number
@@ -22,10 +23,8 @@ export type TPageState = {
   backgroundColor: string
   backgroundGradient: string
   backgroundImage: string
-  backgroundTransform: {
-    x?: number
-    y?: number
-  }
+  /** How the background picture is cropped to the page. See `pageBackground`. */
+  backgroundTransform: TBackgroundTransform
   opacity: number
   /** Used to force a redraw */
   tag: number
