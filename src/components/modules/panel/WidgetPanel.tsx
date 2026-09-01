@@ -1,7 +1,6 @@
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import { forwardRef, useImperativeHandle, useState } from 'react'
 import widgetClassifyListData from '@/assets/data/WidgetClassifyList'
 import Tooltip from '@/components/ui/Tooltip'
-import { readQuery } from '@/common/hooks/useRouteQuery'
 import { cx } from '@/utils/dom'
 import { panelComponents } from './panelRegistry'
 import './widgetPanel.less'
@@ -26,14 +25,6 @@ const WidgetPanel = forwardRef<WidgetPanelHandle>(function WidgetPanel(_props, r
   }
 
   useImperativeHandle(ref, () => ({ clickClassify }), [activeWidgetClassify, active])
-
-  useEffect(() => {
-    const { koutu } = readQuery()
-    if (koutu) {
-      setActiveWidgetClassify(4)
-      setMounted((prev) => ({ ...prev, 4: true }))
-    }
-  }, [])
 
   return (
     <div id="widget-panel">

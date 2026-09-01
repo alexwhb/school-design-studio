@@ -5,14 +5,12 @@ import layerIconList from '@/assets/data/LayerIconList'
 import { getImage } from '@/common/methods/getImgDetail'
 import Button from '@/components/ui/Button'
 import Collapse, { CollapseItem } from '@/components/ui/Collapse'
-import ImageCutout, { type ImageCutoutHandle } from '@/components/business/image-cutout/ImageCutout'
 import PictureSelector, { type PictureSelectorHandle } from '@/components/business/picture-selector/PictureSelector'
 import { canvasState, widgetState } from '@/store/state'
 import { setCropUuid, setShowRotatable } from '@/store/control'
 import { setUpdateRect } from '@/store/force'
 import { updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
 import type { TGetImageListResult } from '@/api/material'
-import type { LocalUpload } from '@/common/methods/localUploads'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
@@ -31,7 +29,6 @@ export default function WImageStyle() {
   const [activeNames, setActiveNames] = useState<string[]>(['2', '3', '4'])
   const [toolBarStyle, setToolBarStyle] = useState<Record<string, any>>({})
   const picBoxRef = useRef<PictureSelectorHandle | null>(null)
-  const imageCutoutRef = useRef<ImageCutoutHandle | null>(null)
   const lastUuid = useRef<string | undefined>(undefined)
 
   const layerIcons = useMemo(() => layerIconList.concat(FLIP_ICONS), [])
@@ -105,24 +102,6 @@ export default function WImageStyle() {
     picBoxRef.current?.open()
   }
 
-  function openImageCutout() {
-    fetch(active.imgUrl || '')
-      .then((response) => response.blob())
-      .then((blob) => {
-        const file = new File([blob], `image_${Math.random()}.jpg`, { type: 'image/jpeg' })
-        imageCutoutRef.current?.open(file)
-      })
-      .catch((error) => {
-        console.error('Could not load the image:', error)
-      })
-  }
-
-  function cutImageDone(saved: LocalUpload) {
-    setTimeout(() => {
-      finish('imgUrl', saved.url)
-    }, 300)
-  }
-
   const radiusMax = Math.min(Number(active.record?.width), Number(active.record?.height))
 
   return (
@@ -151,10 +130,6 @@ export default function WImageStyle() {
                 Crop
               </Button>
             )}
-            <Button plain onClick={openImageCutout}>
-              <i className="icon sd-AIkoutu" />
-              Remove background
-            </Button>
             <Button size="small" disabled plain>
               Enhance
             </Button>
@@ -215,7 +190,6 @@ export default function WImageStyle() {
         </InnerToolBar>
       ) : null}
       <PictureSelector ref={picBoxRef} onSelect={selectDone} />
-      <ImageCutout ref={imageCutoutRef} onDone={cutImageDone} />
     </div>
   )
 }

@@ -82,9 +82,6 @@ list of things that a Vue-to-React port gets wrong, so they are worth keeping:
 - **The icon font leaked into the host.** It is fetched at runtime, so the build
   never scoped its `.iconfont` and hundred-odd `.icon-*` rules. It is bundled and
   scoped now, with the woff2 files inline.
-- **The eraser never started.** Radix mounts portal content a tick after the
-  dialog opens, so the canvas refs were still null when the engine was told to
-  start.
 - **The colour picker's hex field could not be typed in.** It was bound straight
   to the committed value, so React put the old text back on every keystroke —
   each one is a partial colour the picker does not accept.
@@ -124,9 +121,7 @@ each median beside the previous run's, so it is a regression check rather than a
 comparison. Benchmark the **production** build (`npm run bench:prod`) — in dev,
 React's `jsxDEV` dominates the profile and the numbers mean nothing.
 
-Bundles: 1603 kB JS (494 kB gzipped) + 290 kB CSS. The eraser is a separate
-46 kB chunk (16 kB gzipped), loaded when someone opens it — so the feature that
-does the most work costs nothing to everyone who never uses it.
+Bundles: 1598 kB JS (492 kB gzipped) + 288 kB CSS.
 
 ## How it is put together
 
@@ -165,16 +160,6 @@ read-only twin and the preview glyph in the panel. `recolorEffects` next to it
 is what makes the colour swatch work on a widget that has a stack: the fill
 layer paints over the plain text, so without carrying the colour through, the
 swatch appears to do nothing.
-
-**The eraser** (`src/packages/image-extraction/`) is 1,300 lines of canvas
-geometry written against Vue refs, with the drawing listeners mutating a shared
-transform and a watcher repainting from it. The geometry is copied unchanged and
-`matting.ts` replaces the four composables, over `@vue/reactivity` — the
-reactivity system on its own, no components and no renderer. Rewriting the
-watchers into explicit calls would have meant finding every mutation site in code
-whose whole job is to be subtle about pixels. The whole thing — engine,
-reactivity and all — is one lazy chunk of 16 kB gzipped, loaded when the dialog
-is opened and by nobody else.
 
 **Same libraries where they are framework-agnostic:** moveable, selecto,
 @scena/guides, sortablejs, qr-code-styling, html2canvas, pptxgenjs, psd.js,

@@ -101,11 +101,11 @@ photo's `download_location` through the proxy.
 
 ### Uploads
 
-Pictures you add — the Upload button, a pasted screenshot, a background image,
-the result of Remove background — are stored in the browser, in IndexedDB. There
-is no account system and no upload endpoint in this fork, so there is nowhere
-else for them to go; upstream posted them to a Chinese CDN this project has no
-account for, which is why uploading used to end in a thumbnail reading FAILED.
+Pictures you add — the Upload button, a pasted screenshot, a background image —
+are stored in the browser, in IndexedDB. There is no account system and no
+upload endpoint in this fork, so there is nowhere else for them to go; upstream
+posted them to a Chinese CDN this project has no account for, which is why
+uploading used to end in a thumbnail reading FAILED.
 
 What that means in practice:
 

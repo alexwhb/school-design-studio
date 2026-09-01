@@ -418,20 +418,6 @@ test('starting fresh throws the saved design away', async ({ page }) => {
   await expect(page.locator('.el-message-box')).toHaveCount(0)
 })
 
-/* ------------------------------------------------- background removal */
-
-test('the background remover asks for a picture and keeps it on this computer', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
-  await page.waitForTimeout(500)
-  await page.getByText('Remove background', { exact: true }).click()
-  await page.waitForTimeout(900)
-
-  const dialog = page.locator('.ds-image-cutout')
-  await expect(dialog).toBeVisible()
-  await expect(dialog.getByText("Choose a picture, then brush away the parts you don't want.")).toBeVisible()
-  await expect(dialog.getByText('It stays on this computer. Nothing is uploaded.')).toBeVisible()
-})
-
 /* ------------------------------------------------------------- templates */
 
 test('the gallery is filed into categories', async ({ page }) => {
