@@ -520,17 +520,24 @@ export default function Moveable() {
       if (!moveable) return
       const items = widgetState.dSelectWidgets
       const alt = controlState.dAltDown
-      if (alt) {
+      // A multi-selection can also arrive without a modifier held — Ctrl/Cmd + A
+      // makes one outright, and by the time this runs the keys may be back up.
+      if (alt || items.length > 1) {
+        // Selecto marks what a drag box caught and leaves the mark on; the marks
+        // added here are only a way to gather the nodes, so they are taken off
+        // again and anything already marked is left as it was found.
+        const marked: HTMLElement[] = []
         for (let i = 0; i < items.length; i++) {
-          document.getElementById(items[i].uuid)?.classList.add('widget-selected')
+          const el = document.getElementById(items[i].uuid)
+          if (!el || el.classList.contains('widget-selected')) continue
+          el.classList.add('widget-selected')
+          marked.push(el)
         }
         moveable.renderDirections = []
         moveable.rotatable = false
         const targetCollector = [].slice.call(document.querySelectorAll('.widget-selected'))
         moveable.target = targetCollector
-        for (let i = 0; i < items.length; i++) {
-          document.getElementById(items[i].uuid)?.classList.remove('widget-selected')
-        }
+        marked.forEach((el) => el.classList.remove('widget-selected'))
       }
       // A multi-selection moves as one, so none of it aligns to the rest of itself
       buildElementGuidelines()

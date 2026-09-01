@@ -400,3 +400,41 @@ test('an element you place stays clickable on the canvas', async ({ page }) => {
 
   await expect(page.locator('#page-design-canvas .layer.layer-no-hover')).toHaveAttribute('data-uuid', uuid!)
 })
+
+test('ctrl+A selects every layer on the page', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+  await addText(page, 'Subheading')
+  await expect(page.locator(WIDGET)).toHaveCount(3)
+
+  await page.locator('#page-design-canvas').click({ position: { x: 4, y: 4 } })
+  await page.waitForTimeout(300)
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.waitForTimeout(600)
+
+  // Group only appears once the store agrees more than one widget is selected.
+  await expect(page.locator('.gounp__btn')).toBeVisible()
+  // And the transform box is drawn round the lot, not round one of them.
+  const box = (await page.locator('.moveable-area').first().boundingBox())!
+  for (let i = 0; i < 3; i++) {
+    const widget = (await page.locator(WIDGET).nth(i).boundingBox())!
+    expect(widget.x).toBeGreaterThanOrEqual(box.x - 1)
+    expect(widget.y).toBeGreaterThanOrEqual(box.y - 1)
+    expect(widget.x + widget.width).toBeLessThanOrEqual(box.x + box.width + 1)
+    expect(widget.y + widget.height).toBeLessThanOrEqual(box.y + box.height + 1)
+  }
+})
+
+test('ctrl+A while editing text leaves the editor alone', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+
+  await page.locator(WIDGET).first().dblclick()
+  await page.waitForTimeout(500)
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.waitForTimeout(500)
+
+  // Still one text being edited, not two widgets selected.
+  await expect(page.locator('.gounp__btn')).toBeHidden()
+  await expect(page.locator('#page-design-canvas .w-text.editing')).toHaveCount(1)
+})

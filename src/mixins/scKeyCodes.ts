@@ -64,6 +64,10 @@ export default [
     info: `${ctrlKey} / Shift + click`,
   },
   {
+    feat: `Select all`,
+    info: `${ctrlKey} + A`,
+  },
+  {
     feat: `Group`,
     info: `${ctrlKey} + G`,
   },

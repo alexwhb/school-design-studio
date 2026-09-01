@@ -81,3 +81,22 @@ export function setSelectItem({ data, type }: TselectItem) {
   widgetState.selectItem.data = data
   widgetState.selectItem.type = type
 }
+
+/**
+ * Ctrl/Cmd + A. Takes every top-level layer on the page as the selection —
+ * a group counts as one thing, so its container comes in and its children stay
+ * out, and locked layers are left alone the same way a drag box leaves them.
+ *
+ * A single layer is made active rather than multi-selected: that is what one
+ * click does, and the panels read the two states differently.
+ */
+export function selectAllWidgets() {
+  const selectable = widgetState.dWidgets.filter((item) => item.parent === '-1' && !item.lock)
+  if (selectable.length === 0) return
+  if (selectable.length === 1) {
+    widgetState.dSelectWidgets = []
+    widgetState.dActiveElement = selectable[0]
+    return
+  }
+  widgetState.dSelectWidgets = selectable
+}

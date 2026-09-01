@@ -3,6 +3,7 @@ import { widgetState } from '@/store/state'
 import { realCombined } from '@/store/group'
 import { handleHistory } from '@/store/history'
 import { copyWidget, pasteWidget } from '@/store/widget/clone'
+import { selectAllWidgets } from '@/store/widget/select'
 
 export type ShortcutInstance = {
   save: () => void
@@ -13,6 +14,9 @@ export type ShortcutInstance = {
 
 export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) {
   switch (e.keyCode) {
+    case 65:
+      selectAll(e)
+      break
     case 71:
       e.preventDefault()
       realCombined()
@@ -52,6 +56,18 @@ function checkGroupChild(pid: number | string, key: any) {
     element[key] && (itHas = true)
   })
   return itHas
+}
+
+/**
+ * Text being edited keeps the browser's own select-all — its contentEditable is
+ * `plaintext-only`, which the INPUT/TEXTAREA guard upstream does not catch, so
+ * the check has to happen here the way copy and paste do it.
+ */
+function selectAll(e: KeyboardEvent) {
+  if (widgetState.dActiveElement?.editable) return
+  if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement.uuid, 'editable')) return
+  e.preventDefault()
+  selectAllWidgets()
 }
 
 function copy() {
