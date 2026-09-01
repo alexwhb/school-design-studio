@@ -312,6 +312,35 @@ and both PowerPoint exports. A photograph wearing a keyline goes into a .pptx as
 a picture of itself, because a PowerPoint picture has no keyline of its own to
 set.
 
+## Shadows
+
+Text has carried shadows all along, as one feature of a stacked text effect.
+Photographs and shapes had nothing. Both now have a **Shadow** section in the
+settings panel: switch on *Drop shadow* and set a colour, a blur and an x/y
+offset. There is no shadow until it is switched on.
+
+The shadow traces what the artwork paints rather than the box it sits in, so a
+cut-out PNG casts the shape of what is in it, a shape casts its own outline, and
+a photograph with rounded corners or a keyline casts those too. It is a CSS
+`drop-shadow` rather than a `box-shadow` for exactly that reason.
+
+- **It belongs to the whole element**, so flipping a photograph mirrors the
+  picture without swinging its shadow to the other side, and rotating one turns
+  the shadow with it.
+- **It steps aside while you crop.** The crop frame and its grips live in the
+  same box as the photograph, and each of them would otherwise pick up a shadow
+  of its own. It comes back when you are done.
+- **Switching it off clears it**, rather than saving a shadow that is turned
+  off. The panel holds on to what you had set, so switching it back on returns
+  the same shadow.
+
+A shadow is saved with the design, undo puts it back, and the page thumbnails
+and the presenter draw it as well as the canvas. It survives the PNG, the PDF
+and both PowerPoint exports — html2canvas cannot draw a CSS filter, so a
+shadowed element is pre-rendered by the browser instead, with room left round it
+for the shadow to fall into. A .pptx gets a real PowerPoint shadow rather than a
+picture of one, so whoever opens the deck can still edit it.
+
 ## Curved text
 
 What a badge, a crest or a Sports Day header is set on. Select a text box and

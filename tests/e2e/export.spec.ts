@@ -32,6 +32,77 @@ test('Export writes a PNG of the page', async ({ page }) => {
   expect(bytes.length).toBeGreaterThan(2000)
 })
 
+/** One pixel of a PNG data buffer, decoded by the browser rather than in Node. */
+async function pixelOf(page: import('@playwright/test').Page, png: Buffer, x: number, y: number) {
+  return page.evaluate(
+    async ([data, px, py]) => {
+      const img = new Image()
+      img.src = 'data:image/png;base64,' + data
+      await img.decode()
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0)
+      const [r, g, b, a] = Array.from(ctx.getImageData(px as number, py as number, 1, 1).data)
+      return { r, g, b, a }
+    },
+    [png.toString('base64'), x, y] as const,
+  )
+}
+
+test('a drop shadow on a photo survives the PNG export', async ({ page }) => {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Photos' }).click()
+  await page.waitForTimeout(1200)
+  await page.locator('.photo-list-wrap .list__img').first().click()
+  await page.waitForTimeout(1500)
+  const widget = page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first()
+  await widget.click({ position: { x: 20, y: 10 } })
+  await page.waitForTimeout(400)
+
+  // Straight down and unblurred, so the shadow is a hard copy of the photo
+  // sixty pixels below it: a pixel that is either there or is not. It also
+  // falls entirely outside the widget's own box, which is the part that used
+  // to be impossible — html2canvas cannot draw a filter, and the picture the
+  // export draws instead is only as big as the element unless it is told to
+  // leave room.
+  await page.locator('#w-image-style .shadow-select .el-checkbox').click()
+  await page.waitForTimeout(300)
+  const blur = page.locator('#w-image-style .shadow-select .field--full input')
+  await blur.fill('0')
+  await blur.blur()
+  const offsetY = page.locator('#w-image-style .shadow-select .field').nth(2).locator('input')
+  await offsetY.fill('60')
+  await offsetY.blur()
+  await page.waitForTimeout(400)
+
+  const box = await widget.evaluate((el) => ({
+    left: parseFloat((el as HTMLElement).style.left),
+    top: parseFloat((el as HTMLElement).style.top),
+    width: parseFloat((el as HTMLElement).style.width),
+    height: parseFloat((el as HTMLElement).style.height),
+  }))
+
+  const download = page.waitForEvent('download', { timeout: 90000 })
+  await page.getByRole('button', { name: 'Export' }).click()
+  const file = await download
+  const stream = await file.createReadStream()
+  const chunks: Buffer[] = []
+  for await (const chunk of stream!) chunks.push(chunk as Buffer)
+  const png = Buffer.concat(chunks)
+
+  const inShadow = await pixelOf(page, png, Math.round(box.left + box.width / 2), Math.round(box.top + box.height + 30))
+  // Black at 35% over the white page.
+  expect(inShadow.a).toBe(255)
+  expect(inShadow.r).toBeLessThan(220)
+  expect(inShadow.r).toBe(inShadow.g)
+  expect(inShadow.g).toBe(inShadow.b)
+
+  // Beside the photo, where no shadow falls, the page is untouched.
+  const beside = await pixelOf(page, png, Math.round(box.left - 40), Math.round(box.top + box.height + 30))
+  expect(beside).toEqual({ r: 255, g: 255, b: 255, a: 255 })
+})
+
 test('the PDF export writes a real PDF, one page per page of the design', async ({ page }) => {
   await addText(page, 'Heading')
   await page.locator('.export-caret').click()

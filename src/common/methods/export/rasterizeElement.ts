@@ -39,6 +39,12 @@ export function needsRasterizing(el: Element): boolean {
   const mask = style.getPropertyValue('-webkit-mask-image') || style.getPropertyValue('mask-image')
   if (strokeWidth > 0 || clip === 'text' || (Boolean(mask) && mask !== 'none')) return true
 
+  // CSS filters are a fourth thing html2canvas has no code for, so the shadow
+  // an image or a shape casts would simply not be drawn. See `rasterBleed` for
+  // the other half of this: a shadow is the one thing here that paints outside
+  // the element's own box.
+  if (hasFilter(style)) return true
+
   // A glow is a stack of invisible copies of the text, each casting a blurred
   // shadow. html2canvas paints the shadow as part of painting the text, so
   // when the text is fully transparent it skips both and the glow is lost —
@@ -47,10 +53,53 @@ export function needsRasterizing(el: Element): boolean {
   return alphaOf(style.color) === 0 && style.textShadow !== 'none' && Boolean(style.textShadow)
 }
 
+function hasFilter(style: CSSStyleDeclaration): boolean {
+  const filter = style.filter || style.getPropertyValue('-webkit-filter')
+  return Boolean(filter) && filter !== 'none'
+}
+
 /** True when this element, or anything inside it, needs the treatment. */
 export function subtreeNeedsRasterizing(el: Element): boolean {
   if (needsRasterizing(el)) return true
   return Array.from(el.querySelectorAll('*')).some(needsRasterizing)
+}
+
+/**
+ * A `drop-shadow(...)` in a computed filter, colour and all.
+ *
+ * The colour comes back as `rgba(0, 0, 0, 0.35)`, so the brackets nest one
+ * level deep and the obvious `\([^)]*\)` stops in the middle of it.
+ */
+const DROP_SHADOW = /drop-shadow\((?:[^()]|\([^()]*\))*\)/g
+
+/**
+ * How far outside its own box the subtree paints, in CSS pixels.
+ *
+ * Everything else this file handles stays inside the element — an outline, a
+ * gradient fill, a mask. A drop shadow does not: it is offset and blurred, so
+ * rasterising the element's box alone would slice the shadow off along the
+ * edges. The caller pads the picture by this much and shifts it back by the
+ * same amount, which leaves the artwork where it was and the shadow whole.
+ *
+ * A blur radius is twice the Gaussian's standard deviation and the tail is
+ * spent by three of them, hence the 1.5. Rounded up, since a pixel of slack
+ * costs a pixel of texture and a pixel short is a visible straight edge.
+ */
+export function rasterBleed(root: Element): number {
+  let bleed = 0
+  for (const el of [root, ...Array.from(root.querySelectorAll('*'))]) {
+    const style = getComputedStyle(el)
+    if (!hasFilter(style)) continue
+    for (const shadow of (style.filter || '').match(DROP_SHADOW) || []) {
+      const lengths = Array.from(shadow.matchAll(/(-?[\d.]+)px/g)).map((m) => Number(m[1]))
+      if (lengths.length < 2) continue
+      const [x, y, blur = 0] = lengths
+      bleed = Math.max(bleed, Math.max(Math.abs(x), Math.abs(y)) + blur * 1.5)
+    }
+  }
+  // Bounded, because the picture grows by twice this on each side and a silly
+  // blur on a large design would otherwise ask for a canvas nothing can hold.
+  return Math.min(Math.ceil(bleed), 500)
 }
 
 const FETCH_TIMEOUT = 10000
@@ -187,11 +236,20 @@ async function inlineResources(clone: HTMLElement): Promise<boolean> {
  * `scale` is the export's own pixel ratio: the SVG is given an intrinsic size
  * that large so the bitmap html2canvas copies is already at final resolution,
  * rather than a CSS-sized one it would have to blow up.
+ *
+ * `bleed` widens the picture by that many CSS pixels on every side, for artwork
+ * that paints outside its own box — see `rasterBleed`. The caller has to place
+ * the result that much up and left of where the element was.
  */
-export async function rasterizeElement(el: HTMLElement, scale: number): Promise<string | null> {
+export async function rasterizeElement(el: HTMLElement, scale: number, bleed = 0): Promise<string | null> {
   const width = el.offsetWidth
   const height = el.offsetHeight
   if (!width || !height) return null
+
+  // The picture is the element's box grown by `bleed` on every side, so a
+  // shadow that falls outside the box is still inside the picture.
+  const outerWidth = width + bleed * 2
+  const outerHeight = height + bleed * 2
 
   const clone = el.cloneNode(true) as HTMLElement
   inlineComputedStyles(el, clone, true)
@@ -204,12 +262,16 @@ export async function rasterizeElement(el: HTMLElement, scale: number): Promise<
   clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
 
   const markup = new XMLSerializer().serializeToString(clone)
+  // A foreignObject clips whatever overflows it, so the padding cannot go on
+  // the object — the element is inset by it instead, and the object is grown to
+  // match. The root clone had its own position dropped, so it flows here.
+  const body = bleed > 0 ? `<div xmlns="http://www.w3.org/1999/xhtml" style="padding:${bleed}px">${markup}</div>` : markup
   const ratio = Math.max(1, scale)
   const svg = [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width * ratio}" height="${height * ratio}" viewBox="0 0 ${width} ${height}">`,
-    `<foreignObject x="0" y="0" width="${width}" height="${height}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${outerWidth * ratio}" height="${outerHeight * ratio}" viewBox="0 0 ${outerWidth} ${outerHeight}">`,
+    `<foreignObject x="0" y="0" width="${outerWidth}" height="${outerHeight}">`,
     fontCss ? `<style xmlns="http://www.w3.org/1999/xhtml">${fontCss}</style>` : '',
-    markup,
+    body,
     '</foreignObject></svg>',
   ].join('')
 
@@ -224,8 +286,8 @@ export async function rasterizeElement(el: HTMLElement, scale: number): Promise<
   }
 
   const canvas = document.createElement('canvas')
-  canvas.width = Math.round(width * ratio)
-  canvas.height = Math.round(height * ratio)
+  canvas.width = Math.round(outerWidth * ratio)
+  canvas.height = Math.round(outerHeight * ratio)
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height)

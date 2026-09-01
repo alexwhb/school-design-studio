@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef } from 'react'
+import { shadowFilter } from '@/common/methods/shadow'
 import type { WidgetProps } from '../types'
 import { widgetBorder } from '../widgetBorder'
 import { collectShapePaint, paintShape } from './shapePaint'
@@ -67,6 +68,7 @@ function WSvgStatic({ params, parent, className, ...rest }: WidgetProps) {
         width: p.width + 'px',
         height: p.height + 'px',
         opacity: p.opacity,
+        filter: shadowFilter(p.shadow),
       }}
     />
   )

@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef } from 'react'
+import { shadowFilter } from '@/common/methods/shadow'
 import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
 import ImageKeyline from './ImageKeyline'
@@ -29,6 +30,7 @@ function WImageStatic({ params, parent, className, ...rest }: WidgetProps) {
         width: p.width + 'px',
         height: p.height + 'px',
         opacity: p.opacity,
+        filter: shadowFilter(p.shadow),
       }}
     >
       <div

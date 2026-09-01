@@ -140,6 +140,34 @@ function addTextWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: numb
   })
 }
 
+const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high)
+
+/**
+ * The shadow an image or a shape casts, as PowerPoint states one.
+ *
+ * The editor holds a shadow the way CSS does — an x, a y and a blur, in pixels.
+ * PowerPoint holds a direction and a distance, in points. Same shadow, so it
+ * goes in as a real shadow the recipient can edit rather than being baked into
+ * a picture, and it stays put when they move the object.
+ */
+function pptxShadow(widget: TdWidgetData, scale: number): PptxGenJS.ShadowProps | undefined {
+  const shadow = widget.shadow
+  if (!shadow?.enable) return undefined
+  const x = Number(shadow.offsetX) || 0
+  const y = Number(shadow.offsetY) || 0
+  const { color, transparency } = toPptxColor(shadow.color, '000000')
+  return {
+    type: 'outer',
+    color,
+    opacity: clamp(1 - (transparency ?? 0) / 100, 0, 1),
+    blur: clamp(pxToPoints(Math.max(0, Number(shadow.blur) || 0)) * scale, 0, 100),
+    offset: clamp(pxToPoints(Math.hypot(x, y)) * scale, 0, 200),
+    // OOXML measures the direction clockwise from due east, and so does atan2
+    // over screen coordinates, where y grows downwards. They already agree.
+    angle: (Math.round((Math.atan2(y, x) * 180) / Math.PI) + 360) % 360,
+  }
+}
+
 async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: number) {
   const url = (widget as any).imgUrl
   if (!url) return
@@ -152,6 +180,7 @@ async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scal
     rotate: readRotation(widget) || undefined,
     transparency: toPptxColor(`#000000${Math.round((Number((widget as any).opacity ?? 1)) * 255).toString(16).padStart(2, '0')}`).transparency,
     rounding: false,
+    shadow: pptxShadow(widget, scale),
   })
   return true
 }
@@ -166,7 +195,9 @@ async function addRasterWidget(
   if (!render) return
   const data = await render(pageIndex, widget)
   if (!data) return
-  slide.addImage({ data, ...frame(widget, scale) })
+  // The picture is drawn without the element's shadow — see `capture` — so the
+  // shadow is put back here, where PowerPoint can cast it outside the frame.
+  slide.addImage({ data, ...frame(widget, scale), shadow: pptxShadow(widget, scale) })
 }
 
 /** Paints the page background onto the slide: a colour, a gradient's base, or an image. */

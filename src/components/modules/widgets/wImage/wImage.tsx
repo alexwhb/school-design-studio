@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef } from 'react'
 import { useSnapshot } from 'valtio'
+import { shadowFilter } from '@/common/methods/shadow'
 import { canvasState, controlState, widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import { setUpdateRect } from '@/store/force'
@@ -347,6 +348,11 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
         width: p.width + 'px',
         height: p.height + 'px',
         opacity: p.opacity,
+        // Cast off the whole widget rather than off the picture inside it, so a
+        // flip mirrors the photo without swinging its shadow to the other side.
+        // Not while cropping: the frame and its grips live in this box too, and
+        // they would each pick up a shadow of their own.
+        filter: cropEdit ? undefined : shadowFilter(p.shadow),
       }}
     >
       {cropEdit ? (

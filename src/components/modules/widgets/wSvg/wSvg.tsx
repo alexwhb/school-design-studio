@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef } from 'react'
 import { useSnapshot } from 'valtio'
+import { shadowFilter } from '@/common/methods/shadow'
 import { canvasState, widgetState } from '@/store/state'
 import { setUpdateRect } from '@/store/force'
 import { updateWidgetData } from '@/store/widget/widget'
@@ -211,6 +212,9 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
         width: p.width + 'px',
         height: p.height + 'px',
         opacity: p.opacity,
+        // A shape is drawn as an inline <svg> with transparent everything
+        // around it, so a drop-shadow traces the shape itself.
+        filter: shadowFilter(p.shadow),
       }}
     />
   )

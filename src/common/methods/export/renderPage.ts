@@ -13,7 +13,7 @@ import { setShowMoveable } from '@/store/control'
 import { setDPage, updateZoom } from '@/store/canvas'
 import { getWidgets, setDWidgets } from '@/store/widget/widget'
 import { selectWidget } from '@/store/widget/select'
-import { rasterizeElement, subtreeNeedsRasterizing } from './rasterizeElement'
+import { rasterBleed, rasterizeElement, subtreeNeedsRasterizing } from './rasterizeElement'
 import { withTimeout } from './utils'
 import type { TdWidgetData } from '@/store/types'
 
@@ -171,7 +171,16 @@ async function rasterizeUnsupported(root: HTMLElement, scale: number): Promise<v
   for (const widget of widgets) {
     if (!subtreeNeedsRasterizing(widget)) continue
 
-    const picture = await rasterizeElement(widget, scale)
+    const style = getComputedStyle(widget)
+    const left = parseFloat(style.left)
+    const top = parseFloat(style.top)
+    // A widget that is not placed by left/top has nowhere to be shifted back
+    // to, so it is rasterised at its own size and whatever falls outside it is
+    // lost — the same as before any of this existed.
+    const placed = Number.isFinite(left) && Number.isFinite(top)
+    const bleed = placed ? rasterBleed(widget) : 0
+
+    const picture = await rasterizeElement(widget, scale, bleed)
     if (!picture) {
       console.warn('[export] could not pre-render a widget; leaving it to html2canvas', widget.className)
       continue
@@ -179,11 +188,33 @@ async function rasterizeUnsupported(root: HTMLElement, scale: number): Promise<v
 
     const img = document.createElement('img')
     img.src = picture
-    const style = getComputedStyle(widget)
-    img.style.cssText = `position:absolute;left:${style.left};top:${style.top};width:${widget.offsetWidth}px;height:${widget.offsetHeight}px;transform:${style.transform};transform-origin:${style.transformOrigin};opacity:${style.opacity};display:block`
+    img.style.cssText = [
+      'position:absolute',
+      `left:${placed ? `${left - bleed}px` : style.left}`,
+      `top:${placed ? `${top - bleed}px` : style.top}`,
+      `width:${widget.offsetWidth + bleed * 2}px`,
+      `height:${widget.offsetHeight + bleed * 2}px`,
+      `transform:${style.transform}`,
+      // The picture grew evenly on every side, so it turns about the same point
+      // the widget did — but that point is now `bleed` further into it.
+      `transform-origin:${shiftOrigin(style.transformOrigin, bleed)}`,
+      `opacity:${style.opacity}`,
+      'display:block',
+    ].join(';')
     widget.replaceWith(img)
     await withTimeout(img.decode(), DECODE_TIMEOUT, 'decoding a pre-rendered widget').catch(() => undefined)
   }
+}
+
+/** A computed `transform-origin` moved to suit a picture padded by `bleed`. */
+function shiftOrigin(origin: string, bleed: number): string {
+  if (!bleed) return origin
+  const parts = origin.split(/\s+/)
+  const shifted = parts.map((part) => {
+    const value = parseFloat(part)
+    return Number.isFinite(value) && part.endsWith('px') ? `${value + bleed}px` : part
+  })
+  return shifted.join(' ')
 }
 
 async function capture(el: HTMLElement, scale: number): Promise<string | null> {
@@ -192,6 +223,11 @@ async function capture(el: HTMLElement, scale: number): Promise<string | null> {
   clone.style.position = 'absolute'
   clone.style.left = '-99999px'
   clone.style.top = '0'
+  // A picture of one element is exactly the size of that element, so a shadow
+  // it casts has nowhere to go and would come out sliced along all four edges.
+  // Only `renderWidget` captures a single element, and its one caller — the
+  // .pptx export — places the shadow on the slide itself, so drop it here.
+  clone.style.filter = 'none'
   document.body.appendChild(clone)
   try {
     await rasterizeUnsupported(clone, scale)

@@ -15,6 +15,7 @@ import BorderControls from '../../settings/BorderControls'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
+import ShadowSelect from '../../settings/ShadowSelect'
 import ContainerWrap from '../../settings/EffectSelect/ContainerWrap'
 import InnerToolBar from './components/InnerToolBar'
 import './wImageStyle.less'
@@ -33,7 +34,7 @@ export default function WImageStyle() {
   // the Done button and the Scale slider with no crop editor behind them.
   const cropping = useSnapshot(controlState).dCropUuid === active?.uuid
   const canvasZoom = useSnapshot(canvasState).dZoom
-  const [activeNames, setActiveNames] = useState<string[]>(['2', '3', '4', '5'])
+  const [activeNames, setActiveNames] = useState<string[]>(['2', '3', '4', '5', '6'])
   const [toolBarStyle, setToolBarStyle] = useState<Record<string, any>>({})
   const picBoxRef = useRef<PictureSelectorHandle | null>(null)
   const lastUuid = useRef<string | undefined>(undefined)
@@ -207,6 +208,11 @@ export default function WImageStyle() {
             />
           </CollapseItem>
         ) : null}
+        <CollapseItem name="6" title="Shadow">
+          <div className="slide-wrap">
+            <ShadowSelect value={active.shadow} onChange={(value) => finish('shadow', value)} />
+          </div>
+        </CollapseItem>
         <br />
         <IconItemSelect className="style-item" label="" data={layerIcons} onFinish={layerAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />

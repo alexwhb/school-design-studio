@@ -828,6 +828,62 @@ test('clicking a shape in the Elements panel places it', async ({ page }) => {
   await expect(page.locator(WIDGET)).toHaveCount(1)
 })
 
+/* ---------------------------------------------------------------- shadow */
+
+/** The Shadow section's on/off switch, which both artwork panels share. */
+function shadowToggle(page: Page) {
+  return page.locator('#w-image-style .shadow-select .el-checkbox')
+}
+
+test('a photo can be given a drop shadow, and lose it again', async ({ page }) => {
+  await addPhoto(page)
+  await selectFirstWidget(page)
+  const widget = page.locator(WIDGET).first()
+  await expect(widget).toHaveCSS('filter', 'none')
+
+  await shadowToggle(page).click()
+  await page.waitForTimeout(400)
+  // A drop-shadow rather than a box-shadow, so a cut-out photo casts the shape
+  // of what is in it and not the shape of its bounding box.
+  await expect(widget).toHaveCSS('filter', /drop-shadow/)
+
+  await shadowToggle(page).click()
+  await page.waitForTimeout(400)
+  await expect(widget).toHaveCSS('filter', 'none')
+})
+
+test('the blur and offsets survive switching the shadow off and on', async ({ page }) => {
+  await addPhoto(page)
+  await selectFirstWidget(page)
+  await shadowToggle(page).click()
+  await page.waitForTimeout(400)
+
+  const blur = page.locator('#w-image-style .shadow-select .field--full input')
+  await blur.fill('40')
+  await blur.blur()
+  await page.waitForTimeout(400)
+  await expect(page.locator(WIDGET).first()).toHaveCSS('filter', /40px/)
+
+  // Switching off clears the shadow out of the design entirely, so the panel is
+  // the only thing left holding what was dialled in.
+  await shadowToggle(page).click()
+  await page.waitForTimeout(400)
+  await shadowToggle(page).click()
+  await page.waitForTimeout(400)
+  await expect(page.locator(WIDGET).first()).toHaveCSS('filter', /40px/)
+})
+
+test('a shape casts its shadow in the page thumbnail too', async ({ page }) => {
+  await addShape(page, 'apple')
+  await selectFirstWidget(page)
+  await shadowToggle(page).click()
+  await page.waitForTimeout(400)
+  await expect(page.locator(WIDGET).first()).toHaveCSS('filter', /drop-shadow/)
+
+  await expandPageStrip(page)
+  await expect(page.locator('.artboards .list [style*="drop-shadow"]')).toHaveCount(1)
+})
+
 test('the colour picker keeps the colours you have used', async ({ page }) => {
   await addText(page, 'Heading')
   await selectFirstWidget(page)

@@ -1,5 +1,6 @@
 import type { TWidgetAnimation } from '@/common/animations/presets'
 import type { TBackgroundTransform } from '@/common/methods/pageBackground'
+import type { TWidgetShadow } from '@/common/methods/shadow'
 
 export type TScreeData = {
   width: number
@@ -103,6 +104,13 @@ export type TdWidgetData = TPageState &
     /** 'solid', 'dashed' or 'dotted'. Absent reads as solid. */
     borderStyle?: string
     record?: TWidgetRecord
+    /**
+     * Images and shapes: the shadow the artwork casts. Absent means none, the
+     * same way `hidden` is absent rather than false, so a design that never
+     * asked for one saves exactly as it always did. Text carries its shadows
+     * inside `textEffects` instead, one per layer of the stack.
+     */
+    shadow?: TWidgetShadow
     /** Entrance animation, played in the presenter. Absent means the element is simply there. */
     animation?: TWidgetAnimation
   }

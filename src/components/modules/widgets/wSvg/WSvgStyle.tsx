@@ -10,12 +10,13 @@ import ColorSelect from '../../settings/ColorSelect'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
+import ShadowSelect from '../../settings/ShadowSelect'
 import './wSvgStyle.less'
 
 export default function WSvgStyle() {
   const snap = useSnapshot(widgetState)
   const active = snap.dActiveElement as any
-  const [activeNames, setActiveNames] = useState<string[]>(['2', '3', '4'])
+  const [activeNames, setActiveNames] = useState<string[]>(['2', '3', '4', '5', '6'])
 
   if (!active) return null
 
@@ -68,6 +69,11 @@ export default function WSvgStyle() {
             style={active.borderStyle}
             onChange={finish}
           />
+        </CollapseItem>
+        <CollapseItem name="6" title="Shadow">
+          <div className="slide-wrap">
+            <ShadowSelect value={active.shadow} onChange={(value) => finish('shadow', value)} />
+          </div>
         </CollapseItem>
         <br />
         <IconItemSelect className="style-item" label="" data={layerIconList} onFinish={layerAction} />
