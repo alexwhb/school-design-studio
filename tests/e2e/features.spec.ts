@@ -28,6 +28,16 @@ test('the page pill names the page you are on', async ({ page }) => {
   await expect(page.locator('.artboards .page__name').nth(1)).toHaveText('Page 2')
 })
 
+test('the add-a-page square lines up with the thumbnails', async ({ page }) => {
+  await expandPageStrip(page)
+  const thumb = (await page.locator('.artboards .item-box').first().boundingBox())!
+  const add = (await page.locator('.artboards .item-add').boundingBox())!
+  // A page in the strip is its thumbnail plus its name, so it is taller than
+  // this square; centred in the row, the square hung below the pictures.
+  expect(Math.abs(add.y - thumb.y), 'the + shares a top edge with the thumbnails').toBeLessThan(1)
+  expect(Math.abs(add.height - thumb.height), 'and is the same size as one').toBeLessThan(1)
+})
+
 test('duplicating a page copies its artwork onto a new page', async ({ page }) => {
   await addText(page, 'Heading')
   await expect(page.locator(WIDGET)).toHaveCount(1)

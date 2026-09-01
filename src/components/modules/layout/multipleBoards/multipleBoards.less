@@ -106,6 +106,10 @@
     color: @ink-4;
     background: @surface-2;
     flex-shrink: 0;
+    // A page is its thumbnail plus its name, so it is taller than this square.
+    // Centred in the row, the two would not line up — this sits on the same
+    // top edge as the thumbnails it follows.
+    align-self: flex-start;
     .icon-add {
       font-size: 18px;
     }
