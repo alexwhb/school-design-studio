@@ -13,23 +13,25 @@ function WGroup({ params, parent, id, className, child, children, ...rest }: Wid
   const ratio = useRef(0)
   const temp = useRef<Record<string, any>>({})
   const compWidgetsRecord = useRef<Record<string, any>>({})
-  const mounted = useRef(false)
 
   useEffect(() => {
     updateRecord()
   })
 
+  // Patched in place whenever it changes rather than applied once on mount, or
+  // an undone rotation stays on screen. Patching also leaves the scale
+  // updateRecord writes into the same transform alone.
+  useEffect(() => {
+    const el = widgetRef.current
+    if (!el) return
+    if (p.rotate) el.style.transformOrigin = 'left top'
+    setTransformAttribute(el, 'rotate', p.rotate || '0deg')
+  }, [p.rotate])
+
   useEffect(() => {
     touchstart()
     document.addEventListener('mousedown', touchstart, false)
     document.addEventListener('mouseup', touchend, false)
-    if (!mounted.current) {
-      mounted.current = true
-      if (params.rotate && widgetRef.current) {
-        widgetRef.current.style.transformOrigin = 'left top'
-        widgetRef.current.style.transform += `rotate(${params.rotate})`
-      }
-    }
     return () => {
       document.removeEventListener('mousedown', touchstart, false)
       document.removeEventListener('mouseup', touchend, false)

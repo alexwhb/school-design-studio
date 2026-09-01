@@ -23,7 +23,6 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   const widgetRef = useRef<HTMLDivElement | null>(null)
   const editWrapRef = useRef<HTMLDivElement | null>(null)
   const loadFontDone = useRef('')
-  const mounted = useRef(false)
 
   const fontFamily = `'${p.fontClass.value}'`
 
@@ -38,13 +37,16 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     updateRecord()
   })
 
+  // Rebuilt from the store whenever it changes rather than once on mount, or an
+  // undone rotation stays on screen: Moveable writes the turn straight to the
+  // element, so nothing else puts it back.
   useEffect(() => {
     const el = widgetRef.current
-    if (!el || mounted.current) return
-    mounted.current = true
-    params.transform && (el.style.transform = params.transform)
-    params.rotate && (el.style.transform += `translate(0px, 0px) rotate(${params.rotate}) scale(1, 1)`)
-  }, [params])
+    if (!el) return
+    let transform = p.transform || ''
+    if (p.rotate) transform += `translate(0px, 0px) rotate(${p.rotate}) scale(1, 1)`
+    el.style.transform = transform
+  }, [p.transform, p.rotate])
 
   useEffect(() => {
     let cancelled = false

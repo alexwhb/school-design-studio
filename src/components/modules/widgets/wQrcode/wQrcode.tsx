@@ -10,7 +10,6 @@ import type { WidgetProps } from '../types'
 function WQrcode({ params, parent, id, className, child, ...rest }: WidgetProps) {
   const p = useSnapshot(params) as any
   const widgetRef = useRef<HTMLDivElement | null>(null)
-  const mounted = useRef(false)
   const width = Number(p.width)
 
   const dotsOptions = useMemo<Options['dotsOptions']>(
@@ -34,13 +33,14 @@ function WQrcode({ params, parent, id, className, child, ...rest }: WidgetProps)
     setUpdateRect()
   })
 
+  // Rebuilt from the store whenever it changes rather than once on mount, or an
+  // undone rotation stays on screen: Moveable writes the turn straight to the
+  // element, so nothing else puts it back.
   useEffect(() => {
-    if (mounted.current) return
-    mounted.current = true
-    if (widgetRef.current) {
-      params.rotate && (widgetRef.current.style.transform += `rotate(${params.rotate})`)
-    }
-  }, [params])
+    const el = widgetRef.current
+    if (!el) return
+    el.style.transform = p.rotate ? `rotate(${p.rotate})` : ''
+  }, [p.rotate])
 
   function updateRecord() {
     const active = widgetState.dActiveElement

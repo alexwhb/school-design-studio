@@ -21,7 +21,6 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
   const holdPosition = useRef({ left: 0, top: 0 })
   const rotateTemp = useRef<any>(null)
   const flipTemp = useRef<string | null>(null)
-  const mounted = useRef(false)
 
   const cropEdit = params.uuid === control.dCropUuid
   const isMask = !!p.mask && dropOverUuid === params.uuid
@@ -38,12 +37,15 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
     }
   }, [])
 
+  // Rebuilt from the store whenever it changes rather than once on mount, or an
+  // undone rotation stays on screen: Moveable writes the turn straight to the
+  // element, so nothing else puts it back. Cropping is left alone — fixRotate
+  // straightens the image for the duration and puts the angle back after.
   useEffect(() => {
     const el = widgetRef.current
-    if (!el || mounted.current) return
-    mounted.current = true
-    params.rotate && (el.style.transform += `rotate(${params.rotate})`)
-  }, [params])
+    if (!el || cropEdit) return
+    el.style.transform = p.rotate ? `rotate(${p.rotate})` : ''
+  }, [p.rotate, cropEdit])
 
   const lastCropEdit = useRef(cropEdit)
   useEffect(() => {

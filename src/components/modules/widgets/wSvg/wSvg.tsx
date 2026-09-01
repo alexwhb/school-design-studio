@@ -27,11 +27,6 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
       updateRecord()
     })
     document.addEventListener('mouseup', touchend, false)
-    const el = widgetRef.current
-    if (el) {
-      params.transform && (el.style.transform = params.transform)
-      params.rotate && (el.style.transform += `rotate(${params.rotate})`)
-    }
     return () => {
       cancelled = true
       document.removeEventListener('mouseup', touchend, false)
@@ -42,6 +37,17 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
     updateRecord()
     setUpdateRect()
   })
+
+  // Rebuilt from the store whenever it changes rather than once on mount, or an
+  // undone rotation stays on screen: Moveable writes the turn straight to the
+  // element, so nothing else puts it back.
+  useEffect(() => {
+    const el = widgetRef.current
+    if (!el) return
+    let transform = p.transform || ''
+    if (p.rotate) transform += `rotate(${p.rotate})`
+    el.style.transform = transform
+  }, [p.transform, p.rotate])
 
   useEffect(() => {
     attrsChange()
