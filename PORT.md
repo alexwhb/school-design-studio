@@ -223,8 +223,9 @@ transform and a watcher repainting from it. The geometry is copied unchanged and
 `matting.ts` replaces the four composables, over `@vue/reactivity` — the
 reactivity system on its own, no components and no renderer. Rewriting the
 watchers into explicit calls would have meant finding every mutation site in code
-whose whole job is to be subtle about pixels. The whole thing is lazy-loaded, so
-the 10 kB it costs is only paid by someone who opens it.
+whose whole job is to be subtle about pixels. The whole thing — engine,
+reactivity and all — is one lazy chunk of 16 kB gzipped, loaded when the dialog
+is opened and by nobody else.
 
 **Same libraries where they are framework-agnostic:** moveable, selecto,
 @scena/guides, sortablejs, qr-code-styling, html2canvas, pptxgenjs, psd.js,
