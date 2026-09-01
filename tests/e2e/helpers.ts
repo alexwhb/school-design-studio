@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 
 export const APP_URL = process.env.APP_URL || 'http://127.0.0.1:5273'
 
@@ -177,4 +177,19 @@ export async function boxSelectAll(page: Page) {
   }
   await page.mouse.up()
   await page.waitForTimeout(600)
+}
+
+/** Opens a swatch in the shape panel and switches it to a gradient. */
+export async function openGradient(page: Page, swatch: Locator, type: 'linear' | 'radial' = 'linear') {
+  await swatch.click()
+  await page.waitForTimeout(600)
+  const picker = page.locator('.color-picker:visible')
+  await picker.locator('.my-tab__title', { hasText: 'Gradient' }).click()
+  await page.waitForTimeout(600)
+  if (type === 'radial') {
+    await picker.locator('.cpgt__option').nth(1).click()
+    await page.waitForTimeout(600)
+  }
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(500)
 }

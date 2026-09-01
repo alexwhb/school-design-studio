@@ -4,6 +4,7 @@ import {
   addText,
   expandPageStrip,
   openEditor,
+  openGradient,
   openPageMenu,
   openResizeDialog,
   pageCanvas,
@@ -1019,4 +1020,74 @@ test('the outline is drawn in the page thumbnails too', async ({ page }) => {
 
   await expandPageStrip(page)
   expect(await page.locator('.artboards svg [data-border]').count()).toBeGreaterThan(0)
+})
+
+/* ------------------------------------------------------------- gradients */
+
+/**
+ * The shape's own drawing, once the placeholders have been painted over.
+ *
+ * Not the copy of it inside `<defs>`: an outline clips itself to a silhouette
+ * of the shape, and that clone keeps the fill the shape had when it was made.
+ */
+function shapeArt(page: Page) {
+  return page.locator(`${WIDGET} svg :is(polygon, path, rect, circle):not(defs *)`).first()
+}
+
+test('a shape can be filled with a gradient', async ({ page }) => {
+  await addShape(page, 'Rectangle')
+  await selectFirstWidget(page)
+  await openGradient(page, page.locator('#w-image-style .color__select').first().locator('.color__field'))
+
+  // An SVG attribute cannot hold a CSS gradient, so the fill is a reference to
+  // a paint server the shape carries with it.
+  await expect(shapeArt(page)).toHaveAttribute('fill', /^url\(#/)
+  await expect(page.locator(`${WIDGET} svg defs linearGradient`)).toHaveCount(1)
+  await expect(page.locator('#w-image-style .color__select').first().locator('.color__value')).toHaveText('Gradient')
+})
+
+test('a gradient can be radial as well as linear', async ({ page }) => {
+  await addShape(page, 'Rectangle')
+  await selectFirstWidget(page)
+  await openGradient(page, page.locator('#w-image-style .color__select').first().locator('.color__field'), 'radial')
+
+  await expect(page.locator(`${WIDGET} svg defs radialGradient`)).toHaveCount(1)
+  await expect(page.locator(`${WIDGET} svg defs linearGradient`)).toHaveCount(0)
+})
+
+test('a shape outline can be a gradient too', async ({ page }) => {
+  await addShape(page, 'Rectangle')
+  await selectFirstWidget(page)
+  await dragSlider(page, '.ds-svg-style', 'Thickness', 0.25)
+  await openGradient(page, page.locator('.ds-svg-style .border-controls .color__field'))
+
+  // The outline's paint server sits in the same <defs> as its clip paths, so
+  // taking the outline off takes the gradient with it.
+  const outline = (await outlinedShape(page))!
+  expect(outline.stroke).toMatch(/^url\(#/)
+  await expect(page.locator(`${WIDGET} svg defs[data-border-clip] linearGradient`)).toHaveCount(1)
+
+  // The fill is painted onto the markup by one module and the outline by
+  // another, so a shape carrying both keeps both: two paint servers, in two
+  // <defs>, neither writing over the other's attributes.
+  await openGradient(page, page.locator('.ds-svg-style .color__select').first().locator('.color__field'))
+  await expect(shapeArt(page)).toHaveAttribute('fill', /^url\(#/)
+  expect((await outlinedShape(page))!.stroke).toMatch(/^url\(#/)
+
+  await dragSlider(page, '.ds-svg-style', 'Thickness', 0)
+  expect(await outlinedShape(page)).toBeNull()
+  await expect(page.locator(`${WIDGET} svg defs[data-border-clip]`)).toHaveCount(0)
+})
+
+test('a keyline on a photograph can be a gradient', async ({ page }) => {
+  await addPhoto(page)
+  await selectFirstWidget(page)
+  await dragSlider(page, '.ds-image-style', 'Thickness', 0.2)
+  await openGradient(page, page.locator('.ds-image-style .border-controls .color__field'))
+
+  // `border` takes a colour and nothing else, so a gradient keyline is the
+  // whole element painted and masked down to its own padding.
+  const keyline = page.locator(`${WIDGET} .img__keyline`)
+  await expect(keyline).toHaveCSS('background-image', /gradient/)
+  await expect(keyline).toHaveCSS('border-top-width', '0px')
 })

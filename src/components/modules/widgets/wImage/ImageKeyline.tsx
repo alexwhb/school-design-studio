@@ -20,8 +20,15 @@
  * Both are laid over the picture rather than around it, which keeps the widget
  * the size the user set it to: a keyline never grows a photograph, and it is
  * never cropped away at the edge of the page.
+ *
+ * A keyline can be a gradient. The masked case takes one for nothing, since it
+ * is a ring of background and background paints gradients. A plain rectangular
+ * one cannot, because `border` only takes a colour, so it is cut out of a
+ * rounded rectangle the same way — which is also why a gradient keyline is
+ * always solid: a ring cut from a mask has no run of line to break into dashes.
  */
 import type { CSSProperties } from 'react'
+import { isGradient } from '@/packages/color-picker/utils/gradient'
 import { widgetBorder } from '../widgetBorder'
 
 /** Only asked once, and only in a browser; `CSS` is absent when it is not. */
@@ -41,7 +48,7 @@ function ringStyle(mask: string, width: number, color: string): CSSProperties {
   const inner = `calc(100% - ${width * 2}px)`
   const layers = `url('${mask}'), url('${mask}')`
   return {
-    backgroundColor: color,
+    background: color,
     WebkitMaskImage: layers,
     WebkitMaskSize: `100% 100%, ${inner} ${inner}`,
     WebkitMaskPosition: 'center, center',
@@ -51,6 +58,29 @@ function ringStyle(mask: string, width: number, color: string): CSSProperties {
     maskSize: `100% 100%, ${inner} ${inner}`,
     maskPosition: 'center, center',
     maskRepeat: 'no-repeat, no-repeat',
+    maskComposite: 'exclude',
+  }
+}
+
+/**
+ * A ring of gradient round a rectangular picture.
+ *
+ * The whole element is painted, then masked down to its own border box minus
+ * its content box, which leaves the padding: a band of the asked-for width
+ * lying inside the edge, curving with the corner radius.
+ */
+function gradientRingStyle(width: number, color: string, radius: string): CSSProperties {
+  const layers = 'linear-gradient(#000 0 0), linear-gradient(#000 0 0)'
+  return {
+    background: color,
+    borderRadius: radius,
+    padding: `${width}px`,
+    boxSizing: 'border-box',
+    WebkitMaskImage: layers,
+    WebkitMaskClip: 'content-box, border-box',
+    WebkitMaskComposite: 'xor',
+    maskImage: layers,
+    maskClip: 'content-box, border-box',
     maskComposite: 'exclude',
   }
 }
@@ -67,12 +97,19 @@ export default function ImageKeyline({ params }: { params: Record<string, any> }
     return <div className="img__keyline" style={ringStyle(mask, border.width, border.color)} />
   }
 
+  const radius = (Number(params.radius) || 0) + 'px'
+
+  if (isGradient(border.color)) {
+    if (!supportsMaskRing()) return null
+    return <div className="img__keyline" style={gradientRingStyle(border.width, border.color, radius)} />
+  }
+
   return (
     <div
       className="img__keyline"
       style={{
         border: `${border.width}px ${border.style} ${border.color}`,
-        borderRadius: (Number(params.radius) || 0) + 'px',
+        borderRadius: radius,
       }}
     />
   )

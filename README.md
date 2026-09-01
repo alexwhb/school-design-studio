@@ -195,6 +195,8 @@ A4, flyers, name badges, display boards.
 
 **Curved text.** New. See below.
 
+**Gradients.** New. See below.
+
 **PowerPoint export.** New. See below.
 
 **Defaults.** The app name links to `HOME_URL` rather than the original
@@ -349,6 +351,41 @@ quietly straightened out.
 The layout is in `src/components/modules/widgets/wText/arcLayout.ts`, apart from
 the drawing, so the canvas, the page thumbnails and the presenter all place the
 characters the same way.
+
+## Gradients
+
+Following Adobe XD, a fill can be a gradient as well as a flat colour: a shape's
+colour, the outline round a shape, the keyline round a photograph, a page
+background and a text fill.
+
+Open a swatch and pick Gradient. The tab has two buttons above the ramp, a
+square for a linear gradient and a circle for a radial one. Linear keeps the
+angle dial beside them. A radial gradient runs from the middle outwards, so
+there is no angle to set and the dial goes away. Dragging along the ramp moves
+a stop, clicking it adds one, and Backspace takes the selected one out, as
+before.
+
+**A shape carries its gradient with it.** An SVG attribute cannot hold a CSS
+gradient the way `background` can, so a gradient becomes a paint server in the
+shape's own `<defs>` and the `fill` or `stroke` refers to it. One paint server
+serves the whole shape rather than one per path, so a gradient runs across the
+artwork instead of starting again on every path. An outline's paint server goes
+in the same `<defs>` as its clip paths, so removing the outline removes the
+gradient with it.
+
+**A gradient keyline on a photograph is always solid.** `border` takes a colour
+and nothing else, so a gradient keyline is the whole element painted and then
+masked down to its own padding, and a ring cut from a mask has no run of line to
+break into dashes. A picture poured into a container shape was already a ring
+of background, so it only needed that background widened from a colour to
+anything CSS can paint.
+
+The gradient itself is parsed and written in
+`src/packages/color-picker/utils/gradient.ts`, the SVG paint servers are in
+`src/utils/svgPaint.ts`, and a shape's colours in
+`src/components/modules/widgets/wSvg/shapePaint.ts`. The static renderer paints
+through the same code, so page thumbnails, presentation mode and every export
+draw a shape the way the canvas does.
 
 ## Spelling
 

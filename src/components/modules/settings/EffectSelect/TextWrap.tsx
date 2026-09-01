@@ -177,7 +177,7 @@ export default function TextWrap({ value, data = {}, onValueChange, onSelect }: 
   function colorChange(e: colorChangeData, index: number, key: string) {
     const modeStr: Record<string, number> = { Gradient: 2, Solid: 0 }
     const layer = layers[index]
-    const feature = { ...layer[key], gradient: { angle: e.angle, stops: e.stops } }
+    const feature = { ...layer[key], gradient: { angle: e.angle, type: e.gradientType, stops: e.stops } }
     patchLayer(index, { [key]: feature })
     setTimeout(() => {
       setLayers((prev) => {

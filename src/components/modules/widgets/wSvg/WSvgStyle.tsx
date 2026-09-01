@@ -50,10 +50,10 @@ export default function WSvgStyle() {
             <NumberInput value={active.height} label="H" onChange={(v) => finish('height', Number(v))} />
           </div>
         </CollapseItem>
-        <CollapseItem name="2" title="Colour">
+        <CollapseItem name="2" title="Fill">
           {(active.colors || []).map((c: string, ci: number) => (
             <div key={ci + 'c'}>
-              <ColorSelect value={c} onValueChange={(value) => colorFinish(ci, value)} />
+              <ColorSelect value={c} modes={['Solid', 'Gradient']} onValueChange={(value) => colorFinish(ci, value)} />
             </div>
           ))}
           <br />

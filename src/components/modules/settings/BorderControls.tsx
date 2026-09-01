@@ -38,7 +38,7 @@ export default function BorderControls({ width = 0, color = '#000000ff', style =
       />
       {thickness > 0 ? (
         <div className="border-controls">
-          <ColorSelect label="Colour" value={color} onValueChange={(value) => onChange('borderColor', value)} />
+          <ColorSelect label="Colour" value={color} modes={['Solid', 'Gradient']} onValueChange={(value) => onChange('borderColor', value)} />
           <ValueSelect
             label="Style"
             readonly

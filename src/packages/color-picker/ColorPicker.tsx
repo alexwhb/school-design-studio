@@ -2,7 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { debounce } from 'throttle-debounce'
 import { registerMoveableElement } from './utils/moveable'
 import { HSLA2HexA, RGB2HSL, RGBA2HexA, hex2RGB, hexA2HSLA, hexA2RGBA } from './utils/color'
-import { parseBackgroundValue, toGradientString, toolTip } from './utils/helper'
+import { parseBackgroundValue, toolTip } from './utils/helper'
+import { type GradientType, parseGradient, toGradientString } from './utils/gradient'
 import Tabs from './comps/Tabs'
 import Straw from './comps/Straw'
 import AngleHandle from './comps/AngleHandle'
@@ -12,7 +13,9 @@ import './colorPicker.less'
 export type ColorChangeData = {
   mode: string
   color: string
+  /** Which way a linear gradient runs. A radial one ignores it. */
   angle: number
+  gradientType: GradientType
   stops: { color: string; offset: number }[]
 }
 
@@ -41,6 +44,9 @@ type Props = {
 
 const hasEyeDrop = typeof window !== 'undefined' && 'EyeDropper' in window
 
+/** The two Adobe XD offers a fill, in the order it lists them. */
+const GRADIENT_TYPES: GradientType[] = ['linear', 'radial']
+
 export default function ColorPicker({
   value = '#ffffffff',
   modes = ['Solid', 'Gradient'],
@@ -56,6 +62,7 @@ export default function ColorPicker({
 }: Props) {
   const [mode, setMode] = useState(() => parseBackgroundValue(value))
   const [angle, setAngle] = useState(90)
+  const [gradientType, setGradientType] = useState<GradientType>('linear')
   const [gradients, setGradients] = useState<Gradient[]>([])
   const [paletteBackground, setPaletteBackground] = useState('#f00')
   const [hex, setHex] = useState('#000')
@@ -79,6 +86,8 @@ export default function ColorPicker({
   valueRef.current = value
   const angleRef = useRef(angle)
   angleRef.current = angle
+  const gradientTypeRef = useRef(gradientType)
+  gradientTypeRef.current = gradientType
   const gradientsRef = useRef(gradients)
   gradientsRef.current = gradients
   const activeGradientRef = useRef(activeGradient)
@@ -89,6 +98,14 @@ export default function ColorPicker({
   const record = useRef({ color: defaultColor, gradient: defaultGradient, image: defaultImage })
 
   const showGradient = modes.includes('Gradient')
+
+  /**
+   * The stops drawn as a swatch. The track under them always reads left to
+   * right, whatever the fill itself does, because that is what dragging a stop
+   * along it moves — and a radial fill painted into a 16px strip is a blur.
+   */
+  const ramp = (type: GradientType) => (gradients.length ? toGradientString(type, 90, gradients) : value)
+  const rampBackground = ramp('linear')
 
   const sliderAlphaBackgroundStyle = (() => {
     const rgb = hex2RGB(hex).join(',')
@@ -115,6 +132,7 @@ export default function ColorPicker({
         mode: modeRef.current,
         color: next,
         angle: Number(angleRef.current),
+        gradientType: gradientTypeRef.current,
         stops: gradientsRef.current,
       })
     },
@@ -157,7 +175,7 @@ export default function ColorPicker({
       next = hexA
     } else if (modeRef.current === 'Gradient' && activeGradientRef.current) {
       activeGradientRef.current.color = hexA
-      next = toGradientString(angleRef.current, gradientsRef.current)
+      next = toGradientString(gradientTypeRef.current, angleRef.current, gradientsRef.current)
       setGradients((prev) => prev.slice())
     }
     updateColorData(hexA)
@@ -176,35 +194,37 @@ export default function ColorPicker({
     (nextMode: string) => {
       if (nextMode === 'Solid') {
         setColor(valueRef.current)
-      } else if (nextMode === 'Gradient') {
-        if (gradientsRef.current.length === 0) {
-          const parsed: Gradient[] = []
-          const parts = valueRef.current.match(/[^,]+/g) || []
-          parts.forEach((item, index) => {
-            if (index === 0) {
-              const found = item.match(/\d+/)
-              found && setAngle(Number(found[0]))
-              found && (angleRef.current = Number(found[0]))
-              return
-            }
-            let [color, offset] = item.trim().split(' ')
-            if (!color.startsWith('#')) {
-              const [r, g, b, a = 1] = (color.match(/[\d.]+/g) || []).map(Number)
-              color = RGBA2HexA(r, g, b, a)
-            }
-            const offsetValue = Number(offset.match(/\d+/)?.[0] ?? 0) / 100
-            parsed.push({ color, offset: offsetValue })
-          })
-          gradientsRef.current = parsed
-          setGradients(parsed)
-          if (parsed[0]) {
-            activeGradientRef.current = parsed[0]
-            setActiveGradient(parsed[0])
-            setColor(parsed[0].color)
-          }
-        } else if (activeGradientRef.current) {
-          setColor(activeGradientRef.current.color)
+        return
+      }
+      if (nextMode !== 'Gradient') return
+
+      // The value is the only record of which gradient this is and which way it
+      // runs, so it is read every time rather than once: the fill can change
+      // under the picker, and switching back from Solid has to land on the
+      // gradient the swatch was showing, not on the last one edited.
+      const parsed = parseGradient(valueRef.current)
+      if (parsed) {
+        if (parsed.type !== gradientTypeRef.current) {
+          gradientTypeRef.current = parsed.type
+          setGradientType(parsed.type)
         }
+        if (parsed.type === 'linear' && parsed.angle !== angleRef.current) {
+          angleRef.current = parsed.angle
+          setAngle(parsed.angle)
+        }
+      }
+
+      if (gradientsRef.current.length === 0) {
+        const stops = parsed?.stops ?? []
+        gradientsRef.current = stops
+        setGradients(stops)
+        if (stops[0]) {
+          activeGradientRef.current = stops[0]
+          setActiveGradient(stops[0])
+          setColor(stops[0].color)
+        }
+      } else if (activeGradientRef.current) {
+        setColor(activeGradientRef.current.color)
       }
     },
     [setColor],
@@ -333,7 +353,7 @@ export default function ColorPicker({
       const next = gradientsRef.current.slice().sort((a, b) => a.offset - b.offset)
       gradientsRef.current = next
       setGradients(next)
-      updateValue(toGradientString(angleRef.current, next))
+      updateValue(toGradientString(gradientTypeRef.current, angleRef.current, next))
     }
 
     function onMouseupGradient() {
@@ -434,7 +454,14 @@ export default function ColorPicker({
   function angleChange(nextAngle: number) {
     angleRef.current = nextAngle
     setAngle(nextAngle)
-    updateValue(toGradientString(nextAngle, gradientsRef.current))
+    updateValue(toGradientString(gradientTypeRef.current, nextAngle, gradientsRef.current))
+  }
+
+  function changeGradientType(next: GradientType) {
+    if (next === gradientTypeRef.current) return
+    gradientTypeRef.current = next
+    setGradientType(next)
+    updateValue(toGradientString(next, angleRef.current, gradientsRef.current))
   }
 
   return (
@@ -442,9 +469,27 @@ export default function ColorPicker({
       {modes.length > 1 ? <Tabs value={mode} labels={modes} onChange={onChangeMode} /> : <div className="title">{mode}</div>}
 
       {showGradient ? (
-        <div className="cp__gradient flex-center" style={{ display: mode === 'Gradient' ? undefined : 'none' }}>
+        <div className="cp__gradient" style={{ display: mode === 'Gradient' ? undefined : 'none' }}>
+          <div className="cp__gradient-head">
+            <div className="cp__gradient-type">
+              {GRADIENT_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  title={type === 'radial' ? 'Radial gradient' : 'Linear gradient'}
+                  aria-label={type === 'radial' ? 'Radial gradient' : 'Linear gradient'}
+                  aria-pressed={type === gradientType}
+                  className={cx('cpgt__option', { 'cpgt__option--active': type === gradientType })}
+                  onClick={() => changeGradientType(type)}
+                >
+                  <span className={`cpgt__swatch cpgt__swatch--${type}`} style={{ background: ramp(type) }} />
+                </button>
+              ))}
+            </div>
+            {gradientType === 'linear' ? <AngleHandle value={angle} onChange={angleChange} /> : null}
+          </div>
           <div className="cp__gradient-bar">
-            <div ref={elGradientTrack} className="cpgb__track" style={{ width: '100%', background: value }}>
+            <div ref={elGradientTrack} className="cpgb__track" style={{ width: '100%', background: rampBackground }}>
               {gradients.map((gradient, index) => (
                 <div
                   key={index}
@@ -458,7 +503,6 @@ export default function ColorPicker({
               ))}
             </div>
           </div>
-          <AngleHandle value={angle} onChange={angleChange} />
         </div>
       ) : null}
 

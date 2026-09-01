@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef } from 'react'
 import type { WidgetProps } from '../types'
 import { widgetBorder } from '../widgetBorder'
+import { collectShapePaint, paintShape } from './shapePaint'
 import applySvgBorder from './svgBorder'
 
 /**
@@ -8,9 +9,9 @@ import applySvgBorder from './svgBorder'
  *
  * Shapes are stored as SVG markup rather than a URL, and their colours as
  * `{{colors[n]}}` placeholders, so drawing one means parsing the markup and
- * substituting the colours. That has to happen the same way here as it does on
- * the canvas — see wSvg — or a shape shows up as an empty box in the page
- * thumbnails and in presentation mode.
+ * painting it. That goes through the same `shapePaint` the canvas uses — or a
+ * shape shows up as an empty box in the page thumbnails and in presentation
+ * mode, and a gradient that is on the canvas is missing from every export.
  */
 function WSvgStatic({ params, parent, className, ...rest }: WidgetProps) {
   const p = params as any
@@ -41,23 +42,7 @@ function WSvgStatic({ params, parent, className, ...rest }: WidgetProps) {
     svgNode.removeAttribute('height')
     svgNode.setAttribute('style', 'height: inherit;width: inherit;')
 
-    const colours: Record<string, string> = {}
-    const list: string[] = p.colors || []
-    list.forEach((colour, i) => {
-      colours[`{{colors[${i}]}}`] = colour
-    })
-
-    // The root <svg> carries the colour placeholder as often as its children do
-    // (every Lucide icon puts `stroke` there), so the walk starts at it.
-    const applyColours = (el: Record<string, any>) => {
-      if (el.attributes) {
-        for (const attr of Array.from(el.attributes) as Record<string, any>[]) {
-          if (colours[attr.value]) attr.value = colours[attr.value]
-        }
-      }
-      el.childNodes?.forEach((child: Record<string, any>) => applyColours(child))
-    }
-    applyColours(svgNode)
+    paintShape(collectShapePaint(svgNode), p.uuid, p.colors || [])
     svgRoot.current = svgNode
 
     widgetRef.current.appendChild(svgNode)

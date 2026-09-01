@@ -5,6 +5,7 @@
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2023-11-29 11:01:50
  */
+import { toGradientString } from '@/packages/color-picker/utils/gradient'
 import patternUri from './patternFill'
 
 export default (effect: any) => {
@@ -12,9 +13,8 @@ export default (effect: any) => {
   switch (Number(effect.filling.type)) {
     case 2:
       {
-        const { angle, stops } = effect.filling.gradient
-        const gradients = stops.map((x: any) => `${x.color} ${Number(x.offset) * 100}%`)
-        result = `linear-gradient(${angle}deg, ${gradients.toString()})`
+        const { angle, stops, type } = effect.filling.gradient
+        result = toGradientString(type === 'radial' ? 'radial' : 'linear', angle, stops)
       }
       break
     case 1:

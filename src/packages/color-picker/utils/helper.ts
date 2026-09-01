@@ -5,23 +5,12 @@
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2023-11-28 11:03:14
  */
+import { isGradient } from './gradient'
+
 export const parseBackgroundValue = (value: string): string => {
   if (value.startsWith('#')) return 'Solid'
-  if (value.startsWith('linear-gradient')) return 'Gradient'
+  if (isGradient(value)) return 'Gradient'
   return 'Pattern'
-}
-
-interface Stop {
-  color: string
-  offset: number
-}
-
-export const toGradientString = (angle: number, stops: Stop[]) => {
-  const s: string[] = []
-  stops.forEach((stop) => {
-    s.push(`${stop.color} ${stop.offset * 100}%`)
-  })
-  return `linear-gradient(${angle}deg, ${s.join(',')})`
 }
 
 /**

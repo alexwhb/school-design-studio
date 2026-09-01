@@ -6,6 +6,7 @@ import { updateWidgetData } from '@/store/widget/widget'
 import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
 import { widgetBorder } from '../widgetBorder'
+import { collectShapePaint, paintShape, type ShapePaint } from './shapePaint'
 import applySvgBorder from './svgBorder'
 import './wSvg.less'
 
@@ -13,7 +14,7 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
   const p = useSnapshot(params) as any
 
   const widgetRef = useRef<HTMLDivElement | null>(null)
-  const svgElements = useRef<Record<string, any>[] | null>(null)
+  const shapePaint = useRef<ShapePaint | null>(null)
   const viewBox = useRef({ width: 0, height: 0 })
   const svgImg = useRef<Record<string, any> | null>(null)
   const svgRoot = useRef<SVGSVGElement | null>(null)
@@ -52,9 +53,13 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
     el.style.transform = transform
   }, [p.transform, p.rotate])
 
+  // Colours are put back from the store rather than only at load, so a swatch
+  // or an undo repaints the shape that is already on the canvas — gradients
+  // included, since those are paint servers that have to be rebuilt when their
+  // stops change.
   useEffect(() => {
-    attrsChange()
-  })
+    if (shapePaint.current) paintShape(shapePaint.current, params.uuid, (params as any).colors || [])
+  }, [p.colors, params])
 
   const cropEdit = p.cropEdit
   const lastCropEdit = useRef(cropEdit)
@@ -138,28 +143,11 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
       svgNode.removeAttribute('width')
       svgNode.removeAttribute('height')
       svgNode.setAttribute('style', 'height: inherit;width: inherit;')
-      svgElements.current = []
-      const colorsObj = color2obj()
 
-      deepElement(svgNode)
-
-      function deepElement(el: Record<string, any>) {
-        elementFactory(el)
-        el.childNodes.forEach((childNode: Record<string, any>) => deepElement(childNode))
-      }
-
-      function elementFactory(element: Record<string, any>) {
-        if (!element.attributes) return
-        const attrsColor: Record<string, any> = {}
-        for (const attr of Array.from(element.attributes) as Record<string, any>[]) {
-          if (!colorsObj[attr.value]) continue
-          attr.value = colorsObj[attr.value]
-          attrsColor[attr.name] = (params as any).colors.findIndex((x: string) => x == attr.value)
-        }
-        if (JSON.stringify(attrsColor) !== '{}' && svgElements.current) {
-          svgElements.current.push({ item: element, attrsColor })
-        }
-      }
+      // Colours are stored as `{{colors[n]}}` placeholders in the markup, so
+      // the shape is painted before it goes on screen rather than after.
+      shapePaint.current = collectShapePaint(svgNode)
+      paintShape(shapePaint.current, params.uuid, (params as any).colors || [])
 
       if (widgetRef.current) {
         widgetRef.current.appendChild(svgNode)
@@ -167,15 +155,6 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
       svgRoot.current = svgNode
       resolve()
     })
-  }
-
-  function color2obj() {
-    const obj: Record<string, any> = {}
-    const colors = (params as any).colors || []
-    for (let i = 0; i < colors.length; i++) {
-      obj[`{{colors[${i}]}}`] = colors[i]
-    }
-    return obj
   }
 
   function updateRecord() {
@@ -217,21 +196,6 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
     const left = Number(widgetXY.x) + Math.floor((dx * 100) / canvasState.dZoom)
     const top = Number(widgetXY.y) + Math.floor((dy * 100) / canvasState.dZoom)
     return { left, top }
-  }
-
-  function attrsChange() {
-    const active = widgetState.dActiveElement
-    if (active?.uuid === params.uuid && svgElements.current) {
-      for (const element of svgElements.current) {
-        const { item, attrsColor } = element
-        for (const key in attrsColor) {
-          if (Object.hasOwnProperty.call(attrsColor, key)) {
-            const color = (params as any).colors[attrsColor[key]]
-            item.setAttribute(key, color)
-          }
-        }
-      }
-    }
   }
 
   return (

@@ -19,7 +19,14 @@
  * Shapes that already stroke themselves — every Lucide icon is drawn as lines,
  * not fills — are left alone. Adding to their stroke would not outline them, it
  * would repaint them.
+ *
+ * An outline can be a gradient as well as a flat colour. `stroke` cannot hold
+ * one, so the gradient goes into the same `<defs>` as the clip paths and the
+ * stroke refers to it. One paint server serves every stroked element, which is
+ * what makes the gradient run across the whole shape rather than restart on
+ * each path.
  */
+import { createGradientNode, viewBoxOf } from '@/utils/svgPaint'
 import type { TWidgetBorder } from '../widgetBorder'
 
 const NS = 'http://www.w3.org/2000/svg'
@@ -73,6 +80,10 @@ export default function applySvgBorder(svg: SVGSVGElement, border: TWidgetBorder
   defs.setAttribute('data-border-clip', '')
   const dashes = dashesFor(border)
 
+  const paintId = `shape-outline-paint-${++sequence}`
+  const paint = createGradientNode(paintId, border.color, viewBoxOf(svg))
+  const stroke = paint ? `url(#${paintId})` : border.color
+
   for (const el of Array.from(svg.querySelectorAll(DRAWABLE))) {
     if (paintsItsOwnStroke(el)) continue
 
@@ -89,7 +100,7 @@ export default function applySvgBorder(svg: SVGSVGElement, border: TWidgetBorder
     clip.appendChild(silhouette)
     defs.appendChild(clip)
 
-    el.setAttribute('stroke', border.color)
+    el.setAttribute('stroke', stroke)
     el.setAttribute('stroke-width', String(border.width * 2))
     el.setAttribute('vector-effect', 'non-scaling-stroke')
     if (dashes) el.setAttribute('stroke-dasharray', dashes)
@@ -98,5 +109,9 @@ export default function applySvgBorder(svg: SVGSVGElement, border: TWidgetBorder
     el.setAttribute('data-border', '')
   }
 
-  if (defs.childNodes.length) svg.insertBefore(defs, svg.firstChild)
+  // An empty <defs> is how a shape that took no outline is recognised, so the
+  // gradient is added after the loop rather than before it.
+  if (!defs.childNodes.length) return
+  if (paint) defs.appendChild(paint)
+  svg.insertBefore(defs, svg.firstChild)
 }
