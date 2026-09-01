@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import Sortable from 'sortablejs'
 import { widgetState } from '@/store/state'
-import { renameWidget, selectWidget, updateHoverUuid, updateWidgetData } from '@/store/widget'
+import { renameWidget, selectWidget, setLayerHidden, updateHoverUuid, updateWidgetData } from '@/store/widget'
 import { recordHistory } from '@/common/hooks/history'
 import Input from '@/components/ui/Input'
 import { cx } from '@/utils/dom'
@@ -140,13 +140,17 @@ export default function LayerList({ data, onChange }: Props) {
     })
   }
 
+  function hideLayer(item: TdWidgetData) {
+    setLayerHidden({ uuid: item.uuid, hidden: !item.hidden })
+  }
+
   return (
     <ul className="widget-list" ref={listRef}>
       {widgets.map((element, index) => (
         <li
           key={element.uuid}
           data-index={index}
-          className={cx('widget', { active: getIsActive(element.uuid), disable: !showItem(element) }, 'item-one')}
+          className={cx('widget', { active: getIsActive(element.uuid), disable: !showItem(element), 'widget-hidden': !!element.hidden }, 'item-one')}
           onClick={() => selectWidget({ uuid: element.uuid })}
           onDoubleClick={() => startRename(element)}
           onMouseOver={() => updateHoverUuid(element.uuid)}
@@ -190,7 +194,17 @@ export default function LayerList({ data, onChange }: Props) {
                   }}
                 />
                 <i
+                  className={cx('icon', element.hidden ? 'sd-eye-no' : 'sd-eye-see')}
+                  title={element.hidden ? 'Show this layer' : 'Hide this layer'}
+                  onDoubleClick={stopEvent}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    hideLayer(element)
+                  }}
+                />
+                <i
                   className={cx('icon', element.lock ? 'sd-suoding' : 'sd-jiesuo')}
+                  title={element.lock ? 'Unlock this layer' : 'Lock this layer'}
                   onDoubleClick={stopEvent}
                   onClick={(e) => {
                     e.stopPropagation()

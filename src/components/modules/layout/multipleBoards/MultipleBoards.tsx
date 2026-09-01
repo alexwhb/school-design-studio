@@ -60,7 +60,7 @@ function pageLabel(page: TdLayout | undefined, position: number) {
 }
 
 function StaticLayers({ layers, global }: { layers: readonly TdWidgetData[]; global: TPageState }) {
-  const top = useMemo(() => layers.filter((item) => item.parent === global.uuid), [layers, global.uuid])
+  const top = useMemo(() => layers.filter((item) => item.parent === global.uuid && !item.hidden), [layers, global.uuid])
   return (
     <>
       {top.map((layer) => {
@@ -70,7 +70,7 @@ function StaticLayers({ layers, global }: { layers: readonly TdWidgetData[]; glo
           <Comp key={layer.uuid} params={layer as TdWidgetData} parent={global}>
             {layer.isContainer
               ? layers
-                  .filter((item) => item.parent === layer.uuid)
+                  .filter((item) => item.parent === layer.uuid && !item.hidden)
                   .map((widget) => {
                     const ChildComp = staticWidgetComponents[widget.type]
                     if (!ChildComp) return null

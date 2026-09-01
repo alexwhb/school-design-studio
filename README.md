@@ -254,6 +254,28 @@ What a page operation *means* lives in `src/store/design/widget/actions/pages.ts
 rather than in the strip, so that keeping the current page index, the widget
 list and the canvas in step is written once instead of once per button.
 
+## Layers
+
+The Layers tab in the panel on the right lists everything on the page, topmost
+first, with a group's members under the group itself. Drag a row to change what
+sits in front of what.
+
+Each row carries two toggles at its end. The state a layer is not in stays out
+of the way until you hover over the row; the state it is in is always on show.
+
+- **Lock** holds an element where it is. It is still drawn and still exported —
+  it just stops answering to clicks, drags and the selection box.
+- **Hide** takes it off the canvas until you show it again. A hidden layer is
+  not drawn at all rather than made faint, so nothing can click it, drag onto
+  it or snap to its edges, and it is absent from the PDF, the PNG and both
+  PowerPoint exports. It is how you keep last term's version of a poster in the
+  file without it appearing in this term's.
+
+Hiding a group hides what is inside it. Hiding the layer you had selected lets
+go of it, because there is nothing left on the canvas for the selection box to
+hold. Both toggles belong to the design, so they are saved with it and undo
+puts them back.
+
 ## Spelling
 
 On by default, and switched off in **File → Check spelling**.

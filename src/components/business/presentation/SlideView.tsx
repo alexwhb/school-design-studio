@@ -110,8 +110,8 @@ const SlideView = forwardRef<SlideViewHandle, Props>(function SlideView({ page, 
 
   const pending = (uuid: string) => animated && scheduled.has(uuid) && !revealed.has(uuid)
 
-  const rootLayers = layers.filter((layer) => layer.parent === global.uuid)
-  const childrenOf = (uuid: string) => layers.filter((layer) => layer.parent === uuid)
+  const rootLayers = layers.filter((layer) => layer.parent === global.uuid && !layer.hidden)
+  const childrenOf = (uuid: string) => layers.filter((layer) => layer.parent === uuid && !layer.hidden)
 
   return (
     <div ref={slideRef} className="slide" style={{ width: global.width * scale + 'px', height: global.height * scale + 'px' }}>

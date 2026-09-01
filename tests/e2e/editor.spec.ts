@@ -299,6 +299,44 @@ test('clearing a layer name hands it back to the text on the page', async ({ pag
   await expect(name).toHaveText(/Add a heading/)
 })
 
+test('hiding a layer takes it off the canvas, and showing it puts it back', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+  await page.getByText('Layers', { exact: true }).click()
+  await page.waitForTimeout(400)
+
+  const row = page.locator('.widget-list .widget').first()
+  await row.locator('.sd-eye-see').click()
+  await page.waitForTimeout(400)
+
+  await expect(page.locator(WIDGET)).toHaveCount(1)
+  // The row stays in the list, marked as the hidden one.
+  await expect(page.locator('.widget-list .widget')).toHaveCount(2)
+  await expect(row).toHaveClass(/widget-hidden/)
+
+  await row.locator('.sd-eye-no').click()
+  await page.waitForTimeout(400)
+  await expect(page.locator(WIDGET)).toHaveCount(2)
+  await expect(row).not.toHaveClass(/widget-hidden/)
+})
+
+test('hiding the layer you had selected lets go of it', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await expect(page.locator('.moveable-control-box')).toBeVisible()
+
+  await page.getByText('Layers', { exact: true }).click()
+  await page.waitForTimeout(400)
+  await page.locator('.widget-list .widget').first().locator('.sd-eye-see').click()
+  await page.waitForTimeout(500)
+
+  await expect(page.locator(WIDGET)).toHaveCount(0)
+  // Moveable keeps its box in the document and parks it far off-screen when it
+  // has nothing to hold, which is the same state as clicking the bare canvas.
+  const box = (await page.locator('.moveable-control-box').boundingBox())!
+  expect(box.x).toBeLessThan(0)
+})
+
 test('resizing the design changes the canvas and refits the zoom', async ({ page }) => {
   const before = await pageCanvas(page)
   await openResizeDialog(page)
@@ -501,6 +539,30 @@ test('ctrl+A selects every layer on the page', async ({ page }) => {
     expect(widget.x + widget.width).toBeLessThanOrEqual(box.x + box.width + 1)
     expect(widget.y + widget.height).toBeLessThanOrEqual(box.y + box.height + 1)
   }
+})
+
+test('ctrl+A leaves a hidden layer out of the selection', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+  await addText(page, 'Subheading')
+
+  await page.getByText('Layers', { exact: true }).click()
+  await page.waitForTimeout(400)
+  await page.locator('.widget-list .widget').nth(0).locator('.sd-eye-see').click()
+  await page.locator('.widget-list .widget').nth(1).locator('.sd-eye-see').click()
+  await page.waitForTimeout(400)
+  await expect(page.locator(WIDGET)).toHaveCount(1)
+
+  await page.getByText('Settings', { exact: true }).click()
+  await page.locator('#page-design-canvas').click({ position: { x: 4, y: 4 } })
+  await page.waitForTimeout(300)
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.waitForTimeout(600)
+
+  // One layer left to select is one layer, not three: it becomes the active
+  // element, and Group is only offered for a selection of several.
+  await expect(page.locator('.gounp__btn')).toBeHidden()
+  await expect(page.locator('#w-text-style')).toBeVisible()
 })
 
 test('ctrl+A while editing text leaves the editor alone', async ({ page }) => {

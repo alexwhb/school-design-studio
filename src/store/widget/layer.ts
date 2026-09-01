@@ -1,6 +1,7 @@
 import { widgetState } from '../state'
 import { setUpdateSelect } from '../force'
 import type { TdWidgetData } from '../types'
+import { clearSelection } from './select'
 
 export type TupdateLayerIndexData = {
   uuid: string
@@ -80,4 +81,33 @@ export function ungroup(uuid: string) {
   }
 
   setUpdateSelect()
+}
+
+export type TsetLayerHiddenData = {
+  uuid: string
+  hidden: boolean
+}
+
+/**
+ * Takes a layer off the canvas, or puts it back.
+ *
+ * A hidden layer is not rendered at all rather than merely made transparent,
+ * so it cannot be clicked, snapped to, or picked up by a drag selection, and
+ * every export that draws the page simply never sees it.
+ */
+export function setLayerHidden({ uuid, hidden }: TsetLayerHiddenData) {
+  const widget = widgetState.dWidgets.find((item) => item.uuid === uuid)
+  if (!widget) return
+  if (!hidden) {
+    delete widget.hidden
+    return
+  }
+  widget.hidden = true
+  // Nothing is left on the canvas for a selection box to hold on to, so let go
+  // of the layer as it goes — and of a child that went with its group.
+  const active = widgetState.dActiveElement
+  const wasSelected = widgetState.dSelectWidgets.some((item) => item.uuid === uuid || item.parent === uuid)
+  if (wasSelected || active?.uuid === uuid || active?.parent === uuid) {
+    clearSelection()
+  }
 }

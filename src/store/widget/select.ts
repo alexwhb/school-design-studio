@@ -10,7 +10,8 @@ export function selectWidget({ uuid }: TSelectWidgetData) {
   const widget = widgetState.dWidgets.find((item) => item.uuid === uuid)
 
   if (alt) {
-    if (!widget) return
+    // A hidden layer has nothing on the canvas to select.
+    if (!widget || widget.hidden) return
     if (uuid !== '-1' && widget.parent === '-1') {
       if (selectWidgets.length === 0) {
         if (widgetState.dActiveElement && widgetState.dActiveElement.uuid !== '-1') {
@@ -44,7 +45,7 @@ export function selectWidget({ uuid }: TSelectWidgetData) {
       widgetState.dSelectWidgets = []
     }, 10)
   } else {
-    if (!widget) return
+    if (!widget || widget.hidden) return
     setTimeout(() => {
       widgetState.dActiveElement = widget
     }, 10)
@@ -86,12 +87,13 @@ export function setSelectItem({ data, type }: TselectItem) {
  * Ctrl/Cmd + A. Takes every top-level layer on the page as the selection —
  * a group counts as one thing, so its container comes in and its children stay
  * out, and locked layers are left alone the same way a drag box leaves them.
+ * Hidden layers are not there to be selected at all.
  *
  * A single layer is made active rather than multi-selected: that is what one
  * click does, and the panels read the two states differently.
  */
 export function selectAllWidgets() {
-  const selectable = widgetState.dWidgets.filter((item) => item.parent === '-1' && !item.lock)
+  const selectable = widgetState.dWidgets.filter((item) => item.parent === '-1' && !item.lock && !item.hidden)
   if (selectable.length === 0) return
   if (selectable.length === 1) {
     widgetState.dSelectWidgets = []

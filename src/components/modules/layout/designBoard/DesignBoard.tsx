@@ -52,11 +52,13 @@ const Layers = memo(function Layers({
   const parent = useMemo(() => ({ left: parentLeft, top: parentTop, uuid: pageUuid }), [parentLeft, parentTop, pageUuid])
 
   const layers = useMemo(() => {
-    if (widgets) return widgets.filter((item) => item.parent === pageUuid)
+    if (widgets) return widgets.filter((item) => item.parent === pageUuid && !item.hidden)
     const raw = widgetState.dWidgets
     const out: TdWidgetData[] = []
     for (let i = 0; i < raw.length; i++) {
-      if (snap.dWidgets[i].parent === pageUuid) out.push(raw[i])
+      // Both tests read the snapshot rather than the raw widget: that is what
+      // registers them with valtio, and hiding a layer must repaint the page.
+      if (snap.dWidgets[i].parent === pageUuid && !snap.dWidgets[i].hidden) out.push(raw[i])
     }
     return out
   }, [snap.dWidgets, pageUuid, widgets, layoutsChange])
@@ -103,11 +105,11 @@ function Children({
   const snap = useSnapshot(widgetState)
   const layoutsChange = useSnapshot(forceState).layoutsChange
   const childs = useMemo(() => {
-    if (widgets) return widgets.filter((item) => item.parent === parentLayer.uuid)
+    if (widgets) return widgets.filter((item) => item.parent === parentLayer.uuid && !item.hidden)
     const raw = widgetState.dWidgets
     const out: TdWidgetData[] = []
     for (let i = 0; i < raw.length; i++) {
-      if (snap.dWidgets[i].parent === parentLayer.uuid) out.push(raw[i])
+      if (snap.dWidgets[i].parent === parentLayer.uuid && !snap.dWidgets[i].hidden) out.push(raw[i])
     }
     return out
   }, [snap.dWidgets, parentLayer.uuid, widgets, layoutsChange])

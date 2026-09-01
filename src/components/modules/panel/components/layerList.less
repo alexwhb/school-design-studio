@@ -36,7 +36,8 @@
     .widget-name {
       flex: 1;
       font-size: 14px;
-      padding-right: 46px;
+      // Clear of all three of the icons at the end of the row.
+      padding-right: 78px;
     }
     .widget-rename {
       flex: 1;
@@ -51,8 +52,15 @@
       align-items: center;
     }
     .widget-out:hover > .sd-jiesuo,
+    .widget-out:hover > .sd-eye-see,
     .widget-out:hover > .sd-edit {
       opacity: 1;
+    }
+  }
+  .widget.widget-hidden {
+    .widget-type,
+    .widget-name {
+      opacity: 0.4;
     }
   }
   .widget.active {
@@ -79,12 +87,23 @@
     cursor: default;
     color: @ink-2;
   }
-  .sd-jiesuo {
+  .sd-eye-see,
+  .sd-eye-no {
+    position: absolute;
+    right: 38px;
+    font-size: 18px;
+    cursor: default;
+    color: @ink-2;
+  }
+  // The state a layer is *not* in stays out of the way until the row is under
+  // the pointer; the state it is in is always on show.
+  .sd-jiesuo,
+  .sd-eye-see {
     opacity: 0;
   }
   .sd-edit {
     position: absolute;
-    right: 36px;
+    right: 64px;
     font-size: 16px;
     opacity: 0;
     cursor: pointer;

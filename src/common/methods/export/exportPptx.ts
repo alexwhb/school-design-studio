@@ -204,8 +204,13 @@ export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Pro
 
     await applyBackground(slide, page)
 
+    // A group is never drawn itself, so hiding one has to be read off its
+    // children — they are what this loop places on the slide.
+    const hiddenGroups = new Set(layers.filter((widget) => widget.hidden && widget.isContainer).map((widget) => widget.uuid))
+
     for (const widget of layers) {
       if (String(widget.type) === 'w-group') continue
+      if (widget.hidden || (widget.parent && hiddenGroups.has(widget.parent))) continue
       if ((widget as any).opacity === 0) continue
 
       try {

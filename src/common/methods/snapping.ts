@@ -52,6 +52,8 @@ export default function getSnapPositions(widgets: TdWidgetData[], page: TPageSta
   for (const widget of widgets) {
     // Children of a group snap as part of their parent, not on their own.
     if (widget.parent && widget.parent !== page.uuid) continue
+    // A layer nobody can see is not an edge anybody meant to line up with.
+    if (widget.hidden) continue
     if (exclude && widget.uuid === exclude) continue
     const left = Number(widget.left)
     const top = Number(widget.top)

@@ -74,6 +74,12 @@ export type TdWidgetData = TPageState &
     label?: string
     editable?: boolean
     lock?: boolean
+    /**
+     * Taken off the canvas, and out of every export, until it is shown again.
+     * Absent rather than `false` when visible, so a design that never hid
+     * anything saves exactly as it always did.
+     */
+    hidden?: boolean
     imgUrl?: string
     rotate?: string
     transform?: string
