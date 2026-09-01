@@ -94,7 +94,6 @@ export const historyState = proxy<THistoryState>({
 
 export const baseState = proxy<TBaseState>({
   loading: null,
-  watermark: '',
   fonts: [],
 })
 

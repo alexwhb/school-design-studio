@@ -247,23 +247,6 @@ test('adds and switches pages from the artboard strip', async ({ page }) => {
   await expect(page.locator(WIDGET)).toHaveCount(1)
 })
 
-test('the watermark toggle stamps the page', async ({ page }) => {
-  const inkLength = () =>
-    page.evaluate(() => {
-      const overlay = (Array.from(document.querySelectorAll('#page-design div')) as HTMLElement[]).find((el) =>
-        el.style.backgroundImage.startsWith('url("data:image'),
-      )
-      return overlay ? overlay.style.backgroundImage.length : 0
-    })
-
-  const before = await inkLength()
-  await page.locator('.watermark-toggle .el-switch').click()
-  await page.waitForTimeout(600)
-  await expect(page.locator('.watermark-toggle .el-switch')).toHaveClass(/is-checked/)
-  const after = await inkLength()
-  expect(after).toBeGreaterThan(before)
-})
-
 test('the theme toggle flips the editor between light and dark', async ({ page }) => {
   await expect(page.locator('html')).toHaveClass(/dark/)
   await page.locator('.theme-toggle').click()

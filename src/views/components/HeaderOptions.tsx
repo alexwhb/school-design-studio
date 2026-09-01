@@ -16,7 +16,6 @@ import { setShowMoveable } from '@/store/control'
 import { managerEdit } from '@/store/base'
 import { setDPage, getDPage } from '@/store/canvas'
 import { addGroup, addWidget, getWidgets, setDWidgets, setTemplate } from '@/store/widget'
-import WatermarkToggle from './WatermarkToggle'
 import ThemeToggle from './ThemeToggle'
 import './headerOptions.less'
 
@@ -239,7 +238,6 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
             Edit template
           </Button>
         )}
-        <WatermarkToggle />
         <ThemeToggle />
         <div className="top-nav-divider" />
         {children}

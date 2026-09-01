@@ -146,7 +146,6 @@ export type THistoryState = {
 
 export type TBaseState = {
   loading: boolean | null
-  watermark: string | string[]
   fonts: string[]
 }
 

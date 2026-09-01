@@ -14,7 +14,6 @@ import type { TdWidgetData, TPageState } from '@/store/types'
 import { widgetComponents } from '../../widgets/registry'
 import { cx } from '@/utils/dom'
 import ResizePage from './comps/ResizePage'
-import PageWatermark from './comps/PageWatermark'
 import SnapGuides from './comps/SnapGuides'
 import './designBoard.less'
 
@@ -380,39 +379,37 @@ export default function DesignBoard({
         >
           {children}
           {needTools ? <ResizePage width={(dPage.width * dZoom) / 100} height={(dPage.height * dZoom) / 100} /> : null}
-          <PageWatermark customStyle={{ height: (dPage.height * dZoom) / 100 + 'px' }}>
-            <div
-              id={pageDesignCanvasId}
-              className="design-canvas"
-              data-type={dPage.type}
-              data-uuid={dPage.uuid}
-              style={{
-                width: dPage.width + 'px',
-                height: dPage.height + 'px',
-                transform: 'scale(' + dZoom / 100 + ')',
-                transformOrigin: (dZoom >= 100 ? 'center' : 'left') + ' top',
-                backgroundColor: dPage.backgroundGradient ? undefined : dPage.backgroundColor,
-                backgroundImage: dPage.backgroundImage ? `url(${dPage?.backgroundImage})` : dPage.backgroundGradient || undefined,
-                backgroundSize: dPage.backgroundTransform?.x ? 'auto' : 'cover',
-                backgroundPositionX: (dPage.backgroundTransform?.x || 0) + 'px',
-                backgroundPositionY: (dPage.backgroundTransform?.y || 0) + 'px',
-                opacity: dPage.opacity + (dZoom < 100 ? dPage.tag : 0),
-              }}
-              onMouseMove={dropOver}
-              onDrop={drop as any}
-              onMouseUp={drop}
-            >
-              <Layers
-                needTools={needTools}
-                pageUuid={dPage.uuid}
-                parentLeft={dPage.left}
-                parentTop={dPage.top}
-                widgets={renderDWidgets}
-              />
-              {/* What Moveable snaps to when a ruler guide is in the way */}
-              {needTools ? <SnapGuides /> : null}
-            </div>
-          </PageWatermark>
+          <div
+            id={pageDesignCanvasId}
+            className="design-canvas"
+            data-type={dPage.type}
+            data-uuid={dPage.uuid}
+            style={{
+              width: dPage.width + 'px',
+              height: dPage.height + 'px',
+              transform: 'scale(' + dZoom / 100 + ')',
+              transformOrigin: (dZoom >= 100 ? 'center' : 'left') + ' top',
+              backgroundColor: dPage.backgroundGradient ? undefined : dPage.backgroundColor,
+              backgroundImage: dPage.backgroundImage ? `url(${dPage?.backgroundImage})` : dPage.backgroundGradient || undefined,
+              backgroundSize: dPage.backgroundTransform?.x ? 'auto' : 'cover',
+              backgroundPositionX: (dPage.backgroundTransform?.x || 0) + 'px',
+              backgroundPositionY: (dPage.backgroundTransform?.y || 0) + 'px',
+              opacity: dPage.opacity + (dZoom < 100 ? dPage.tag : 0),
+            }}
+            onMouseMove={dropOver}
+            onDrop={drop as any}
+            onMouseUp={drop}
+          >
+            <Layers
+              needTools={needTools}
+              pageUuid={dPage.uuid}
+              parentLeft={dPage.left}
+              parentTop={dPage.top}
+              widgets={renderDWidgets}
+            />
+            {/* What Moveable snaps to when a ruler guide is in the way */}
+            {needTools ? <SnapGuides /> : null}
+          </div>
         </div>
       </div>
       {bottom}

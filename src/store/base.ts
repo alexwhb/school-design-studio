@@ -10,10 +10,6 @@ export function setFonts(list: string[]) {
   baseState.fonts = list
 }
 
-export function changeWatermark(wm: string | string[]) {
-  baseState.watermark = wm
-}
-
 export function changeOnline(status: boolean) {
   userState.online = status
 }

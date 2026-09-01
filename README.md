@@ -188,8 +188,8 @@ A4, flyers, name badges, display boards.
 
 **PowerPoint export.** New. See below.
 
-**Defaults.** The watermark is off unless you turn it on, and the app name links
-to `HOME_URL` rather than the original project's marketing site.
+**Defaults.** The app name links to `HOME_URL` rather than the original
+project's marketing site.
 
 ## Resizing a design
 
