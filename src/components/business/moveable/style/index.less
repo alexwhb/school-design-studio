@@ -69,7 +69,15 @@
   }
   // The px figure on a gap or a snap distance. Coloured text has the same
   // problem the line does, so it is a chip rather than bare glyphs.
-  .moveable-size-value {
+  //
+  // Moveable injects its own `.moveable-guideline-group .moveable-size-value`
+  // rule at runtime, and a runtime rule of equal weight lands after this
+  // stylesheet and wins. It kept its red on the chip's pink, so the figures
+  // were there but unreadable — the chips looked empty. Naming the group, and
+  // the gap modifier, outweighs it.
+  .moveable-size-value,
+  .moveable-guideline-group .moveable-size-value,
+  .moveable-size-value.moveable-gap {
     background: @snap-line;
     color: #fff;
     padding: 1px 5px;

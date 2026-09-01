@@ -89,6 +89,48 @@ test('an element snaps to the centre of the page', async ({ page }) => {
   expect((await boxOf(page, 0)).left).toBe(centred)
 })
 
+test('the distance a snap reports is legible on its chip', async ({ page }) => {
+  // Three, because a figure is only worth reporting when there is a gap or a
+  // distance between neighbours to report. Repeat inserts cascade down the
+  // page, so they land in a column with the third at the bottom.
+  await addText(page, 'Heading')
+  await addText(page, 'Heading')
+  await addText(page, 'Heading')
+  await expect(page.locator(WIDGET)).toHaveCount(3)
+
+  const widget = page.locator(WIDGET).nth(2)
+  await widget.click({ position: { x: 20, y: 10 } })
+  await page.waitForTimeout(400)
+  const box = (await widget.boundingBox())!
+  await page.mouse.move(box.x + 40, box.y + 10)
+  await page.mouse.down()
+
+  // The chips only exist mid-drag, and only where there is something to say,
+  // so walk the third one down past the other two until one shows up.
+  let chips: { text: string; color: string; background: string }[] = []
+  for (let step = 1; step <= 30 && chips.length === 0; step++) {
+    await page.mouse.move(box.x + 40, box.y + 10 + step * 6, { steps: 2 })
+    await page.waitForTimeout(90)
+    chips = await page.evaluate(() =>
+      [...document.querySelectorAll('.moveable-size-value')].map((el) => {
+        const style = getComputedStyle(el)
+        return { text: el.textContent || '', color: style.color, background: style.backgroundColor }
+      }),
+    )
+  }
+  await page.mouse.up()
+
+  expect(chips.length, 'a gap or a distance was reported').toBeGreaterThan(0)
+  for (const chip of chips) {
+    expect(chip.text, 'the chip carries a figure').toMatch(/\d/)
+    // Moveable styles these itself, at the same weight and later in the
+    // document, so its own red landed on the chip's pink and the figures could
+    // not be read at all.
+    expect(chip.color, 'and the figure is not the colour of the chip under it').toBe('rgb(255, 255, 255)')
+    expect(chip.color).not.toBe(chip.background)
+  }
+})
+
 test('the File menu offers snapping, ticked, and remembers the choice', async ({ page }) => {
   await page.getByText('File', { exact: true }).click()
   await page.waitForTimeout(400)
