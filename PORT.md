@@ -113,10 +113,10 @@ Bugs found by the parity and e2e suites while porting main's changes, all fixed:
 - **Two pickers shared their class names.** The image-mask picker's tile size
   won over the text-effect picker's, so the presets came out at half the width
   and twice the height.
-- **Three link buttons had Element Plus's padding**, because `&__name` in Less
-  concatenates to one class and ties with `.el-button.is-link` — and one of them
-  was nested two blocks deep, where `& &__name` compiles to a selector that can
-  never match.
+- **Three link buttons had Element Plus's padding**, because `&__choose` in Less
+  concatenates to one class, which ties with `.el-button.is-link` and then loses
+  on source order — and one of them was nested two blocks deep, where
+  `& &__action` compiles to a selector that can never match at all.
 - **The effect rows never laid out**, because the classes that make the toggle
   flexible and pin the swatch right were on the Vue components and not on the
   React ones.
@@ -127,8 +127,9 @@ Bugs found by the parity and e2e suites while porting main's changes, all fixed:
   had queued to begin that slide's build. The pixel-parity shot could not see
   it: by the time it is taken the animation has finished in both apps.
 
-Three bugs were found in the Vue app and fixed there, because the port faithfully
-reproduced them and they made the feature untestable:
+Three bugs were found in the Vue app and fixed there. The port had reproduced
+all three faithfully, which is how they were found; two of them are broken
+features rather than cosmetic:
 
 - A page's ⋯ button was positioned against Element Plus's own dropdown wrapper
   rather than the thumbnail, which put it on top of the collapse chevron where
