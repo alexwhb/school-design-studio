@@ -80,6 +80,47 @@ test('arrow keys nudge the selected widget by one, shift by ten', async ({ page 
   expect(Number.parseFloat(jumped!.left)).toBeCloseTo(Number.parseFloat(nudged!.left) + 10, 1)
 })
 
+test('ctrl+D duplicates the selected widget, offset from the original', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  const before = await widgetBox(page)
+
+  await page.keyboard.press('ControlOrMeta+d')
+  await page.waitForTimeout(400)
+  await expect(page.locator(WIDGET)).toHaveCount(2)
+
+  const copy = await widgetBox(page, 1)
+  expect(Number.parseFloat(copy!.left)).toBeCloseTo(Number.parseFloat(before!.left) + 30, 1)
+  expect(Number.parseFloat(copy!.top)).toBeCloseTo(Number.parseFloat(before!.top) + 30, 1)
+  // Two copies of one id would fight over selection, so the copy gets its own.
+  const ids = await page.locator(WIDGET).evaluateAll((els) => els.map((el) => el.getAttribute('data-uuid')))
+  expect(ids[0]).not.toBe(ids[1])
+})
+
+test('ctrl+D on a group copies the group and its children together', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+
+  const canvas = (await page.locator('#page-design-canvas').boundingBox())!
+  await page.mouse.move(canvas.x + 4, canvas.y + 4)
+  await page.mouse.down()
+  await page.mouse.move(canvas.x + canvas.width - 4, canvas.y + canvas.height - 4, { steps: 15 })
+  await page.mouse.up()
+  await page.waitForTimeout(600)
+  await page.locator('.gounp__btn').click()
+  await page.waitForTimeout(500)
+
+  await page.keyboard.press('ControlOrMeta+d')
+  await page.waitForTimeout(500)
+
+  // Two texts and their container, twice over. A child is drawn inside its
+  // container, so the copies having children at all is the parent links having
+  // been rewritten to point at the copied group rather than the original.
+  await expect(page.locator(WIDGET)).toHaveCount(6)
+  await expect(page.locator(`${WIDGET}[data-type="w-group"]`)).toHaveCount(2)
+  await expect(page.locator(`${WIDGET}[data-type="w-group"]`).nth(1).locator('[data-uuid]')).toHaveCount(2)
+})
+
 test('backspace deletes the selected widget', async ({ page }) => {
   await addText(page, 'Heading')
   await selectFirstWidget(page)

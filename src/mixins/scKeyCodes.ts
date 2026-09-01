@@ -48,6 +48,10 @@ export default [
     info: `${ctrlKey} + V`,
   },
   {
+    feat: `Duplicate`,
+    info: `${ctrlKey} + D`,
+  },
+  {
     feat: `Delete`,
     info: `Delete / Backspace`,
   },

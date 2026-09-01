@@ -2,7 +2,7 @@ import handlePaste from './handlePaste'
 import { widgetState } from '@/store/state'
 import { realCombined } from '@/store/group'
 import { handleHistory } from '@/store/history'
-import { copyWidget, pasteWidget } from '@/store/widget/clone'
+import { copyWidget, duplicateOne, pasteWidget } from '@/store/widget/clone'
 import { selectAllWidgets } from '@/store/widget/select'
 
 export type ShortcutInstance = {
@@ -26,6 +26,11 @@ export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) 
       break
     case 86:
       paste()
+      break
+    case 68:
+      // Ctrl+D is the browser's bookmark dialog, so it has to be taken.
+      e.preventDefault()
+      duplicate()
       break
     case 90:
       undo(e.shiftKey)
@@ -77,6 +82,15 @@ function copy() {
     return
   }
   !widgetState.dActiveElement?.editable && copyWidget()
+}
+
+function duplicate() {
+  if (widgetState.dActiveElement?.uuid === '-1') {
+    return
+  } else if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement?.uuid, 'editable')) {
+    return
+  }
+  !widgetState.dActiveElement?.editable && duplicateOne()
 }
 
 let pasteImageFile: any = null
