@@ -50,7 +50,7 @@ export const wQrcodeSetting: TWQrcodeSetting = {
   dotRotation: 270,
   dotColor: '#35495E',
   dotColor2: '#35495E',
-  value: 'https://xp.palxp.cn',
+  value: 'https://example.com',
   setting: [],
   record: {
     width: 0,
