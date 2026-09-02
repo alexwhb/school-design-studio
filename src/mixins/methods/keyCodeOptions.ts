@@ -94,12 +94,15 @@ function isTyping() {
  * selected underneath should still be there afterwards.
  */
 function escape() {
+  // The overlay first, and before the text: a picker open over a text box is
+  // what the key was aimed at, and taking the caret out of the words being
+  // coloured as well is a step nobody asked for.
+  if (escapeHitOverlay()) return
   const editing = document.activeElement as HTMLElement | null
   if (editing?.isContentEditable) {
     editing.blur()
     return
   }
-  if (escapeHitOverlay()) return
   // An armed tool has nothing selected behind it to drop, so this is the whole
   // step rather than the first half of one.
   if (controlState.dDrawTool) {
