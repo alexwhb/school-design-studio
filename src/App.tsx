@@ -1,5 +1,6 @@
-import type { ComponentType } from 'react'
+import { useEffect, useState, type ComponentType } from 'react'
 import { EditorModeContext, type EditorMode } from '@/common/hooks/useEditorMode'
+import { loadBrandKit } from '@/common/methods/brandKit'
 import { TooltipProvider } from '@/components/ui/Tooltip'
 import Draw from './views/Draw'
 import Html from './views/Html'
@@ -25,13 +26,28 @@ const screens: Record<EditorMode, ComponentType> = {
 export default function App() {
   const mode = resolveMode()
   const Screen = screens[mode]
+  // The brand kit is read before the screen mounts, as DesignStudio does for
+  // the embed, so a template opened by id is filled in from it. It is one
+  // small row; a browser that will not open the database gets an empty kit.
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    void loadBrandKit().finally(() => {
+      if (!cancelled) setReady(true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
   return (
     <div id="app-view">
-      <EditorModeContext.Provider value={mode}>
-        <TooltipProvider>
-          <Screen />
-        </TooltipProvider>
-      </EditorModeContext.Provider>
+      {ready ? (
+        <EditorModeContext.Provider value={mode}>
+          <TooltipProvider>
+            <Screen />
+          </TooltipProvider>
+        </EditorModeContext.Provider>
+      ) : null}
     </div>
   )
 }

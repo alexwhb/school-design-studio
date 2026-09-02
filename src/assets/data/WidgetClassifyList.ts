@@ -6,11 +6,15 @@
  * @LastEditTime: 2024-03-01 20:55:51
  */
 
-import type { CSSProperties } from 'react'
+import type { ComponentType, CSSProperties } from 'react'
+import { BrandIcon } from '@/components/ui/icons'
 
 export type TWidgetClassifyData = {
   name: string
+  /** A glyph from the icon font, or '' when `Icon` draws the tab instead. */
   icon: string
+  /** An SVG icon, for a tab the icon font has no glyph for. */
+  Icon?: ComponentType<{ className?: string }>
   show: boolean
   component: string
   style?: CSSProperties
@@ -59,5 +63,12 @@ export default [
     icon: 'icon-shangchuan',
     show: false,
     component: 'user-wrap',
+  },
+  {
+    name: 'Brand',
+    icon: '',
+    Icon: BrandIcon,
+    show: false,
+    component: 'brand-wrap',
   },
 ] as TWidgetClassifyData[]

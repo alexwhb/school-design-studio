@@ -1,10 +1,11 @@
 /**
  * The browser-side database, and the only place its schema is written down.
  *
- * Two things live in here: the pictures someone uploads (see localUploads.ts)
- * and the design they are working on (see localDesigns.ts). Both used to belong
- * to a backend this fork does not have, and both are the seam to re-point at
- * one that does — swap the bodies of the modules above, not this file.
+ * Three things live in here: the pictures someone uploads (see localUploads.ts),
+ * the design they are working on (see localDesigns.ts) and the school's brand
+ * kit (see brandKit.ts). All of them used to belong, or would belong, to a
+ * backend this fork does not have, and all are the seam to re-point at one
+ * that does — swap the bodies of the modules above, not this file.
  *
  * IndexedDB rather than localStorage because localStorage caps out around 5MB
  * across the whole origin, which one phone photo can spend on its own.
@@ -15,7 +16,7 @@
  */
 
 const DB_NAME = 'design-studio'
-const DB_VERSION = 3
+const DB_VERSION = 4
 
 export const STORES = {
   /** Uploaded and pasted pictures, keyed by a generated id. */
@@ -25,6 +26,8 @@ export const STORES = {
   /** One row per page of a saved design, so a save can rewrite just the page
    *  that changed rather than the whole deck. See localDesigns.ts. */
   designPages: 'designPages',
+  /** The school's brand kit: one row, keyed 'kit'. See brandKit.ts. */
+  brand: 'brand',
 } as const
 
 export type StoreName = (typeof STORES)[keyof typeof STORES]

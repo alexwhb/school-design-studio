@@ -1,0 +1,36 @@
+.el-dialog.ds-apply-brand {
+  .ds-apply-brand__line {
+    margin: 0 0 @space-3;
+    font-size: @text-base;
+    line-height: 1.5;
+    color: @ink;
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: @text-sm;
+      padding: 1px 4px;
+      border-radius: @radius-sm - 2px;
+      background: @surface-2;
+    }
+    &--quiet {
+      margin: @space-4 0 0;
+      color: @ink-3;
+      font-size: @text-sm;
+    }
+  }
+  .ds-apply-brand__option {
+    padding: @space-3;
+    .control-surface();
+    background: @surface-2;
+  }
+  .ds-apply-brand__note {
+    margin: @space-2 0 0;
+    font-size: @text-sm;
+    line-height: 1.45;
+    color: @ink-3;
+  }
+  .el-dialog__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: @space-2;
+  }
+}

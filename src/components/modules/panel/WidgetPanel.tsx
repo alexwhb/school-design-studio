@@ -47,7 +47,7 @@ const WidgetPanel = forwardRef<WidgetPanelHandle>(function WidgetPanel(_props, r
                   onClick={() => clickClassify(index)}
                 >
                   <span className="icon-box">
-                    <i className={cx('iconfont', 'rail-icon', item.icon)} style={item.style} />
+                    {item.Icon ? <item.Icon className="rail-icon" /> : <i className={cx('iconfont', 'rail-icon', item.icon)} style={item.style} />}
                   </span>
                   <span className="classify-name">{item.name}</span>
                 </button>

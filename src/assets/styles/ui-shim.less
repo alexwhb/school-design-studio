@@ -48,6 +48,17 @@
   border: 1px solid var(--el-border-color-light);
 }
 
+/*
+ * Element Plus hangs its select list inside an `el-scrollbar` that caps the
+ * height; ours is a plain list, so a select with thirty options in it — the
+ * font pickers in the Brand panel — ran off the bottom of the window and the
+ * last two thirds could not be clicked at all.
+ */
+.el-select__popper .el-select-dropdown__list {
+  max-height: 274px;
+  overflow-y: auto;
+}
+
 .el-dropdown-menu__item .ds-dropdown-item-inner {
   display: flex;
   align-items: center;

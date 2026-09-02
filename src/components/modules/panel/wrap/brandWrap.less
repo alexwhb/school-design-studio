@@ -1,0 +1,221 @@
+.brand-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+
+  &__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: @space-2 @panel-gutter @space-6;
+  }
+  // Pinned under the list, so it is reachable without scrolling past the
+  // details it applies.
+  &__footer {
+    flex: none;
+    padding: @space-3 @panel-gutter;
+    border-top: 1px solid @line;
+    background: @surface;
+    .el-button {
+      width: 100%;
+      margin: 0;
+    }
+  }
+
+  .ds-section + .ds-section {
+    margin-top: @space-3;
+  }
+
+  .brand-hint {
+    margin: @space-2 0 0;
+    font-size: @text-sm;
+    line-height: 1.45;
+    color: @ink-3;
+  }
+
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: @space-3;
+    margin-bottom: @space-2;
+    &__thumb {
+      flex: none;
+      width: 72px;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      .control-surface();
+      background-size: 8px 8px;
+      img {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+      }
+    }
+    &__actions {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: @space-1;
+      .el-button {
+        margin: 0;
+      }
+    }
+  }
+  .brand-upload {
+    display: block;
+    width: 100%;
+    .el-button {
+      width: 100%;
+      margin: 0;
+      .iconfont {
+        margin-right: 6px;
+      }
+    }
+  }
+
+  .brand-colours {
+    display: flex;
+    flex-wrap: wrap;
+    gap: @space-2;
+    padding-top: 2px;
+  }
+  .brand-swatch {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    &__chip {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: @radius-sm;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px @line-strong;
+      transition: transform 0.12s ease;
+      &:hover {
+        transform: scale(1.06);
+      }
+      &:focus-visible {
+        .focus-ring();
+      }
+    }
+    // Shown on hover, the way the layer list shows the state a row is not in.
+    &__remove {
+      .icon-button();
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px @line;
+      font-size: 10px;
+      opacity: 0;
+      svg {
+        width: 10px;
+        height: 10px;
+      }
+    }
+    &:hover &__remove,
+    &__remove:focus-visible {
+      opacity: 1;
+    }
+    &--add {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      .control-surface();
+      border-style: dashed;
+      border-radius: @radius-sm;
+      color: @ink-3;
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      &:hover {
+        border-color: @accent;
+        color: @accent;
+      }
+      &:focus-visible {
+        .focus-ring();
+      }
+    }
+  }
+  .brand-add {
+    .el-button {
+      width: 100%;
+      margin: @space-3 0 0;
+    }
+  }
+
+  .brand-font {
+    display: flex;
+    align-items: center;
+    gap: @space-2;
+    margin-bottom: @space-2;
+    &__label {
+      flex: none;
+      width: 64px;
+      font-size: @text-sm;
+      color: @ink-2;
+    }
+    &__select {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .brand-field {
+    margin-bottom: @space-2;
+    &:last-child {
+      margin-bottom: 0;
+    }
+    &__label {
+      .field-label();
+    }
+  }
+
+  .brand-token {
+    display: flex;
+    align-items: center;
+    gap: @space-2;
+    width: 100%;
+    padding: 6px @space-2;
+    margin-bottom: @space-1;
+    .control-surface();
+    border-radius: @radius-sm;
+    color: @ink;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.12s ease, background-color 0.12s ease;
+    &:hover {
+      border-color: @accent-border;
+      background: @accent-soft;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+    code {
+      flex: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: @text-xs;
+    }
+    &__value {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: right;
+      font-size: @text-sm;
+      color: @ink-3;
+    }
+  }
+}
