@@ -263,7 +263,7 @@ export default function WTextStyle() {
         />
       </div>
 
-      <div style={{ flexWrap: 'nowrap' }} className="line-layout style-item text-colour">
+      <div className="line-layout line-layout--tight style-item text-colour">
         <ColorSelect value={active.color} label="Colour" onValueChange={changeColor} />
       </div>
       {swatches.length ? (
@@ -290,10 +290,10 @@ export default function WTextStyle() {
           onSelect={selectTextEffect}
         />
       </div>
-      <IconItemSelect className="style-item" data={layerIconList} onFinish={layerAction} />
-      <IconItemSelect className="style-item" data={alignIconList} onFinish={alignAction} />
+      <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
+      <IconItemSelect className="style-item" label="Align" data={alignIconList} onFinish={alignAction} />
 
-      <div style={{ marginTop: 10 }} className="line-layout style-item">
+      <div className="line-layout style-item">
         <TextInputArea value={textToLines(active.text).join('\n')} onChange={(value) => finish('text', applyListStyle(value, listStyle))} />
       </div>
     </div>

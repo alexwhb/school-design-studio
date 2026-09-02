@@ -135,7 +135,7 @@ export default function WImageStyle() {
   const radiusMax = Math.min(Number(active.record?.width), Number(active.record?.height))
 
   return (
-    <div id="w-image-style" className="ds-image-style">
+    <div className="ds-image-style">
       <PanelSections value={activeNames} onChange={setActiveNames}>
         <PanelSection name="1" title="Size and position">
           <div className="line-layout">
@@ -214,7 +214,7 @@ export default function WImageStyle() {
           </div>
         </PanelSection>
         <br />
-        <IconItemSelect className="style-item" label="" data={layerIcons} onFinish={layerAction} />
+        <IconItemSelect className="style-item" label="Arrange" data={layerIcons} onFinish={layerAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
       </PanelSections>

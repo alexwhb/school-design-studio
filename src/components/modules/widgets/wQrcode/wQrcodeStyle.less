@@ -1,47 +1,25 @@
-#w-image-style.ds-qrcode-style {
+.ds-qrcode-style {
   height: 100%;
   width: 100%;
 
-  .slide-wrap {
-    width: 100%;
-    padding: 16px;
-    background: @surface-2;
-    border-radius: 6px;
-  }
-  .line-layout {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    row-gap: 8px;
-    width: 100%;
-  }
-  .style-item {
-    margin-bottom: 10px;
-  }
-  .setting-list {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    width: 100%;
-  }
   .options {
     &__upload {
       width: auto;
       display: inline-block;
     }
   }
+  // Was 340px scaled to 0.94 to make it fit a 288px panel — a control shrunk
+  // to hide that it had been given a width the panel never had.
   .selector {
-    width: 340px;
-    transform: scale(0.94);
+    width: 100%;
   }
   .logo__layout {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
+    gap: @space-2;
   }
   .logo {
-    height: 40px;
+    height: @control-h-lg;
   }
 }

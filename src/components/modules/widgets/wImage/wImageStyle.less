@@ -1,30 +1,12 @@
-#w-image-style.ds-image-style {
+.ds-image-style {
   height: 100%;
   width: 100%;
 
-  .line-layout {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    row-gap: 8px;
-    width: 100%;
-  }
-  .style-item {
-    margin-bottom: 10px;
-  }
-  .setting-list {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    width: 100%;
-  }
   .options {
-    margin-bottom: 0.7rem;
+    margin-bottom: @field-gap;
     &__upload {
       width: auto;
-      margin-left: 10px;
+      margin-left: @space-2;
       display: inline-block;
     }
     .icon {
@@ -32,16 +14,12 @@
     }
   }
 
-  .slide-wrap {
-    margin-top: 18px;
-    width: 100%;
-    padding: 16px;
-    background: @surface-2;
-    border-radius: 6px;
-  }
 
+  // Shares the row with the buttons either side of it rather than claiming a
+  // fixed width the 288px panel cannot always give it.
   .inner-bar {
-    margin: 0 10px;
-    width: 240px;
+    flex: 1;
+    min-width: 0;
+    margin: 0 @space-2;
   }
 }

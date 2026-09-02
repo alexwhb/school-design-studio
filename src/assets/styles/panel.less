@@ -1,0 +1,41 @@
+// The layout classes every widget's settings panel uses.
+//
+// Each of the five wrote these out for itself, and they had drifted: the row
+// was identical in all five, the field gap was 14px in one and 10px in the
+// rest, and the slider group had three different treatments — bare in text, a
+// tinted well with a top margin in image, the same well without the margin in
+// shapes and QR codes. `.setting-list` was declared four times and used by
+// none of them.
+
+// A row of controls sharing the panel's width — X and Y, W and H, a label and
+// its value. Wraps, and keeps the vertical gap when it does.
+.line-layout {
+  .panel-row();
+}
+
+// The row is meant to stay on one line: a control and the button that acts on
+// it, not two fields that can stack.
+.line-layout--tight {
+  flex-wrap: nowrap;
+}
+
+// The space under one control before the next one starts.
+.style-item {
+  .panel-field();
+}
+
+// Controls grouped by the space around them rather than by a tinted box. The
+// editor has one surface for panels; a well inside a panel is a second one,
+// and it made the same three sliders look like a different kind of setting
+// depending on which element was selected.
+.slide-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: @field-gap;
+  width: 100%;
+}
+
+// A section's worth of separation, for the rare block that is not a section.
+.panel-gap {
+  margin-top: @section-gap;
+}

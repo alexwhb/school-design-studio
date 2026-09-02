@@ -47,7 +47,7 @@ export default function WQrcodeStyle() {
   }
 
   return (
-    <div id="w-image-style" className="ds-qrcode-style">
+    <div className="ds-qrcode-style">
       <PanelSections value={activeNames} onChange={setActiveNames}>
         <PanelSection name="1" title="Size and position">
           <div className="line-layout">
@@ -58,7 +58,7 @@ export default function WQrcodeStyle() {
           </div>
         </PanelSection>
         <PanelSection name="2" title="Style">
-          <div style={{ flexWrap: 'nowrap' }} className="line-layout">
+          <div className="line-layout line-layout--tight">
             <Select
               value={active.dotColorType}
               options={localization.dotColorTypes.map((c) => ({ label: c.value, value: c.key }))}
@@ -71,7 +71,7 @@ export default function WQrcodeStyle() {
               onChange={(value) => finish('dotType', value)}
             />
           </div>
-          <div style={{ flexWrap: 'nowrap', marginTop: '1rem' }} className="line-layout">
+          <div className="line-layout line-layout--tight panel-gap">
             <ColorSelect value={active.dotColor} onValueChange={(value) => finish('dotColor', value)} />
             <div style={{ display: active.dotColorType !== 'single' ? undefined : 'none', width: '100%' }}>
               <ColorSelect value={active.dotColor2} onValueChange={(value) => finish('dotColor2', value)} />
@@ -111,7 +111,7 @@ export default function WQrcodeStyle() {
           </div>
         </PanelSection>
         <br />
-        <IconItemSelect className="style-item" label="" data={layerIconList} onFinish={layerAction} />
+        <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
       </PanelSections>

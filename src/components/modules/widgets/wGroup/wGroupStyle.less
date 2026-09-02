@@ -2,30 +2,11 @@
   height: 100%;
   width: 100%;
 
-  .line-layout {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    row-gap: 8px;
-    width: 100%;
-  }
   .select {
-    margin-bottom: 10px;
-  }
-  .ungroup {
-    background-color: @accent;
-    color: @accent-on;
-    cursor: pointer;
-    margin: 10px;
-    padding: 5px;
-    text-align: center;
-    &:hover {
-      background-color: @accent-hover;
-    }
+    margin-bottom: @field-gap;
   }
   .block-btn {
     width: 100%;
-    margin-bottom: 1rem;
+    margin-bottom: @field-gap;
   }
 }

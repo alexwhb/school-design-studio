@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
 import layerIconList from '@/assets/data/LayerIconList'
+import Button from '@/components/ui/Button'
 import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import { widgetState } from '@/store/state'
 import { ungroup, updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
@@ -43,9 +44,9 @@ export default function WGroupStyle() {
           </div>
         </PanelSection>
         <PanelSection name="2" title="Style">
-          <div className="ungroup style-item" onClick={() => ungroup(String(uuid))}>
+          <Button className="block-btn" plain onClick={() => ungroup(String(uuid))}>
             Ungroup
-          </div>
+          </Button>
           <NumberSlider
             value={active.opacity}
             className="style-item"
@@ -54,9 +55,8 @@ export default function WGroupStyle() {
             maxValue={1}
             onChange={(value) => finish('opacity', value)}
           />
-          <br />
-          <IconItemSelect className="style-item" label="" data={layerIconList} onFinish={layerAction} />
-          <IconItemSelect label="" data={alignIconList} onFinish={alignAction} />
+          <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
+          <IconItemSelect label="Align" data={alignIconList} onFinish={alignAction} />
         </PanelSection>
       </PanelSections>
     </div>

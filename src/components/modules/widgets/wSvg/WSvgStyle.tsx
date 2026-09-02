@@ -41,7 +41,7 @@ export default function WSvgStyle() {
   }
 
   return (
-    <div id="w-image-style" className="ds-svg-style">
+    <div className="ds-svg-style">
       <PanelSections value={activeNames} onChange={setActiveNames}>
         <PanelSection name="1" title="Size and position">
           <div className="line-layout">
@@ -76,7 +76,7 @@ export default function WSvgStyle() {
           </div>
         </PanelSection>
         <br />
-        <IconItemSelect className="style-item" label="" data={layerIconList} onFinish={layerAction} />
+        <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
       </PanelSections>
