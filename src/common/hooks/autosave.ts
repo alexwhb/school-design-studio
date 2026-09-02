@@ -97,7 +97,10 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
       if (!watching) return
       clearTimeout(timer)
       timer = setTimeout(() => {
-        void write()
+        // The store reports a change of selection as readily as a change of
+        // artwork, and a selection is not worth a write — nor the "pick up
+        // where you left off?" that an empty draft earns on the next visit.
+        if (isDirty()) void write()
       }, DEBOUNCE)
     }
 
