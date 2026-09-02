@@ -189,6 +189,10 @@ export type TControlState = {
   dPathEditUuid: string
   /** Snap moves and resizes to other objects, the page and the guides */
   dSnapEnabled: boolean
+  /** Draw a grid over the page, and let things line up on it */
+  dShowGrid: boolean
+  /** How far apart the grid's lines are, in design pixels. See GRID_SIZES. */
+  dGridSize: number
   /**
    * The shape tool waiting for a drag on the page, or null when the pointer is
    * an ordinary pointer. The name of the shape it draws rather than a flag, so

@@ -3,8 +3,9 @@ import { useSnapshot } from 'valtio'
 import Dropdown, { DropdownItem } from '@/components/ui/DropdownMenu'
 import { CheckIcon } from '@/components/ui/icons'
 import useSpellcheck from '@/common/hooks/useSpellcheck'
-import { controlState } from '@/store/state'
-import { toggleSnapEnabled } from '@/store/control'
+import { cx } from '@/utils/dom'
+import { GRID_SIZES, controlState } from '@/store/state'
+import { setGridSize, toggleShowGrid, toggleSnapEnabled } from '@/store/control'
 import './folder.less'
 
 type Props = {
@@ -31,7 +32,7 @@ export default function Folder({ onSelect, showGuides, children }: Props) {
 
   // Snapping is the editor's own state, so unlike the rulers above it needs no
   // help from the toolbar to know whether it is on.
-  const { dSnapEnabled: snapEnabled } = useSnapshot(controlState)
+  const { dSnapEnabled: snapEnabled, dShowGrid: showGrid, dGridSize: gridSize } = useSnapshot(controlState)
 
   const openPSD = () => {
     window.open('/psd', '_blank')
@@ -81,6 +82,40 @@ export default function Folder({ onSelect, showGuides, children }: Props) {
                   <CheckIcon />
                 </i>
               ) : null}
+            </div>
+          </DropdownItem>
+          <DropdownItem onSelect={toggleShowGrid}>
+            <div className="item item--toggle">
+              <span>Show grid</span>
+              {showGrid ? (
+                <i className="el-icon tick">
+                  <CheckIcon />
+                </i>
+              ) : null}
+            </div>
+          </DropdownItem>
+          {/*
+            The spacings sit on their own row rather than behind a submenu: it
+            is three numbers, and putting them in front of you is shorter than
+            opening anything. Choosing one turns the grid on, since asking for
+            25px squares and being given none would be a strange answer. The
+            menu is held open so you can see the page change behind it.
+          */}
+          <DropdownItem closeOnSelect={false}>
+            <div className="item item--toggle">
+              <span>Grid spacing</span>
+              <span className="grid-sizes">
+                {GRID_SIZES.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    className={cx('grid-size', { 'is-on': showGrid && gridSize === size })}
+                    onClick={() => setGridSize(size)}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </span>
             </div>
           </DropdownItem>
           <DropdownItem onSelect={toggleSpellcheck}>

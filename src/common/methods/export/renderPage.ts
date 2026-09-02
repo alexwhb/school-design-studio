@@ -229,6 +229,11 @@ async function capture(el: HTMLElement, scale: number): Promise<string | null> {
   // Only `renderWidget` captures a single element, and its one caller — the
   // .pptx export — places the shadow on the slide itself, so drop it here.
   clone.style.filter = 'none'
+  // Editing furniture that lives inside the page rather than over it — the grid
+  // — marks itself so that it can be taken out of the copy. Hiding it while the
+  // export runs would make it flicker on screen for every page of a deck; the
+  // clone is a copy nobody is looking at, so it is the right place to do it.
+  clone.querySelectorAll('[data-export="off"]').forEach((el) => el.remove())
   document.body.appendChild(clone)
   try {
     await rasterizeUnsupported(clone, scale)

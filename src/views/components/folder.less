@@ -13,3 +13,28 @@
     }
   }
 }
+
+// The three grid spacings, shown in the row rather than behind a submenu.
+.ds-folder-menu .grid-sizes {
+  display: flex;
+  gap: @space-1;
+  .grid-size {
+    background: none;
+    border: 1px solid @line;
+    border-radius: @radius-sm;
+    color: @ink-2;
+    cursor: pointer;
+    font-size: @text-xs;
+    line-height: 1;
+    padding: 3px 6px;
+    &:hover {
+      border-color: @line-strong;
+      color: @ink;
+    }
+    &.is-on {
+      background: @accent-soft;
+      border-color: @accent-border;
+      color: @accent;
+    }
+  }
+}

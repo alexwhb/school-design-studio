@@ -1,4 +1,4 @@
-import { SNAP_STORAGE_KEY, controlState } from './state'
+import { GRID_SIZES, GRID_SIZE_STORAGE_KEY, GRID_STORAGE_KEY, SNAP_STORAGE_KEY, controlState } from './state'
 import type { TControlState } from './types'
 
 export function setdMoving(bool: boolean) {
@@ -76,6 +76,40 @@ export function setSnapEnabled(enabled: boolean) {
 
 export function toggleSnapEnabled() {
   setSnapEnabled(!controlState.dSnapEnabled)
+}
+
+/**
+ * The grid. Kept beside snapping because it is the same kind of thing — a way
+ * the editor helps you place something, remembered between sessions and
+ * belonging to the person rather than to the design, so it is never saved into
+ * a file and never travels to whoever opens it next.
+ */
+export function setShowGrid(show: boolean) {
+  controlState.dShowGrid = show
+  try {
+    localStorage.setItem(GRID_STORAGE_KEY, show ? 'on' : 'off')
+  } catch {
+    /* see readStoredGrid */
+  }
+}
+
+export function toggleShowGrid() {
+  setShowGrid(!controlState.dShowGrid)
+}
+
+/**
+ * Chooses how fine the grid is, and turns it on — asking for 25px squares and
+ * getting no squares at all would be a strange answer to the question.
+ */
+export function setGridSize(size: number) {
+  if (!GRID_SIZES.includes(size)) return
+  controlState.dGridSize = size
+  try {
+    localStorage.setItem(GRID_SIZE_STORAGE_KEY, String(size))
+  } catch {
+    /* see readStoredGridSize */
+  }
+  setShowGrid(true)
 }
 
 /**

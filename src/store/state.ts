@@ -56,6 +56,39 @@ function readStoredSnap(): boolean {
   }
 }
 
+/** The grid, remembered the same way — both whether it is on and how fine it is. */
+export const GRID_STORAGE_KEY = 'ds_grid'
+export const GRID_SIZE_STORAGE_KEY = 'ds_grid_size'
+
+/**
+ * The spacings offered. Three is enough: a coarse one to lay a page out on, a
+ * middling default, and a fine one for lining up small things. Anything the
+ * store is handed that is not on this list is ignored, so a stored value from a
+ * future build cannot leave someone with a grid they have no way to change.
+ */
+export const GRID_SIZES = [25, 50, 100]
+
+const GRID_SIZE_DEFAULT = 50
+
+function readStoredGrid(): boolean {
+  try {
+    // Absence of a choice means off: a grid nobody asked for is clutter over
+    // artwork, which is the opposite of snapping's default.
+    return localStorage.getItem(GRID_STORAGE_KEY) === 'on'
+  } catch {
+    return false
+  }
+}
+
+function readStoredGridSize(): number {
+  try {
+    const stored = Number(localStorage.getItem(GRID_SIZE_STORAGE_KEY))
+    return GRID_SIZES.includes(stored) ? stored : GRID_SIZE_DEFAULT
+  } catch {
+    return GRID_SIZE_DEFAULT
+  }
+}
+
 export const controlState = proxy<TControlState>({
   dMoving: false,
   dDraging: false,
@@ -68,6 +101,8 @@ export const controlState = proxy<TControlState>({
   dPathEditUuid: '-1',
   dSpaceDown: false,
   dSnapEnabled: readStoredSnap(),
+  dShowGrid: readStoredGrid(),
+  dGridSize: readStoredGridSize(),
   dDrawTool: null,
 })
 

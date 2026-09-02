@@ -30,6 +30,8 @@ type TSnapOptions = {
   exclude?: string
   /** Ruler guides, in page coordinates */
   guides?: TGuidelinesData
+  /** Grid spacing in page pixels, when the grid is on. 0 or absent means no grid. */
+  grid?: number
 }
 
 /** De-duplicated and sorted, so a snap target is offered once. */
@@ -45,9 +47,14 @@ function tidy(values: number[]): number[] {
  * `width` and `height` describe. Callers that care about rotated objects should
  * leave them alone — Moveable handles those against their real bounds.
  */
-export default function getSnapPositions(widgets: TdWidgetData[], page: TPageState, { exclude, guides }: TSnapOptions = {}): TSnapPositions {
+export default function getSnapPositions(widgets: TdWidgetData[], page: TPageState, { exclude, guides, grid }: TSnapOptions = {}): TSnapPositions {
   const x: number[] = [0, page.width / 2, page.width, ...(guides?.verticalGuidelines ?? [])]
   const y: number[] = [0, page.height / 2, page.height, ...(guides?.horizontalGuidelines ?? [])]
+
+  if (grid && grid > 0) {
+    for (let at = grid; at < page.width; at += grid) x.push(at)
+    for (let at = grid; at < page.height; at += grid) y.push(at)
+  }
 
   for (const widget of widgets) {
     // Children of a group snap as part of their parent, not on their own.

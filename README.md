@@ -326,6 +326,28 @@ without it, square and the diagonals — every multiple of 45° — pull the han
 in from a couple of degrees away, gently enough that 43° is still there if 43°
 is what you want.
 
+## Grid
+
+**File → Show grid** rules the page into squares, and **Grid spacing** on the
+row underneath sets how big they are: 25, 50 or 100 design pixels. Choosing a
+spacing turns the grid on, because asking for 25px squares and being handed none
+would be a strange answer. The setting belongs to you rather than to the design
+— it is remembered between sessions, like the snapping toggle and the theme, and
+it never travels to whoever opens the file next.
+
+With the grid on, dragging and resizing line up on it as well as on the other
+things on the page, so a row of certificates or a seating plan comes out even
+without measuring anything. Grid snapping rides on the same **Snap to objects**
+toggle: turn snapping off and the grid is drawn but nothing sticks to it.
+
+The grid is drawn for you and nobody else. It is not in the PNG, not in the PDF,
+not in either PowerPoint export, not in the page-strip thumbnails and not in the
+presenter. It sits inside the page — which is how it scales with the zoom
+without any arithmetic of its own — and marks itself `data-export="off"`, which
+the exporter strips from its copy of the page before rendering. The lines
+thicken as you zoom out so a grid line stays a hairline at 25% instead of fading
+away.
+
 ## Outlines and keylines
 
 Shapes and photographs both take a **Border** in the settings panel: a

@@ -92,6 +92,11 @@
   // not change with the theme, rather than over app chrome.
   --ds-guide-line: #f33;
   --ds-guide-casing: rgba(255, 255, 255, 0.92);
+  // The grid. One value for both themes, for the same reason the guides have
+  // one: it is drawn over the user's artwork, not over app chrome. A mid grey
+  // at low opacity is the only thing that stays visible on a white flyer and on
+  // a dark photograph without shouting on either.
+  --ds-grid-line: rgba(128, 128, 128, 0.4);
   // Ruler gutter (see LineGuides.tsx, which reads these through getComputedStyle).
   --ds-ruler-bg: #f3f8fa;
   --ds-ruler-line: #acbac1;

@@ -205,6 +205,16 @@ export default function Moveable() {
         values.push({ element, top: false, bottom: false })
       })
 
+      // The grid's lines, when it is on. Stand-ins inside the page for the same
+      // reason the guides have them, and suppressed the same way: a grid line
+      // is a line, not a box.
+      canvas.querySelectorAll('.grid-snap-v').forEach((element) => {
+        values.push({ element, left: false, right: false })
+      })
+      canvas.querySelectorAll('.grid-snap-h').forEach((element) => {
+        values.push({ element, top: false, bottom: false })
+      })
+
       moveable.elementGuidelines = values
     }
 
@@ -267,6 +277,7 @@ export default function Moveable() {
       const positions = getSnapPositions(widgetState.dWidgets, canvasState.dPage, {
         exclude: widget.uuid,
         guides: canvasState.guidelines,
+        grid: controlState.dShowGrid ? controlState.dGridSize : 0,
       })
       return snapBox(
         { left: position.left, top: position.top, width: Number(widget.width), height: Number(widget.height) },
@@ -840,6 +851,19 @@ export default function Moveable() {
       moveable.snappable = enabled
     })
 
+    /**
+     * Turning the grid on or changing how fine it is replaces every stand-in
+     * inside the page, so what there is to line up against has to be gathered
+     * again. A frame later, once React has drawn the new ones.
+     */
+    const unsubGrid = subscribeSelector(
+      controlState,
+      () => `${controlState.dShowGrid ? 1 : 0}:${controlState.dGridSize}`,
+      () => {
+        requestAnimationFrame(buildElementGuidelines)
+      },
+    )
+
     return () => {
       clearTimeout(emptyTimer)
       hideRotateReadout()
@@ -853,6 +877,7 @@ export default function Moveable() {
       unsubGuides()
       unsubLayers()
       unsubSnap()
+      unsubGrid()
       unsubLock()
       selecto.destroy()
       moveable?.destroy()

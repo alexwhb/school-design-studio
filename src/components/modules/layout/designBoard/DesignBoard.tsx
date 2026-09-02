@@ -14,6 +14,7 @@ import { useEditorMode } from '@/common/hooks/useEditorMode'
 import type { TdWidgetData, TPageState } from '@/store/types'
 import { widgetComponents } from '../../widgets/registry'
 import { cx } from '@/utils/dom'
+import PageGrid from './comps/PageGrid'
 import ResizePage from './comps/ResizePage'
 import SnapGuides from './comps/SnapGuides'
 import './designBoard.less'
@@ -399,6 +400,8 @@ export default function DesignBoard({
             onDrop={drop as any}
             onMouseUp={drop}
           >
+            {/* Under the artwork, and out of every export: see PageGrid */}
+            {needTools ? <PageGrid width={dPage.width} height={dPage.height} zoom={dZoom} /> : null}
             <Layers
               needTools={needTools}
               pageUuid={dPage.uuid}

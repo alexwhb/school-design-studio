@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { WIDGET, addText, boxSelectAll, openEditor, rotateWidgetBy, selectFirstWidget, widgetRotation } from './helpers'
+import { WIDGET, addText, boxSelectAll, canvasBox, downloadBytes, openEditor, pixelOf, rotateWidgetBy, selectFirstWidget, widgetBox, widgetRotation } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
@@ -262,4 +262,100 @@ test('a locked layer can still be clicked, but dragging it goes nowhere', async 
   await expect(page.locator('#w-text-style')).toBeVisible()
   expect(await widgetLefts(page)).toEqual(before)
   await expect(page.locator('.el-message', { hasText: 'locked' })).toBeVisible()
+})
+
+/* ------------------------------------------------------------------- grid */
+
+/** True when an edge or the middle of a box sits exactly on a 50px grid line. */
+function onGrid(start: string, size: string, step = 50) {
+  const at = Number.parseFloat(start)
+  const length = Number.parseFloat(size)
+  return [at, at + length / 2, at + length].some((edge) => edge % step === 0)
+}
+
+async function openFileMenu(page: import('@playwright/test').Page) {
+  await page.getByText('File', { exact: true }).click()
+  await page.waitForTimeout(300)
+}
+
+async function toggleGrid(page: import('@playwright/test').Page) {
+  await openFileMenu(page)
+  await page.getByText('Show grid', { exact: true }).click()
+  await page.waitForTimeout(400)
+}
+
+/** The spacing the grid is actually painted at, read off the overlay itself. */
+function gridStep(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const el = document.querySelector('#page-design-canvas .page-grid') as HTMLElement | null
+    return el ? el.style.getPropertyValue('--ds-grid-step') : null
+  })
+}
+
+test('Show grid draws a grid over the page, at the spacing you pick', async ({ page }) => {
+  await expect(page.locator('#page-design-canvas .page-grid')).toHaveCount(0)
+
+  await toggleGrid(page)
+  await expect(page.locator('#page-design-canvas .page-grid')).toBeVisible()
+  expect(await gridStep(page)).toBe('50px')
+  const at50 = await page.locator('#page-design-canvas .grid-snap-v').count()
+  expect(at50).toBeGreaterThan(1)
+
+  // Finer squares: twice as many lines, and the menu stays open to show it.
+  await openFileMenu(page)
+  await page.locator('.ds-folder-menu .grid-size', { hasText: '25' }).click()
+  await page.waitForTimeout(400)
+  expect(await gridStep(page)).toBe('25px')
+  expect(await page.locator('#page-design-canvas .grid-snap-v').count()).toBeGreaterThan(at50)
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+
+  // And it goes away again.
+  await toggleGrid(page)
+  await expect(page.locator('#page-design-canvas .page-grid')).toHaveCount(0)
+})
+
+test('the grid is drawn for you, not exported', async ({ page }) => {
+  await toggleGrid(page)
+  await expect(page.locator('#page-design-canvas .page-grid')).toBeVisible()
+  await addText(page, 'Heading')
+
+  const { bytes: png } = await downloadBytes(page, () => page.getByRole('button', { name: 'Export' }).click())
+
+  // Straight down the first grid line, in the empty top-left corner of the
+  // page. On screen there is a line here; in the file the page is bare white.
+  for (const x of [50, 51]) {
+    expect(await pixelOf(page, png, x, 20)).toEqual({ r: 255, g: 255, b: 255, a: 255 })
+  }
+  // Taking it out of the copy must not take it off the editor's own page.
+  await expect(page.locator('#page-design-canvas .page-grid')).toBeVisible()
+})
+
+test('a dragged layer lands on the grid', async ({ page }) => {
+  await toggleGrid(page)
+  await addText(page, 'Heading')
+  const widget = page.locator(WIDGET).first()
+  await widget.click({ position: { x: 20, y: 10 } })
+  await page.waitForTimeout(400)
+
+  // Aimed a couple of design pixels short of the lines at 500 and 400 — near
+  // enough for the grid to take it, far enough that landing exactly on them is
+  // the grid's doing and not the drag's.
+  const board = await canvasBox(page)
+  const before = await widgetBox(page)
+  const box = (await widget.boundingBox())!
+  const dx = (502 - Number.parseFloat(before!.left)) * board.scale
+  const dy = (402 - Number.parseFloat(before!.top)) * board.scale
+  await page.mouse.move(box.x + 40, box.y + 10)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 40 + dx, box.y + 10 + dy, { steps: 14 })
+  await page.mouse.up()
+  await page.waitForTimeout(600)
+
+  // One of the three lines a box offers — its two edges and its middle — is
+  // exactly on the grid, which is all snapping ever promises: which edge took
+  // depends on how wide the words are.
+  const landed = await widgetBox(page)
+  expect(onGrid(landed!.left, landed!.width)).toBe(true)
+  expect(onGrid(landed!.top, landed!.height)).toBe(true)
 })

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addText, armShapeTool, clickPoints, openEditor } from './helpers'
+import { addText, armShapeTool, clickPoints, openEditor, pixelOf } from './helpers'
 
 /** The finished-export overlay covers the toolbar until it is closed. */
 async function dismissProgress(page: import('@playwright/test').Page) {
@@ -31,25 +31,6 @@ test('Export writes a PNG of the page', async ({ page }) => {
   expect(bytes.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a')
   expect(bytes.length).toBeGreaterThan(2000)
 })
-
-/** One pixel of a PNG data buffer, decoded by the browser rather than in Node. */
-async function pixelOf(page: import('@playwright/test').Page, png: Buffer, x: number, y: number) {
-  return page.evaluate(
-    async ([data, px, py]) => {
-      const img = new Image()
-      img.src = 'data:image/png;base64,' + data
-      await img.decode()
-      const canvas = document.createElement('canvas')
-      canvas.width = img.naturalWidth
-      canvas.height = img.naturalHeight
-      const ctx = canvas.getContext('2d')!
-      ctx.drawImage(img, 0, 0)
-      const [r, g, b, a] = Array.from(ctx.getImageData(px as number, py as number, 1, 1).data)
-      return { r, g, b, a }
-    },
-    [png.toString('base64'), x, y] as const,
-  )
-}
 
 test('a drop shadow on a photo survives the PNG export', async ({ page }) => {
   await page.locator('#widget-panel .classify-item', { hasText: 'Photos' }).click()
