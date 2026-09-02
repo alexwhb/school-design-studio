@@ -1,0 +1,78 @@
+// The bar over a text selection. It floats like a menu, so it is coloured like
+// one, and stands centred over the selection with its bottom edge at the top.
+.inline-toolbar {
+  position: fixed;
+  z-index: 2200;
+  transform: translate(-50%, -100%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: @popover;
+  border: 1px solid @line;
+  border-radius: @radius;
+  box-shadow: @shadow-pop;
+  user-select: none;
+
+  &__btn {
+    all: unset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: @radius-sm;
+    color: @ink-2;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+
+    i {
+      font-size: 16px;
+    }
+    &:hover {
+      background: @surface-2;
+      color: @ink;
+    }
+    &.active {
+      color: @accent;
+      background: @accent-soft;
+    }
+  }
+  &__svg {
+    width: 16px;
+    height: 16px;
+  }
+  &__rule {
+    width: 1px;
+    height: 16px;
+    margin: 0 3px;
+    background: @line;
+  }
+  // The swatch alone: the value it would print beside itself is what the
+  // picker is for.
+  &__colour {
+    .color__field {
+      height: 26px;
+      padding: 0 5px;
+      border-color: transparent;
+      background: transparent;
+    }
+    .color__value {
+      display: none;
+    }
+  }
+}
+
+.inline-link {
+  display: flex;
+  flex-direction: column;
+  gap: @space-2;
+
+  &__row {
+    display: flex;
+    gap: @space-2;
+    .el-button {
+      margin: 0;
+    }
+  }
+}

@@ -199,6 +199,10 @@ A4, flyers, name badges, display boards.
 
 **Background removal.** New. See below.
 
+**Formatting part of a text box.** New — bold, italic, underline,
+strikethrough, a colour or a link on a selection rather than on the whole box.
+See below.
+
 **Curved text.** New. See below.
 
 **Gradients.** New. See below.
@@ -573,6 +577,123 @@ in order:
 
 `configure({ BACKGROUND_REMOVAL: false })` takes the button away entirely, for a
 deployment that would rather not offer it.
+
+## Formatting part of a text box
+
+Bold one word of a heading, put the date in red, turn a phrase into a link. Every
+other text setting — typeface, size, line height, letter spacing, alignment,
+curve, effects — is still a property of the whole box, and says so.
+
+There are two ways in, and they do the same thing:
+
+- **A small bar floats over the selection** while you are typing: bold, italic,
+  underline, strikethrough, a colour and a link. It is where people look first,
+  because it is where the words are.
+- **The panel's own buttons follow the caret.** With a run of text selected,
+  Bold, Italic, Underline, Strikethrough and Colour apply to that run and show
+  what it already is. With the caret merely sitting in the box they apply to the
+  whole of it. A line between the two rows of buttons says which of the two is
+  about to happen, so nobody has to guess.
+
+**Ctrl+B, Ctrl+I and Ctrl+U** work while typing. **Escape** ends the edit —
+unless a picker or the link field is standing open over the box, which takes the
+first Escape for itself.
+
+**A box that is bold all over stays that way.** Pressing Bold inside a heading
+whose weight belongs to the box takes the weight off the box, rather than
+writing a span that says "not bold". There is no such thing in the markup below
+and no export could carry it. Old designs, whose `fontWeight` and
+`textDecoration` sit on the widget, go on rendering exactly as they did.
+
+### What the markup may be
+
+`text` is still one HTML string. What may be inside it is a short list, and
+every write goes through it:
+
+```
+b/strong   i/em   u   s/strike/del   span[style=color:…]   a[href]   br
+div/p/ul/ol/li
+```
+
+Everything else is read for its words and dropped: fonts, sizes, classes,
+backgrounds, tables, images, stylesheets, scripts. A colour is normalised to
+`#rrggbb`, and a link to an `http`, `https`, `mailto` or `tel` address — a
+`javascript:` URL never gets through the door. Markup is parsed in an inert
+document, so a pasted design cannot even fetch an image on the way past.
+
+The writing is canonical: the same runs always come out as the same string, in
+a fixed order of tags, nested as little as that order allows. That is what keeps
+the box from being rewritten under the caret on every keystroke.
+
+The browser's own editing commands do the work — `document.execCommand` —
+because they keep the caret and the field's own undo stack, which rewriting
+`innerHTML` would throw away. What they produce does not matter. Whether
+Chromium writes `<b>` or `<strong>`, a `<span>` or a `<font>`, it is read back
+into runs and written out again in the one canonical form when the edit is
+stored. That is the whole reason the sanitiser is a parser and a serialiser
+rather than a list of forbidden tags: there is one description of what the
+markup may be, and everything downstream reads it through the same door.
+
+**A paste is plain text** unless it was copied out of one of these boxes, which
+a marker comment in the clipboard's HTML says. So a paste from a web page or a
+Word document arrives as words rather than as 14pt Calibri on a white
+background, and a copy from one text box to another keeps its bold and its
+links.
+
+**Retyping in the panel keeps the formatting.** The text area at the bottom of
+the panel is plain text, and a change made there is nearly always a word or two,
+so the new text is matched against the old line by line and only the characters
+that actually changed lose their styling.
+
+### What survives where
+
+| | Bold, italic, underline, strike | A colour on part of the text | A link |
+| --- | --- | --- | --- |
+| Canvas, thumbnails, presenter | yes | yes | followed in the presenter, in a new tab |
+| Curved text | yes | yes | not marked, and not followed |
+| PowerPoint | yes, as run properties | yes | yes, a real hyperlink |
+| PDF and PNG | yes | yes | no, the page is a picture |
+
+**PowerPoint gets real runs.** A line becomes a paragraph and each formatted
+piece of it a run carrying its own `bold`, `italic`, `underline`, `strike`,
+colour and `hyperlink`, so what comes out is editable text rather than a picture
+of it. A bulleted box still gets real bullets. A curved run is the exception it
+already was, and goes in as a picture.
+
+**A curved line is a character per element**, each drawn and measured in its own
+weight and slant, since a bold glyph is wider than a regular one, and painted in
+its own colour. An underline there is drawn under each character's own box, so
+it follows the arc as a run of short strokes rather than one smooth curve — good
+enough to read as an underline, and the alternative was not drawing it. A link
+is the one thing an arc drops: there is nothing to underline it against and
+nothing to click, so a linked word on a curve is just a word.
+
+**A link is drawn as an underline in the text's own colour**, not in browser
+blue, so it sits in the design like the rest of the line. On the canvas a click
+selects the box; in the presenter it opens the address in a new tab, so the talk
+is still on screen when the tab is closed.
+
+**PDF and PNG are pictures of the page**, so a link in them is not clickable and
+never will be. That is not a gap waiting to be closed: it is what those two
+formats are for here. PowerPoint is the editable route, and it carries the link.
+
+**Find and replace reads straight through the formatting**: "14 June" is found
+whether or not the "14" is bold. A replacement that spans a bold edge lands
+inside the first piece it touched, which is the only reading of "replace this
+run" that leaves the surrounding markup standing. Merge fields fill through the
+same matcher, so `{{name}}` may be styled like any other words. See Find and
+replace above.
+
+Relevant code:
+
+```
+src/utils/widgets/richText.ts     the allowlist: markup to lines of runs and back
+src/components/modules/widgets/wText/
+  inlineFormat.ts    the selection while a box is being typed in, and what the
+                     controls do to it
+  InlineToolbar.tsx  the bar that floats over the selection
+src/common/methods/export/textRuns.ts   the same markup as PowerPoint text runs
+```
 
 ## Curved text
 
@@ -1115,6 +1236,10 @@ suit different jobs:
 Speaker notes go into PowerPoint's own notes pane in either mode. Page
 transitions do not travel at all: pptxgenjs has no API for them.
 
+Text goes in as paragraphs of runs, so a word bolded in the editor is a bolded
+run in the deck and a link is a real hyperlink. See Formatting part of a text
+box above.
+
 A design is stored in CSS pixels, so 1920×1080 read literally at 96 DPI would
 be a 20-inch-wide slide — valid, but nothing like a normal deck, and it merges
 badly into an existing presentation. The longest side is scaled to 13.333in,
@@ -1128,6 +1253,7 @@ src/common/methods/export/
   exportPptx.ts    the mapping from design widgets to slide objects
   exportPdf.ts     the PDF writer, and the pixels-to-paper conversion
   renderPage.ts    renders any page or element to a PNG, restoring editor state
+  textRuns.ts      a text widget's markup as PowerPoint runs
   utils.ts         unit, colour, HTML-to-text and image helpers
 src/views/components/ExportMenu.tsx   the toolbar button, and the quality picker
 ```

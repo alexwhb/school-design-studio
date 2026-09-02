@@ -11,6 +11,12 @@ export type PopoverProps = {
   onOpenChange?: (open: boolean) => void
   trigger?: 'click' | 'hover'
   popperClass?: string
+  /**
+   * Stay open when focus moves elsewhere. For a picker that applies to a text
+   * selection: applying puts focus back in the text, which Radix would
+   * otherwise read as leaving the popover.
+   */
+  keepOpenOnFocusOutside?: boolean
   children: ReactNode
 }
 
@@ -21,7 +27,7 @@ function splitPlacement(placement: string): { side: 'top' | 'bottom' | 'left' | 
   return { side, align }
 }
 
-export default function Popover({ content, placement = 'bottom', width, open, onOpenChange, popperClass, children }: PopoverProps) {
+export default function Popover({ content, placement = 'bottom', width, open, onOpenChange, popperClass, keepOpenOnFocusOutside, children }: PopoverProps) {
   const [internalOpen, setInternalOpen] = useState(false)
   const isOpen = open ?? internalOpen
   const setOpen = (next: boolean) => {
@@ -41,6 +47,7 @@ export default function Popover({ content, placement = 'bottom', width, open, on
           sideOffset={12}
           collisionPadding={8}
           onOpenAutoFocus={(e) => e.preventDefault()}
+          onFocusOutside={keepOpenOnFocusOutside ? (e) => e.preventDefault() : undefined}
           className={cx('el-popover', 'el-popper', 'is-light', 'ds-popper', popperClass || '')}
           style={{ width: width === 'auto' || width === undefined ? 'auto' : typeof width === 'number' ? `${width}px` : width }}
           // See DropdownMenu: a React portal bubbles through the React tree, so

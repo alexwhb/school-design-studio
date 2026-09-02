@@ -19,7 +19,12 @@ import TextWrap from '../../settings/EffectSelect/TextWrap'
 import recolorEffects, { parseColor, replaceEffectColor, type TColorParts } from './recolorEffects'
 import effectColors, { type TEffectColor } from './effectColors'
 import { applyListStyle, textToLines, type TListStyle } from './listMarkup'
+import { retypeText } from '@/utils/widgets/richText'
+import { colourInline, hasInlineSelection, inlineState, toggleInline, type TInlineKind } from './inlineFormat'
 import './wTextStyle.less'
+
+/** The panel's whole-box properties that also exist as formatting on a selection. */
+const INLINE_KINDS: Record<string, TInlineKind> = { fontWeight: 'bold', fontStyle: 'italic', underline: 'underline', 'line-through': 'strike' }
 
 const FONT_SIZE_LIST = [12, 14, 24, 26, 28, 30, 36, 48, 60, 72, 96, 108, 120, 140, 180, 200, 250, 300, 400, 500]
 
@@ -40,6 +45,10 @@ function buildFontLists(brand: TFontItem[] = []) {
 export default function WTextStyle() {
   const snap = useSnapshot(widgetState)
   const active = snap.dActiveElement as any
+  const inline = useSnapshot(inlineState)
+  /** The caret is in this box: the style buttons may be about a selection. */
+  const editing = !!active && inline.uuid === String(active.uuid)
+  const onSelection = editing && inline.selected
   const [activeNames, setActiveNames] = useState<string[]>([])
   const [fontClassList, setFontClassList] = useState<Record<string, any>>({})
 
@@ -54,6 +63,13 @@ export default function WTextStyle() {
     return styleIconList1.map((item) => {
       const next = { ...item, select: false }
       const [unchecked, checked] = item.value
+      const kind = inlineKindOf(item)
+      // With a run of text selected the button says what that run is, since
+      // that is what pressing it will change.
+      if (onSelection && kind) {
+        next.select = inline[kind]
+        return next
+      }
       switch (item.key) {
         case 'fontWeight':
         case 'textDecoration':
@@ -66,7 +82,7 @@ export default function WTextStyle() {
       }
       return next
     })
-  }, [active?.fontWeight, active?.textDecoration, active?.fontStyle, active?.writingMode, active])
+  }, [active?.fontWeight, active?.textDecoration, active?.fontStyle, active?.writingMode, active, onSelection, inline.bold, inline.italic, inline.underline, inline.strike])
 
   const styleIcons2 = useMemo(() => {
     if (!active) return styleIconList2
@@ -121,6 +137,8 @@ export default function WTextStyle() {
    * rewritten before the new colour is written through.
    */
   function changeColor(value: string) {
+    // A selection takes the colour itself, and the box keeps its own.
+    if (hasInlineSelection(uuid) && colourInline(value)) return
     const target = widgetState.dActiveElement as any
     const effects = target?.textEffects
     // The panel can still be holding the widget that was selected a moment ago.
@@ -173,6 +191,10 @@ export default function WTextStyle() {
     const target = widgetState.dActiveElement as any
     if (!target) return
     if (item.key === 'listStyle') return changeListStyle(item.value as TListStyle)
+    // Bold with a word selected is bold on the word — see inlineFormat.ts. The
+    // toggle falls through to the whole box only if the selection has gone.
+    const kind = inlineKindOf(item)
+    if (kind && hasInlineSelection(uuid) && toggleInline(kind)) return
     let value: any = ['textAlign', 'textAlignLast'].includes(item.key || '')
       ? item.value
       : (item.value as any[])[item.select ? 1 : 0]
@@ -198,8 +220,22 @@ export default function WTextStyle() {
     requestAnimationFrame(() => setUpdateRect())
   }
 
+  /**
+   * While the caret is in the box, a press on one of the panel's buttons must
+   * not take focus, and the selection with it, out of the text. Fields still
+   * take it — a size has to be typed into — and so do the pickers, which are
+   * drawn elsewhere in the document and only pass through here in React's
+   * tree; the check is on where the press landed.
+   */
+  function keepCaret(e: React.MouseEvent<HTMLDivElement>) {
+    if (!editing) return
+    const target = e.target as HTMLElement
+    if (!e.currentTarget.contains(target) || target.closest('input, textarea, select, [contenteditable]')) return
+    e.preventDefault()
+  }
+
   return (
-    <div id="w-text-style">
+    <div id="w-text-style" onMouseDown={keepCaret}>
       <PanelSections value={activeNames} onChange={setActiveNames}>
         <PanelSection name="1" title="Size and position">
           <div className="line-layout">
@@ -230,6 +266,9 @@ export default function WTextStyle() {
       </div>
 
       <IconItemSelect className="style-item" data={styleIcons1} onFinish={textStyleAction} />
+      {editing ? (
+        <p className="inline-scope">{onSelection ? 'Bold, italic, underline, strikethrough and colour apply to the selected text.' : 'Select some of the text to style just that part; otherwise the whole box changes.'}</p>
+      ) : null}
       <IconItemSelect className="style-item" data={styleIcons2} onFinish={textStyleAction} />
 
       <div className="style-item slide-wrap">
@@ -273,7 +312,7 @@ export default function WTextStyle() {
       </div>
 
       <div className="line-layout line-layout--tight style-item text-colour">
-        <ColorSelect value={active.color} label="Colour" onValueChange={changeColor} />
+        <ColorSelect value={onSelection && inline.color ? inline.color : active.color} label="Colour" keepOpenOnFocusOutside onValueChange={changeColor} />
       </div>
       {swatches.length ? (
         <div className="style-item effect-palette">
@@ -303,10 +342,18 @@ export default function WTextStyle() {
       <IconItemSelect className="style-item" label="Align" data={alignIconList} onFinish={alignAction} />
 
       <div className="line-layout style-item">
-        <TextInputArea value={textToLines(active.text).join('\n')} onChange={(value) => finish('text', applyListStyle(value, listStyle))} />
+        {/* Retyped rather than replaced, so a corrected word does not cost the
+            line its bold — see retypeText. */}
+        <TextInputArea value={textToLines(active.text).join('\n')} onChange={(value) => finish('text', retypeText(active.text, value, listStyle))} />
       </div>
     </div>
   )
+}
+
+/** Which selection formatting a panel button stands for, if any. */
+function inlineKindOf(item: TIconItemSelectData): TInlineKind | undefined {
+  if (item.key === 'textDecoration') return INLINE_KINDS[String((item.value as string[])[1])]
+  return item.key ? INLINE_KINDS[item.key] : undefined
 }
 
 /**

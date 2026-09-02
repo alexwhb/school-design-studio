@@ -69,3 +69,29 @@
   background: @scrim;
   pointer-events: none;
 }
+
+/*
+ * Formatting inside the box — see utils/widgets/richText.ts for what the
+ * markup may be. A link is drawn as an underline in the text's own colour
+ * rather than browser blue, so it sits in the design like the rest of the
+ * line; the presenter is where it is followed.
+ */
+.edit-text a {
+  color: inherit;
+  text-decoration: underline;
+  cursor: inherit;
+}
+.present .edit-text a {
+  cursor: pointer;
+}
+/*
+ * An effect layer is a copy of the same markup painted in the layer's own
+ * colour — the fill's, or none at all under an outline. A word coloured by
+ * hand carries that colour inline, which would otherwise beat the layer's and
+ * show through the effect. Only a colour is overridden; the layer keeps the
+ * bold and the underlines, which the effect is drawn round.
+ */
+.effect-text span[style],
+.effect-text font {
+  color: inherit !important;
+}

@@ -15,13 +15,15 @@ type Props = {
   width?: string
   modes?: string[]
   className?: string
+  /** See Popover: for a swatch that colours a text selection. */
+  keepOpenOnFocusOutside?: boolean
   onOpenChange?: (open: boolean) => void
   onValueChange?: (value: string) => void
   onFinish?: (value: string) => void
   onChange?: (data: ColorChangeData) => void
 }
 
-export default function ColorSelect({ label = '', value = '', width = '100%', modes = ['Solid'], className, onOpenChange, onValueChange, onChange }: Props) {
+export default function ColorSelect({ label = '', value = '', width = '100%', modes = ['Solid'], className, keepOpenOnFocusOutside, onOpenChange, onValueChange, onChange }: Props) {
   const [innerColor, setInnerColor] = useState('')
   const [open, setOpen] = useState(false)
   // Held here so it survives the popover closing; see ColorPicker.
@@ -61,7 +63,7 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
     <div className={cx('color__select', className || '')} style={{ width }}>
       {label ? <p className="input-label">{label}</p> : null}
       <div className="content">
-        <Popover placement="left-end" width="auto" open={open} onOpenChange={handleOpenChange} content={<ColorPicker value={innerColor} modes={modes} history={history} presets={presets} onHistoryChange={setHistory} onValueChange={handleValueChange} onChange={onChange} />}>
+        <Popover placement="left-end" width="auto" open={open} onOpenChange={handleOpenChange} keepOpenOnFocusOutside={keepOpenOnFocusOutside} content={<ColorPicker value={innerColor} modes={modes} history={history} presets={presets} onHistoryChange={setHistory} onValueChange={handleValueChange} onChange={onChange} />}>
           <div className="color__field">
             <span className="color__chip transparent-bg">
               <span className="color__chip-fill" style={{ background: innerColor }} />

@@ -7,13 +7,34 @@ import { fontMinWithDraw } from '@/utils/widgets/loadFontRule'
 import { cx } from '@/utils/dom'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
 import useSpellcheck from '@/common/hooks/useSpellcheck'
+import { recordHistory } from '@/common/hooks/history'
+import { escapeHitOverlay } from '@/mixins/overlayEscape'
+import { htmlToLines, linesToHtml, sanitiseText } from '@/utils/widgets/richText'
 import CurvedText from './CurvedText'
 import layoutCurvedText, { forgetMeasurements } from './arcLayout'
 import useFontTick from './useFontTick'
 import effectStyle from './effectStyle'
-import { applyListStyle, matchesListStyle, type TListStyle } from './listMarkup'
+import type { TListStyle } from './listMarkup'
+import { blurStaysInSession, endInlineSession, startInlineSession, toggleInline, type TInlineKind } from './inlineFormat'
+import InlineToolbar from './InlineToolbar'
 import type { WidgetProps } from '../types'
 import './wText.less'
+
+/**
+ * Marks a copy made inside one of this editor's text boxes, so a paste can tell
+ * it from a copy made anywhere else. Anything else is pasted as plain text.
+ */
+const OWN_CLIPBOARD = '<!--ds-text-->'
+
+const SHORTCUTS: Record<string, TInlineKind> = { b: 'bold', i: 'italic', u: 'underline' }
+
+/** The whole-box property each selection style falls back to, and its off value. */
+const BOX_STYLE: Record<TInlineKind, { key: string; off: string }> = {
+  bold: { key: 'fontWeight', off: 'normal' },
+  italic: { key: 'fontStyle', off: 'normal' },
+  underline: { key: 'textDecoration', off: 'none' },
+  strike: { key: 'textDecoration', off: 'none' },
+}
 
 function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   const p = useSnapshot(params) as any
@@ -31,7 +52,6 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
 
   const fontFamily = `'${p.fontClass.value}'`
   const listStyle = (p.listStyle ?? 'none') as TListStyle
-  const isList = listStyle !== 'none'
 
   /**
    * The arc, when there is one. Editing drops it, the way the text effects are
@@ -148,6 +168,17 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     updateWidgetData({ uuid: String(params.uuid), key: 'editable', value: editable })
   }, [editable, params.uuid])
 
+  // The formatting session lives as long as the caret does — see inlineFormat.ts.
+  useEffect(() => {
+    const el = editWrapRef.current
+    if (!editable || !el) return
+    startInlineSession(String(params.uuid), el, finishEdit)
+    return () => endInlineSession(el)
+    // finishEdit is stable for the life of one edit: it reads its refs, not
+    // its closure, and the session is torn down when the edit ends.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editable, params.uuid])
+
   function updateRecord() {
     const el = widgetRef.current
     if (!el) return
@@ -165,25 +196,91 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
 
   function updateText(e?: { target: HTMLElement }) {
     const written = e && e.target ? e.target.innerHTML : params.text
-    // Chromium's list editing leaves markup the model does not describe — a
-    // nested <ul> after Tab, a bare <div> after Enter on an empty bullet. Put
-    // it back into one flat list before anything else reads it.
-    const value = matchesListStyle(written as string, listStyle) ? written : applyListStyle(written as string, listStyle)
+    // Every write goes through the allowlist. That pares a paste back to what
+    // the box may hold, and puts back the markup Chromium's editing leaves in a
+    // shape the model does not describe — a nested <ul> after Tab, a bare
+    // <div> after Enter on an empty bullet — as one flat list.
+    const value = sanitiseText(written as string, listStyle)
     if (value !== params.text) {
-      updateWidgetData({ uuid: String(params.uuid), key: 'text', value: value as string })
+      updateWidgetData({ uuid: String(params.uuid), key: 'text', value })
     }
   }
 
   /**
-   * A list has to be edited as real markup, so the field cannot be
-   * plaintext-only there and a paste would otherwise bring its source's HTML
-   * with it. execCommand keeps the caret and the browser's own undo stack for
-   * the field, which writing innerHTML would throw away.
+   * A paste is plain text unless it was copied out of one of these boxes, in
+   * which case the bold and the links come with it. Anything from a web page
+   * or a document arrives with fonts, sizes and classes the box cannot hold;
+   * rather than pick through them, only the words are kept. execCommand keeps
+   * the caret and the field's own undo stack, which writing innerHTML would
+   * throw away.
    */
-  function pasteAsText(e: React.ClipboardEvent<HTMLDivElement>) {
-    if (!isList) return
+  function paste(e: React.ClipboardEvent<HTMLDivElement>) {
     e.preventDefault()
+    const html = e.clipboardData.getData('text/html')
+    if (html && html.includes(OWN_CLIPBOARD)) {
+      // Lines, not a list: pasted into the middle of an item, list markup
+      // would nest, and the write normalises the lines into items anyway.
+      document.execCommand('insertHTML', false, linesToHtml(htmlToLines(html)))
+      return
+    }
     document.execCommand('insertText', false, e.clipboardData.getData('text/plain'))
+  }
+
+  /** A copy carries the formatting, marked as this editor's own. */
+  function copy(e: React.ClipboardEvent<HTMLDivElement>, cut = false) {
+    const selection = document.getSelection()
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return
+    const holder = document.createElement('div')
+    holder.appendChild(selection.getRangeAt(0).cloneContents())
+    e.preventDefault()
+    e.clipboardData.setData('text/html', OWN_CLIPBOARD + sanitiseText(holder.innerHTML))
+    e.clipboardData.setData('text/plain', selection.toString())
+    if (cut) document.execCommand('delete', false)
+  }
+
+  /**
+   * The keys the box takes for itself. The editor's own shortcuts leave a
+   * contentEditable alone, so Escape has to end the edit from here — and
+   * Ctrl+B, which the browser would apply on its own, goes through the session
+   * so the panel sees it.
+   */
+  function keydown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Escape') {
+      // A picker or the link field standing open over the box takes the
+      // Escape for itself — it closes, the caret stays where it was, and a
+      // second Escape ends the edit. Asked rather than looked for: both Radix
+      // and Element Plus have the thing out of the DOM before this runs, which
+      // is what overlayEscape is for.
+      if (escapeHitOverlay()) return
+      e.preventDefault()
+      // Ending the edit is the whole step Escape takes here. Left to carry on,
+      // it would reach the editor's own handler, find nothing being typed into
+      // any more, and go on to drop the selection as well.
+      e.stopPropagation()
+      // No press brackets this the way clicking away is bracketed, so the
+      // edit records its own undo step.
+      recordHistory(finishEdit)
+      return
+    }
+    const kind = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey ? SHORTCUTS[e.key.toLowerCase()] : undefined
+    if (kind) {
+      e.preventDefault()
+      toggleInline(kind) || boxToggle(kind)
+    }
+  }
+
+  /**
+   * Takes a style the whole box carries back off it. Where a selection's Bold
+   * falls to when the box is already bold all over — see inlineFormat.ts.
+   */
+  function boxToggle(kind: TInlineKind) {
+    const { key, off } = BOX_STYLE[kind]
+    recordHistory(() => updateWidgetData({ uuid: String(params.uuid), key: key as any, value: off }))
+  }
+
+  /** A link in the box is for the presenter; on the canvas a click is a click. */
+  function onClick(e: React.MouseEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest('a')) e.preventDefault()
   }
 
   function writingText() {
@@ -196,9 +293,28 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     setUpdateRect()
   }
 
-  function writeDone(e: React.FocusEvent<HTMLDivElement>) {
+  const editing = useRef(false)
+  editing.current = editable
+
+  /** Ends the edit and stores what was typed. Safe to call more than once. */
+  function finishEdit() {
+    const el = editWrapRef.current
+    if (!editing.current || !el) return
+    editing.current = false
     setEditable(false)
-    updateText({ target: e.target })
+    el.blur()
+    updateText({ target: el })
+  }
+
+  /**
+   * Focus leaving the box ends the edit — unless it has gone to one of the
+   * box's own formatting controls, in which case the edit stays open and the
+   * session puts the selection back when the control is used. A press
+   * anywhere else ends it then; see inlineFormat.ts.
+   */
+  function writeDone(e: React.FocusEvent<HTMLDivElement>) {
+    if (blurStaysInSession(e.relatedTarget)) return
+    finishEdit()
   }
 
   function dblclickText() {
@@ -246,11 +362,12 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
         fontFamily,
       }}
       onDoubleClick={dblclickText}
+      onClick={onClick}
     >
       {p.textEffects && !editable
         ? p.textEffects.map((ef: any, efi: number) =>
             curved ? (
-              <CurvedText key={efi + 'effect'} layout={curved} className="effect-text" style={{ fontFamily, ...effectStyle(ef) }} />
+              <CurvedText key={efi + 'effect'} layout={curved} className="effect-text" style={{ fontFamily, ...effectStyle(ef) }} plain />
             ) : (
               <div
                 key={efi + 'effect'}
@@ -270,13 +387,21 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
           style={{ fontFamily }}
           className="edit-text"
           spellCheck={spellcheck}
-          contentEditable={editable ? (isList ? true : 'plaintext-only') : false}
+          // Real markup, not plaintext-only: a bolded word and a list item are
+          // both elements, and the caret has to be able to move through them.
+          // The editor's global shortcuts stand aside for an element like
+          // this, so the keys the box needs are handled in `keydown`.
+          contentEditable={editable}
           suppressContentEditableWarning
           onInput={() => writingText()}
-          onPaste={pasteAsText}
+          onPaste={paste}
+          onCopy={copy}
+          onCut={(e) => copy(e, true)}
+          onKeyDown={keydown}
           onBlur={writeDone}
         />
       )}
+      {editable ? <InlineToolbar color={p.color} onBoxToggle={boxToggle} /> : null}
       {loading ? <div className="w-text__loading" /> : null}
     </div>
   )

@@ -20,6 +20,22 @@ function WTextStatic({ params, parent, className, ...rest }: WidgetProps) {
   const fontFamily = `'${p.fontClass.value}'`
   const fontTick = useFontTick(fontFamily)
 
+  /**
+   * A link in the text. The static copy is what the presenter shows, and there
+   * a link is for following, in a new tab so the talk is still on screen when
+   * it is closed; the press must not also turn the page. Everywhere else the
+   * copy is drawn — the page strip, a thumbnail — a click means the page, not
+   * the link.
+   */
+  function onClick(e: React.MouseEvent<HTMLDivElement>) {
+    const link = (e.target as HTMLElement).closest('a[href]') as HTMLAnchorElement | null
+    if (!link) return
+    e.preventDefault()
+    if (!e.currentTarget.closest('.present')) return
+    e.stopPropagation()
+    window.open(link.href, '_blank', 'noopener')
+  }
+
   // The box this draws in was fitted to the arc by the editor, so the layout
   // only has to be rebuilt, not measured back into the widget.
   const curved = useMemo(
@@ -42,6 +58,7 @@ function WTextStatic({ params, parent, className, ...rest }: WidgetProps) {
       {...rest}
       ref={widgetRef}
       className={className}
+      onClick={onClick}
       style={{
         position: 'absolute',
         left: p.left - parent.left + 'px',
@@ -67,7 +84,7 @@ function WTextStatic({ params, parent, className, ...rest }: WidgetProps) {
       {p.textEffects
         ? p.textEffects.map((ef: any, efi: number) =>
             curved ? (
-              <CurvedText key={efi + 'effect'} layout={curved} className="effect-text" style={{ fontFamily, ...effectStyle(ef) }} />
+              <CurvedText key={efi + 'effect'} layout={curved} className="effect-text" style={{ fontFamily, ...effectStyle(ef) }} plain />
             ) : (
               <div
                 key={efi + 'effect'}

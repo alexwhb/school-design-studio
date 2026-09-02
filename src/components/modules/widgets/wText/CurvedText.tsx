@@ -7,15 +7,35 @@
  */
 import { memo, type CSSProperties } from 'react'
 import { cx } from '@/utils/dom'
-import type { TCurvedLayout } from './arcLayout'
+import type { TCurvedGlyph, TCurvedLayout } from './arcLayout'
 
 type Props = {
   layout: TCurvedLayout
   className?: string
   style?: CSSProperties
+  /**
+   * Draw every character in the layer's own colour. An effect layer is painted
+   * in the colour of its fill or made transparent for its outline, and a word
+   * coloured by hand must not punch through that — the straight-text layers
+   * get the same treatment from a stylesheet rule.
+   */
+  plain?: boolean
 }
 
-function CurvedText({ layout, className, style }: Props) {
+/** A character's own formatting, as the style of the box it is drawn in. */
+function glyphStyle(glyph: TCurvedGlyph, plain: boolean | undefined): CSSProperties {
+  const decoration = [glyph.underline ? 'underline' : '', glyph.strike ? 'line-through' : ''].filter(Boolean).join(' ')
+  return {
+    fontWeight: glyph.bold ? 'bold' : undefined,
+    fontStyle: glyph.italic ? 'italic' : undefined,
+    // An underline is drawn under each character's own box, so along an arc it
+    // is a run of short strokes rather than one curved line.
+    textDecoration: decoration || undefined,
+    color: plain ? undefined : glyph.color,
+  }
+}
+
+function CurvedText({ layout, className, style, plain }: Props) {
   return (
     <div
       className={cx('curved-text', className)}
@@ -37,6 +57,7 @@ function CurvedText({ layout, className, style }: Props) {
           key={index}
           className="curved-text__glyph"
           style={{
+            ...glyphStyle(glyph, plain),
             left: `${glyph.x}px`,
             top: `${glyph.y}px`,
             width: `${glyph.width}px`,
