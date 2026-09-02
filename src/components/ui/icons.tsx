@@ -163,3 +163,15 @@ export function RectangleIcon({ className, width = '1em', height = '1em' }: Icon
     </svg>
   )
 }
+
+/** The triangle the polygon tool starts from, before its corners are turned up. */
+export function PolygonIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="currentColor"
+        d="M512 128a64 64 0 0 1 55 31l360 608a64 64 0 0 1-55 97H152a64 64 0 0 1-55-97l360-608a64 64 0 0 1 55-31zm0 96L177 800h670z"
+      />
+    </svg>
+  )
+}

@@ -1,0 +1,61 @@
+// The frame is the shape module's — see shape.less. The drawing and the grip
+// are the polygon's own.
+.polygon__paint {
+  position: absolute;
+  inset: 0;
+  // An <svg> is inline by default, which would leave it sitting on a text
+  // baseline a few pixels short of the frame it is meant to fill.
+  display: block;
+  // Only the grip answers the mouse; a press anywhere else is a press on the
+  // widget underneath, which is what selects and drags it.
+  pointer-events: none;
+}
+
+.polygon__sides {
+  position: absolute;
+  inset: 0;
+  // Only the grip answers the mouse. The area around it is the shape itself,
+  // which still has to be draggable while its corners are being counted.
+  pointer-events: none;
+}
+
+.polygon__sides-grip {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border-style: solid;
+  border-color: #fff;
+  background: var(--ds-accent, #6ccfff);
+  box-shadow: 0 0 2px 0 rgba(86, 90, 98, 0.35);
+  transform: translate(-50%, -50%);
+  cursor: ew-resize;
+  pointer-events: auto;
+}
+
+.polygon__sides-readout {
+  position: absolute;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: var(--ds-accent, #6ccfff);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+// The box for an exact corner count, with the note that says where the other
+// way at the same number is.
+.polygon-sides {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: @space-2;
+  margin-bottom: @space-2;
+
+  &__hint {
+    font-size: @text-xs;
+    color: @ink-3;
+    user-select: none;
+  }
+}

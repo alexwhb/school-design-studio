@@ -20,15 +20,61 @@ function defsOf(svg: SVGSVGElement) {
   return defs
 }
 
-function appendStops(node: Element, stops: { color: string; offset: number }[]) {
-  stops.forEach((stop) => {
+/**
+ * A gradient worked out but not yet built, so a caller can build it as DOM or
+ * as React elements from the same numbers.
+ *
+ * `coords` are the attributes the element of that type takes — `x1`/`y1`/`x2`/
+ * `y2` for a linear, `cx`/`cy`/`r` for a radial — already in the shape's own
+ * coordinates, which is what `gradientUnits="userSpaceOnUse"` asks for.
+ */
+export type SvgGradientSpec = {
+  element: 'linearGradient' | 'radialGradient'
+  coords: Record<string, number>
+  stops: { offset: string; color: string; opacity: number }[]
+}
+
+/** Null when the value is a flat colour, which needs no paint server at all. */
+export function svgGradientSpec(value: string, box: PaintBox): SvgGradientSpec | null {
+  if (!value || !isGradient(value)) return null
+
+  const gradient = parseGradient(value)
+  if (!gradient) return null
+
+  const { x, y, width, height } = box
+  const cx = x + width / 2
+  const cy = y + height / 2
+
+  let element: SvgGradientSpec['element']
+  let coords: Record<string, number>
+  if (gradient.type === 'radial') {
+    element = 'radialGradient'
+    // CSS reaches the farthest corner by default, which for a circle is the
+    // half-diagonal.
+    coords = { cx, cy, r: Math.hypot(width, height) / 2 }
+  } else {
+    // CSS measures the angle from straight up and turns clockwise, and the line
+    // is long enough that the last stop lands on the far corner. SVG wants the
+    // two ends of that line instead.
+    const radians = (gradient.angle * Math.PI) / 180
+    const dx = Math.sin(radians)
+    const dy = -Math.cos(radians)
+    const length = Math.abs(width * dx) + Math.abs(height * dy)
+    element = 'linearGradient'
+    coords = {
+      x1: cx - (dx * length) / 2,
+      y1: cy - (dy * length) / 2,
+      x2: cx + (dx * length) / 2,
+      y2: cy + (dy * length) / 2,
+    }
+  }
+
+  const stops = gradient.stops.map((stop) => {
     const [r, g, b, a] = hexA2RGBA(stop.color)
-    const el = document.createElementNS(SVG_NS, 'stop')
-    el.setAttribute('offset', `${stop.offset * 100}%`)
-    el.setAttribute('stop-color', `rgb(${r},${g},${b})`)
-    el.setAttribute('stop-opacity', String(Number.isFinite(a) ? a : 1))
-    node.appendChild(el)
+    return { offset: `${stop.offset * 100}%`, color: `rgb(${r},${g},${b})`, opacity: Number.isFinite(a) ? a : 1 }
   })
+
+  return { element, coords, stops }
 }
 
 /**
@@ -61,40 +107,19 @@ export function resolveSvgPaint(svg: SVGSVGElement, id: string, value: string, b
  * Returns null when the value is a flat colour, which needs no paint server.
  */
 export function createGradientNode(id: string, value: string, box: PaintBox): Element | null {
-  if (!value || !isGradient(value)) return null
+  const spec = svgGradientSpec(value, box)
+  if (!spec) return null
 
-  const gradient = parseGradient(value)
-  if (!gradient) return null
-
-  const { x, y, width, height } = box
-  const cx = x + width / 2
-  const cy = y + height / 2
-  let node: Element
-
-  if (gradient.type === 'radial') {
-    node = document.createElementNS(SVG_NS, 'radialGradient')
-    node.setAttribute('cx', String(cx))
-    node.setAttribute('cy', String(cy))
-    // CSS reaches the farthest corner by default, which for a circle is the
-    // half-diagonal.
-    node.setAttribute('r', String(Math.hypot(width, height) / 2))
-  } else {
-    // CSS measures the angle from straight up and turns clockwise, and the line
-    // is long enough that the last stop lands on the far corner. SVG wants the
-    // two ends of that line instead.
-    const radians = (gradient.angle * Math.PI) / 180
-    const dx = Math.sin(radians)
-    const dy = -Math.cos(radians)
-    const length = Math.abs(width * dx) + Math.abs(height * dy)
-    node = document.createElementNS(SVG_NS, 'linearGradient')
-    node.setAttribute('x1', String(cx - (dx * length) / 2))
-    node.setAttribute('y1', String(cy - (dy * length) / 2))
-    node.setAttribute('x2', String(cx + (dx * length) / 2))
-    node.setAttribute('y2', String(cy + (dy * length) / 2))
-  }
-
+  const node = document.createElementNS(SVG_NS, spec.element)
+  for (const [name, coordinate] of Object.entries(spec.coords)) node.setAttribute(name, String(coordinate))
   node.setAttribute('id', id)
   node.setAttribute('gradientUnits', 'userSpaceOnUse')
-  appendStops(node, gradient.stops)
+  for (const stop of spec.stops) {
+    const el = document.createElementNS(SVG_NS, 'stop')
+    el.setAttribute('offset', stop.offset)
+    el.setAttribute('stop-color', stop.color)
+    el.setAttribute('stop-opacity', String(stop.opacity))
+    node.appendChild(el)
+  }
   return node
 }

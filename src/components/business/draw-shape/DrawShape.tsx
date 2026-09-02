@@ -1,8 +1,8 @@
 /**
- * The shape tools: arm one, drag anywhere on the page, and a rectangle or an
- * ellipse is drawn at whatever size you pulled it out to.
+ * The shape tools: arm one, drag anywhere on the page, and a rectangle, an
+ * ellipse or a polygon is drawn at whatever size you pulled it out to.
  *
- * Adobe XD's rectangle and ellipse tools, and the same three habits — Shift
+ * Adobe XD's shape tools, and the same three habits — Shift
  * holds the two sides equal, Alt grows the shape out of the point you started
  * from rather than towards you, and a click with no drag behind it drops one at
  * a readable default size instead of a shape four pixels wide. Edges are pulled
@@ -10,9 +10,9 @@
  * positions a dragged layer snaps to, so a shape drawn by hand lands where a
  * shape moved by hand would.
  *
- * Both tools are one gesture with two outcomes, so they are one component: what
+ * They are one gesture with several outcomes, so they are one component: what
  * the shape is called, what it is drawn from and what the rubber band looks
- * like is all `TOOLS` knows, and the drag itself never asks which is armed.
+ * like is all `drawTools` knows, and the drag itself never asks which is armed.
  *
  * Nothing rendered here answers the mouse. The press is taken by a capture-phase
  * listener on the document, because the board selects and starts moving layers
@@ -34,24 +34,12 @@ import { addWidget } from '@/store/widget'
 import { clearSelection } from '@/store/widget/select'
 import { cx } from '@/utils/dom'
 import { SHAPE_DEFAULT_SIZE, SHAPE_MIN_SIZE } from '@/components/modules/widgets/shape/shapeSetting'
-import { wRectSetting } from '@/components/modules/widgets/wRect/wRectSetting'
-import { wEllipseSetting } from '@/components/modules/widgets/wEllipse/wEllipseSetting'
 import type { TDrawTool } from '@/store/types'
+import { drawTools } from './drawTools'
 import './drawShape.less'
 
 /** How close an edge has to come, in screen pixels, before it is pulled into line. */
 const SNAP_THRESHOLD = 5
-
-/**
- * What each tool draws and what to call it while it is being drawn.
- *
- * `round` is the rubber band: an ellipse is pulled out of the same box a
- * rectangle is, and showing that box would be showing the wrong shape.
- */
-const TOOLS: Record<TDrawTool, { setting: Record<string, any>; noun: string; equal: string; round: boolean }> = {
-  rect: { setting: wRectSetting, noun: 'a box', equal: 'square', round: false },
-  ellipse: { setting: wEllipseSetting, noun: 'an ellipse', equal: 'circular', round: true },
-}
 
 type TBox = { left: number; top: number; width: number; height: number }
 
@@ -215,7 +203,7 @@ export default function DrawShape() {
   return (
     <>
       <div className="draw-hint" role="status">
-        <b>Drag to draw {TOOLS[tool].noun}.</b> Shift keeps it {TOOLS[tool].equal}, Alt draws it from the centre, Esc cancels.
+        <b>Drag to draw {drawTools[tool].noun}.</b> Shift keeps it {drawTools[tool].equal}, Alt draws it from the centre, Esc cancels.
       </div>
       {canvasEl && band
         ? createPortal(
@@ -223,7 +211,7 @@ export default function DrawShape() {
               {guides.x !== null ? <i className="draw-guide draw-guide--v" style={{ left: `${guides.x}px`, width: `${scale}px` }} /> : null}
               {guides.y !== null ? <i className="draw-guide draw-guide--h" style={{ top: `${guides.y}px`, height: `${scale}px` }} /> : null}
               <div
-                className={cx('draw-band', { 'draw-band--round': TOOLS[tool].round })}
+                className={cx('draw-band', { 'draw-band--round': drawTools[tool].round })}
                 style={{
                   left: `${band.left}px`,
                   top: `${band.top}px`,
@@ -261,7 +249,7 @@ export default function DrawShape() {
  * `beginHistory`. Without it the shape appears and Ctrl+Z has nothing to undo.
  */
 function addShape(tool: TDrawTool, drawn: TBox | null, origin: { x: number; y: number }, page: { width: number; height: number }) {
-  const setting = JSON.parse(JSON.stringify(TOOLS[tool].setting))
+  const setting = JSON.parse(JSON.stringify(drawTools[tool].setting))
   if (drawn && drawn.width >= SHAPE_MIN_SIZE && drawn.height >= SHAPE_MIN_SIZE) {
     setting.left = Math.round(drawn.left)
     setting.top = Math.round(drawn.top)

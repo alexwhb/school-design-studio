@@ -112,6 +112,13 @@ export type TdWidgetData = TPageState &
      */
     radius?: number
     radii?: number[]
+    /**
+     * A drawn polygon: how many corners it has, three to a hundred. See
+     * wPolygon/polygonShape.ts, which is the only thing that should be reading
+     * it — a shape carrying nothing, or something out of range, still has to
+     * draw.
+     */
+    sides?: number
     record?: TWidgetRecord
     /**
      * Images and shapes: the shadow the artwork casts. Absent means none, the
@@ -149,7 +156,7 @@ export type TWidgetState = {
  * name is the widget's own type with the `w-` taken off, so the tool, the
  * shortcut and the widget it makes are all one word.
  */
-export type TDrawTool = 'rect' | 'ellipse'
+export type TDrawTool = 'rect' | 'ellipse' | 'polygon'
 
 export type TControlState = {
   dMoving: boolean

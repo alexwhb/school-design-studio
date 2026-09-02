@@ -1,26 +1,11 @@
-import type { ComponentType } from 'react'
 import { useSnapshot } from 'valtio'
 import { canvasState, controlState } from '@/store/state'
 import { setShowMoveable, toggleDrawTool } from '@/store/control'
 import { addWidget } from '@/store/widget'
-import { EllipseIcon, RectangleIcon } from '@/components/ui/icons'
-import type { TDrawTool } from '@/store/types'
+import { drawToolOrder, drawTools } from '@/components/business/draw-shape/drawTools'
 import { cx } from '@/utils/dom'
 import { wQrcodeSetting } from '../../widgets/wQrcode/wQrcodeSetting'
 import './toolsListWrap.less'
-
-type TShapeTool = {
-  tool: TDrawTool
-  Icon: ComponentType<{ className?: string }>
-  label: string
-  desc: string
-}
-
-/** In the order Adobe XD has them, which is also the order of their shortcuts. */
-const SHAPE_TOOLS: TShapeTool[] = [
-  { tool: 'rect', Icon: RectangleIcon, label: 'Rectangle', desc: 'Drag out a box at any size, then round its corners' },
-  { tool: 'ellipse', Icon: EllipseIcon, label: 'Ellipse', desc: 'Drag out an oval at any size, or hold Shift for a circle' },
-]
 
 export default function ToolsListWrap() {
   const armed = useSnapshot(controlState).dDrawTool
@@ -41,7 +26,8 @@ export default function ToolsListWrap() {
         Tools rather than buttons: these arm the pointer and wait for a drag on
         the page, so one stays lit until the shape has been drawn.
       */}
-      {SHAPE_TOOLS.map(({ tool, Icon, label, desc }) => {
+      {drawToolOrder.map((tool) => {
+        const { Icon, label, desc, shortcut } = drawTools[tool]
         const drawing = armed === tool
         return (
           <button
@@ -49,6 +35,7 @@ export default function ToolsListWrap() {
             type="button"
             className={cx('item', { 'item--armed': drawing })}
             aria-pressed={drawing}
+            title={`${label} (${shortcut})`}
             onClick={() => toggleDrawTool(tool)}
           >
             <Icon className="icon" />

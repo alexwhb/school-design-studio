@@ -126,7 +126,7 @@ export async function canvasBox(page: Page) {
 }
 
 /** Arms a shape tool from the Tools panel, which is how it is first found. */
-export async function armShapeTool(page: Page, label: 'Rectangle' | 'Ellipse') {
+export async function armShapeTool(page: Page, label: 'Rectangle' | 'Ellipse' | 'Polygon') {
   await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
   await page.waitForTimeout(300)
   await page.locator('.tools-list-wrap .item', { hasText: label }).click()

@@ -4,7 +4,7 @@
  * @LastEditors: ShawnPhang
  * @LastEditTime: 2022-03-13 16:17:54
  */
-const arr = ['w-text', 'w-image', 'w-svg', 'w-rect', 'w-ellipse', 'w-group', 'w-qrcode']
+const arr = ['w-text', 'w-image', 'w-svg', 'w-rect', 'w-ellipse', 'w-polygon', 'w-group', 'w-qrcode']
 
 export function getTarget(currentTarget: HTMLElement): Promise<HTMLElement | null> {
   let collector: string[] = []

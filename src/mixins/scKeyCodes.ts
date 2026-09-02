@@ -59,6 +59,10 @@ export default [
     info: `E`,
   },
   {
+    feat: `Draw a polygon`,
+    info: `Y`,
+  },
+  {
     feat: `Delete`,
     info: `Delete / Backspace`,
   },

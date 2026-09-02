@@ -26,13 +26,17 @@ export default function keyCodeOptions(e: any, params: any) {
     case 27:
       escape()
       break
-    // R and E, as they are in Adobe XD. Pressed again the key puts the pointer
-    // back, so the one that arms a tool is also the one that gets you out of it.
+    // R, E and Y, as they are in Adobe XD. Pressed again the key puts the
+    // pointer back, so the one that arms a tool is also the one that gets you
+    // out of it.
     case 82:
       if (!isTyping()) toggleDrawTool('rect')
       break
     case 69:
       if (!isTyping()) toggleDrawTool('ellipse')
+      break
+    case 89:
+      if (!isTyping()) toggleDrawTool('polygon')
       break
     case 46:
     case 8:

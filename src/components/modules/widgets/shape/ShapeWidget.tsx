@@ -1,11 +1,12 @@
 /**
  * The frame a drawn shape sits in, on the canvas and off it.
  *
- * Everything a rectangle and an ellipse have in common is here: where the
- * shape is, how big, how see-through, which way up, and the size it reports
- * back to the selection box. What each one paints inside that frame is a
- * corner radius, which is handed in — and anything that belongs to one of them
- * alone, such as the rectangle's corner grips, comes in as a child.
+ * Everything the drawn shapes have in common is here: where the shape is, how
+ * big, how see-through, which way up, and the size it reports back to the
+ * selection box. What goes inside the frame is handed in — a corner radius for
+ * the shapes CSS can round into, or a drawing of its own for a polygon, which
+ * it cannot. Anything belonging to one shape alone, such as the rectangle's
+ * corner grips, comes in as a child.
  */
 import { useEffect, useRef, type ReactNode } from 'react'
 import { useSnapshot } from 'valtio'
@@ -16,14 +17,16 @@ import type { WidgetProps } from '../types'
 import ShapePaint from './ShapePaint'
 import './shape.less'
 
-type Props = WidgetProps & {
-  /** Any CSS `border-radius`: four lengths for a box, `50%` for an ellipse. */
-  radius: string
-  /** The widget's own class, `w-rect` or `w-ellipse`. */
-  kind: string
-}
+/**
+ * How the shape is drawn, and only ever one of the two: a corner radius for
+ * `ShapePaint` to round a box into, or a drawing that paints itself.
+ */
+type ShapeFill = { radius: string; paint?: never } | { paint: ReactNode; radius?: never }
 
-export function ShapeWidget({ params, parent, id, className, kind, radius, child, children, ...rest }: Props) {
+/** The widget's own class, `w-rect`, `w-ellipse` or `w-polygon`. */
+type Props = WidgetProps & ShapeFill & { kind: string }
+
+export function ShapeWidget({ params, parent, id, className, kind, radius, paint, child, children, ...rest }: Props) {
   const p = useSnapshot(params) as any
   const widgetRef = useRef<HTMLDivElement | null>(null)
 
@@ -67,7 +70,7 @@ export function ShapeWidget({ params, parent, id, className, kind, radius, child
         opacity: p.opacity,
       }}
     >
-      <ShapePaint params={p} radius={radius} />
+      {paint ?? <ShapePaint params={p} radius={radius!} />}
       {children}
     </div>
   )
@@ -78,7 +81,7 @@ export function ShapeWidget({ params, parent, id, className, kind, radius, child
  * slides and exports. It reads its widget straight rather than through a
  * snapshot, because nothing here is going to change under it.
  */
-export function ShapeStatic({ params, parent, className, radius, child, children, ...rest }: Omit<Props, 'kind'>) {
+export function ShapeStatic({ params, parent, className, radius, paint, child, children, ...rest }: WidgetProps & ShapeFill) {
   const p = params as any
   const widgetRef = useRef<HTMLDivElement | null>(null)
 
@@ -102,7 +105,7 @@ export function ShapeStatic({ params, parent, className, radius, child, children
         opacity: p.opacity,
       }}
     >
-      <ShapePaint params={p} radius={radius} />
+      {paint ?? <ShapePaint params={p} radius={radius!} />}
     </div>
   )
 }
