@@ -18,6 +18,7 @@ import ResizeDesign, { type ResizeDesignHandle } from '@/components/business/res
 import FindReplace, { type FindReplaceHandle } from '@/components/business/find-replace/FindReplace'
 import BulkDocuments, { type BulkDocumentsHandle } from '@/components/business/bulk-documents/BulkDocuments'
 import PresentMode, { type PresentModeHandle } from '@/components/business/presentation/PresentMode'
+import NotesDrawer from '@/components/business/notes/NotesDrawer'
 import Tour, { type TourHandle } from './components/Tour'
 import HeaderOptions, { type HeaderOptionsHandle } from './components/HeaderOptions'
 import ExportMenu from './components/ExportMenu'
@@ -33,6 +34,7 @@ import { wGroupSetting } from '@/components/modules/widgets/wGroup/groupSetting'
 import { canvasState, historyState } from '@/store/state'
 import { readQuery } from '@/common/hooks/useRouteQuery'
 import { initGroupJson } from '@/store/group'
+import { toggleNotes } from '@/store/notes'
 import { handleHistory } from '@/store/history'
 import { selectWidget } from '@/store/widget/select'
 import { cx } from '@/utils/dom'
@@ -174,6 +176,7 @@ export default function Index() {
     resizeDesign: () => resizeDesignRef.current?.open(),
     findReplace: () => findReplaceRef.current?.open(),
     bulkDocuments: () => bulkDocumentsRef.current?.open(),
+    toggleNotes: () => toggleNotes(),
   }
 
   const dealWith = (fnName: string, params?: any) => {
@@ -243,7 +246,12 @@ export default function Index() {
         <DesignBoard
           className="page-design-wrap"
           pageDesignCanvasId="page-design-canvas"
-          bottom={<MultipleBoards />}
+          bottom={
+            <>
+              <MultipleBoards />
+              <NotesDrawer />
+            </>
+          }
         >
           <div className="shelter" style={{ width: shelterWidth, height: shelterHeight }} />
           <div className="shelter-bg transparent-bg" style={{ width: shelterWidth, height: shelterHeight }} />

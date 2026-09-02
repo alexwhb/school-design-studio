@@ -29,15 +29,25 @@ import type { TPageState, TdLayout } from '../types'
  */
 export const MAX_PAGES = 50
 
-/** A new page inherits the size of the one it is added after, but not its artwork. */
+/**
+ * A new page inherits the size of the one it is added after, but not its
+ * artwork.
+ *
+ * It keeps the transition, because a deck wants one way of moving between
+ * slides rather than a different one every time somebody adds a page. It does
+ * not keep the speaker notes: what you meant to say about last week's fixtures
+ * is not what you mean to say about the blank page after it.
+ */
 function blankPageLike(page: TPageState): TPageState {
-  return {
+  const blank: TPageState = {
     ...JSON.parse(JSON.stringify(page)),
     name: 'New page',
     backgroundColor: '#ffffffff',
     backgroundGradient: '',
     backgroundImage: '',
   }
+  delete blank.notes
+  return blank
 }
 
 /**

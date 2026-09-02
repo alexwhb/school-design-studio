@@ -7,6 +7,12 @@
   width: @zoom-control-width;
   z-index: 1000;
 
+  // The notes drawer takes the bottom of the well, and the zoom pill stands on
+  // top of it the way the page strip does.
+  &.above-notes {
+    bottom: @zoom-control-inset + @notes-drawer-height;
+  }
+
   .zoom-control-wrap {
     display: flex;
     flex-direction: row;

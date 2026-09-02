@@ -1,0 +1,48 @@
+.notes-toggle {
+  position: relative;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 0 12px 0 14px;
+  border: 0;
+  border-left: 1px solid @line;
+  background: transparent;
+  color: @ink-2;
+  font: inherit;
+  font-size: @text-base;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover,
+  &.is-on {
+    color: @accent;
+  }
+  // A dot for a page that has notes, so the strip can be read for them.
+  &.has-notes::after {
+    content: '';
+    position: absolute;
+    top: 9px;
+    right: 6px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: @accent;
+  }
+}
+
+// In the collapsed pill it is the pill's right-hand end, divided off by a rule.
+.fold .notes-toggle {
+  border-radius: 0 @radius @radius 0;
+  &:hover {
+    background: @surface-2;
+  }
+}
+
+// In the open strip it stands on its own rather than inside anything.
+.unfold .notes-toggle {
+  height: 32px;
+  margin: 0 4px 0 2px;
+  border: 1px solid @line;
+  border-radius: @radius;
+  background: @surface;
+}

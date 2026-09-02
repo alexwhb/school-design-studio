@@ -6,6 +6,7 @@ import useSpellcheck from '@/common/hooks/useSpellcheck'
 import { cx } from '@/utils/dom'
 import { GRID_SIZES, controlState } from '@/store/state'
 import { setGridSize, toggleShowGrid, toggleSnapEnabled } from '@/store/control'
+import { notesState } from '@/store/notes'
 import './folder.less'
 
 type Props = {
@@ -33,6 +34,11 @@ export default function Folder({ onSelect, showGuides, children }: Props) {
   // Snapping is the editor's own state, so unlike the rulers above it needs no
   // help from the toolbar to know whether it is on.
   const { dSnapEnabled: snapEnabled, dShowGrid: showGrid, dGridSize: gridSize } = useSnapshot(controlState)
+
+  // The notes drawer is read the same way, and for the same reason: the button
+  // by the page pill toggles it too, so the menu must not hold its own idea of
+  // whether it is open.
+  const { open: notesOpen } = useSnapshot(notesState)
 
   const openPSD = () => {
     window.open('/psd', '_blank')
@@ -116,6 +122,16 @@ export default function Folder({ onSelect, showGuides, children }: Props) {
                   </button>
                 ))}
               </span>
+            </div>
+          </DropdownItem>
+          <DropdownItem onSelect={() => onSelect('toggleNotes')}>
+            <div className="item item--toggle">
+              <span>Speaker notes</span>
+              {notesOpen ? (
+                <i className="el-icon tick">
+                  <CheckIcon />
+                </i>
+              ) : null}
             </div>
           </DropdownItem>
           <DropdownItem onSelect={toggleSpellcheck}>

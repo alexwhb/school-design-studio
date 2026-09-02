@@ -11,6 +11,8 @@ import message from '@/components/ui/message'
 import confirm, { promptText } from '@/common/methods/confirm'
 import { pageBackgroundStyle } from '@/common/methods/pageBackground'
 import { staticWidgetComponents } from '../../widgets/registry'
+import { NOTES_DRAWER_HEIGHT, notesState } from '@/store/notes'
+import NotesToggle from '@/components/business/notes/NotesToggle'
 import PageTransitionGlyph from './PageTransitionGlyph'
 import { cx } from '@/utils/dom'
 import type { TdLayout, TdWidgetData, TPageState } from '@/store/types'
@@ -143,6 +145,10 @@ const Page = memo(function Page({ layout, index, isCurrent, isFirst, isLast, onC
 export default function MultipleBoards() {
   const canvas = useSnapshot(canvasState)
   const dLayouts = useSnapshot(widgetState).dLayouts as readonly TdLayout[]
+  // The notes drawer sits along the very bottom, so the strip stands on top of
+  // it rather than under it.
+  const notesOpen = useSnapshot(notesState).open
+  const notesHeight = notesOpen ? NOTES_DRAWER_HEIGHT : 0
   const [isFold, setIsFold] = useState(true)
   const [st, setSt] = useState(0)
   const [sl, setSl] = useState(0)
@@ -190,11 +196,16 @@ export default function MultipleBoards() {
     if (mainElRef.current) mainElRef.current.scrollTop = 0
   }, [canvas.dZoom])
 
+  // How much of the well the strip and the drawer have taken between them, so
+  // the zoom control can fit the page into what is left.
+  useEffect(() => {
+    setBottomHeight((isFold ? 0 : 112) + notesHeight)
+  }, [isFold, notesHeight])
+
   const lastFold = useRef(isFold)
   useEffect(() => {
     if (lastFold.current === isFold) return
     lastFold.current = isFold
-    setBottomHeight(isFold ? 0 : 112)
     const timer = setTimeout(() => {
       setZoomScreenChange()
     }, 300)
@@ -287,24 +298,28 @@ export default function MultipleBoards() {
 
   return (
     <div
-      style={{ position: 'absolute', bottom: -1 * st + 'px', left: sl + 'px' }}
+      style={{ position: 'absolute', bottom: notesHeight - st + 'px', left: sl + 'px' }}
       className={cx('artboards', isFold ? 'fold' : 'unfold')}
     >
       <div ref={listRef} className="wrap">
         {isFold ? (
-          <div
-            className="btn"
-            title={foldLabel}
-            style={{ display: dLayouts.length > 0 ? undefined : 'none' }}
-            onClick={() => setIsFold(!isFold)}
-          >
-            <span className="btn__label">{foldLabel}</span> <i className="icon sd-zhankai" />
-          </div>
+          <>
+            <div
+              className="btn"
+              title={foldLabel}
+              style={{ display: dLayouts.length > 0 ? undefined : 'none' }}
+              onClick={() => setIsFold(!isFold)}
+            >
+              <span className="btn__label">{foldLabel}</span> <i className="icon sd-zhankai" />
+            </div>
+            <NotesToggle />
+          </>
         ) : (
           <div className="list">
             <span onClick={() => setIsFold(!isFold)} className="icon-btn">
               <i className="icon sd-zhankai" />
             </span>
+            <NotesToggle />
             <div ref={pagesRef} className="pages">
               {dLayouts.map((l, li) => (
                 <Page

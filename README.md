@@ -1012,6 +1012,61 @@ letting you set one and find out in front of a room.
 
 Code: `src/common/animations/transitions.ts`.
 
+## Speaker notes and presenter view
+
+What to say while a page is on screen, kept with the page and never drawn on it.
+
+**Notes** by the page pill, or **File → Speaker notes**, opens a drawer along the
+bottom of the board with one box in it. Type; it belongs to the page you are on,
+so moving between pages moves between notes, and the button carries a dot when
+the page you are looking at has some. The whole edit is one undo step rather
+than one per keystroke: Ctrl+Z takes back the paragraph, not the last letter.
+Notes are saved with the design like anything else, and a new page does not
+inherit them — what you meant to say about last week's fixtures is not what you
+mean to say about the blank page after it.
+
+While presenting, **N** lays the notes for the slide over the stage. Over it, not
+beside it: the slide is a projected image and nothing may take room off it.
+
+**Presenter view** — the button in the presenter's bar, or **S** — opens a second
+window you can drag onto the laptop while the projector keeps the slide. It
+shows what is up, what is coming, the notes for this page, the clock and how far
+through the deck you are, all at a size that can be read from a lectern. Either
+window turns the page and the other follows.
+
+The two are separate documents, and that is the whole difficulty. The second
+window has its own key handler, so a space bar pressed while you are looking at
+your notes arrives nowhere near the code that turns the page; and neither window
+can safely hold a reference into the other's DOM, because the presenter view is
+exactly the window somebody closes by accident halfway through a talk. So they
+talk over a `BroadcastChannel`: the presenter owns where the talk is and
+broadcasts it, the view sends presses back, and a view that has just opened says
+hello and is told where things stand. The artwork itself needs no channel — the
+view is drawn by the editor's own React tree through a portal, so it is the same
+components the presenter draws, live, with no second copy of the deck to keep in
+step.
+
+If the browser blocks the pop-up there is nothing to see and nowhere to say so —
+a toast is outside the full-screen element and would not be drawn at all — so
+the notes overlay opens instead, carrying the explanation.
+
+Notes travel into `.pptx` as real PowerPoint speaker notes, in both export
+modes: they are for the person presenting, not part of the picture of the page.
+**Find and replace does not search them.** It walks the artwork on every page,
+and notes are not artwork; a date changed on the slides has to be changed in the
+notes by hand.
+
+Relevant code:
+
+```
+src/store/notes.ts                              whether the drawer is open
+src/store/widget/pageMeta.ts                    the page's notes and transition
+src/components/business/notes/                  the drawer and its button
+src/components/business/presentation/
+  presenterLink.ts   the channel, and opening the second window
+  PresenterView.tsx  what that window shows
+```
+
 ## PowerPoint export
 
 Every page of a design becomes one slide. There are two modes, because they
@@ -1024,6 +1079,9 @@ suit different jobs:
   just that element, so it still looks right.
 - **PowerPoint (exact copy)** puts a flat image of each page on its slide.
   Nothing is editable, but it matches the editor pixel for pixel.
+
+Speaker notes go into PowerPoint's own notes pane in either mode. Page
+transitions do not travel at all: pptxgenjs has no API for them.
 
 A design is stored in CSS pixels, so 1920×1080 read literally at 96 DPI would
 be a 20-inch-wide slide — valid, but nothing like a normal deck, and it merges

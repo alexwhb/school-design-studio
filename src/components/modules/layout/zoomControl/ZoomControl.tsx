@@ -5,6 +5,7 @@ import { subscribeSelector } from '@/store/subscribe'
 import addMouseWheel from '@/common/methods/addMouseWheel'
 import { updatePaddingTop, updateScreen, updateZoom } from '@/store/canvas'
 import { canvasState, forceState } from '@/store/state'
+import { notesState } from '@/store/notes'
 import { findClosestNumber } from '@/utils/utils'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
 import { OtherList, ZoomList, type TZoomData } from './data'
@@ -211,8 +212,10 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
     local.show = false
   }
 
+  const notesOpen = useSnapshot(notesState).open
+
   return (
-    <div id="zoom-control">
+    <div id="zoom-control" className={notesOpen ? 'above-notes' : undefined}>
       <ul className="zoom-selecter" style={{ display: snap.show ? undefined : 'none' }}>
         {ZoomList.map((item, index) => (
           <li

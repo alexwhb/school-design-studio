@@ -6,6 +6,9 @@ import { canvasState, widgetState } from '@/store/state'
 import { showPage } from '@/store/widget/pages'
 import { cancelTransitions, playTransition, prefersReducedMotion, readTransition } from '@/common/animations/transitions'
 import SlideView, { type SlideViewHandle } from './SlideView'
+import PresenterView from './PresenterView'
+import Elapsed from './Elapsed'
+import { openPresenterChannel, openPresenterWindow, type TPresenterMessage, type TPresenterState, type TPresenterWindow } from './presenterLink'
 import { cx } from '@/utils/dom'
 import type { TdLayout } from '@/store/types'
 import './presentMode.less'
@@ -24,36 +27,8 @@ const SWIPE_THRESHOLD = 50
 /** How many slides either side of the current one to draw before they are needed. */
 const REACH = 2
 
-const NEXT_KEYS = ['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Spacebar', 'Enter', 'n', 'N']
+const NEXT_KEYS = ['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Spacebar', 'Enter']
 const PREV_KEYS = ['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace', 'p', 'P']
-
-/**
- * The talk's running time.
- *
- * Its own component because it ticks once a second, and the presenter's tree
- * has a mounted slide in it for every page within reach. Every one of those is
- * memoised and would skip the render, but there is no reason to ask.
- */
-function Elapsed({ startedAt, onReset }: { startedAt: number; onReset: () => void }) {
-  const [seconds, setSeconds] = useState(0)
-
-  useEffect(() => {
-    setSeconds(0)
-    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1000)
-    return () => clearInterval(timer)
-  }, [startedAt])
-
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  const pad = (n: number) => String(n).padStart(2, '0')
-
-  return (
-    <button type="button" className="present__timer" title="Time on this presentation — click to reset" onClick={onReset}>
-      {h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`}
-    </button>
-  )
-}
 
 function pageLabel(page: TdLayout | undefined, position: number) {
   const name = page?.global?.name
@@ -86,6 +61,12 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   const [curtain, setCurtain] = useState<'' | 'black' | 'white'>('')
   const [stage, setStage] = useState({ width: 0, height: 0 })
   const [startedAt, setStartedAt] = useState(0)
+  /** The notes overlay over the stage, on N. */
+  const [showNotes, setShowNotes] = useState(false)
+  /** Set when the browser refused the second window, so the overlay can say why it is here. */
+  const [viewBlocked, setViewBlocked] = useState(false)
+  /** Where the presenter view is drawn, once there is a window to draw it in. */
+  const [viewMount, setViewMount] = useState<HTMLElement | null>(null)
   /** Slides drawn so far. Only ever grows, so going back is instant. */
   const [mounted, setMounted] = useState<Set<number>>(() => new Set())
 
@@ -112,6 +93,11 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   const transitioning = useRef<Animation[]>([])
   /** The slide on screen before the last change of index. */
   const cameFrom = useRef<number | null>(null)
+  /** The second window, so it can be raised rather than opened twice, and shut when the talk ends. */
+  const viewWindow = useRef<TPresenterWindow | null>(null)
+  const channel = useRef<BroadcastChannel | null>(null)
+  /** The last state broadcast, so a view that says hello can be answered without re-deriving it. */
+  const broadcast = useRef<TPresenterState>({ index: 0, total: 0, startedAt: 0, live: false })
   const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const lastWheel = useRef(0)
   const touchStartX = useRef(0)
@@ -222,6 +208,62 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   }, [enterFullscreen, exitFullscreen])
 
   /**
+   * Shuts the presenter view. The talk ending, or this window going away, has to
+   * take it with them: a second window left behind shows notes for a slide
+   * nobody is looking at any more.
+   */
+  const closePresenterView = useCallback(() => {
+    const view = viewWindow.current
+    viewWindow.current = null
+    setViewMount(null)
+    setViewBlocked(false)
+    if (view && !view.window.closed) view.window.close()
+  }, [])
+
+  /**
+   * Puts the presenter view in a second window — what is on screen, what is
+   * coming, the notes and the clock — so it can be dragged onto the laptop while
+   * the projector keeps the slide. Asking twice raises the window already open.
+   *
+   * A browser that blocks the pop-up leaves nothing to see, so the notes overlay
+   * opens instead with a line saying why. There is nowhere else to say it: a
+   * toast is drawn outside the full-screen element and would not appear at all.
+   */
+  const openPresenterView = useCallback(() => {
+    const existing = viewWindow.current
+    if (existing && !existing.window.closed) {
+      existing.window.focus()
+      return
+    }
+    // Opening a window drops some browsers out of full screen, and that must not
+    // be read as the Esc that ends the talk. The flag is dropped again shortly
+    // after, in case this browser stayed in full screen and a real Esc follows.
+    leavingFullscreenOnPurpose.current = true
+    setTimeout(() => {
+      leavingFullscreenOnPurpose.current = false
+    }, 600)
+
+    const opened = openPresenterWindow()
+    if (!opened) {
+      viewWindow.current = null
+      setViewMount(null)
+      setViewBlocked(true)
+      setShowNotes(true)
+      return
+    }
+    setViewBlocked(false)
+    viewWindow.current = opened
+    setViewMount(opened.mount)
+    // Closed from its own title bar rather than from here: forget it, so the
+    // button opens a fresh one instead of raising a window that has gone.
+    opened.window.addEventListener('pagehide', () => {
+      if (viewWindow.current?.window !== opened.window) return
+      viewWindow.current = null
+      setViewMount(null)
+    })
+  }, [])
+
+  /**
    * Ends the show and leaves the editor on whichever slide the talk finished on,
    * which is nearly always the one you want to go back and fix.
    */
@@ -230,13 +272,15 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
     setIsOpen(false)
     setIsOverview(false)
     setCurtain('')
+    setShowNotes(false)
+    closePresenterView()
     clearTimeout(idleTimer.current)
     exitFullscreen()
     // Put the editor on the slide the talk finished on. The store owns the
     // order these have to happen in.
     const page = live.current.index
     if (page !== canvasState.dCurrentPage && widgetState.dLayouts[page]) showPage(page)
-  }, [exitFullscreen])
+  }, [exitFullscreen, closePresenterView])
 
   const open = useCallback(
     (startAt?: number) => {
@@ -248,6 +292,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
       setIndex(start)
       setIsOverview(false)
       setCurtain('')
+      setShowNotes(false)
       setIsIdle(false)
       setStartedAt(Date.now())
       setMounted(new Set())
@@ -259,6 +304,50 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   )
 
   useImperativeHandle(ref, () => ({ open, close }), [open, close])
+
+  /**
+   * The channel to the presenter view, open for as long as the editor is rather
+   * than only during a talk: a view that outlived its presentation still has to
+   * be answered, if only to be told the talk has ended.
+   */
+  useEffect(() => {
+    const link = openPresenterChannel()
+    channel.current = link
+    if (!link) return
+    link.onmessage = (event: MessageEvent) => {
+      const message = event.data as TPresenterMessage | null
+      if (!message) return
+      if (message.kind === 'hello') {
+        link.postMessage({ kind: 'state', ...broadcast.current } satisfies TPresenterMessage)
+        return
+      }
+      if (!live.current.isOpen) return
+      if (message.kind === 'step') message.by > 0 ? next() : prev()
+      else if (message.kind === 'go') goTo(message.index, { closeOverview: true })
+      else if (message.kind === 'restartClock') setStartedAt(Date.now())
+    }
+    return () => {
+      link.close()
+      channel.current = null
+    }
+  }, [next, prev, goTo])
+
+  // Where the talk has got to. The view holds none of this itself, so this is
+  // the only thing that tells it the slide has changed.
+  useEffect(() => {
+    broadcast.current = { index, total: pages.length, startedAt, live: isOpen }
+    channel.current?.postMessage({ kind: 'state', ...broadcast.current } satisfies TPresenterMessage)
+  }, [index, pages.length, startedAt, isOpen])
+
+  // A second window must not outlive the tab that opened it.
+  useEffect(() => {
+    const onPageHide = () => closePresenterView()
+    window.addEventListener('pagehide', onPageHide)
+    return () => {
+      window.removeEventListener('pagehide', onPageHide)
+      closePresenterView()
+    }
+  }, [closePresenterView])
 
   // Focus, measure and go full screen once the stage is actually in the document.
   useEffect(() => {
@@ -340,6 +429,16 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
           handled()
           setIsOverview((value) => !value)
           break
+        case 'n':
+        case 'N':
+          handled()
+          setShowNotes((value) => !value)
+          break
+        case 's':
+        case 'S':
+          handled()
+          openPresenterView()
+          break
         default:
           // A digit jumps straight to that slide, for questions at the end.
           if (/^[1-9]$/.test(e.key)) {
@@ -390,7 +489,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
       document.removeEventListener('fullscreenchange', onFullscreenChange)
       root?.removeEventListener('wheel', onWheel)
     }
-  }, [isOpen, close, goTo, next, prev, toggleFullscreen, measureStage, wake])
+  }, [isOpen, close, goTo, next, prev, toggleFullscreen, measureStage, wake, openPresenterView])
 
   /**
    * Plays the arriving page's transition between the slot being left and the
@@ -460,6 +559,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   }, [index, isOpen, reach, mounted])
 
   const progress = pages.length < 2 ? 100 : (index / (pages.length - 1)) * 100
+  const notes = String((pages[index]?.global as { notes?: string } | undefined)?.notes ?? '').trim()
 
   function onStageClick() {
     if (live.current.isOverview) return
@@ -523,6 +623,27 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
       {/* B and W blank the screen mid-talk, so the room looks at you instead. */}
       {curtain ? <div className={`present__curtain present__curtain--${curtain}`} /> : null}
 
+      {/* What to say while this slide is up. Over the stage rather than beside
+          it: the slide is a projected image and nothing may take room off it. */}
+      {showNotes ? (
+        <div className="present__notes" onClick={(e) => e.stopPropagation()}>
+          <div className="present__notes-head">
+            <span>
+              Speaker notes · {index + 1} / {pages.length}
+            </span>
+            <button type="button" className="present__notes-close" onClick={() => setShowNotes(false)}>
+              Hide (N)
+            </button>
+          </div>
+          {viewBlocked ? (
+            <p className="present__notes-blocked">
+              Your browser blocked the presenter window. Allow pop-ups for this site to put your notes on a second screen.
+            </p>
+          ) : null}
+          <div className={cx('present__notes-body', { 'present__notes-empty': !notes })}>{notes || 'No notes for this page.'}</div>
+        </div>
+      ) : null}
+
       {/* Jump to any slide without walking through the ones in between. */}
       {isOverview ? (
         <div
@@ -581,6 +702,27 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
           <Elapsed startedAt={startedAt} onReset={() => setStartedAt(Date.now())} />
           <button
             type="button"
+            className={cx('present__btn', { 'is-on': showNotes })}
+            title="Speaker notes (N)"
+            onClick={() => setShowNotes((value) => !value)}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 3.5h14v17H5zM8.5 8h7M8.5 12h7M8.5 16h4.5" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={cx('present__btn', { 'is-on': !!viewMount })}
+            title="Presenter view (S)"
+            onClick={openPresenterView}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="2" y="4.5" width="12" height="9" rx="1" />
+              <path d="M17 8.5h5v11h-9v-6" />
+            </svg>
+          </button>
+          <button
+            type="button"
             className={cx('present__btn', { 'is-on': isOverview })}
             title="All slides (G)"
             onClick={() => setIsOverview((v) => !v)}
@@ -619,6 +761,10 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
           <span style={{ width: progress + '%' }} />
         </div>
       </div>
+
+      {/* The second window, drawn from here so it can use the same components
+          and the same live store. */}
+      {viewMount ? createPortal(<PresenterView />, viewMount) : null}
     </div>,
     getPortalContainer() ?? document.body,
   )

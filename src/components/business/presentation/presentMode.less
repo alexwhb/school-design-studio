@@ -3,6 +3,10 @@
 @present-ink: rgba(255, 255, 255, 0.92);
 @present-ink-dim: rgba(255, 255, 255, 0.55);
 @present-chrome: rgba(22, 22, 24, 0.82);
+// Bigger than anything in the editor's type scale, deliberately. The notes and
+// the clock are read from a lectern or across a desk, not at arm's length.
+@present-read: 17px;
+@present-clock: 20px;
 
 .present {
   position: fixed;
@@ -246,5 +250,204 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+// The notes overlay, laid over the stage when N is pressed. Not a panel beside
+// the slide: the presenter is a projected image and nothing may take room off
+// it, so the notes come and go on top and the slide keeps the whole screen.
+.present__notes {
+  position: absolute;
+  left: 50%;
+  bottom: 96px;
+  z-index: 2;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(760px, 78vw);
+  max-height: 42vh;
+  padding: 14px 18px 16px;
+  border-radius: @radius-lg;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: @present-chrome;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  color: @present-ink;
+  text-align: left;
+  cursor: default;
+
+  &-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: @present-ink-dim;
+    font-size: @text-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  &-close {
+    margin-left: auto;
+    padding: 0 6px;
+    border: 0;
+    border-radius: @radius-sm;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    &:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+  }
+  &-blocked {
+    margin: 0;
+    color: #ffca7a;
+    font-size: @text-sm;
+  }
+  &-body {
+    overflow: auto;
+    font-size: @present-read;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  &-empty {
+    color: @present-ink-dim;
+  }
+}
+
+// The second window. Same neutral surround as the stage, for the same reason:
+// it is a console rather than part of the editor, and it is looked at in a dark
+// room.
+.presenter {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0b0b0d;
+  color: @present-ink;
+  font-family: @font-ui;
+  overflow: hidden;
+
+  &__bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  &__spacer {
+    flex: 1;
+  }
+  &__count {
+    color: @present-ink-dim;
+    font-size: @text-md;
+    b {
+      color: @present-ink;
+      font-size: @present-clock;
+      font-weight: 600;
+    }
+  }
+  &__timer {
+    border: 0;
+    border-radius: @radius-pill;
+    padding: 2px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: @present-ink;
+    font-family: inherit;
+    font-size: @present-clock;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    &:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+  }
+  &__btn {
+    padding: 7px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: @radius-pill;
+    background: transparent;
+    color: @present-ink;
+    font: inherit;
+    font-size: @text-md;
+    cursor: pointer;
+    &:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+    &--go {
+      background: rgba(255, 255, 255, 0.16);
+    }
+  }
+  &__ended {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    background: rgba(255, 202, 122, 0.16);
+    color: #ffca7a;
+    font-size: @text-md;
+  }
+
+  &__body {
+    flex: 1;
+    display: flex;
+    gap: 16px;
+    min-height: 0;
+    padding: 16px;
+  }
+  // Two thirds the slide on show, one third what is coming and what to say.
+  &__now {
+    flex: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    border-radius: @radius;
+    background: #000;
+    overflow: hidden;
+  }
+  &__side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  &__label {
+    color: @present-ink-dim;
+    font-size: @text-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  &__next {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32%;
+    flex-shrink: 0;
+    border-radius: @radius;
+    background: #000;
+    overflow: hidden;
+  }
+  &__last {
+    color: @present-ink-dim;
+    font-size: @text-md;
+  }
+  &__notes {
+    flex: 1;
+    min-height: 0;
+    padding: 12px 14px;
+    border-radius: @radius;
+    background: rgba(255, 255, 255, 0.06);
+    font-size: @present-read;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow: auto;
+    &.is-empty {
+      color: @present-ink-dim;
+      font-size: @text-md;
+    }
   }
 }
