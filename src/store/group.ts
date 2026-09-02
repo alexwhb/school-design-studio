@@ -1,12 +1,14 @@
 import { customAlphabet } from 'nanoid/non-secure'
 import { canvasState, groupState, widgetState } from './state'
 import type { TdWidgetData } from './types'
+import { refuseLocked } from './widget/lock'
 
 const nanoid = customAlphabet('1234567890abcdef', 12)
 
 export function realCombined() {
   const selectWidgets = widgetState.dSelectWidgets
   if (selectWidgets.length > 1) {
+    if (refuseLocked(selectWidgets, 'grouped')) return
     const widgets = widgetState.dWidgets
     const group: TdWidgetData = JSON.parse(groupState.dGroupJson)
     group.uuid = nanoid()

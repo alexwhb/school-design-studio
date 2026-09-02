@@ -259,9 +259,11 @@ html.dark {
     outline: 2px solid @accent !important;
   }
 }
-// Locked layers cannot be picked up.
+// A locked layer can still be clicked, so that you can see it is locked and
+// unlock it; what it refuses is decided where the moving is done. Selecto
+// reads the class to keep locked layers out of a drag box.
 .layer-lock {
-  pointer-events: none;
+  cursor: default;
 }
 
 // ---- keyboard focus -----------------------------------------------------

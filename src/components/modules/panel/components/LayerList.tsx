@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import Sortable from 'sortablejs'
 import { widgetState } from '@/store/state'
-import { renameWidget, selectWidget, setLayerHidden, updateHoverUuid, updateWidgetData } from '@/store/widget'
+import { renameWidget, selectWidget, setLayerHidden, toggleLayerLock, updateHoverUuid } from '@/store/widget'
 import { recordHistory } from '@/common/hooks/history'
 import Input from '@/components/ui/Input'
 import { cx } from '@/utils/dom'
@@ -138,11 +138,7 @@ export default function LayerList({ data, onChange }: Props) {
   }
 
   function lockLayer(item: TdWidgetData) {
-    updateWidgetData({
-      uuid: item.uuid,
-      key: 'lock',
-      value: typeof item.lock === 'undefined' ? true : !item.lock,
-    })
+    toggleLayerLock(item.uuid)
   }
 
   function hideLayer(item: TdWidgetData) {

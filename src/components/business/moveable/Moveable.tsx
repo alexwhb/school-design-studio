@@ -9,6 +9,7 @@ import { resize } from '@/store/widget/resize'
 import { updateWidgetData, updateWidgetMultiple } from '@/store/widget/widget'
 import { clearSelection, selectWidget } from '@/store/widget/select'
 import { beginHistory, endHistory } from '@/common/hooks/history'
+import { refuseLocked } from '@/store/widget/lock'
 import type { TdWidgetData } from '@/store/types'
 import useSelecto, { isBoxingSelection } from './Selecto'
 import getSnapPositions, { snapBox } from '@/common/methods/snapping'
@@ -123,6 +124,8 @@ export default function Moveable() {
     let resizeStartWidth = 0
     /** Where every layer of a multi-selection was when its corner was picked up. */
     let groupResizeStart: Map<string, TScaleStart> | null = null
+    /** A locked layer was pulled: say so once, when it is let go. */
+    let lockedDragAttempt = false
     /** See drawActiveTarget: the delayed insistence that nothing is selected. */
     let emptyTimer: any = null
 
@@ -327,15 +330,26 @@ export default function Moveable() {
         if (inputEvent.target.nodeName === 'PRE') {
           active.editable && stop()
         }
-        active.lock && stop()
+        lockedDragAttempt = false
       })
-      .on('drag', ({ target, left, top }: any) => {
+      .on('drag', ({ target, left, top, dist }: any) => {
+        // A locked layer is picked up like any other — the press is also how it
+        // is selected — but it does not go anywhere. A press that turns into a
+        // pull is an attempt to move it, and is answered when it ends.
+        if (widgetState.dActiveElement?.lock) {
+          if (Math.hypot(dist?.[0] || 0, dist?.[1] || 0) > 3) lockedDragAttempt = true
+          return
+        }
         target!.style.left = `${left}px`
         target!.style.top = `${top}px`
         holdPosition = { left, top }
       })
       .on('dragEnd', ({ inputEvent }: any) => {
         widgetState.activeMouseEvent = null
+        if (lockedDragAttempt) {
+          lockedDragAttempt = false
+          refuseLocked([widgetState.dActiveElement], 'moved')
+        }
 
         inputEvent.stopPropagation()
         inputEvent.preventDefault()
@@ -358,6 +372,9 @@ export default function Moveable() {
           })
           holdPosition = null
         }
+      })
+      .on('rotateStart', ({ stop }: any) => {
+        refuseLocked([widgetState.dActiveElement], 'turned') && stop()
       })
       .on('rotate', ({ target, transform, rotate, inputEvent }: any) => {
         const angle = snapRotation(rotate, !!inputEvent?.shiftKey)
@@ -388,6 +405,10 @@ export default function Moveable() {
       .on('resizeStart', (args: any) => {
         if (!moveable) return
         const active = widgetState.dActiveElement
+        if (refuseLocked([active], 'resized')) {
+          args.stop()
+          return
+        }
         if (active?.type === 'w-text') {
           if (String(args.direction) === '1,0') {
             moveable.keepRatio = false
@@ -504,6 +525,9 @@ export default function Moveable() {
           }
         } catch (err) {}
       })
+      .on('dragGroupStart', ({ stop }: any) => {
+        refuseLocked(widgetState.dSelectWidgets, 'moved') && stop()
+      })
       .on('dragGroup', (e: any) => {
         e.inputEvent.stopPropagation()
         e.inputEvent.preventDefault()
@@ -539,6 +563,10 @@ export default function Moveable() {
        * press that starts this is not one the history hook can see.
        */
       .on('resizeGroupStart', (e: any) => {
+        if (refuseLocked(widgetState.dSelectWidgets, 'resized')) {
+          e.stop()
+          return
+        }
         groupResizeStart = new Map()
         for (const ev of e.events) {
           const uuid = ev.target.getAttribute('data-uuid')
@@ -608,8 +636,14 @@ export default function Moveable() {
       clearTimeout(emptyTimer)
       if (val && val.record && Number(val.uuid) != -1) {
         _target = `[id="${val.uuid}"]`
-        moveable.rotatable = true
-        switch (val.type) {
+        // A locked layer keeps its box, drawn so that you can tell, and loses
+        // the handles: there is nothing they could do.
+        moveable.className = val.lock ? 'zk-moveable-style is-locked' : 'zk-moveable-style'
+        moveable.rotatable = !val.lock
+        switch (val.lock ? 'locked' : val.type) {
+          case 'locked':
+            moveable.renderDirections = []
+            break
           case 'w-text':
             // The side handle sets how wide the text may run before it wraps,
             // which a curved run has no use for: its box is fitted to the arc
@@ -790,6 +824,16 @@ export default function Moveable() {
       },
     )
 
+    /** Locking or unlocking the selected layer changes which handles it gets. */
+    const unsubLock = subscribeSelector(
+      widgetState,
+      () => `${widgetState.dActiveElement?.uuid}:${widgetState.dActiveElement?.lock ? 1 : 0}`,
+      () => {
+        const active = widgetState.dActiveElement
+        if (active && active.uuid !== '-1' && widgetState.dSelectWidgets.length <= 1) drawActiveTarget(active)
+      },
+    )
+
     /** Snapping is a preference, and it is allowed to be off. */
     const unsubSnap = subscribeKey(controlState, 'dSnapEnabled', (enabled) => {
       if (!moveable) return
@@ -809,6 +853,7 @@ export default function Moveable() {
       unsubGuides()
       unsubLayers()
       unsubSnap()
+      unsubLock()
       selecto.destroy()
       moveable?.destroy()
       moveable = null

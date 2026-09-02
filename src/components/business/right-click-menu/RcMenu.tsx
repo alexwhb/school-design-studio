@@ -54,6 +54,8 @@ export default function RcMenu() {
     if (active?.isContainer) {
       list = ([{ type: 'ungroup', text: 'Ungroup' }] as TWidgetItemData[]).concat(list)
     }
+    // The item names what it will do, not what the layer is
+    list = list.map((item) => (item.type === 'lock' ? { ...item, text: active?.lock ? 'Unlock' : 'Lock' } : item))
     let mx = e.pageX
     let my = e.pageY
     const listWidth = 160
@@ -95,6 +97,9 @@ export default function RcMenu() {
         break
       case 'index-back':
         arrangeLayer(active?.uuid || '', { key: 'zOrder', value: 'back' })
+        break
+      case 'lock':
+        arrangeLayer(active?.uuid || '', { key: 'lock', value: 'toggle' })
         break
       case 'del':
         deleteWidget()

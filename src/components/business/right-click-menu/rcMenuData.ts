@@ -19,7 +19,7 @@ export const menuList: TMenuItemData = {
 }
 
 export type TWidgetItemData = {
-  type: 'copy' | 'paste' | 'index-up' | 'index-down' | 'index-front' | 'index-back' | 'del' | 'ungroup'
+  type: 'copy' | 'paste' | 'index-up' | 'index-down' | 'index-front' | 'index-back' | 'lock' | 'del' | 'ungroup'
   text: string
 }
 
@@ -47,6 +47,10 @@ export const widgetMenu: TWidgetItemData[] = [
   {
     type: 'index-back',
     text: 'Send to back',
+  },
+  {
+    type: 'lock',
+    text: 'Lock',
   },
   {
     type: 'del',

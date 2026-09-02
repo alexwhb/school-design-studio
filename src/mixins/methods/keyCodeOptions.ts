@@ -2,6 +2,7 @@ import { controlState, widgetState } from '@/store/state'
 import { setDrawTool, setPathEditUuid, setSpaceDown, toggleDrawTool } from '@/store/control'
 import { deleteWidget, lockWidgets, updateWidgetData } from '@/store/widget/widget'
 import { clearSelection } from '@/store/widget/select'
+import { refuseLocked, selectionWidgets } from '@/store/widget/lock'
 import { escapeHitOverlay } from '../overlayEscape'
 import type { TdWidgetData } from '@/store/types'
 import { getAppRoot } from '@/common/hooks/appRoot'
@@ -131,6 +132,7 @@ function udlr(type: keyof TdWidgetData, value: any, event: any) {
   const selected = widgetState.dSelectWidgets
   if (Number(widgetState.dActiveElement.uuid) == -1 && selected.length > 1) {
     event.preventDefault()
+    if (refuseLocked(selected, 'moved')) return
     for (const item of selected) {
       updateWidgetData({ uuid: item.uuid, key: type, value: Number(item[type]) + value })
     }
@@ -145,6 +147,7 @@ function udlr(type: keyof TdWidgetData, value: any, event: any) {
       return
     }
     event.preventDefault()
+    if (refuseLocked([widgetState.dActiveElement], 'moved')) return
     const result = Number(widgetState.dActiveElement[type]) + value
     updateWidgetData({
       uuid: widgetState.dActiveElement.uuid,

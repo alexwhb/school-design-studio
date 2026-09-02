@@ -66,6 +66,12 @@ export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) 
       e.preventDefault()
       arrange(e.shiftKey ? { key: 'zOrder', value: 'back' } : { key: 'zIndex', value: -1 })
       break
+    case 76:
+      // Ctrl/Cmd + Shift + L locks and unlocks; plain Ctrl/Cmd + L is the browser's
+      if (!e.shiftKey) return
+      e.preventDefault()
+      arrange({ key: 'lock', value: 'toggle' })
+      break
   }
 }
 

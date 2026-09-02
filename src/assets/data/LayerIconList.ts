@@ -33,4 +33,12 @@ export default [
     tip: 'Send to back',
     value: 'back',
   },
+  // Tip, glyph and state are filled in by ArrangeRow from the layer itself
+  {
+    key: 'lock',
+    icon: 'sd-jiesuo',
+    extraIcon: true,
+    tip: 'Lock',
+    value: 'toggle',
+  },
 ] as TIconItemSelectData[]

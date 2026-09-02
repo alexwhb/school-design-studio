@@ -267,8 +267,9 @@ sits in front of what.
 Each row carries two toggles at its end. The state a layer is not in stays out
 of the way until you hover over the row; the state it is in is always on show.
 
-- **Lock** holds an element where it is. It is still drawn and still exported —
-  it just stops answering to clicks, drags and the selection box.
+- **Lock** holds an element where it is. It is still drawn and still exported,
+  and it can still be selected — that is how you see it is locked — but it will
+  not move. See [Arrange and lock](#arrange-and-lock).
 - **Hide** takes it off the canvas until you show it again. A hidden layer is
   not drawn at all rather than made faint, so nothing can click it, drag onto
   it or snap to its edges, and it is absent from the PDF, the PNG and both
@@ -298,6 +299,18 @@ for the background that belongs behind everything or the badge that has to come
 out on top of it all. A group travels as one thing — its members go with it and
 keep their order — and a member of a group can only move within the group. All
 of it undoes with Ctrl/⌘ + Z.
+
+**Locking.** A locked layer stays exactly as it is. It can still be clicked —
+that is how you see it is locked, and how you unlock it — and its box is drawn
+as a dashed line with no handles. What it refuses is everything that would
+change it: moving, resizing, turning, nudging with the arrow keys, deleting,
+grouping, and moving through the stack. Each refusal says so in a short notice
+rather than silently doing nothing. Drag boxes and Select all leave locked
+layers out, so the rest of the page can be moved around them.
+
+Lock and unlock from the padlock at the end of the Arrange row, the right-click
+menu, the Layers tab, or Ctrl/⌘ + Shift + L. A lock belongs to the design, so it
+is saved with it and undo puts it back.
 
 **Resizing several at once.** Select more than one thing — drag a box round
 them, or Shift-click — and the box round the lot has corner handles. Dragging a

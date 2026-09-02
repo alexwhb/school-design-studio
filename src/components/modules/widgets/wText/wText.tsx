@@ -202,7 +202,7 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   }
 
   function dblclickText() {
-    if (editable) return
+    if (editable || p.lock) return
     setEditable(true)
     setTimeout(() => {
       // Read after the re-render, not before it: a curved run has no editable

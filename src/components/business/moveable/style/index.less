@@ -108,6 +108,14 @@
   top: -9999px;
 }
 
+// A locked layer's box: the same colour, drawn as a dashed hairline rather
+// than a solid one, with nothing on it to grab.
+.zk-moveable-style.is-locked .moveable-line.moveable-direction {
+  background: transparent;
+  border-top: 1px dashed var(--moveable-color);
+  height: 0;
+}
+
 // The angle beside the pointer while something is being turned. The same chip
 // as the snap distances, so the two readouts look like one family.
 .ds-rotate-readout {

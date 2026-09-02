@@ -194,3 +194,72 @@ test('arrow keys nudge a whole multi-selection, one pixel or ten, and undo takes
   await undo(page)
   expect(await widgetLefts(page)).toEqual(before.map((left) => left + 1))
 })
+
+/* ------------------------------------------------------------------ locks */
+
+test('a locked layer refuses delete and nudge, and says so; unlocking restores both', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  const before = await widgetLefts(page)
+
+  await page.keyboard.press('ControlOrMeta+Shift+KeyL')
+  await page.waitForTimeout(300)
+  // The box is still there — you can see what you have selected — but has no handles
+  await expect(page.locator('.moveable-control-box.is-locked')).toBeVisible()
+  await expect(page.locator('.moveable-control.moveable-se')).toHaveCount(0)
+
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(300)
+  expect(await widgetLefts(page)).toEqual(before)
+  await expect(page.locator('.el-message', { hasText: 'locked' })).toBeVisible()
+
+  await page.keyboard.press('Backspace')
+  await page.waitForTimeout(300)
+  await expect(page.locator(WIDGET)).toHaveCount(1)
+
+  await page.keyboard.press('ControlOrMeta+Shift+KeyL')
+  await page.waitForTimeout(300)
+  await expect(page.locator('.moveable-control-box.is-locked')).toHaveCount(0)
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(300)
+  expect(await widgetLefts(page)).toEqual(before.map((left) => left + 1))
+  await page.keyboard.press('Backspace')
+  await page.waitForTimeout(300)
+  await expect(page.locator(WIDGET)).toHaveCount(0)
+})
+
+test('the Arrange row and the context menu both lock and unlock', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+
+  await page.locator('#style-panel .icon-item-select .list-item[aria-label="Lock"]').click()
+  await page.waitForTimeout(300)
+  await expect(page.locator('#style-panel .icon-item-select .list-item[aria-label="Unlock"]')).toBeVisible()
+  await expect(page.locator('#style-panel .icon-item-select .list-item[aria-label="Bring to front"]')).toHaveClass(/disabled/)
+
+  await openContextMenu(page)
+  await page.locator('.menu-list .menu-item', { hasText: 'Unlock' }).click()
+  await page.waitForTimeout(300)
+  await expect(page.locator('#style-panel .icon-item-select .list-item[aria-label="Lock"]')).toBeVisible()
+})
+
+test('a locked layer can still be clicked, but dragging it goes nowhere', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await page.keyboard.press('ControlOrMeta+Shift+KeyL')
+  await page.waitForTimeout(300)
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+  const before = await widgetLefts(page)
+
+  const box = (await page.locator(WIDGET).first().boundingBox())!
+  await page.mouse.move(box.x + 20, box.y + 10)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 120, box.y + 70, { steps: 10 })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+
+  await expect(page.locator('#w-text-style')).toBeVisible()
+  expect(await widgetLefts(page)).toEqual(before)
+  await expect(page.locator('.el-message', { hasText: 'locked' })).toBeVisible()
+})

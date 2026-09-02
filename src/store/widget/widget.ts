@@ -5,6 +5,7 @@ import { setLayoutsChange } from '../force'
 import type { TdLayout, TdWidgetData } from '../types'
 import { updateGroupSize } from './move'
 import { selectWidget } from './select'
+import { refuseLocked } from './lock'
 
 const nanoid = customAlphabet('1234567890abcdef', 12)
 
@@ -122,6 +123,7 @@ export function deleteWidget() {
   const selectWidgets = widgetState.dSelectWidgets
   const activeElement = widgetState.dActiveElement
   if (!activeElement) return
+  if (refuseLocked(selectWidgets.length ? selectWidgets : [activeElement], 'deleted')) return
 
   let count = 0
   if (selectWidgets.length !== 0) {

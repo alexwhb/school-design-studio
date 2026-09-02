@@ -2,6 +2,7 @@ import { widgetState } from '../state'
 import { setUpdateSelect } from '../force'
 import type { TdWidgetData } from '../types'
 import { clearSelection } from './select'
+import { refuseLocked } from './lock'
 
 export type TupdateLayerIndexData = {
   uuid: string
@@ -16,6 +17,7 @@ export function updateLayerIndex({ uuid, value, isGroup }: TupdateLayerIndexData
   let group: TdWidgetData[] = []
 
   if (!widget) return
+  if (refuseLocked([widget], 'moved in the stack')) return
 
   if (isGroup) {
     group = widgets.filter((item) => item.parent === uuid)
@@ -84,6 +86,7 @@ export function setLayerOrder({ uuid, to }: { uuid: string; to: TLayerOrderEnd }
   const index = widgets.findIndex((item) => item.uuid === uuid)
   if (index === -1) return
   const widget = widgets[index]
+  if (refuseLocked([widget], 'moved in the stack')) return
 
   // Everything that moves, in the order it currently sits
   const moving = [widget, ...widgets.filter((item) => item.parent === uuid)]

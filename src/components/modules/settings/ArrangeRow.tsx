@@ -3,6 +3,7 @@ import { useSnapshot } from 'valtio'
 import layerIconList from '@/assets/data/LayerIconList'
 import { widgetState } from '@/store/state'
 import { setLayerOrder, updateLayerIndex } from '@/store/widget/layer'
+import { toggleLayerLock } from '@/store/widget/lock'
 import { recordHistory } from '@/common/hooks/history'
 import IconItemSelect, { type TIconItemSelectData } from './IconItemSelect'
 
@@ -31,6 +32,9 @@ export function arrangeLayer(uuid: string, item: Pick<TIconItemSelectData, 'key'
       case 'zOrder':
         setLayerOrder({ uuid, to: item.value === 'back' ? 'back' : 'front' })
         break
+      case 'lock':
+        toggleLayerLock(uuid)
+        break
     }
   })
 }
@@ -43,13 +47,21 @@ export default function ArrangeRow({ uuid, className = 'style-item', label = 'Ar
   const snap = useSnapshot(widgetState)
   const widget = snap.dWidgets.find((w) => w.uuid === uuid)
 
+  const locked = !!widget?.lock
+
   const items = useMemo(() => {
-    const own: TIconItemSelectData[] = layerIconList.map((item) => ({ ...item }))
+    const own: TIconItemSelectData[] = layerIconList.map((item) => {
+      if (item.key === 'lock') {
+        return { ...item, icon: locked ? 'sd-suoding' : 'sd-jiesuo', tip: locked ? 'Unlock' : 'Lock', select: locked }
+      }
+      // Nothing else on the row can be done to a locked layer
+      return { ...item, disabled: locked }
+    })
     return extra ? own.concat(extra) : own
-  }, [widget?.lock, extra])
+  }, [locked, extra])
 
   function finish(item: TIconItemSelectData) {
-    if (item.key === 'zIndex' || item.key === 'zOrder') {
+    if (item.key === 'zIndex' || item.key === 'zOrder' || item.key === 'lock') {
       arrangeLayer(uuid, item)
       return
     }
