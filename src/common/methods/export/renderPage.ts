@@ -9,7 +9,7 @@
 import html2canvas from 'html2canvas'
 import FontFaceObserver from 'fontfaceobserver'
 import { canvasState, widgetState } from '@/store/state'
-import { setShowMoveable } from '@/store/control'
+import { setPathEditUuid, setShowMoveable } from '@/store/control'
 import { setDPage, updateZoom } from '@/store/canvas'
 import { getWidgets, setDWidgets } from '@/store/widget/widget'
 import { selectWidget } from '@/store/widget/select'
@@ -285,7 +285,9 @@ export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Prom
   const originalZoom = canvasState.dZoom
 
   // Deselect first: the selection outline would otherwise be baked into the
-  // exported image.
+  // exported image, and so would a path's points. Editing goes first because
+  // leaving it puts the selection box back, which the next line then takes away.
+  setPathEditUuid('-1')
   setShowMoveable(false)
   selectWidget({ uuid: '-1' })
   await waitForFonts()

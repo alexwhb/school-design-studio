@@ -27,7 +27,7 @@
  * each path.
  */
 import { createGradientNode, viewBoxOf } from '@/utils/svgPaint'
-import type { TWidgetBorder } from '../widgetBorder'
+import { dashesFor, type TWidgetBorder } from '../widgetBorder'
 
 const NS = 'http://www.w3.org/2000/svg'
 
@@ -52,13 +52,6 @@ function paintsItsOwnStroke(el: Element): boolean {
     if (node.tagName.toLowerCase() === 'svg') break
   }
   return false
-}
-
-/** The gap pattern for a dashed or dotted outline, in design pixels. */
-function dashesFor(border: TWidgetBorder): string | null {
-  if (border.style === 'dashed') return `${border.width * 3} ${border.width * 2}`
-  if (border.style === 'dotted') return `0 ${border.width * 2}`
-  return null
 }
 
 /**

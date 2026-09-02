@@ -1,0 +1,70 @@
+// A point dragged past the widget's edge is still part of the path, so neither
+// the paint nor the grips are clipped to the frame. An <svg> hides what runs
+// outside its viewport unless it is told not to.
+.path__paint,
+.path__points-stalks {
+  overflow: visible;
+}
+
+.path__points {
+  position: absolute;
+  inset: 0;
+  // Only the dots answer the mouse. Everything between them is the path itself,
+  // which still has to be draggable while its points are being moved.
+  pointer-events: none;
+}
+
+.path__points-stalks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.path__points-outline {
+  stroke: var(--ds-accent, #6ccfff);
+}
+
+.path__points-stalk {
+  stroke: var(--ds-accent, #6ccfff);
+  opacity: 0.7;
+}
+
+.path__point,
+.path__handle {
+  position: absolute;
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: #fff;
+  box-shadow: 0 0 2px 0 rgba(86, 90, 98, 0.35);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  pointer-events: auto;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// A point sits on the path; a control handle sits off it on a stalk. Square
+// against round is how every drawing program tells the two apart at a glance.
+.path__point {
+  background: var(--ds-accent, #6ccfff);
+}
+
+.path__handle {
+  border-radius: 50%;
+  background: #fff;
+  border-color: var(--ds-accent, #6ccfff);
+}
+
+.path__readout {
+  position: absolute;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: var(--ds-accent, #6ccfff);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+  pointer-events: none;
+}

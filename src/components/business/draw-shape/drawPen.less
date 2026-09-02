@@ -1,0 +1,46 @@
+// Drawn inside the page, so its lengths are design pixels and the canvas's own
+// scale carries them onto the screen — which is why every width here is divided
+// back out of the zoom before it is set.
+.draw-pen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.draw-pen__line {
+  stroke: @accent;
+}
+
+// The stretch between the last point and the pointer, which is where the line
+// would go rather than where it is.
+.draw-pen__ahead {
+  stroke: @accent;
+  opacity: 0.7;
+}
+
+.draw-pen__stalk {
+  stroke: @accent;
+  opacity: 0.7;
+}
+
+.draw-pen__handle {
+  fill: @surface;
+  stroke: @accent;
+}
+
+// Square for a point on the path, the way every drawing program marks one, and
+// grown at the first point once a click there would close the shape.
+.draw-pen__point {
+  fill: @accent;
+  stroke: @accent-on;
+}
+
+.draw-pen__point--close {
+  fill: @accent-on;
+  stroke: @accent;
+}
+
+.draw-pen__guide {
+  stroke: @snap-line;
+}

@@ -6,6 +6,7 @@ import WSvgStyle from '../widgets/wSvg/WSvgStyle'
 import WRectStyle from '../widgets/wRect/WRectStyle'
 import WEllipseStyle from '../widgets/wEllipse/WEllipseStyle'
 import WPolygonStyle from '../widgets/wPolygon/WPolygonStyle'
+import WPathStyle from '../widgets/wPath/WPathStyle'
 import WGroupStyle from '../widgets/wGroup/WGroupStyle'
 import WQrcodeStyle from '../widgets/wQrcode/WQrcodeStyle'
 
@@ -17,6 +18,7 @@ export const styleComponents: Record<string, ComponentType<any>> = {
   'w-rect-style': WRectStyle,
   'w-ellipse-style': WEllipseStyle,
   'w-polygon-style': WPolygonStyle,
+  'w-path-style': WPathStyle,
   'w-group-style': WGroupStyle,
   'w-qrcode-style': WQrcodeStyle,
 }

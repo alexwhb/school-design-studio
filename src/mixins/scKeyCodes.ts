@@ -63,6 +63,10 @@ export default [
     info: `Y`,
   },
   {
+    feat: `Draw a path`,
+    info: `P`,
+  },
+  {
     feat: `Delete`,
     info: `Delete / Backspace`,
   },

@@ -294,7 +294,7 @@ export default function Moveable() {
             startLS = Number(args.target!.style.letterSpacing.replace('px', ''))
             resetRatio = 1
           }
-        } else if (active?.type === 'w-rect' || active?.type === 'w-ellipse' || active?.type === 'w-polygon') {
+        } else if (active?.type === 'w-rect' || active?.type === 'w-ellipse' || active?.type === 'w-polygon' || active?.type === 'w-path') {
           // A drawn shape is whatever size it was drawn at: there is no artwork
           // inside it with a shape of its own to hold on to, so no handle on it
           // keeps the ratio — including the corners, which do everywhere else.
@@ -486,6 +486,7 @@ export default function Moveable() {
           case 'w-rect':
           case 'w-ellipse':
           case 'w-polygon':
+          case 'w-path':
             moveable.renderDirections = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']
             break
           default:

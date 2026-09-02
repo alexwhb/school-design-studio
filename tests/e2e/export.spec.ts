@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addText, openEditor } from './helpers'
+import { addText, armShapeTool, clickPoints, openEditor } from './helpers'
 
 /** The finished-export overlay covers the toolbar until it is closed. */
 async function dismissProgress(page: import('@playwright/test').Page) {
@@ -101,6 +101,50 @@ test('a drop shadow on a photo survives the PNG export', async ({ page }) => {
   // Beside the photo, where no shadow falls, the page is untouched.
   const beside = await pixelOf(page, png, Math.round(box.left - 40), Math.round(box.top + box.height + 30))
   expect(beside).toEqual({ r: 255, g: 255, b: 255, a: 255 })
+})
+
+test('a path drawn with the pen survives the PNG export', async ({ page }) => {
+  // html2canvas has no SVG renderer and a path is the one drawn shape that has
+  // to be one, so this is the shape most likely to come out of an export as a
+  // hole in the page.
+  await armShapeTool(page, 'Pen')
+  await clickPoints(page, [
+    { x: 80, y: 60 },
+    { x: 260, y: 60 },
+    { x: 170, y: 220 },
+    { x: 80, y: 60 },
+  ])
+  await page.waitForTimeout(600)
+  const box = await page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first().evaluate((el) => ({
+    left: parseFloat((el as HTMLElement).style.left),
+    top: parseFloat((el as HTMLElement).style.top),
+    width: parseFloat((el as HTMLElement).style.width),
+    height: parseFloat((el as HTMLElement).style.height),
+  }))
+
+  const download = page.waitForEvent('download', { timeout: 90000 })
+  await page.getByRole('button', { name: 'Export' }).click()
+  const file = await download
+  const stream = await file.createReadStream()
+  const chunks: Buffer[] = []
+  for await (const chunk of stream!) chunks.push(chunk as Buffer)
+  const png = Buffer.concat(chunks)
+
+  // Just under the top edge, between the two upper corners, is inside the
+  // triangle and filled with the placeholder grey.
+  const inside = await pixelOf(page, png, Math.round(box.left + box.width / 2), Math.round(box.top + 12))
+  expect(inside).toEqual({ r: 216, g: 216, b: 216, a: 255 })
+
+  // The bottom-left corner of the frame is outside the triangle, so the page
+  // shows through — which is what says the shape was drawn and not just its box.
+  const outside = await pixelOf(page, png, Math.round(box.left + 6), Math.round(box.top + box.height - 6))
+  expect(outside).toEqual({ r: 255, g: 255, b: 255, a: 255 })
+
+  // The bottom point of the triangle is grey like the rest of it, not the blue
+  // of a grip: the export deselects, so the points a path is edited by are not
+  // baked into the file.
+  const apex = await pixelOf(page, png, Math.round(box.left + box.width / 2), Math.round(box.top + box.height - 4))
+  expect(apex.r).toBe(apex.b)
 })
 
 test('the PDF export writes a real PDF, one page per page of the design', async ({ page }) => {

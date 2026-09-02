@@ -65,6 +65,7 @@ export const controlState = proxy<TControlState>({
   showRotatable: true,
   dAltDown: false,
   dCropUuid: '-1',
+  dPathEditUuid: '-1',
   dSpaceDown: false,
   dSnapEnabled: readStoredSnap(),
   dDrawTool: null,

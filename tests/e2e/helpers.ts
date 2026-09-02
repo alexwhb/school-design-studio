@@ -125,8 +125,8 @@ export async function canvasBox(page: Page) {
   return { ...box, scale }
 }
 
-/** Arms a shape tool from the Tools panel, which is how it is first found. */
-export async function armShapeTool(page: Page, label: 'Rectangle' | 'Ellipse' | 'Polygon') {
+/** Arms a drawing tool from the Tools panel, which is how it is first found. */
+export async function armShapeTool(page: Page, label: 'Rectangle' | 'Ellipse' | 'Polygon' | 'Pen') {
   await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
   await page.waitForTimeout(300)
   await page.locator('.tools-list-wrap .item', { hasText: label }).click()
@@ -293,4 +293,44 @@ export async function widgetText(page: Page, index = 0) {
 export async function collapsePageStrip(page: Page) {
   await page.locator('.artboards .icon-btn').click()
   await page.waitForTimeout(500)
+}
+
+/**
+ * Clicks a run of points on the page with the pen, one at a time, and leaves the
+ * path unfinished — how it is finished is what the test is usually about.
+ */
+export async function clickPoints(page: Page, points: { x: number; y: number }[]) {
+  const board = await canvasBox(page)
+  for (const point of points) {
+    await page.mouse.click(board.x + point.x, board.y + point.y)
+    await page.waitForTimeout(120)
+  }
+  return board
+}
+
+/** The `d` the one path on the page is drawn with. */
+export function pathShape(page: Page) {
+  return page.evaluate(() => {
+    const el = document.querySelector('#page-design-canvas .path__paint path') as SVGPathElement
+    return el ? el.getAttribute('d') : null
+  })
+}
+
+/** What the one path on the page is painted and stroked with. */
+export function pathPaint(page: Page) {
+  return page.evaluate(() => {
+    const el = document.querySelector('#page-design-canvas .path__paint path') as SVGPathElement
+    if (!el) return null
+    return { fill: el.getAttribute('fill'), stroke: el.getAttribute('stroke'), strokeWidth: el.getAttribute('stroke-width') }
+  })
+}
+
+/**
+ * Opens the selected path up for editing, which is what a double-click on it
+ * does. Aimed at the middle of the widget rather than at its centre, which for
+ * a path may be somewhere the shape does not cover.
+ */
+export async function editPoints(page: Page) {
+  await page.locator(WIDGET).first().dblclick({ position: { x: 4, y: 4 } })
+  await page.waitForTimeout(400)
 }

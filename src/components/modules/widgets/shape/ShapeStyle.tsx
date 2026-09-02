@@ -3,7 +3,7 @@
  * what it is outlined in, and the shadow it casts.
  *
  * Some shapes take a section of their own — the rectangle's corners, the
- * polygon's count of them — and an ellipse takes none, so the section is handed
+ * polygon's count of them, a path's points — and an ellipse takes none, so the section is handed
  * in rather than assumed. Everything else they have in common, which is
  * everything else.
  */

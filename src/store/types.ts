@@ -119,6 +119,13 @@ export type TdWidgetData = TPageState &
      * draw.
      */
     sides?: number
+    /**
+     * Paths drawn with the pen: the points the curve runs through, as fractions
+     * of the box it is painted in, and whether the last runs back to the first.
+     * See wPath/pathGeometry.ts, which is the only thing that should read them.
+     */
+    points?: { x: number; y: number; in?: { x: number; y: number }; out?: { x: number; y: number } }[]
+    closed?: boolean
     record?: TWidgetRecord
     /**
      * Images and shapes: the shadow the artwork casts. Absent means none, the
@@ -155,8 +162,15 @@ export type TWidgetState = {
  * A shape that can be drawn by hand rather than fetched from a library. The
  * name is the widget's own type with the `w-` taken off, so the tool, the
  * shortcut and the widget it makes are all one word.
+ *
+ * The two are split because they are two gestures. A drag tool is pulled out of
+ * the page in one press and comes out at the size it was pulled to; the pen is
+ * a point at a time and is not finished until it is told it is. They share one
+ * setting so that arming either puts the other away.
  */
-export type TDrawTool = 'rect' | 'ellipse' | 'polygon'
+export type TDragTool = 'rect' | 'ellipse' | 'polygon'
+
+export type TDrawTool = TDragTool | 'pen'
 
 export type TControlState = {
   dMoving: boolean
@@ -168,6 +182,11 @@ export type TControlState = {
   dAltDown: boolean
   dSpaceDown: boolean
   dCropUuid: string
+  /**
+   * The path whose points are being edited, or '-1'. A mode rather than a flag
+   * on the widget, the same way cropping is, because only one path can be in it.
+   */
+  dPathEditUuid: string
   /** Snap moves and resizes to other objects, the page and the guides */
   dSnapEnabled: boolean
   /**

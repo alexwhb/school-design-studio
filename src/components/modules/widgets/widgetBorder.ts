@@ -33,6 +33,22 @@ export function widgetBorder(params: Record<string, any> | null | undefined): TW
 }
 
 /**
+ * The gap pattern a dashed or dotted outline is drawn with, in design pixels.
+ *
+ * Shared so that a dashed outline round a photograph, round a library shape and
+ * round a path drawn with the pen all break into the same rhythm. A dotted one
+ * is a run of zero-length dashes, which only shows up at all once the ends are
+ * rounded off — every caller that asks for it rounds its caps.
+ *
+ * @returns null for a solid outline, which needs no pattern.
+ */
+export function dashesFor(border: TWidgetBorder): string | null {
+  if (border.style === 'dashed') return `${border.width * 3} ${border.width * 2}`
+  if (border.style === 'dotted') return `0 ${border.width * 2}`
+  return null
+}
+
+/**
  * A gradient outline is a band of paint, not a border.
  *
  * `border` takes a colour and nothing else, so an outline that is a gradient

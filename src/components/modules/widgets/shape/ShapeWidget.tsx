@@ -4,9 +4,9 @@
  * Everything the drawn shapes have in common is here: where the shape is, how
  * big, how see-through, which way up, and the size it reports back to the
  * selection box. What goes inside the frame is handed in — a corner radius for
- * the shapes CSS can round into, or a drawing of its own for a polygon, which
- * it cannot. Anything belonging to one shape alone, such as the rectangle's
- * corner grips, comes in as a child.
+ * the shapes CSS can round into, or a drawing of its own for a polygon or a
+ * path, which it cannot. Anything belonging to one shape alone, such as the rectangle's
+ * corner grips or a path's points, comes in as a child.
  */
 import { useEffect, useRef, type ReactNode } from 'react'
 import { useSnapshot } from 'valtio'
@@ -23,7 +23,7 @@ import './shape.less'
  */
 type ShapeFill = { radius: string; paint?: never } | { paint: ReactNode; radius?: never }
 
-/** The widget's own class, `w-rect`, `w-ellipse` or `w-polygon`. */
+/** The widget's own class, `w-rect`, `w-ellipse`, `w-polygon` or `w-path`. */
 type Props = WidgetProps & ShapeFill & { kind: string }
 
 export function ShapeWidget({ params, parent, id, className, kind, radius, paint, child, children, ...rest }: Props) {

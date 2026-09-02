@@ -1,5 +1,5 @@
 import { controlState, widgetState } from '@/store/state'
-import { setDrawTool, setSpaceDown, toggleDrawTool } from '@/store/control'
+import { setDrawTool, setPathEditUuid, setSpaceDown, toggleDrawTool } from '@/store/control'
 import { deleteWidget, lockWidgets, updateWidgetData } from '@/store/widget/widget'
 import { clearSelection } from '@/store/widget/select'
 import { escapeHitOverlay } from '../overlayEscape'
@@ -26,7 +26,7 @@ export default function keyCodeOptions(e: any, params: any) {
     case 27:
       escape()
       break
-    // R, E and Y, as they are in Adobe XD. Pressed again the key puts the
+    // R, E, Y and P, as they are in Adobe XD. Pressed again the key puts the
     // pointer back, so the one that arms a tool is also the one that gets you
     // out of it.
     case 82:
@@ -37,6 +37,9 @@ export default function keyCodeOptions(e: any, params: any) {
       break
     case 89:
       if (!isTyping()) toggleDrawTool('polygon')
+      break
+    case 80:
+      if (!isTyping()) toggleDrawTool('pen')
       break
     case 46:
     case 8:
@@ -97,6 +100,12 @@ function escape() {
   // step rather than the first half of one.
   if (controlState.dDrawTool) {
     setDrawTool(null)
+    return
+  }
+  // A path being edited goes back to being a path you have selected, which is
+  // the same step back that a text layer being typed into takes above.
+  if (controlState.dPathEditUuid !== '-1') {
+    setPathEditUuid('-1')
     return
   }
   clearSelection()

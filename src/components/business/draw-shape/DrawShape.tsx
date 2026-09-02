@@ -12,7 +12,7 @@
  *
  * They are one gesture with several outcomes, so they are one component: what
  * the shape is called, what it is drawn from and what the rubber band looks
- * like is all `drawTools` knows, and the drag itself never asks which is armed.
+ * like is all `dragTools` knows, and the drag itself never asks which is armed.
  *
  * Nothing rendered here answers the mouse. The press is taken by a capture-phase
  * listener on the document, because the board selects and starts moving layers
@@ -34,46 +34,19 @@ import { addWidget } from '@/store/widget'
 import { clearSelection } from '@/store/widget/select'
 import { cx } from '@/utils/dom'
 import { SHAPE_DEFAULT_SIZE, SHAPE_MIN_SIZE } from '@/components/modules/widgets/shape/shapeSetting'
-import type { TDrawTool } from '@/store/types'
-import { drawTools } from './drawTools'
+import type { TDragTool } from '@/store/types'
+import { SNAP_THRESHOLD, canvasScale, clamp, snap } from './drawGeometry'
+import { dragTools } from './drawTools'
 import './drawShape.less'
 
-/** How close an edge has to come, in screen pixels, before it is pulled into line. */
-const SNAP_THRESHOLD = 5
-
 type TBox = { left: number; top: number; width: number; height: number }
-
-function clamp(value: number, low: number, high: number) {
-  return Math.min(Math.max(value, low), Math.max(low, high))
-}
-
-/**
- * The canvas's own scale, measured rather than read off the zoom: the two agree
- * everywhere except for the instant between a zoom being set and the page being
- * drawn at it, and a shape started in that instant would come out the wrong size.
- */
-function canvasScale(el: HTMLElement) {
-  return el.getBoundingClientRect().width / el.offsetWidth || 1
-}
-
-/** The nearest position within `tolerance`, or the value untouched. */
-function snap(value: number, positions: number[], tolerance: number) {
-  let best = value
-  let bestDistance = tolerance
-  for (const position of positions) {
-    const distance = Math.abs(position - value)
-    if (distance < bestDistance) {
-      bestDistance = distance
-      best = position
-    }
-  }
-  return best
-}
 
 export default function DrawShape() {
   const control = useSnapshot(controlState)
   const canvas = useSnapshot(canvasState)
-  const tool = control.dDrawTool
+  // The pen is armed through the same setting, because one armed tool has to
+  // disarm the other, but it is a different gesture and has its own component.
+  const tool = control.dDrawTool && control.dDrawTool in dragTools ? (control.dDrawTool as TDragTool) : null
   const armed = !!tool
   const [canvasEl, setCanvasEl] = useState<HTMLElement | null>(null)
   const [band, setBand] = useState<TBox | null>(null)
@@ -203,7 +176,7 @@ export default function DrawShape() {
   return (
     <>
       <div className="draw-hint" role="status">
-        <b>Drag to draw {drawTools[tool].noun}.</b> Shift keeps it {drawTools[tool].equal}, Alt draws it from the centre, Esc cancels.
+        <b>Drag to draw {dragTools[tool].noun}.</b> Shift keeps it {dragTools[tool].equal}, Alt draws it from the centre, Esc cancels.
       </div>
       {canvasEl && band
         ? createPortal(
@@ -211,7 +184,7 @@ export default function DrawShape() {
               {guides.x !== null ? <i className="draw-guide draw-guide--v" style={{ left: `${guides.x}px`, width: `${scale}px` }} /> : null}
               {guides.y !== null ? <i className="draw-guide draw-guide--h" style={{ top: `${guides.y}px`, height: `${scale}px` }} /> : null}
               <div
-                className={cx('draw-band', { 'draw-band--round': drawTools[tool].round })}
+                className={cx('draw-band', { 'draw-band--round': dragTools[tool].round })}
                 style={{
                   left: `${band.left}px`,
                   top: `${band.top}px`,
@@ -248,8 +221,8 @@ export default function DrawShape() {
  * Bracketed by hand because the tool swallows both ends of the gesture: see
  * `beginHistory`. Without it the shape appears and Ctrl+Z has nothing to undo.
  */
-function addShape(tool: TDrawTool, drawn: TBox | null, origin: { x: number; y: number }, page: { width: number; height: number }) {
-  const setting = JSON.parse(JSON.stringify(drawTools[tool].setting))
+function addShape(tool: TDragTool, drawn: TBox | null, origin: { x: number; y: number }, page: { width: number; height: number }) {
+  const setting = JSON.parse(JSON.stringify(dragTools[tool].setting))
   if (drawn && drawn.width >= SHAPE_MIN_SIZE && drawn.height >= SHAPE_MIN_SIZE) {
     setting.left = Math.round(drawn.left)
     setting.top = Math.round(drawn.top)
