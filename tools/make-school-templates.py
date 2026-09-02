@@ -15,7 +15,9 @@ licensing exposure:
   - no photographs, no remote URLs, no network at render time
 
 Every template is recolourable and every string is placeholder copy a school is
-meant to overwrite.
+meant to overwrite. The school's own name and contact line are merge fields,
+{{school.name}} and the like, filled in from the brand kit when the template
+is added; see the "fields" block below.
 
     python3 make-school-templates.py            # write the pack
     python3 make-school-templates.py --remove   # take it back out again
@@ -72,6 +74,18 @@ GOLD_GHOST = '#E1A73126'
 RED_GHOST = '#FFFFFF1C'
 GOLD_WASH = '#E1A73133'
 SIG_RULE = '#22252A55'
+
+# ------------------------------------------------------------------- fields --
+# The school's own details are written as merge fields rather than as one
+# sample school's, and filled in from the brand kit as the template is added
+# to a design — or from the samples in src/common/methods/brandKit.ts for a
+# school that has not set one up, which read exactly as the copy used to.
+# `|upper` sets the value in capitals, which is how the footers are set.
+# See src/utils/mergeFields.ts.
+SCHOOL = '{{school.name}}'
+SCHOOL_UPPER = '{{school.name|upper}}'
+EMAIL = '{{school.email}}'
+WEBSITE = '{{school.website}}'
 
 # Page sizes: Letter at 150dpi, and a 16:9 slide.
 LETTER_P = (1275, 1650)
@@ -249,7 +263,7 @@ def field_day():
              font_=INTER, size=36, colour=SLATE, left=137, top=1400,
              width=1001, height=52),
         band(NAVY, top=1490, height=160, page_width=w),
-        footer('SPRINGFIELD ELEMENTARY', colour=WHITE, page_width=w, top=1548, size=56),
+        footer(SCHOOL_UPPER, colour=WHITE, page_width=w, top=1548, size=56),
     ]
 
 
@@ -272,7 +286,7 @@ def open_house():
         text('Main Building · enter by the gym doors<br/>Refreshments in the cafeteria',
              font_=INTER, size=38, colour=SLATE, left=190, top=1180,
              width=895, height=120, line_height=1.5),
-        footer('SPRINGFIELD ELEMENTARY', colour=NAVY, page_width=w, top=1420, size=44),
+        footer(SCHOOL_UPPER, colour=NAVY, page_width=w, top=1420, size=44),
     ]
 
 
@@ -295,12 +309,12 @@ def conferences():
                     colour=TEAL, left=160, top=970, width=955),
         *bullet_row('map pin', "Your child's classroom", None,
                     colour=TEAL, left=160, top=1070, width=955),
-        *bullet_row('mail', 'office@springfield.k12.us', None,
+        *bullet_row('mail', EMAIL, None,
                     colour=TEAL, left=160, top=1170, width=955),
         text('Slots fill quickly — please book by Friday 10/10.', font_=INTER,
              size=38, colour=SLATE, align='left', left=100, top=1410,
              width=1075, height=60),
-        footer('SPRINGFIELD MIDDLE SCHOOL', colour=TEAL, page_width=w, top=1500,
+        footer(SCHOOL_UPPER, colour=TEAL, page_width=w, top=1500,
                size=42, align='left', left=100, width=1075),
     ]
 
@@ -320,7 +334,7 @@ def book_fair():
         pill(GOLD, left=237, top=1290, width=801, height=120),
         text('EVERY BOOK BUILDS OUR LIBRARY', font_=BEBAS, size=44, colour=NAVY,
              left=257, top=1324, width=761, height=56, spacing=3),
-        footer('SPRINGFIELD ELEMENTARY', colour=WHITE, page_width=w, top=1500),
+        footer(SCHOOL_UPPER, colour=WHITE, page_width=w, top=1500),
     ]
 
 
@@ -343,7 +357,7 @@ def picture_day():
                     colour=PLUM, left=197, top=1084, width=891),
         text('Questions? Call the front office at (555) 010-2200.', font_=INTER,
              size=38, colour=SLATE, left=137, top=1360, width=1001, height=54),
-        footer('SPRINGFIELD ELEMENTARY', colour=PLUM, page_width=w, top=1500),
+        footer(SCHOOL_UPPER, colour=PLUM, page_width=w, top=1500),
     ]
 
 
@@ -358,14 +372,14 @@ def spring_concert():
              left=137, top=580, width=1001, height=72),
         text('Friday, April 24  ·  7:00 PM', font_=ARCHIVO, size=60, weight=700,
              colour=GOLD, left=137, top=880, width=1001, height=80),
-        text('Springfield High School Auditorium<br/>Doors open at 6:30 PM · free admission',
+        text(f'{SCHOOL} Auditorium<br/>Doors open at 6:30 PM · free admission',
              font_=INTER, size=40, colour=MIST, left=137, top=1010,
              width=1001, height=130, line_height=1.5),
         panel(WHITE_WASH, left=237, top=1230, width=801, height=180),
         text('Reception in the commons<br/>following the performance',
              font_=MERRIWEATHER, size=38, colour=WHITE, left=277, top=1276,
              width=721, height=110, line_height=1.5),
-        footer('SPRINGFIELD HIGH SCHOOL', colour=GOLD, page_width=w, top=1500, size=42),
+        footer(SCHOOL_UPPER, colour=GOLD, page_width=w, top=1500, size=42),
     ]
 
 
@@ -402,10 +416,10 @@ def science_fair():
              align='left', left=197, top=1095, width=881, height=54),
         text('Judging Tuesday, March 3 · gymnasium', font_=INTER, size=40, colour=INK,
              align='left', left=197, top=1165, width=881, height=54),
-        text('Rules and forms: springfield.k12.us/sciencefair', font_=INTER,
+        text(f'Rules and forms: {WEBSITE}/sciencefair', font_=INTER,
              size=36, colour=SLATE, left=137, top=1390, width=1001, height=52),
         band(FOREST, top=1520, height=130, page_width=w),
-        footer('SPRINGFIELD MIDDLE SCHOOL', colour=WHITE, page_width=w, top=1560, size=46),
+        footer(SCHOOL_UPPER, colour=WHITE, page_width=w, top=1560, size=46),
     ]
 
 
@@ -430,7 +444,7 @@ def bake_sale():
         text('Sign up to bake at the front office, or just come hungry.<br/>Every dollar goes to the trip.',
              font_=INTER, size=36, colour=INK, align='left', left=160, top=1240,
              width=955, height=110, line_height=1.5),
-        footer('SPRINGFIELD ELEMENTARY PTA', colour=RED, page_width=w, top=1480,
+        footer(f'{SCHOOL_UPPER} PTA', colour=RED, page_width=w, top=1480,
                size=42, align='left', left=100, width=1075),
     ]
 
@@ -463,7 +477,7 @@ def certificate():
              width=420, height=44),
         text('Principal', font_=INTER, size=32, colour=SLATE, left=950, top=1032,
              width=420, height=44),
-        footer('SPRINGFIELD ELEMENTARY', colour=NAVY, page_width=w, top=1110,
+        footer(SCHOOL_UPPER, colour=NAVY, page_width=w, top=1110,
                size=38, left=325, width=1000),
     ]
 
@@ -770,7 +784,7 @@ def slide_team():
     return 'Slide — the team', (w, h), WHITE, [
         *deck_header('Who you will meet tonight', 'Back to School Night', page_width=w),
         *people,
-        text('Reach any of us at office@springfield.k12.us', font_=INTER, size=34,
+        text(f'Reach any of us at {EMAIL}', font_=INTER, size=34,
              colour=SLATE, left=100, top=880, width=1720, height=48),
     ]
 
@@ -840,13 +854,13 @@ def volunteer_signup():
                     colour=TEAL, left=197, top=1090, width=881),
         # One line each: both of these are placed rather than flowed, so a
         # sign-up line long enough to wrap lands on the note below it.
-        text('Sign up at springfield.k12.us/volunteer',
+        text(f'Sign up at {WEBSITE}/volunteer',
              font_=INTER, size=38, colour=SLATE, left=137, top=1290,
              width=1001, height=54),
         text('Background check required — the office will walk you through it.',
              font_=INTER, size=32, colour=SLATE, left=137, top=1370,
              width=1001, height=46),
-        footer('SPRINGFIELD ELEMENTARY PTA', colour=TEAL, page_width=w, top=1500, size=42),
+        footer(f'{SCHOOL_UPPER} PTA', colour=TEAL, page_width=w, top=1500, size=42),
     ]
 
 
@@ -879,7 +893,7 @@ def spirit_week():
         text('Dress code still applies. No masks, no face paint in class.',
              font_=INTER, size=34, colour=WHITE, left=137, top=1500,
              width=1001, height=48),
-        footer('SPRINGFIELD MIDDLE SCHOOL', colour=GOLD, page_width=w, top=1570, size=42),
+        footer(SCHOOL_UPPER, colour=GOLD, page_width=w, top=1570, size=42),
     ]
 
 
@@ -905,7 +919,7 @@ def field_trip():
         text('No child is left behind over cost — tell the office and it is handled,<br/>quietly and without a form.',
              font_=INTER, size=34, colour=SLATE, align='left', left=100, top=1310,
              width=1075, height=110, line_height=1.5),
-        footer('SPRINGFIELD ELEMENTARY', colour=FOREST, page_width=w, top=1500,
+        footer(SCHOOL_UPPER, colour=FOREST, page_width=w, top=1500,
                size=42, align='left', left=100, width=1075),
     ]
 

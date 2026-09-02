@@ -10,6 +10,9 @@ import Space from '@/components/ui/Space'
 import { canvasState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import { addGroup, addWidget, setSelectItem } from '@/store/widget'
+import { decodeText } from '@/store/widget/template'
+import { brandResolver } from '@/common/methods/brandKit'
+import { fillWidget } from '@/utils/mergeFields'
 import ClassHeader from './components/ClassHeader'
 import './compListWrap.less'
 
@@ -158,10 +161,13 @@ export default function CompListWrap() {
       })
       addGroup(group)
     } else {
-      group.text && (group.text = decodeURIComponent(group.text))
-      group.left = pW / 2 - group.fontSize * (group.text.length / 2)
-      group.top = pH / 2 - group.fontSize / 2
-      addWidget(group)
+      // A group is filled on its way through addGroup; a lone text preset is
+      // filled here, after the decode that turns its %7B%7B back into braces.
+      group.text && (group.text = decodeText(group.text))
+      const widget: any = fillWidget(group, brandResolver())
+      widget.left = pW / 2 - widget.fontSize * (widget.text.length / 2)
+      widget.top = pH / 2 - widget.fontSize / 2
+      addWidget(widget)
     }
   }
 

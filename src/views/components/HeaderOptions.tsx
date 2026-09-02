@@ -16,7 +16,10 @@ import type { TdWidgetData } from '@/store/types'
 import { setShowMoveable } from '@/store/control'
 import { managerEdit } from '@/store/base'
 import { setDPage, getDPage } from '@/store/canvas'
-import { addGroup, addWidget, getWidgets, setDWidgets, setTemplate } from '@/store/widget'
+import { addGroup, addWidget, fillTemplateLayouts, getWidgets, setDWidgets, setTemplate } from '@/store/widget'
+import { decodeText } from '@/store/widget/template'
+import { brandResolver } from '@/common/methods/brandKit'
+import { fillWidget } from '@/utils/mergeFields'
 import ThemeToggle from './ThemeToggle'
 import './headerOptions.less'
 
@@ -213,12 +216,14 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
       if (Array.isArray(data)) {
         addGroup(data)
       } else {
-        data.text && (data.text = decodeURIComponent(data.text))
-        addWidget(data)
+        data.text && (data.text = decodeText(data.text))
+        addWidget(fillWidget(data, brandResolver()))
       }
     } else {
       if (Array.isArray(data)) {
-        widgetState.dLayouts = data
+        // A template of several pages arrives whole. A saved design does not
+        // get the fill: what it says was settled when it was saved.
+        widgetState.dLayouts = id ? data : fillTemplateLayouts(data)
         setDWidgets(getWidgets())
       } else {
         widgetState.dLayouts = [{ global: data.page, layers: data.widgets }]

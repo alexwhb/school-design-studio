@@ -267,15 +267,22 @@ def columns(total, ratios, gap, *, left):
 
 
 # ------------------------------------------------------------------- copy ----
-# One fictional school, five decks. Every string here is placeholder text.
+# One fictional school, five decks. Every string here is placeholder text. The
+# school's own name and contact line are merge fields, filled in from the brand
+# kit as a slide is added — or from the samples in brandKit.ts for a school
+# that has not set one up. `|upper` sets the value in capitals, which is how
+# the eyebrows are set. See src/utils/mergeFields.ts.
 
-SCHOOL = 'Northfield Middle School'
+SCHOOL = '{{school.name}}'
+SCHOOL_UPPER = '{{school.name|upper}}'
+ADDRESS = '{{school.address}}'
+WEBSITE = '{{school.website}}'
 TITLE = 'Annual Report to Families'
 PRINCIPAL = 'Dana Whitlock'
 MEETING = 'Tuesday, September 15'
 MEETING_TIME = '7:00 p.m., Auditorium'
-CONTACT_MAIL = 'office@northfieldms.org'
-CONTACT_PHONE = '(555) 018-4400'
+CONTACT_MAIL = '{{school.email}}'
+CONTACT_PHONE = '{{school.phone}}'
 
 SECTIONS = ['The Year in Numbers', 'Academic Results', 'Facilities and Safety',
             'The Year Ahead']
@@ -407,7 +414,7 @@ def e_eyebrow(label, number, *, rule=2):
 
 def editorial_cover():
     layers = [
-        text(SCHOOL.upper(), font_=PLEX_MONO, size=25, colour=E_INK, spacing=12,
+        text(SCHOOL_UPPER, font_=PLEX_MONO, size=25, colour=E_INK, spacing=12,
              left=E_LEFT, top=E_TOP, width=1000, height=32),
         text('NO. 24 — SEPTEMBER 2026', font_=PLEX_MONO, size=25, colour=E_ACCENT,
              spacing=12, align='right', left=E_RIGHT - 800, top=E_TOP, width=800, height=32),
@@ -436,7 +443,7 @@ def editorial_cover():
                text('image: front entrance, fall 2026', font_=PLEX_MONO, size=22,
                     colour=E_MUTED, left=side + 22, top=top + 720 - 49, width=side_w - 44, height=30),
                hairline(E_RULE, left=E_LEFT, top=951, width=E_BODY_W),
-               text('Enrollment 842 · Grades 6–8 · 1400 Belmont Road · northfieldms.org',
+               text(f'Enrollment 842 · Grades 6–8 · {ADDRESS} · {WEBSITE}',
                     font_=PLEX_MONO, size=23, colour=E_MUTED, left=E_LEFT, top=972,
                     width=E_BODY_W, height=32)]
     return 'Editorial slide — cover', E_BG, layers
@@ -648,7 +655,7 @@ def s_eyebrow(number, label, *, colour=S_INK, top=S_TOP):
 
 def swiss_cover():
     layers = [
-        text(SCHOOL.upper(), font_=INTER, size=26, weight=700, colour=S_INK,
+        text(SCHOOL_UPPER, font_=INTER, size=26, weight=700, colour=S_INK,
              spacing=16, left=S_LEFT, top=43, width=1000, height=34),
         text('2025 / 26', font_=INTER, size=26, colour=S_ACCENT, spacing=16,
              align='right', left=S_RIGHT - 600, top=43, width=600, height=34),
@@ -902,7 +909,7 @@ def academic_cover():
     (col, col_w), (side, side_w) = columns(A_BODY_W, [1.3, 1], 70, left=A_LEFT)
     layers = [rect(A_NAVY, left=0, top=0, width=W, height=hero)]
 
-    eyebrow = text(SCHOOL.upper(), font_=ARCHIVO, size=26, colour=A_GOLD, spacing=20,
+    eyebrow = text(SCHOOL_UPPER, font_=ARCHIVO, size=26, colour=A_GOLD, spacing=20,
                    left=col, top=139, width=col_w, height=34)
     heading = text(TITLE, font_=SPECTRAL, size=100, colour=A_CREAM, line_height=1.0,
                    spacing=-2, left=col, top=eyebrow['top'] + 60, width=col_w)
@@ -1140,7 +1147,7 @@ def d_eyebrow(number, label):
 def dark_cover():
     layers = [
         rect(D_ACCENT, left=D_LEFT, top=97, width=18, height=18),
-        text(SCHOOL.upper(), font_=JETBRAINS, size=25, colour=D_TEXT, spacing=10,
+        text(SCHOOL_UPPER, font_=JETBRAINS, size=25, colour=D_TEXT, spacing=10,
              left=D_LEFT + 36, top=90, width=1000, height=32),
         text('2025 / 26', font_=JETBRAINS, size=25, colour=D_ACCENT, spacing=10,
              align='right', left=D_RIGHT - 500, top=90, width=500, height=32),
@@ -1386,7 +1393,7 @@ def p_eyebrow(label):
 
 def pastel_cover():
     layers = [
-        text(SCHOOL.upper(), font_=KARLA, size=26, colour=P_MUTED, spacing=10,
+        text(SCHOOL_UPPER, font_=KARLA, size=26, colour=P_MUTED, spacing=10,
              left=P_LEFT, top=90, width=1000, height=34),
         text('2025 / 26', font_=KARLA, size=26, colour=P_RUST, spacing=10,
              align='right', left=P_RIGHT - 500, top=90, width=500, height=34),

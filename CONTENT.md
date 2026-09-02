@@ -166,6 +166,18 @@ contain is a literal `%` — that would make the panel's `decodeURIComponent`
 throw. (Saved *elements* under `components/` are the opposite: those are
 URL-encoded, because every path that loads them decodes.)
 
+Write the school's own details as **merge fields** rather than as one made-up
+school's: `{{school.name}}`, `{{school.tagline}}`, `{{school.address}}`,
+`{{school.phone}}`, `{{school.email}}`, `{{school.website}}` and
+`{{school.short_name}}`. They are filled in from the Brand panel as the template
+is added, and from a sample school when nobody has set a kit up, so a template
+carrying them reads sensibly either way. `{{school.name|upper}}` sets the value
+in capitals, which is what a footer usually wants. See **Brand kit** in
+[README.md](README.md). Two things to hold on to: the box is sized where it is
+written, and nothing reflows, so leave room for a school with a longer name than
+the sample's; and a field must sit inside one text widget rather than being
+split across two.
+
 Then add to `templates/list.json`:
 
 ```json
