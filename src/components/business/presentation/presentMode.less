@@ -40,6 +40,16 @@
     &.is-current {
       opacity: 1;
     }
+    // A zoom grows about the middle of the stage, which is where the slide is.
+    transform-origin: 50% 50%;
+  }
+
+  // Less movement means less: no page transitions, and not even the
+  // cross-fade. The presenter checks the same preference before it plays one.
+  @media (prefers-reduced-motion: reduce) {
+    &__slot {
+      transition: none;
+    }
   }
 
   &__curtain {

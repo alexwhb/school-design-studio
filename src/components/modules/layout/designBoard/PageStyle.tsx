@@ -18,6 +18,7 @@ import { paperName, realSize } from '@/common/methods/pageSize'
 import type { TBackgroundTransform } from '@/common/methods/pageBackground'
 import type { TPageState } from '@/store/types'
 import BackgroundCrop from './comps/BackgroundCrop'
+import TransitionSection from './comps/TransitionSection'
 import './pageStyle.less'
 
 const MODES = ['Colour', 'Image']
@@ -189,6 +190,7 @@ export default function PageStyle() {
               Move background to a layer
             </Button>
           </PanelSection>
+          <TransitionSection page={active} />
         </PanelSections>
       )}
       <ResizeDesign ref={sizeEditRef} />

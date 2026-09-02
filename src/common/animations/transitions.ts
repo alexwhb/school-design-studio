@@ -153,6 +153,16 @@ export function playTransition(inEl: HTMLElement, outEl: HTMLElement | null, tra
   return running
 }
 
+export function cancelTransitions(animations: Animation[]): void {
+  for (const animation of animations) {
+    try {
+      animation.cancel()
+    } catch {
+      // Already torn down with its element.
+    }
+  }
+}
+
 /**
  * Previews a transition on any element — the canvas, in the page settings
  * panel — by playing only the arriving half of it onto the element itself.

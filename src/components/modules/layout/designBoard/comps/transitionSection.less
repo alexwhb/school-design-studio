@@ -1,0 +1,27 @@
+.ds-transition {
+  display: flex;
+  flex-direction: column;
+  gap: @field-gap;
+
+  &__type {
+    width: 100%;
+  }
+  &__hint {
+    margin: -@space-1 0 0;
+    color: @ink-3;
+    font-size: @text-sm;
+  }
+  &__actions {
+    display: flex;
+    gap: @space-2;
+    .el-button {
+      margin: 0;
+      flex: 1;
+    }
+  }
+  &__note {
+    margin: 0;
+    color: @ink-4;
+    font-size: @text-xs;
+  }
+}

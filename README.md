@@ -979,6 +979,39 @@ Turning the quality up puts more pixels on the same sheet rather than making the
 sheet bigger, which is what asking for 300 DPI means. The menu shows both the
 pixel size and the paper size before you commit to either.
 
+## Transitions
+
+How one page gives way to the next when you present. Click the page itself
+rather than anything on it and the **Transition** section is under Background:
+None, Fade, Slide, Push, Zoom or Wipe, with a duration between 150ms and 2.5s.
+**Preview** plays it on the canvas, so you can see what you are choosing without
+starting the show, and **Apply to all pages** gives the whole deck the same one
+— which is what nearly everyone wants and what is tedious to set page by page.
+That counts as a single undo step.
+
+A transition belongs to the page being arrived at, which is how PowerPoint and
+Keynote both read it: "this slide fades in" is a fact about this slide. Going
+backwards plays the same one mirrored, so a slide that pushed in from the right
+pushes back out to the right. A page carrying one is marked on its thumbnail in
+the page strip, so a deck can be read for them without opening every page.
+
+They are played through the Web Animations API rather than by writing to inline
+styles, for the reason the element entrances are: one still running when the
+next key is pressed can be cancelled cleanly rather than stacked on. A quick run
+of arrow presses lands on the right slide with nothing half-faded left behind.
+Nothing fills forwards — when an animation ends, the slot reverts to its own
+CSS, which is where it was heading anyway.
+
+**Somebody who has asked their system for less movement gets a plain cut.** The
+presenter checks `prefers-reduced-motion` before playing anything, and the
+stylesheet drops the cross-fade under the same query.
+
+A `.pptx` file carries none of this. pptxgenjs has no slide transition API, so a
+transition lives in the presenter only, and the panel says so rather than
+letting you set one and find out in front of a room.
+
+Code: `src/common/animations/transitions.ts`.
+
 ## PowerPoint export
 
 Every page of a design becomes one slide. There are two modes, because they

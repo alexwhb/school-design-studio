@@ -11,6 +11,7 @@ import message from '@/components/ui/message'
 import confirm, { promptText } from '@/common/methods/confirm'
 import { pageBackgroundStyle } from '@/common/methods/pageBackground'
 import { staticWidgetComponents } from '../../widgets/registry'
+import PageTransitionGlyph from './PageTransitionGlyph'
 import { cx } from '@/utils/dom'
 import type { TdLayout, TdWidgetData, TPageState } from '@/store/types'
 import './multipleBoards.less'
@@ -110,6 +111,7 @@ const Page = memo(function Page({ layout, index, isCurrent, isFirst, isLast, onC
           <StaticLayers layers={layout.layers} global={global} />
         </div>
         <div className="item-idx">{index + 1}</div>
+        <PageTransitionGlyph page={global} />
         <Dropdown
           placement="top-end"
           menu={

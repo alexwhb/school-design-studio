@@ -4,6 +4,7 @@ import { useSnapshot } from 'valtio'
 import { getPortalContainer } from '@/common/hooks/appRoot'
 import { canvasState, widgetState } from '@/store/state'
 import { showPage } from '@/store/widget/pages'
+import { cancelTransitions, playTransition, prefersReducedMotion, readTransition } from '@/common/animations/transitions'
 import SlideView, { type SlideViewHandle } from './SlideView'
 import { cx } from '@/utils/dom'
 import type { TdLayout } from '@/store/types'
@@ -105,6 +106,12 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   const stageRef = useRef<HTMLDivElement | null>(null)
   /** The mounted SlideView for each slide, so its build can be driven from here. */
   const slides = useRef(new Map<number, SlideViewHandle | null>())
+  /** The slot each slide sits in, which is what a transition moves. */
+  const slots = useRef(new Map<number, HTMLDivElement>())
+  /** The transition in flight, if any, so the next press can cancel it rather than stack on it. */
+  const transitioning = useRef<Animation[]>([])
+  /** The slide on screen before the last change of index. */
+  const cameFrom = useRef<number | null>(null)
   const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const lastWheel = useRef(0)
   const touchStartX = useRef(0)
@@ -386,6 +393,49 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   }, [isOpen, close, goTo, next, prev, toggleFullscreen, measureStage, wake])
 
   /**
+   * Plays the arriving page's transition between the slot being left and the
+   * slot being entered.
+   *
+   * Whatever was still running is cancelled first, which drops both slots
+   * straight to their resting CSS: a run of quick presses ends on the right
+   * slide with nothing half-faded left behind. Someone who has asked their
+   * system for less motion gets a plain cut. Opening the presenter is not a
+   * change of slide, so nothing plays then.
+   */
+  useEffect(() => {
+    if (!isOpen) {
+      cameFrom.current = null
+      return
+    }
+    const from = cameFrom.current
+    cameFrom.current = index
+    cancelTransitions(transitioning.current)
+    transitioning.current = []
+    if (from === null || from === index) return
+
+    const transition = readTransition(live.current.pages[index]?.global)
+    const inEl = slots.current.get(index)
+    const outEl = slots.current.get(from) ?? null
+    if (!transition || !inEl || prefersReducedMotion()) return
+
+    // The arriving slot is drawn over the departing one, so a slide can glide
+    // in over its predecessor; the order is put back once the transition ends.
+    inEl.style.zIndex = '2'
+    if (outEl) outEl.style.zIndex = '1'
+    const running = playTransition(inEl, outEl, transition, index > from)
+    transitioning.current = running
+    const settle = () => {
+      inEl.style.zIndex = ''
+      if (outEl) outEl.style.zIndex = ''
+    }
+    Promise.all(running.map((animation) => animation.finished.catch(() => undefined))).then(settle)
+    return () => {
+      cancelTransitions(running)
+      settle()
+    }
+  }, [index, isOpen])
+
+  /**
    * Shows a slide from the top of its build when arriving forwards, and fully
    * built when arriving backwards — the way every other presentation tool
    * behaves, because a build the room has already watched should not be
@@ -445,7 +495,15 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
     >
       <div ref={stageRef} className="present__stage">
         {pages.map((page, i) => (
-          <div key={'slide' + i} className={cx('present__slot', { 'is-current': i === index })} aria-hidden={i !== index}>
+          <div
+            key={'slide' + i}
+            ref={(el) => {
+              if (el) slots.current.set(i, el)
+              else slots.current.delete(i)
+            }}
+            className={cx('present__slot', { 'is-current': i === index })}
+            aria-hidden={i !== index}
+          >
             {mounted.has(i) ? (
               <SlideView
                 ref={(handle: SlideViewHandle | null) => {
