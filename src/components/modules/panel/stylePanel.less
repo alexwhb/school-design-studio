@@ -1,9 +1,9 @@
 // The panel already sets the gutter every section shares, so this only owns the
 // space and the rule that mark it off from the element's own settings below.
 #style-panel .animate-slot {
-  padding: 8px 0 14px;
+  padding: @space-2 0 @field-gap;
   border-bottom: 1px solid @line-soft;
-  margin-bottom: 6px;
+  margin-bottom: @space-2;
 }
 
 #style-panel {
@@ -16,44 +16,20 @@
   width: @style-panel-width;
   flex-shrink: 0;
 
+  // The panel switch. The control brings its own geometry; this is the slot it
+  // sits in.
   .style-tab {
-    display: flex;
-    gap: 4px;
-    padding: 10px 12px;
+    padding: @space-2 @panel-gutter;
     border-bottom: 1px solid @line;
     width: 100%;
     z-index: 10;
-
-    .tab {
-      user-select: none;
-      flex: 1;
-      text-align: center;
-      padding: 6px 10px;
-      border-radius: @radius-sm;
-      font-size: @text-base;
-      font-weight: 500;
-      color: @ink-3;
-      cursor: pointer;
-      transition: background-color 0.12s ease, color 0.12s ease;
-
-      &:hover {
-        background: @surface-2;
-        color: @ink-2;
-      }
-    }
-
-    .tab.active-tab {
-      background: @accent-soft;
-      color: @accent;
-      font-weight: 600;
-    }
   }
 
   .style-wrap {
     flex: 1;
     overflow: auto;
     width: 100%;
-    padding: 4px 16px 24px;
+    padding: @space-1 @panel-gutter @space-6;
   }
 
   .layer-wrap {
@@ -70,6 +46,6 @@
 .gounp {
   &__btn {
     width: 100%;
-    margin-bottom: 1.5rem;
+    margin-bottom: @section-gap;
   }
 }

@@ -4,6 +4,7 @@ import alignIconList from '@/assets/data/AlignListData'
 import IconItemSelect, { type TIconItemSelectData } from '../settings/IconItemSelect'
 import AnimateWrap from '../settings/AnimateSelect/AnimateWrap'
 import Button from '@/components/ui/Button'
+import Segmented from '@/components/ui/Segmented'
 import { DistributeHorizontalIcon, DistributeVerticalIcon } from '@/components/ui/icons'
 import { widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
@@ -71,12 +72,15 @@ export default function StylePanel() {
   return (
     <div id="style-panel">
       <div className="style-tab">
-        <span className={'tab' + (activeTab === 0 ? ' active-tab' : '')} onClick={() => setActiveTab(0)}>
-          Settings
-        </span>
-        <span className={'tab' + (activeTab === 1 ? ' active-tab' : '')} onClick={() => setActiveTab(1)}>
-          Layers
-        </span>
+        <Segmented
+          aria-label="Panel"
+          value={activeTab === 0 ? 'settings' : 'layers'}
+          options={[
+            { label: 'Settings', value: 'settings' },
+            { label: 'Layers', value: 'layers' },
+          ]}
+          onChange={(next) => setActiveTab(next === 'settings' ? 0 : 1)}
+        />
       </div>
       <div className="style-wrap" style={{ display: activeTab === 0 ? undefined : 'none' }}>
         <div style={{ padding: '2rem 0', display: showGroupCombined ? undefined : 'none' }}>

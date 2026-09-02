@@ -13,7 +13,6 @@ type Props = {
 
 export default function ContainerWrap({ value, onChange }: Props) {
   const [visible, setVisible] = useState(false)
-  const [type, setType] = useState('tuxing')
   const [list, setList] = useState<{ thumb: string; url: string }[]>([])
 
   useEffect(() => {
@@ -25,7 +24,8 @@ export default function ContainerWrap({ value, onChange }: Props) {
     return () => {
       cancelled = true
     }
-  }, [type])
+    // The mask list has one kind in it, so this is a load, not a subscription.
+  }, [])
 
   const select = (url: string = '') => {
     setVisible(false)
@@ -48,12 +48,7 @@ export default function ContainerWrap({ value, onChange }: Props) {
             content={
               <>
                 <div className="box__header">
-                  <div className="el-radio-group">
-                    <label className="el-radio-button is-active el-radio-button--small">
-                      <input type="radio" className="el-radio-button__original-radio" checked readOnly onChange={() => setType('tuxing')} />
-                      <span className="el-radio-button__inner">Shape</span>
-                    </label>
-                  </div>
+                  <span className="box__title">Shape</span>
                 </div>
                 <div className="select__box">
                   <div className="select__box__select-item" onClick={() => select()}>

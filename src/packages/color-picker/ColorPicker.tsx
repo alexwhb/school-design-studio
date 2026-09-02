@@ -4,7 +4,7 @@ import { registerMoveableElement } from './utils/moveable'
 import { HSLA2HexA, RGB2HSL, RGBA2HexA, hex2RGB, hexA2HSLA, hexA2RGBA } from './utils/color'
 import { parseBackgroundValue, toolTip } from './utils/helper'
 import { type GradientType, parseGradient, toGradientString } from './utils/gradient'
-import Tabs from './comps/Tabs'
+import Segmented from '@/components/ui/Segmented'
 import Straw from './comps/Straw'
 import AngleHandle from './comps/AngleHandle'
 import { cx } from '@/utils/dom'
@@ -466,7 +466,7 @@ export default function ColorPicker({
 
   return (
     <div className="color-picker">
-      {modes.length > 1 ? <Tabs value={mode} labels={modes} onChange={onChangeMode} /> : <div className="title">{mode}</div>}
+      {modes.length > 1 ? <Segmented aria-label="Colour type" value={mode} options={modes} onChange={onChangeMode} /> : <div className="title">{mode}</div>}
 
       {showGradient ? (
         <div className="cp__gradient" style={{ display: mode === 'Gradient' ? undefined : 'none' }}>

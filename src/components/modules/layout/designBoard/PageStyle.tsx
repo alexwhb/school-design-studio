@@ -9,7 +9,7 @@ import Collapse, { CollapseItem } from '@/components/ui/Collapse'
 import Tooltip from '@/components/ui/Tooltip'
 import { DeleteIcon, DownloadIcon } from '@/components/ui/icons'
 import Uploader, { type TUploadDoneData } from '@/components/common/Uploader/Uploader'
-import Tabs from '@/packages/color-picker/comps/Tabs'
+import Segmented from '@/components/ui/Segmented'
 import ColorSelect, { type colorChangeData } from '@/components/modules/settings/ColorSelect'
 import ResizeDesign, { type ResizeDesignHandle } from '@/components/business/resize-design/ResizeDesign'
 import BgImgListWrap from '@/components/modules/panel/wrap/BgImgListWrap'
@@ -131,7 +131,7 @@ export default function PageStyle() {
               <i className="iconfont icon-gallery" />
               Browse the background library
             </Button>
-            <Tabs value={mode} labels={MODES} onChange={onChangeMode} />
+            <Segmented aria-label="Background" value={mode} options={MODES} onChange={onChangeMode} />
             <div style={{ display: mode === 'Colour' ? undefined : 'none' }}>
               <ColorSelect
                 value={active.backgroundColor}

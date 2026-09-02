@@ -23,18 +23,23 @@
   .cates {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    padding: 14px 14px 2px;
+    gap: @space-1 @space-2;
+    padding: @space-3 @panel-gutter @space-1;
   }
 
+  // A filter over many categories rather than a switch between two, so these
+  // stay chips rather than becoming a Segmented. They share its height and type
+  // so the two read as the same family.
   .cates__chip {
+    height: @control-h;
+    padding: 0 @space-3;
     border: 1px solid @line;
     background: @surface;
     color: @ink-2;
     font-family: inherit;
-    font-size: @text-base;
+    font-size: @text-sm;
+    font-weight: 500;
     line-height: 1;
-    padding: 6px 11px;
     border-radius: @radius-pill;
     cursor: pointer;
     transition:
@@ -47,19 +52,23 @@
       color: @ink;
     }
 
+    &:focus-visible {
+      .focus-ring();
+      border-radius: @radius-pill;
+    }
+
     &--on,
     &--on:hover {
       background: @accent-soft;
       border-color: @accent-border;
       color: @accent;
-      font-weight: 600;
     }
   }
 
   .upload-psd {
     // The divider above it is gone, so the button supplies its own gap under the
     // search box rather than sitting flush against it.
-    margin: 8px 1rem 0;
+    margin: @space-2 @panel-gutter 0;
     width: calc(100% - 2rem);
   }
 }
