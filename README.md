@@ -665,8 +665,9 @@ weight and slant, since a bold glyph is wider than a regular one, and painted in
 its own colour. An underline there is drawn under each character's own box, so
 it follows the arc as a run of short strokes rather than one smooth curve — good
 enough to read as an underline, and the alternative was not drawing it. A link
-is the one thing an arc drops: there is nothing to underline it against and
-nothing to click, so a linked word on a curve is just a word.
+is the one thing an arc drops: a character there is its own element rather than
+part of an anchor, so there is nothing to click and nothing to carry the link's
+underline, and a linked word on a curve is just a word.
 
 **A link is drawn as an underline in the text's own colour**, not in browser
 blue, so it sits in the design like the rest of the line. On the canvas a click
