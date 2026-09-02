@@ -9,6 +9,7 @@ import WPolygonStyle from '../widgets/wPolygon/WPolygonStyle'
 import WPathStyle from '../widgets/wPath/WPathStyle'
 import WGroupStyle from '../widgets/wGroup/WGroupStyle'
 import WQrcodeStyle from '../widgets/wQrcode/WQrcodeStyle'
+import WTableStyle from '../widgets/wTable/WTableStyle'
 
 export const styleComponents: Record<string, ComponentType<any>> = {
   'page-style': PageStyle,
@@ -21,4 +22,5 @@ export const styleComponents: Record<string, ComponentType<any>> = {
   'w-path-style': WPathStyle,
   'w-group-style': WGroupStyle,
   'w-qrcode-style': WQrcodeStyle,
+  'w-table-style': WTableStyle,
 }

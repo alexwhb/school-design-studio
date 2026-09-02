@@ -1,4 +1,5 @@
 import type { TWidgetAnimation } from '@/common/animations/presets'
+import type { TPageTransition } from '@/common/animations/transitions'
 import type { TBackgroundTransform } from '@/common/methods/pageBackground'
 import type { TWidgetShadow } from '@/common/methods/shadow'
 import type { TImageFilters } from '@/common/methods/imageFilters'
@@ -30,6 +31,17 @@ export type TPageState = {
   opacity: number
   /** Used to force a redraw */
   tag: number
+  /**
+   * How the presenter arrives at this page. Absent means it simply appears,
+   * so a design saved before transitions existed presents as it always did.
+   * See animations/transitions.ts, which is the only thing that should read it.
+   */
+  transition?: TPageTransition
+  /**
+   * Speaker notes: what to say while this page is on screen. Plain text, shown
+   * in the presenter and in PowerPoint's notes pane, never on the page itself.
+   */
+  notes?: string
   [key: string]: any
 }
 
@@ -134,6 +146,18 @@ export type TdWidgetData = TPageState &
      */
     lineStart?: string
     lineEnd?: string
+    /**
+     * Tables: the words in each cell, row by row, as the same contentEditable
+     * markup a text widget holds; how wide each column is, as fractions of the
+     * table that sum to one; and whether the first row is a heading. `rows` and
+     * `cols` are kept alongside for convenience but `cells` is the truth. See
+     * wTable/tableModel.ts, which is the only thing that should read them.
+     */
+    rows?: number
+    cols?: number
+    cells?: string[][]
+    colWidths?: number[]
+    headerRow?: boolean
     record?: TWidgetRecord
     /**
      * Images and shapes: the shadow the artwork casts. Absent means none, the

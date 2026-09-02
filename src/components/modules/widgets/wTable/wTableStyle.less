@@ -1,0 +1,27 @@
+.ds-table-style {
+  .table-shape {
+    display: flex;
+    flex-direction: column;
+    gap: @field-gap;
+
+    &__count {
+      color: @ink-2;
+      font-size: @text-base;
+    }
+    &__buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: @space-2;
+      .el-button {
+        margin: 0;
+        width: 100%;
+      }
+    }
+  }
+  .table-label {
+    display: block;
+    margin-bottom: @label-gap;
+    color: @ink-3;
+    font-size: @text-sm;
+  }
+}

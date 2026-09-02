@@ -236,3 +236,24 @@ export function LineIcon({ className, width = '1em', height = '1em' }: IconProps
     </svg>
   )
 }
+
+/** The pen's nib, pointing down and to the left the way every pen tool's does. */
+export function PenIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="currentColor"
+        d="M556 108a48 48 0 0 1 68 0l292 292a48 48 0 0 1 0 68L620 772a48 48 0 0 1-24 13l-52 11-73 73a112 112 0 1 1-68-68l73-73 11-52a48 48 0 0 1 13-24zm34 102L494 306l224 224 96-96zM426 374l-46 214 214-46zM320 764a48 48 0 1 0 0 96 48 48 0 0 0 0-96z"
+      />
+    </svg>
+  )
+}
+
+export function TableIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="16" rx="1.5" />
+      <path d="M3 9.5h18M3 14.75h18M9.5 9.5V20M15.5 9.5V20" />
+    </svg>
+  )
+}

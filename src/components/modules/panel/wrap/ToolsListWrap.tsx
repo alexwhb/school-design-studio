@@ -5,6 +5,8 @@ import { addWidget } from '@/store/widget'
 import { drawToolOrder, drawTools } from '@/components/business/draw-shape/drawTools'
 import { cx } from '@/utils/dom'
 import { wQrcodeSetting } from '../../widgets/wQrcode/wQrcodeSetting'
+import { wTableSetting } from '../../widgets/wTable/wTableSetting'
+import { TableIcon } from '@/components/ui/icons'
 import './toolsListWrap.less'
 
 export default function ToolsListWrap() {
@@ -16,6 +18,18 @@ export default function ToolsListWrap() {
     const { width: pW, height: pH } = canvasState.dPage
     setting.left = pW / 2 - setting.width / 2
     setting.top = pH / 2 - setting.height / 2
+    addWidget(setting)
+  }
+
+  function addTable() {
+    setShowMoveable(false)
+    const setting = JSON.parse(JSON.stringify(wTableSetting))
+    const { width: pW, height: pH } = canvasState.dPage
+    // Most of the page's width, which is what a table on a slide wants, and
+    // never wider than the page it is dropped on.
+    setting.width = Math.min(setting.width, Math.round(pW * 0.8))
+    setting.left = Math.round(pW / 2 - setting.width / 2)
+    setting.top = Math.round(pH / 2 - setting.height / 2)
     addWidget(setting)
   }
 
@@ -53,6 +67,13 @@ export default function ToolsListWrap() {
         <div className="text">
           <span>QR code</span>
           <span className="desc">Add a styled QR code to your design</span>
+        </div>
+      </div>
+      <div className="item" onClick={addTable}>
+        <TableIcon className="icon" />
+        <div className="text">
+          <span>Table</span>
+          <span className="desc">A 3 × 3 grid to type into; add rows and columns as you go</span>
         </div>
       </div>
     </div>

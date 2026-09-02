@@ -8,6 +8,7 @@ import WPolygon from './wPolygon/wPolygon'
 import WPath from './wPath/wPath'
 import WGroup from './wGroup/wGroup'
 import WQrcode from './wQrcode/wQrcode'
+import WTable from './wTable/wTable'
 import WTextStatic from './wText/wTextStatic'
 import WImageStatic from './wImage/wImageStatic'
 import WSvgStatic from './wSvg/wSvgStatic'
@@ -17,6 +18,7 @@ import WPolygonStatic from './wPolygon/wPolygonStatic'
 import WPathStatic from './wPath/wPathStatic'
 import WGroupStatic from './wGroup/wGroupStatic'
 import WQrcodeStatic from './wQrcode/wQrcodeStatic'
+import WTableStatic from './wTable/wTableStatic'
 import type { WidgetProps } from './types'
 
 export const widgetComponents: Record<string, ComponentType<WidgetProps>> = {
@@ -29,6 +31,7 @@ export const widgetComponents: Record<string, ComponentType<WidgetProps>> = {
   'w-path': WPath,
   'w-group': WGroup,
   'w-qrcode': WQrcode,
+  'w-table': WTable,
 }
 
 export const staticWidgetComponents: Record<string, ComponentType<WidgetProps>> = {
@@ -41,4 +44,5 @@ export const staticWidgetComponents: Record<string, ComponentType<WidgetProps>> 
   'w-path': WPathStatic,
   'w-group': WGroupStatic,
   'w-qrcode': WQrcodeStatic,
+  'w-table': WTableStatic,
 }

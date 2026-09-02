@@ -18,6 +18,7 @@
 import PptxGenJS from 'pptxgenjs'
 import { imageFilterCss } from '../imageFilters'
 import type { TdLayout, TdWidgetData } from '@/store/types'
+import { readTable } from '@/components/modules/widgets/wTable/tableModel'
 import { htmlToText, imageToDataUrl, isInvisible, pxToInches, pxToPoints, readRotation, safeFileName, toPptxColor } from './utils'
 
 export type PptxMode = 'editable' | 'picture'
@@ -34,7 +35,7 @@ export type PptxOptions = {
 }
 
 /** Widget types that have a native PowerPoint equivalent. */
-const NATIVE_TYPES = new Set(['w-text', 'w-image'])
+const NATIVE_TYPES = new Set(['w-text', 'w-image', 'w-table'])
 
 /**
  * Text with an outline, a gradient fill, a shadow or a lean relies on CSS the
@@ -65,6 +66,8 @@ function needsRaster(widget: TdWidgetData): boolean {
   // run goes in as a picture of itself rather than as text that has quietly
   // straightened out.
   if (type === 'w-text' && Number((widget as any).curve)) return true
+  // A PowerPoint table cannot be turned, so a tilted one goes in as a picture.
+  if (type === 'w-table' && readRotation(widget)) return true
   return false
 }
 
@@ -145,6 +148,64 @@ function addTextWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: numb
 }
 
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high)
+
+/**
+ * A table as a real PowerPoint table, so whoever opens the deck can retype a
+ * cell, add a row or restyle it. Each cell carries its own fill, colour and
+ * border because that is how the format holds them — there is no table-wide
+ * style to set once. The rows are given an even share of the table's height:
+ * the editor lets the words set the height and holds only the total, and an
+ * even split keeps the table exactly the size it was on the page.
+ */
+function addTableWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: number) {
+  const table = readTable(widget)
+  const w = widget as any
+  const box = frame(widget, scale)
+  const fontSize = pxToPoints(w.fontSize || 16) * scale
+  const textColor = toPptxColor(w.color, '000000').color
+  const headerColor = toPptxColor(w.headerColor || w.color, 'FFFFFF').color
+  const borderWidth = Number(w.borderWidth) || 0
+  const border: PptxGenJS.BorderProps =
+    borderWidth > 0 && !isInvisible(w.borderColor)
+      ? { type: w.borderStyle === 'dashed' || w.borderStyle === 'dotted' ? 'dash' : 'solid', pt: Math.max(0.25, pxToPoints(borderWidth) * scale), color: toPptxColor(w.borderColor, '000000').color }
+      : { type: 'none' }
+  const align = (['left', 'center', 'right'].includes(w.textAlign) ? w.textAlign : 'left') as 'left' | 'center' | 'right'
+  const margin = pxToInches(Number(w.cellPadding) || 0) * scale
+
+  const fillFor = (row: number): PptxGenJS.ShapeFillProps | undefined => {
+    const paint = (colour: unknown) => (typeof colour === 'string' && colour && !isInvisible(colour) ? { color: toPptxColor(colour).color } : undefined)
+    if (table.headerRow && row === 0) return paint(w.headerFill)
+    const bodyIndex = table.headerRow ? row - 1 : row
+    return (bodyIndex % 2 === 1 ? paint(w.altFill) : undefined) ?? paint(w.bodyFill)
+  }
+
+  const rows: PptxGenJS.TableRow[] = table.cells.map((line, r) =>
+    line.map((cell) => ({
+      text: htmlToText(cell),
+      options: {
+        fill: fillFor(r),
+        color: table.headerRow && r === 0 ? headerColor : textColor,
+        bold: table.headerRow && r === 0 ? true : String(w.fontWeight) === 'bold',
+        align,
+        valign: 'top',
+        margin,
+        border,
+      },
+    })),
+  )
+
+  slide.addTable(rows, {
+    x: box.x,
+    y: box.y,
+    w: box.w,
+    h: box.h,
+    colW: table.colWidths.map((fraction) => fraction * box.w),
+    rowH: box.h / table.rows,
+    fontFace: w.fontClass?.value || 'Inter',
+    fontSize,
+    autoPage: false,
+  })
+}
 
 /**
  * The shadow an image or a shape casts, as PowerPoint states one.
@@ -251,6 +312,10 @@ export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Pro
 
     onProgress?.(Math.round(((i + 0.1) / pages.length) * 90), `Building slide ${i + 1} of ${pages.length}`)
 
+    // Speaker notes go into PowerPoint's own notes pane, in either mode: they
+    // are for the person presenting, not part of the picture of the page.
+    if (typeof page.notes === 'string' && page.notes.trim()) slide.addNotes(page.notes)
+
     if (mode === 'picture') {
       const data = renderPage ? await renderPage(i) : null
       if (data) {
@@ -277,6 +342,8 @@ export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Pro
           await addRasterWidget(slide, widget, i, scale, renderWidget)
         } else if (widget.type === 'w-text') {
           addTextWidget(slide, widget, scale)
+        } else if (widget.type === 'w-table') {
+          addTableWidget(slide, widget, scale)
         } else if (widget.type === 'w-image') {
           const placed = await addImageWidget(slide, widget, scale)
           // A cross-origin image we could not read still has to appear, so

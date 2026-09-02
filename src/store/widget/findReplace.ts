@@ -11,12 +11,19 @@
  *
  * Grouped elements need no handling either: a group's children sit in the same
  * flat `layers` array with `parent` pointing at their container.
+ *
+ * A table is searched cell by cell. Each cell holds the same contentEditable
+ * markup a text box does, so the same walk over the markup serves both; what
+ * differs is only where the words are read from and written back to, which is
+ * what `textSlots` describes. Page names and speaker notes are not searched:
+ * neither is on the page.
  */
 import { canvasState, widgetState } from '../state'
 import { showPage } from './pages'
 import { selectWidget } from './select'
 import { findInMarkup, replaceInMarkup, type TTextHit } from '@/utils/widgets/textMatch'
 import type { TdWidgetData } from '../types'
+import { readTable, setCell } from '@/components/modules/widgets/wTable/tableModel'
 
 export type TSearchScope = 'all' | 'page'
 
@@ -29,6 +36,8 @@ export type TFindOptions = {
 export type TFindMatch = TTextHit & {
   page: number
   uuid: string
+  /** Which cell of a table holds it, as [row, column]. Absent for a text box. */
+  cell?: [number, number]
   /**
    * Whether the layer holding it is hidden or locked. Both are still searched —
    * hiding is about the canvas and locking is about dragging, neither is about
@@ -45,12 +54,45 @@ export type TReplaceOutcome = {
 }
 
 /**
- * The artwork this searches. `w-text` is the only widget that carries a `text`
- * field today (see widgets/registry.ts); the field test rather than the type
- * test alone is what keeps this honest if another type gains one.
+ * One run of markup a search can look in and a replacement can be written
+ * back to: a text box's `text`, or one cell of a table.
  */
-function carriesText(widget: TdWidgetData): boolean {
-  return widget.type === 'w-text' && typeof widget.text === 'string'
+type TTextSlot = {
+  cell?: [number, number]
+  read: () => string | undefined
+  write: (html: string) => void
+}
+
+/**
+ * The words a widget carries. A text box has one run; a table has one per
+ * cell; everything else has none. The field test rather than the type test
+ * alone is what keeps this honest if another type gains a `text`.
+ */
+function textSlots(widget: TdWidgetData): TTextSlot[] {
+  if (widget.type === 'w-text' && typeof widget.text === 'string') {
+    return [{ read: () => widget.text, write: (html) => (widget.text = html) }]
+  }
+  if (widget.type === 'w-table') {
+    const { cells } = readTable(widget)
+    const slots: TTextSlot[] = []
+    cells.forEach((line, r) =>
+      line.forEach((_, c) =>
+        slots.push({
+          cell: [r, c],
+          read: () => readTable(widget).cells[r]?.[c],
+          // A fresh grid rather than a cell written in place, so the canvas
+          // and the thumbnails see the array change.
+          write: (html) => (widget.cells = setCell(readTable(widget).cells, r, c, html)),
+        }),
+      ),
+    )
+    return slots
+  }
+  return []
+}
+
+function slotIn(widget: TdWidgetData, cell?: [number, number]): TTextSlot | undefined {
+  return textSlots(widget).find((slot) => (cell ? slot.cell?.[0] === cell[0] && slot.cell?.[1] === cell[1] : !slot.cell))
 }
 
 /** Every occurrence, in reading order: page by page, layer by layer, left to right. */
@@ -63,9 +105,10 @@ export function findMatches({ query, matchCase, scope }: TFindOptions): TFindMat
     const layers = widgetState.dLayouts[page]?.layers
     if (!layers) continue
     for (const layer of layers) {
-      if (!carriesText(layer)) continue
-      for (const hit of findInMarkup(layer.text, query, matchCase)) {
-        matches.push({ ...hit, page, uuid: layer.uuid, unseen: !!layer.hidden || !!layer.lock })
+      for (const slot of textSlots(layer)) {
+        for (const hit of findInMarkup(slot.read(), query, matchCase)) {
+          matches.push({ ...hit, page, uuid: layer.uuid, cell: slot.cell, unseen: !!layer.hidden || !!layer.lock })
+        }
       }
     }
   }
@@ -101,23 +144,24 @@ function layerAt(page: number, uuid: string): TdWidgetData | undefined {
  */
 export function applyReplace(match: TFindMatch, replacement: string): boolean {
   const layer = layerAt(match.page, match.uuid)
-  if (!layer) return false
-  layer.text = replaceInMarkup(layer.text, [{ start: match.start, length: match.length }], replacement)
+  const slot = layer && slotIn(layer, match.cell)
+  if (!slot) return false
+  slot.write(replaceInMarkup(slot.read(), [{ start: match.start, length: match.length }], replacement))
   return true
 }
 
 /**
  * Rewrites every occurrence given.
  *
- * Grouped by widget so each one's markup is parsed and re-serialised once
- * rather than once per hit, and so the hits inside it are spliced together —
+ * Grouped by run of markup — a text box, or one cell of a table — so each is
+ * parsed and re-serialised once rather than once per hit, and so the hits inside it are spliced together —
  * `replaceInMarkup` works back to front, which is what keeps the earlier
  * offsets true after the later ones have moved.
  */
 export function applyReplaceAll(matches: TFindMatch[], replacement: string): TReplaceOutcome {
   const byLayer = new Map<string, TFindMatch[]>()
   for (const match of matches) {
-    const key = `${match.page}:${match.uuid}`
+    const key = `${match.page}:${match.uuid}:${match.cell ? match.cell.join(',') : ''}`
     const list = byLayer.get(key)
     if (list) list.push(match)
     else byLayer.set(key, [match])
@@ -128,11 +172,14 @@ export function applyReplaceAll(matches: TFindMatch[], replacement: string): TRe
   let unseen = 0
   for (const list of byLayer.values()) {
     const layer = layerAt(list[0].page, list[0].uuid)
-    if (!layer) continue
-    layer.text = replaceInMarkup(
-      layer.text,
-      list.map(({ start, length }) => ({ start, length })),
-      replacement,
+    const slot = layer && slotIn(layer, list[0].cell)
+    if (!slot) continue
+    slot.write(
+      replaceInMarkup(
+        slot.read(),
+        list.map(({ start, length }) => ({ start, length })),
+        replacement,
+      ),
     )
     replaced += list.length
     pages.add(list[0].page)

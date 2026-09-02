@@ -1,0 +1,102 @@
+.w-table {
+  user-select: none;
+  // The dividers hang a little outside the grid so they can be grabbed at
+  // the table's own edge.
+  overflow: visible;
+}
+
+.w-table__grid {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  box-sizing: border-box;
+  // What the cells inherit and do not set themselves.
+  word-break: break-word;
+}
+
+.w-table__cell {
+  outline: none;
+  white-space: pre-wrap;
+  margin: 0;
+  // An empty cell still needs a line to click into.
+  min-height: 1em;
+}
+
+.w-table.editing .w-table__cell[contenteditable] {
+  cursor: text;
+  user-select: text;
+}
+
+// ---- column dividers ----------------------------------------------------
+
+.w-table__dividers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.w-table__divider {
+  position: absolute;
+  transform: translateX(-50%);
+  cursor: col-resize;
+  pointer-events: auto;
+
+  // The line itself: invisible until the pointer is over it, then the accent.
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: var(--ds-accent, #6ccfff);
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+  &:hover::after,
+  &.is-dragging::after {
+    opacity: 1;
+  }
+}
+
+// ---- the cell menu ------------------------------------------------------
+// Chrome rather than artwork, so it takes the editor's tokens.
+
+.w-table__menu {
+  position: fixed;
+  z-index: 3100;
+  min-width: 180px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: @popover;
+  border: 1px solid @line;
+  border-radius: @radius;
+  box-shadow: @shadow-pop;
+  color: @ink;
+  font-size: @text-base;
+
+  li {
+    padding: 6px 10px;
+    border-radius: @radius-sm;
+    cursor: pointer;
+    white-space: nowrap;
+    &:hover {
+      background: @surface-2;
+    }
+    &.is-disabled {
+      color: @ink-4;
+      cursor: default;
+      &:hover {
+        background: transparent;
+      }
+    }
+    &.is-divided {
+      margin-top: 4px;
+      border-top: 1px solid @line-soft;
+      padding-top: 8px;
+    }
+  }
+}

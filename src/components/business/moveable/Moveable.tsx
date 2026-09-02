@@ -440,6 +440,9 @@ export default function Moveable() {
         } else if (active?.type === 'w-image' || active?.type === 'w-qrcode' || active?.type === 'w-svg') {
           const dirs = ['1,0', '0,-1', '-1,0', '0,1']
           dirs.includes(String(args.direction)) && (moveable.keepRatio = false)
+        } else if (active?.type === 'w-table') {
+          // Only the width is the user's: the rows set the height.
+          moveable.keepRatio = false
         }
       })
       .on('resize', (args: any) => {
@@ -671,6 +674,10 @@ export default function Moveable() {
           case 'w-polygon':
           case 'w-path':
             moveable.renderDirections = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']
+            break
+          case 'w-table':
+            // A table is as tall as its rows, so only its width can be dragged.
+            moveable.renderDirections = ['w', 'e']
             break
           default:
             moveable.renderDirections = ['nw', 'ne', 'sw', 'se']
