@@ -16,19 +16,7 @@ export type DropdownProps = {
   onOpenChange?: (open: boolean) => void
 }
 
-export function DropdownItem({
-  children,
-  onSelect,
-  divided,
-  disabled,
-  closeOnSelect = true,
-}: {
-  children: ReactNode
-  onSelect?: () => void
-  divided?: boolean
-  disabled?: boolean
-  closeOnSelect?: boolean
-}) {
+export function DropdownItem({ children, onSelect, divided, disabled, closeOnSelect = true }: { children: ReactNode; onSelect?: () => void; divided?: boolean; disabled?: boolean; closeOnSelect?: boolean }) {
   return (
     <>
       {/* Element Plus draws a divider as its own empty <li>, not as a border on
@@ -83,9 +71,7 @@ export default function Dropdown({ children, menu, placement = 'bottom-start', m
           // page's menu would also select that page.
           onClick={(event) => event.stopPropagation()}
         >
-          <ul className={cx('el-dropdown-menu', size && size !== 'default' ? `el-dropdown-menu--${size}` : '', menuClassName || '')}>
-            {menu}
-          </ul>
+          <ul className={cx('el-dropdown-menu', size && size !== 'default' ? `el-dropdown-menu--${size}` : '', menuClassName || '')}>{menu}</ul>
           <DropdownPrimitive.Arrow asChild width={10} height={10}>
             <span className="el-popper__arrow" />
           </DropdownPrimitive.Arrow>

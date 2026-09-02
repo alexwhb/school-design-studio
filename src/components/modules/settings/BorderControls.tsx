@@ -29,13 +29,7 @@ export default function BorderControls({ width = 0, color = '#000000ff', style =
 
   return (
     <>
-      <NumberSlider
-        value={thickness}
-        style={{ fontSize: 14 }}
-        label="Thickness"
-        maxValue={maxWidth}
-        onChange={(value) => onChange('borderWidth', value)}
-      />
+      <NumberSlider value={thickness} style={{ fontSize: 14 }} label="Thickness" maxValue={maxWidth} onChange={(value) => onChange('borderWidth', value)} />
       {thickness > 0 ? (
         <div className="border-controls">
           <ColorSelect label="Colour" value={color} modes={['Solid', 'Gradient']} onValueChange={(value) => onChange('borderColor', value)} />

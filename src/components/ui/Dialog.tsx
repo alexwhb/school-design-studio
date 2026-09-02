@@ -17,27 +17,13 @@ export type DialogProps = {
   appendToBody?: boolean
 }
 
-export default function Dialog({
-  open,
-  onOpenChange,
-  title,
-  width,
-  footer,
-  showClose = true,
-  closeOnClickModal = true,
-  className,
-  children,
-}: DialogProps) {
+export default function Dialog({ open, onOpenChange, title, width, footer, showClose = true, closeOnClickModal = true, className, children }: DialogProps) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal container={getPortalContainer()}>
         <DialogPrimitive.Overlay className="el-overlay">
           <div className="el-overlay-dialog" onMouseDown={(e) => closeOnClickModal && e.target === e.currentTarget && onOpenChange(false)}>
-            <DialogPrimitive.Content
-              className={cx('el-dialog', className || '')}
-              style={{ ['--el-dialog-width' as any]: typeof width === 'number' ? `${width}px` : width }}
-              onPointerDownOutside={(e) => !closeOnClickModal && e.preventDefault()}
-            >
+            <DialogPrimitive.Content className={cx('el-dialog', className || '')} style={{ ['--el-dialog-width' as any]: typeof width === 'number' ? `${width}px` : width }} onPointerDownOutside={(e) => !closeOnClickModal && e.preventDefault()}>
               <header className="el-dialog__header">
                 <DialogPrimitive.Title className="el-dialog__title">{title}</DialogPrimitive.Title>
                 {showClose ? (

@@ -14,17 +14,7 @@ type Props = {
   onFinish?: (value: number) => void
 }
 
-export default function NumberSlider({
-  label = '',
-  value = 0,
-  minValue = 0,
-  maxValue = 500,
-  step = 1,
-  style,
-  className,
-  onChange,
-  onFinish,
-}: Props) {
+export default function NumberSlider({ label = '', value = 0, minValue = 0, maxValue = 500, step = 1, style, className, onChange, onFinish }: Props) {
   const [innerValue, setInnerValue] = useState(value)
 
   useEffect(() => {

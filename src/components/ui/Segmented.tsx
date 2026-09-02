@@ -52,13 +52,7 @@ export default function Segmented({ value, options, onChange, size = 'md', class
   )
 
   return (
-    <div
-      className={cx('ds-segmented', `ds-segmented--${size}`, className || '')}
-      role="radiogroup"
-      aria-label={ariaLabel}
-      tabIndex={0}
-      onKeyDown={onKeyDown}
-    >
+    <div className={cx('ds-segmented', `ds-segmented--${size}`, className || '')} role="radiogroup" aria-label={ariaLabel} tabIndex={0} onKeyDown={onKeyDown}>
       <div className="ds-segmented__track" aria-hidden="true">
         <div className="ds-segmented__thumb" style={{ width: `${share}%`, left: `${share * index}%` }} />
       </div>

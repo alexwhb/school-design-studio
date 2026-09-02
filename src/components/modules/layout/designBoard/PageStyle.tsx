@@ -5,7 +5,7 @@ import { widgetState } from '@/store/state'
 import { updatePageData } from '@/store/canvas'
 import { selectWidget } from '@/store/widget/select'
 import Button from '@/components/ui/Button'
-import Collapse, { CollapseItem } from '@/components/ui/Collapse'
+import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import Tooltip from '@/components/ui/Tooltip'
 import { DeleteIcon, DownloadIcon } from '@/components/ui/icons'
 import Uploader, { type TUploadDoneData } from '@/components/common/Uploader/Uploader'
@@ -115,8 +115,8 @@ export default function PageStyle() {
           <BgImgListWrap model="stylePanel" />
         </div>
       ) : (
-        <Collapse value={activeNames} onChange={setActiveNames}>
-          <CollapseItem name="1" title="Page size">
+        <PanelSections value={activeNames} onChange={setActiveNames}>
+          <PanelSection name="1" title="Page size">
             <div className="page-size">
               <span className="page-size__value">
                 {Math.round(active.width)} × {Math.round(active.height)} px
@@ -125,8 +125,8 @@ export default function PageStyle() {
                 Resize…
               </Button>
             </div>
-          </CollapseItem>
-          <CollapseItem name="2" title="Background">
+          </PanelSection>
+          <PanelSection name="2" title="Background">
             <Button className="bg-library-open" plain onClick={() => setShowBgLib(true)}>
               <i className="iconfont icon-gallery" />
               Browse the background library
@@ -183,8 +183,8 @@ export default function PageStyle() {
             >
               Move background to a layer
             </Button>
-          </CollapseItem>
-        </Collapse>
+          </PanelSection>
+        </PanelSections>
       )}
       <ResizeDesign ref={sizeEditRef} />
     </div>

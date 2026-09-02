@@ -4,7 +4,7 @@ import alignIconList from '@/assets/data/AlignListData'
 import layerIconList from '@/assets/data/LayerIconList'
 import { getImage } from '@/common/methods/getImgDetail'
 import Button from '@/components/ui/Button'
-import Collapse, { CollapseItem } from '@/components/ui/Collapse'
+import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import PictureSelector, { type PictureSelectorHandle } from '@/components/business/picture-selector/PictureSelector'
 import { canvasState, controlState, widgetState } from '@/store/state'
 import { setCropUuid, setShowRotatable } from '@/store/control'
@@ -136,16 +136,16 @@ export default function WImageStyle() {
 
   return (
     <div id="w-image-style" className="ds-image-style">
-      <Collapse value={activeNames} onChange={setActiveNames}>
-        <CollapseItem name="1" title="Size and position">
+      <PanelSections value={activeNames} onChange={setActiveNames}>
+        <PanelSection name="1" title="Size and position">
           <div className="line-layout">
             <NumberInput value={active.left} label="X" onChange={(v) => finish('left', Number(v))} />
             <NumberInput value={active.top} label="Y" onChange={(v) => finish('top', Number(v))} />
             <NumberInput value={active.width} label="W" onChange={(v) => finish('width', Number(v))} />
             <NumberInput value={active.height} label="H" onChange={(v) => finish('height', Number(v))} />
           </div>
-        </CollapseItem>
-        <CollapseItem name="2" title="Settings">
+        </PanelSection>
+        <PanelSection name="2" title="Settings">
           <Button style={{ width: '100%', marginBottom: 12 }} plain onClick={openPicBox}>
             Replace image
           </Button>
@@ -182,17 +182,17 @@ export default function WImageStyle() {
               onChange={(value) => finish('radius', value)}
             />
           </div>
-        </CollapseItem>
-        <CollapseItem name="5" title="Border">
+        </PanelSection>
+        <PanelSection name="5" title="Border">
           <BorderControls
             width={active.borderWidth}
             color={active.borderColor}
             style={active.borderStyle}
             onChange={finish}
           />
-        </CollapseItem>
+        </PanelSection>
         {active.isNinePatch ? (
-          <CollapseItem name="3" title="Nine-patch settings">
+          <PanelSection name="3" title="Nine-patch settings">
             <NumberSlider
               value={active.sliceData?.ratio}
               step={0.01}
@@ -206,18 +206,18 @@ export default function WImageStyle() {
               label="Size"
               onChange={(value) => finishSliceData('left', value)}
             />
-          </CollapseItem>
+          </PanelSection>
         ) : null}
-        <CollapseItem name="6" title="Shadow">
+        <PanelSection name="6" title="Shadow">
           <div className="slide-wrap">
             <ShadowSelect value={active.shadow} onChange={(value) => finish('shadow', value)} />
           </div>
-        </CollapseItem>
+        </PanelSection>
         <br />
         <IconItemSelect className="style-item" label="" data={layerIcons} onFinish={layerAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
-      </Collapse>
+      </PanelSections>
       {cropping ? (
         <InnerToolBar style={toolBarStyle}>
           <NumberSlider

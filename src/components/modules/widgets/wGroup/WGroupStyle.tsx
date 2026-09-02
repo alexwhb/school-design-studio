@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
 import layerIconList from '@/assets/data/LayerIconList'
-import Collapse, { CollapseItem } from '@/components/ui/Collapse'
+import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import { widgetState } from '@/store/state'
 import { ungroup, updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
@@ -33,16 +33,16 @@ export default function WGroupStyle() {
 
   return (
     <div id="w-group-style">
-      <Collapse value={activeNames} onChange={setActiveNames}>
-        <CollapseItem name="1" title="Size and position">
+      <PanelSections value={activeNames} onChange={setActiveNames}>
+        <PanelSection name="1" title="Size and position">
           <div className="line-layout">
             <NumberInput value={active.left} label="X" onChange={(v) => finish('left', Number(v))} />
             <NumberInput value={active.top} label="Y" onChange={(v) => finish('top', Number(v))} />
             <NumberInput value={active.width} label="W" onChange={(v) => finish('width', Number(v))} />
             <NumberInput value={active.height} label="H" onChange={(v) => finish('height', Number(v))} />
           </div>
-        </CollapseItem>
-        <CollapseItem name="2" title="Style">
+        </PanelSection>
+        <PanelSection name="2" title="Style">
           <div className="ungroup style-item" onClick={() => ungroup(String(uuid))}>
             Ungroup
           </div>
@@ -57,8 +57,8 @@ export default function WGroupStyle() {
           <br />
           <IconItemSelect className="style-item" label="" data={layerIconList} onFinish={layerAction} />
           <IconItemSelect label="" data={alignIconList} onFinish={alignAction} />
-        </CollapseItem>
-      </Collapse>
+        </PanelSection>
+      </PanelSections>
     </div>
   )
 }

@@ -17,10 +17,7 @@ export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> 
  * Ref-forwarding, because Radix's `asChild` triggers — tooltips, dropdowns,
  * popovers — clone the child and hand it a ref to position against.
  */
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { type = 'default', nativeType = 'button', plain, text, link, round, circle, size, className, children, ...rest },
-  ref,
-) {
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ type = 'default', nativeType = 'button', plain, text, link, round, circle, size, className, children, ...rest }, ref) {
   return (
     <button
       {...rest}

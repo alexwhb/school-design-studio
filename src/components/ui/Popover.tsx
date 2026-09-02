@@ -21,15 +21,7 @@ function splitPlacement(placement: string): { side: 'top' | 'bottom' | 'left' | 
   return { side, align }
 }
 
-export default function Popover({
-  content,
-  placement = 'bottom',
-  width,
-  open,
-  onOpenChange,
-  popperClass,
-  children,
-}: PopoverProps) {
+export default function Popover({ content, placement = 'bottom', width, open, onOpenChange, popperClass, children }: PopoverProps) {
   const [internalOpen, setInternalOpen] = useState(false)
   const isOpen = open ?? internalOpen
   const setOpen = (next: boolean) => {

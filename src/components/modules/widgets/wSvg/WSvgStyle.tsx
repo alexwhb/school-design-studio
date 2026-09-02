@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
 import layerIconList from '@/assets/data/LayerIconList'
-import Collapse, { CollapseItem } from '@/components/ui/Collapse'
+import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import { widgetState } from '@/store/state'
 import { updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
 import BorderControls from '../../settings/BorderControls'
@@ -42,16 +42,16 @@ export default function WSvgStyle() {
 
   return (
     <div id="w-image-style" className="ds-svg-style">
-      <Collapse value={activeNames} onChange={setActiveNames}>
-        <CollapseItem name="1" title="Size and position">
+      <PanelSections value={activeNames} onChange={setActiveNames}>
+        <PanelSection name="1" title="Size and position">
           <div className="line-layout">
             <NumberInput value={active.left} label="X" onChange={(v) => finish('left', Number(v))} />
             <NumberInput value={active.top} label="Y" onChange={(v) => finish('top', Number(v))} />
             <NumberInput value={active.width} label="W" onChange={(v) => finish('width', Number(v))} />
             <NumberInput value={active.height} label="H" onChange={(v) => finish('height', Number(v))} />
           </div>
-        </CollapseItem>
-        <CollapseItem name="2" title="Fill">
+        </PanelSection>
+        <PanelSection name="2" title="Fill">
           {(active.colors || []).map((c: string, ci: number) => (
             <div key={ci + 'c'}>
               <ColorSelect value={c} modes={['Solid', 'Gradient']} onValueChange={(value) => colorFinish(ci, value)} />
@@ -61,25 +61,25 @@ export default function WSvgStyle() {
           <div className="slide-wrap">
             <NumberSlider value={active.opacity} label="Opacity" step={0.01} maxValue={1} onChange={(value) => finish('opacity', value)} />
           </div>
-        </CollapseItem>
-        <CollapseItem name="3" title="Border">
+        </PanelSection>
+        <PanelSection name="3" title="Border">
           <BorderControls
             width={active.borderWidth}
             color={active.borderColor}
             style={active.borderStyle}
             onChange={finish}
           />
-        </CollapseItem>
-        <CollapseItem name="6" title="Shadow">
+        </PanelSection>
+        <PanelSection name="6" title="Shadow">
           <div className="slide-wrap">
             <ShadowSelect value={active.shadow} onChange={(value) => finish('shadow', value)} />
           </div>
-        </CollapseItem>
+        </PanelSection>
         <br />
         <IconItemSelect className="style-item" label="" data={layerIconList} onFinish={layerAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
-      </Collapse>
+      </PanelSections>
     </div>
   )
 }

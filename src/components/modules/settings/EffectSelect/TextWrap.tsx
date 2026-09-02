@@ -4,7 +4,7 @@ import type { TGetCompListResult } from '@/api/home'
 import Button from '@/components/ui/Button'
 import Checkbox from '@/components/ui/Checkbox'
 import Popover from '@/components/ui/Popover'
-import { CollapseItem } from '@/components/ui/Collapse'
+import { PanelSection } from '@/components/ui/PanelSection'
 import SortableList from '@/components/ui/SortableList'
 import effectStyle from '../../widgets/wText/effectStyle'
 import getGradientOrImg from '../../widgets/wText/getGradientOrImg'
@@ -196,12 +196,10 @@ export default function TextWrap({ value, data = {}, onValueChange, onSelect }: 
    * opened to show. Handing it the gradient instead starts it in the right mode
    * and the round trip leaves the fill alone.
    */
-  const fillValue = (filling: Record<string, any>) =>
-    filling && Number(filling.type) === 2 && filling.gradient?.stops?.length ? getGradientOrImg({ filling }) : filling?.color
+  const fillValue = (filling: Record<string, any>) => (filling && Number(filling.type) === 2 && filling.gradient?.stops?.length ? getGradientOrImg({ filling }) : filling?.color)
 
   /** The palette of a tiling fill, or nothing if this fill is not one. */
-  const patternOf = (filling: Record<string, any>): TPatternFill | undefined =>
-    Number(filling?.type) === 1 ? filling.imageContent?.pattern : undefined
+  const patternOf = (filling: Record<string, any>): TPatternFill | undefined => (Number(filling?.type) === 1 ? filling.imageContent?.pattern : undefined)
 
   /**
    * A tiling fill has as many colours as its tile has slots, so it gets a
@@ -222,283 +220,172 @@ export default function TextWrap({ value, data = {}, onValueChange, onSelect }: 
 
   return (
     <div className="effects">
-      <div className="effects__head">
-        <span className="effects__title">Text effects</span>
-        <div className="effects__head-right">
-          <div
-            className="effect-preview"
-            style={{
-              position: 'relative',
-              width: '22px',
-              fontSize: '22px',
-              color: data.color,
-              fontWeight: data.fontWeight,
-              fontStyle: data.fontStyle,
-              textDecoration: data.textDecoration,
-              opacity: data.opacity,
-              backgroundColor: data.backgroundColor,
-            }}
-          >
-            {previewEffects.map((ef: any, efi: number) => (
-              <div
-                key={efi + 'effect'}
-                style={effectStyle(ef, 1 / coefficient)}
-                className="demo"
-              >
-                A
-              </div>
-            ))}
-            A
-          </div>
-          <Popover
-            placement="left"
-            popperClass="ds-effect-picker"
-            width={220}
-            open={visible}
-            onOpenChange={setVisible}
-            content={
-              <div className="select__box">
-                <div className="select__box__select-item" onClick={() => selectEffect()}>
-                  None
+      <PanelSection
+        title="Text effects"
+        aside={
+          <>
+            <div
+              className="effect-preview"
+              style={{
+                position: 'relative',
+                width: '22px',
+                fontSize: '22px',
+                color: data.color,
+                fontWeight: data.fontWeight,
+                fontStyle: data.fontStyle,
+                textDecoration: data.textDecoration,
+                opacity: data.opacity,
+                backgroundColor: data.backgroundColor,
+              }}
+            >
+              {previewEffects.map((ef: any, efi: number) => (
+                <div key={efi + 'effect'} style={effectStyle(ef, 1 / coefficient)} className="demo">
+                  A
                 </div>
-                {list.map((l, li) => (
-                  <div key={'list' + li} className="select__box__select-item" onClick={() => selectEffect(l.id)}>
-                    <img src={l.cover} />
+              ))}
+              A
+            </div>
+            <Popover
+              placement="left"
+              popperClass="ds-effect-picker"
+              width={220}
+              open={visible}
+              onOpenChange={setVisible}
+              content={
+                <div className="select__box">
+                  <div className="select__box__select-item" onClick={() => selectEffect()}>
+                    None
                   </div>
-                ))}
-              </div>
-            }
-          >
-            <Button className="effects__choose" link onClick={openSet}>
-              {visible ? 'Cancel' : 'Choose'}
-            </Button>
-          </Popover>
-        </div>
-      </div>
-
-      <div style={{ display: layers.length > 0 ? undefined : 'none' }}>
-        <NumberSlider
-          value={strength}
-          className="effects__intensity"
-          style={{ marginTop: 10 }}
-          label="Intensity"
-          minValue={0}
-          maxValue={100}
-          onChange={strengthChange}
-        />
-      </div>
-
-      <div className="advanced">
-        <CollapseItem
-          name="advanced"
-          title="Advanced"
-          active={advancedOpen.includes('advanced')}
-          onToggle={() => setAdvancedOpen((prev) => (prev.includes('advanced') ? [] : ['advanced']))}
-        >
-          <div className="advanced__actions">
-            <Button className="advanced__action" size="small" type="primary" link onClick={addLayer}>
-              + Add effect
-            </Button>
-            {layers.length > 0 ? (
-              <Button className="advanced__action" size="small" type="primary" link onClick={() => setUnfold(!unfold)}>
-                {unfold ? 'Collapse all' : 'Expand all'}
+                  {list.map((l, li) => (
+                    <div key={'list' + li} className="select__box__select-item" onClick={() => selectEffect(l.id)}>
+                      <img src={l.cover} />
+                    </div>
+                  ))}
+                </div>
+              }
+            >
+              <Button className="effects__choose" link onClick={openSet}>
+                {visible ? 'Cancel' : 'Choose'}
               </Button>
-            ) : null}
-          </div>
-          <SortableList
-            className="layers"
-            handle=".sd-yidong"
-            items={layers}
-            getKey={(item) => item.uuid}
-            onReorder={pushLayers}
-            renderItem={(element, index) => (
-              <div className="layer">
-                <div className="layer__title">
-                  <i className="icon sd-yidong" />
-                  <span className="layer__name">Effect {index + 1}</span>
-                  <i className="icon sd-delete" onClick={() => removeLayer(index)} />
+            </Popover>
+          </>
+        }
+      >
+        <div style={{ display: layers.length > 0 ? undefined : 'none' }}>
+          <NumberSlider value={strength} className="effects__intensity" style={{ marginTop: 10 }} label="Intensity" minValue={0} maxValue={100} onChange={strengthChange} />
+        </div>
+
+        <div className="advanced">
+          <PanelSection name="advanced" title="Advanced" open={advancedOpen.includes('advanced')} onToggle={() => setAdvancedOpen((prev) => (prev.includes('advanced') ? [] : ['advanced']))}>
+            <div className="advanced__actions">
+              <Button className="advanced__action" size="small" type="primary" link onClick={addLayer}>
+                + Add effect
+              </Button>
+              {layers.length > 0 ? (
+                <Button className="advanced__action" size="small" type="primary" link onClick={() => setUnfold(!unfold)}>
+                  {unfold ? 'Collapse all' : 'Expand all'}
+                </Button>
+              ) : null}
+            </div>
+            <SortableList
+              className="layers"
+              handle=".sd-yidong"
+              items={layers}
+              getKey={(item) => item.uuid}
+              onReorder={pushLayers}
+              renderItem={(element, index) => (
+                <div className="layer">
+                  <div className="layer__title">
+                    <i className="icon sd-yidong" />
+                    <span className="layer__name">Effect {index + 1}</span>
+                    <i className="icon sd-delete" onClick={() => removeLayer(index)} />
+                  </div>
+                  <div className="layer__body" style={{ display: unfold ? undefined : 'none' }}>
+                    {element.filling && ([0, 2, '0', '2'].includes(element.filling.type) || patternOf(element.filling)) ? (
+                      <div className={cx('feature', { 'feature--off': !element.filling.enable })}>
+                        <div className="feature__row">
+                          <Checkbox value={!!element.filling.enable} label="Fill" className="feature__toggle" onChange={(next) => patchLayer(index, { filling: { ...element.filling, enable: next } })} />
+                          {patternOf(element.filling) ? patternOf(element.filling)!.colors.map((color, slot) => <ColorSelect key={slot} value={color} width="32px" className="feature__swatch" label="" onValueChange={(next) => patternColorChange(index, slot, next)} />) : <ColorSelect value={fillValue(element.filling)} width="32px" className="feature__swatch" modes={['Solid', 'Gradient']} label="" onValueChange={(next) => patchLayer(index, { filling: { ...element.filling, color: next } })} onChange={(e) => colorChange(e, index, 'filling')} />}
+                        </div>
+                      </div>
+                    ) : null}
+                    {element.stroke ? (
+                      <div className={cx('feature', { 'feature--off': !element.stroke.enable })}>
+                        <div className="feature__row">
+                          <Checkbox value={!!element.stroke.enable} label="Outline" className="feature__toggle" onChange={(next) => patchLayer(index, { stroke: { ...element.stroke, enable: next } })} />
+                          <ColorSelect value={element.stroke.color} width="32px" className="feature__swatch" label="" onValueChange={(next) => patchLayer(index, { stroke: { ...element.stroke, color: next } })} />
+                        </div>
+                        <div className="feature__fields">
+                          <label className="field">
+                            <span className="field__label">Width</span>
+                            <NumberInput value={element.stroke.width} minValue={0} type="simple" onChange={(next) => patchLayer(index, { stroke: { ...element.stroke, width: Number(next) } })} />
+                          </label>
+                        </div>
+                      </div>
+                    ) : null}
+                    {element.offset ? (
+                      <div className={cx('feature', { 'feature--off': !element.offset.enable })}>
+                        <div className="feature__row">
+                          <Checkbox value={!!element.offset.enable} label="Offset" className="feature__toggle" onChange={(next) => patchLayer(index, { offset: { ...element.offset, enable: next } })} />
+                        </div>
+                        <div className="feature__fields">
+                          <label className="field">
+                            <span className="field__label">X</span>
+                            <NumberInput value={element.offset.x} type="simple" onChange={(next) => patchLayer(index, { offset: { ...element.offset, x: Number(next) } })} />
+                          </label>
+                          <label className="field">
+                            <span className="field__label">Y</span>
+                            <NumberInput value={element.offset.y} type="simple" onChange={(next) => patchLayer(index, { offset: { ...element.offset, y: Number(next) } })} />
+                          </label>
+                        </div>
+                      </div>
+                    ) : null}
+                    {element.skew ? (
+                      <div className={cx('feature', { 'feature--off': !element.skew.enable })}>
+                        <div className="feature__row">
+                          <Checkbox value={!!element.skew.enable} label="Skew" className="feature__toggle" onChange={(next) => patchLayer(index, { skew: { ...element.skew, enable: next } })} />
+                        </div>
+                        <div className="feature__fields">
+                          <label className="field">
+                            <span className="field__label">X</span>
+                            <NumberInput value={element.skew.x} minValue={-89} maxValue={89} type="simple" onChange={(next) => patchLayer(index, { skew: { ...element.skew, x: Number(next) } })} />
+                          </label>
+                          <label className="field">
+                            <span className="field__label">Y</span>
+                            <NumberInput value={element.skew.y} minValue={-89} maxValue={89} type="simple" onChange={(next) => patchLayer(index, { skew: { ...element.skew, y: Number(next) } })} />
+                          </label>
+                        </div>
+                      </div>
+                    ) : null}
+                    {element.shadow ? (
+                      <div className={cx('feature', { 'feature--off': !element.shadow.enable })}>
+                        <div className="feature__row">
+                          <Checkbox value={!!element.shadow.enable} label="Shadow" className="feature__toggle" onChange={(next) => patchLayer(index, { shadow: { ...element.shadow, enable: next } })} />
+                          <ColorSelect value={element.shadow.color} width="32px" className="feature__swatch" label="" onValueChange={(next) => patchLayer(index, { shadow: { ...element.shadow, color: next } })} />
+                        </div>
+                        <div className="feature__fields">
+                          <label className="field field--full">
+                            <span className="field__label">Blur</span>
+                            <NumberInput value={element.shadow.blur} minValue={0} type="simple" onChange={(next) => patchLayer(index, { shadow: { ...element.shadow, blur: Number(next) } })} />
+                          </label>
+                          <label className="field">
+                            <span className="field__label">X</span>
+                            <NumberInput value={element.shadow.offsetX} type="simple" onChange={(next) => patchLayer(index, { shadow: { ...element.shadow, offsetX: Number(next) } })} />
+                          </label>
+                          <label className="field">
+                            <span className="field__label">Y</span>
+                            <NumberInput value={element.shadow.offsetY} type="simple" onChange={(next) => patchLayer(index, { shadow: { ...element.shadow, offsetY: Number(next) } })} />
+                          </label>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="layer__body" style={{ display: unfold ? undefined : 'none' }}>
-                  {element.filling && ([0, 2, '0', '2'].includes(element.filling.type) || patternOf(element.filling)) ? (
-                    <div className={cx('feature', { 'feature--off': !element.filling.enable })}>
-                      <div className="feature__row">
-                        <Checkbox
-                          value={!!element.filling.enable}
-                          label="Fill"
-                          className="feature__toggle"
-                          onChange={(next) => patchLayer(index, { filling: { ...element.filling, enable: next } })}
-                        />
-                        {patternOf(element.filling) ? (
-                          patternOf(element.filling)!.colors.map((color, slot) => (
-                            <ColorSelect
-                              key={slot}
-                              value={color}
-                              width="32px"
-                              className="feature__swatch"
-                              label=""
-                              onValueChange={(next) => patternColorChange(index, slot, next)}
-                            />
-                          ))
-                        ) : (
-                          <ColorSelect
-                            value={fillValue(element.filling)}
-                            width="32px"
-                            className="feature__swatch"
-                            modes={['Solid', 'Gradient']}
-                            label=""
-                            onValueChange={(next) => patchLayer(index, { filling: { ...element.filling, color: next } })}
-                            onChange={(e) => colorChange(e, index, 'filling')}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  ) : null}
-                  {element.stroke ? (
-                    <div className={cx('feature', { 'feature--off': !element.stroke.enable })}>
-                      <div className="feature__row">
-                        <Checkbox
-                          value={!!element.stroke.enable}
-                          label="Outline"
-                          className="feature__toggle"
-                          onChange={(next) => patchLayer(index, { stroke: { ...element.stroke, enable: next } })}
-                        />
-                        <ColorSelect
-                          value={element.stroke.color}
-                          width="32px"
-                          className="feature__swatch"
-                          label=""
-                          onValueChange={(next) => patchLayer(index, { stroke: { ...element.stroke, color: next } })}
-                        />
-                      </div>
-                      <div className="feature__fields">
-                        <label className="field">
-                          <span className="field__label">Width</span>
-                          <NumberInput
-                            value={element.stroke.width}
-                            minValue={0}
-                            type="simple"
-                            onChange={(next) => patchLayer(index, { stroke: { ...element.stroke, width: Number(next) } })}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  ) : null}
-                  {element.offset ? (
-                    <div className={cx('feature', { 'feature--off': !element.offset.enable })}>
-                      <div className="feature__row">
-                        <Checkbox
-                          value={!!element.offset.enable}
-                          label="Offset"
-                          className="feature__toggle"
-                          onChange={(next) => patchLayer(index, { offset: { ...element.offset, enable: next } })}
-                        />
-                      </div>
-                      <div className="feature__fields">
-                        <label className="field">
-                          <span className="field__label">X</span>
-                          <NumberInput
-                            value={element.offset.x}
-                            type="simple"
-                            onChange={(next) => patchLayer(index, { offset: { ...element.offset, x: Number(next) } })}
-                          />
-                        </label>
-                        <label className="field">
-                          <span className="field__label">Y</span>
-                          <NumberInput
-                            value={element.offset.y}
-                            type="simple"
-                            onChange={(next) => patchLayer(index, { offset: { ...element.offset, y: Number(next) } })}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  ) : null}
-                  {element.skew ? (
-                    <div className={cx('feature', { 'feature--off': !element.skew.enable })}>
-                      <div className="feature__row">
-                        <Checkbox
-                          value={!!element.skew.enable}
-                          label="Skew"
-                          className="feature__toggle"
-                          onChange={(next) => patchLayer(index, { skew: { ...element.skew, enable: next } })}
-                        />
-                      </div>
-                      <div className="feature__fields">
-                        <label className="field">
-                          <span className="field__label">X</span>
-                          <NumberInput
-                            value={element.skew.x}
-                            minValue={-89}
-                            maxValue={89}
-                            type="simple"
-                            onChange={(next) => patchLayer(index, { skew: { ...element.skew, x: Number(next) } })}
-                          />
-                        </label>
-                        <label className="field">
-                          <span className="field__label">Y</span>
-                          <NumberInput
-                            value={element.skew.y}
-                            minValue={-89}
-                            maxValue={89}
-                            type="simple"
-                            onChange={(next) => patchLayer(index, { skew: { ...element.skew, y: Number(next) } })}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  ) : null}
-                  {element.shadow ? (
-                    <div className={cx('feature', { 'feature--off': !element.shadow.enable })}>
-                      <div className="feature__row">
-                        <Checkbox
-                          value={!!element.shadow.enable}
-                          label="Shadow"
-                          className="feature__toggle"
-                          onChange={(next) => patchLayer(index, { shadow: { ...element.shadow, enable: next } })}
-                        />
-                        <ColorSelect
-                          value={element.shadow.color}
-                          width="32px"
-                          className="feature__swatch"
-                          label=""
-                          onValueChange={(next) => patchLayer(index, { shadow: { ...element.shadow, color: next } })}
-                        />
-                      </div>
-                      <div className="feature__fields">
-                        <label className="field field--full">
-                          <span className="field__label">Blur</span>
-                          <NumberInput
-                            value={element.shadow.blur}
-                            minValue={0}
-                            type="simple"
-                            onChange={(next) => patchLayer(index, { shadow: { ...element.shadow, blur: Number(next) } })}
-                          />
-                        </label>
-                        <label className="field">
-                          <span className="field__label">X</span>
-                          <NumberInput
-                            value={element.shadow.offsetX}
-                            type="simple"
-                            onChange={(next) => patchLayer(index, { shadow: { ...element.shadow, offsetX: Number(next) } })}
-                          />
-                        </label>
-                        <label className="field">
-                          <span className="field__label">Y</span>
-                          <NumberInput
-                            value={element.shadow.offsetY}
-                            type="simple"
-                            onChange={(next) => patchLayer(index, { shadow: { ...element.shadow, offsetY: Number(next) } })}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            )}
-          />
-        </CollapseItem>
-      </div>
+              )}
+            />
+          </PanelSection>
+        </div>
+      </PanelSection>
     </div>
   )
 }

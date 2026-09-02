@@ -44,15 +44,7 @@ export default function ShadowSelect({ value, onChange, className }: Props) {
         <Checkbox value={on} label="Drop shadow" className="shadow-select__toggle" onChange={toggle} />
         {/* Nothing to colour or measure until there is a shadow, so the switch
             stands alone rather than over a row of controls that do nothing. */}
-        {on ? (
-          <ColorSelect
-            value={shadow.color}
-            width="32px"
-            className="shadow-select__swatch"
-            label=""
-            onValueChange={(next) => patch({ color: next })}
-          />
-        ) : null}
+        {on ? <ColorSelect value={shadow.color} width="32px" className="shadow-select__swatch" label="" onValueChange={(next) => patch({ color: next })} /> : null}
       </div>
       {on ? (
         <div className="shadow-select__fields">

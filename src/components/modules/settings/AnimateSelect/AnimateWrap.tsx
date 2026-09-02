@@ -1,19 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import Button from '@/components/ui/Button'
+import { PanelSection } from '@/components/ui/PanelSection'
 import Popover from '@/components/ui/Popover'
 import NumberSlider from '../NumberSlider'
 import ValueSelect from '../ValueSelect'
 import PresetTile, { type PresetTileHandle } from './PresetTile'
 import { updateWidgetData } from '@/store/widget/widget'
 import { cancelAll, playWidgetAnimation } from '@/common/animations/play'
-import {
-  ANIMATION_GROUPS,
-  defaultAnimationFor,
-  getPreset,
-  presetsInGroup,
-  type TWidgetAnimation,
-} from '@/common/animations/presets'
+import { ANIMATION_GROUPS, defaultAnimationFor, getPreset, presetsInGroup, type TWidgetAnimation } from '@/common/animations/presets'
 import { cx } from '@/utils/dom'
 import type { TdWidgetData } from '@/store/types'
 import './animateWrap.less'
@@ -170,10 +165,11 @@ export default function AnimateWrap({ widget }: Props) {
   )
 
   return (
-    <div className="animate">
-      <div className="animate__head">
-        <span className="animate__title">Animation</span>
-        <div className="animate__head-right">
+    <PanelSection
+      className="animate"
+      title="Animation"
+      aside={
+        <>
           <span className="animate__current">{current ? current.name : 'None'}</span>
           <Popover
             content={picker}
@@ -191,9 +187,9 @@ export default function AnimateWrap({ widget }: Props) {
               {pickerOpen ? 'Cancel' : 'Choose'}
             </Button>
           </Popover>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {current ? (
         <div className="animate__body">
           <p className="animate__hint">{current.hint}</p>
@@ -216,6 +212,6 @@ export default function AnimateWrap({ widget }: Props) {
           </div>
         </div>
       ) : null}
-    </div>
+    </PanelSection>
   )
 }

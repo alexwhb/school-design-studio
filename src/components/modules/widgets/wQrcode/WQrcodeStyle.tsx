@@ -4,7 +4,7 @@ import alignIconList from '@/assets/data/AlignListData'
 import layerIconList from '@/assets/data/LayerIconList'
 import localization from '@/assets/data/QrCodeLocalization'
 import Button from '@/components/ui/Button'
-import Collapse, { CollapseItem } from '@/components/ui/Collapse'
+import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import Select from '@/components/ui/Select'
 import Uploader, { type TUploadDoneData } from '@/components/common/Uploader/Uploader'
 import { widgetState } from '@/store/state'
@@ -48,16 +48,16 @@ export default function WQrcodeStyle() {
 
   return (
     <div id="w-image-style" className="ds-qrcode-style">
-      <Collapse value={activeNames} onChange={setActiveNames}>
-        <CollapseItem name="1" title="Size and position">
+      <PanelSections value={activeNames} onChange={setActiveNames}>
+        <PanelSection name="1" title="Size and position">
           <div className="line-layout">
             <NumberInput value={active.left} label="X" onChange={(v) => finish('left', Number(v))} />
             <NumberInput value={active.top} label="Y" onChange={(v) => finish('top', Number(v))} />
             <NumberInput value={active.width} label="W" onChange={(v) => finish('width', Number(v))} />
             <NumberInput value={active.height} label="H" onChange={(v) => finish('height', Number(v))} />
           </div>
-        </CollapseItem>
-        <CollapseItem name="2" title="Style">
+        </PanelSection>
+        <PanelSection name="2" title="Style">
           <div style={{ flexWrap: 'nowrap' }} className="line-layout">
             <Select
               value={active.dotColorType}
@@ -88,8 +88,8 @@ export default function WQrcodeStyle() {
               onChange={(value) => finish('dotRotation', value)}
             />
           </div>
-        </CollapseItem>
-        <CollapseItem name="3" title="Content">
+        </PanelSection>
+        <PanelSection name="3" title="Content">
           <TextInputArea value={active.value} max={40} label="" onChange={(value) => finish('value', value)} />
           <br />
           <div className="slide-wrap logo__layout">
@@ -109,12 +109,12 @@ export default function WQrcodeStyle() {
           <div className="slide-wrap">
             <NumberSlider value={active.opacity} label="Opacity" step={0.01} maxValue={1} onChange={(value) => finish('opacity', value)} />
           </div>
-        </CollapseItem>
+        </PanelSection>
         <br />
         <IconItemSelect className="style-item" label="" data={layerIconList} onFinish={layerAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
-      </Collapse>
+      </PanelSections>
     </div>
   )
 }

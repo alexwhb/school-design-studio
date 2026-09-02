@@ -4,7 +4,7 @@ import { alignIconList, styleIconList1, styleIconList2 } from '@/assets/data/Tex
 import layerIconList from '@/assets/data/LayerIconList'
 import { FONT_GROUPS } from '@/assets/data/FontsData'
 import { useFontStore } from '@/common/methods/fonts'
-import Collapse, { CollapseItem } from '@/components/ui/Collapse'
+import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import { controlState, widgetState } from '@/store/state'
 import { setUpdateRect } from '@/store/force'
 import { setWidgetStyle, updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
@@ -199,16 +199,16 @@ export default function WTextStyle() {
 
   return (
     <div id="w-text-style">
-      <Collapse value={activeNames} onChange={setActiveNames}>
-        <CollapseItem name="1" title="Size and position">
+      <PanelSections value={activeNames} onChange={setActiveNames}>
+        <PanelSection name="1" title="Size and position">
           <div className="line-layout">
             <NumberInput value={active.left} label="X" onChange={(v) => finish('left', Number(v))} />
             <NumberInput value={active.top} label="Y" onChange={(v) => finish('top', Number(v))} />
             <NumberInput value={active.width} label="W" editable onChange={(v) => finish('width', Number(v))} />
             <NumberInput value={active.height} label="H" editable onChange={(v) => finish('height', Number(v))} />
           </div>
-        </CollapseItem>
-      </Collapse>
+        </PanelSection>
+      </PanelSections>
 
       <div className="line-layout style-item">
         <ValueSelect

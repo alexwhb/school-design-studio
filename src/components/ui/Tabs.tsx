@@ -44,12 +44,7 @@ export default function Tabs({ value, items, onChange, stretch = true, children,
             <div ref={navRef} className={cx('el-tabs__nav', 'is-top', { 'is-stretch': stretch })} role="tablist" style={{ transform: 'translateX(0px)' }}>
               <div className="el-tabs__active-bar is-top" style={{ width: `${bar.width}px`, transform: `translateX(${bar.offset}px)` }} />
               {items.map((item) => (
-                <div
-                  key={item.name}
-                  role="tab"
-                  className={cx('el-tabs__item', 'is-top', { 'is-active': value === item.name })}
-                  onClick={() => onChange(item.name)}
-                >
+                <div key={item.name} role="tab" className={cx('el-tabs__item', 'is-top', { 'is-active': value === item.name })} onClick={() => onChange(item.name)}>
                   {item.label}
                 </div>
               ))}

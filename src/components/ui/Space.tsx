@@ -12,10 +12,7 @@ type Props = {
 
 export default function Space({ direction = 'horizontal', wrap, fill, fillRatio = 100, className, children }: Props) {
   return (
-    <div
-      className={cx('el-space', `el-space--${direction === 'vertical' ? 'vertical' : 'horizontal'}`, className || '')}
-      style={{ flexWrap: wrap ? 'wrap' : undefined }}
-    >
+    <div className={cx('el-space', `el-space--${direction === 'vertical' ? 'vertical' : 'horizontal'}`, className || '')} style={{ flexWrap: wrap ? 'wrap' : undefined }}>
       {Children.map(children, (child, i) =>
         child == null ? null : (
           <div key={i} className="el-space__item" style={fill ? { flexGrow: 1, minWidth: `${fillRatio}%` } : undefined}>

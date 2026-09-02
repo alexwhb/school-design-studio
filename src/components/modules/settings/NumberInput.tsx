@@ -15,18 +15,7 @@ type Props = {
   onFinish?: (value: number | string) => void
 }
 
-export default function NumberInput({
-  label = '',
-  value = '',
-  editable = true,
-  step = 1,
-  maxValue,
-  minValue,
-  type,
-  prepend,
-  onChange,
-  onFinish,
-}: Props) {
+export default function NumberInput({ label = '', value = '', editable = true, step = 1, maxValue, minValue, type, prepend, onChange, onFinish }: Props) {
   const [inputBorder, setInputBorder] = useState(false)
   const tagText = useRef<string | number>('')
   const valueRef = useRef(value)
@@ -119,17 +108,7 @@ export default function NumberInput({
     return (
       <div>
         <span className="prepend">{prepend}</span>
-        <input
-          className={cx('small-input', { disable: !editable })}
-          type="text"
-          value={value}
-          readOnly={!editable}
-          onChange={(e) => updateValue(e.target.value)}
-          onFocus={focusInput}
-          onBlur={blurInput}
-          onKeyUp={verifyNumber}
-          onKeyDown={opNumber}
-        />
+        <input className={cx('small-input', { disable: !editable })} type="text" value={value} readOnly={!editable} onChange={(e) => updateValue(e.target.value)} onFocus={focusInput} onBlur={blurInput} onKeyUp={verifyNumber} onKeyDown={opNumber} />
       </div>
     )
   }
@@ -137,17 +116,7 @@ export default function NumberInput({
   return (
     <div className="number-input2">
       <div className="input-wrap">
-        <input
-          className={cx('real-input', { disable: !editable })}
-          type="text"
-          value={value}
-          readOnly={!editable}
-          onChange={(e) => updateValue(e.target.value)}
-          onFocus={focusInput}
-          onBlur={blurInput}
-          onKeyUp={verifyNumber}
-          onKeyDown={opNumber}
-        />
+        <input className={cx('real-input', { disable: !editable })} type="text" value={value} readOnly={!editable} onChange={(e) => updateValue(e.target.value)} onFocus={focusInput} onBlur={blurInput} onKeyUp={verifyNumber} onKeyDown={opNumber} />
       </div>
       <span className="input-axis">{label}</span>
     </div>

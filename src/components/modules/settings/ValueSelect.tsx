@@ -17,18 +17,7 @@ type Props = {
   onFinish?: (value: Record<string, any> | string | number) => void
 }
 
-export default function ValueSelect({
-  label = '',
-  value = {},
-  suffix = '',
-  data = {},
-  disable = true,
-  inputWidth = '80px',
-  readonly = false,
-  step = 1,
-  onChange,
-  onFinish,
-}: Props) {
+export default function ValueSelect({ label = '', value = {}, suffix = '', data = {}, disable = true, inputWidth = '80px', readonly = false, step = 1, onChange, onFinish }: Props) {
   const isList = Array.isArray(data)
   const groupKeys = useMemo(() => (isList ? [] : Object.keys(data)), [data, isList])
   const [activeTab, setActiveTab] = useState('')
@@ -80,13 +69,7 @@ export default function ValueSelect({
         const key = typeof listItem === 'object' ? listItem.alias : listItem
         return (
           <li key={key} className={cx({ active: listItem == innerValue })} onClick={() => selectItem(listItem)}>
-            {listItem.preview ? (
-              <img className="preview" src={listItem.preview} alt="preview" />
-            ) : (
-              <span style={typeof listItem === 'object' ? { fontFamily: `'${listItem.value}'` } : undefined}>
-                {(typeof listItem === 'object' ? listItem.alias : listItem) + suffix}
-              </span>
-            )}
+            {listItem.preview ? <img className="preview" src={listItem.preview} alt="preview" /> : <span style={typeof listItem === 'object' ? { fontFamily: `'${listItem.value}'` } : undefined}>{(typeof listItem === 'object' ? listItem.alias : listItem) + suffix}</span>}
           </li>
         )
       })}
@@ -97,12 +80,7 @@ export default function ValueSelect({
     renderList(data as any[])
   ) : (
     <div className="tabs-wrap">
-      <Tabs
-        value={activeTab}
-        stretch={false}
-        onChange={setActiveTab}
-        items={groupKeys.map((key) => ({ name: key, label: key }))}
-      >
+      <Tabs value={activeTab} stretch={false} onChange={setActiveTab} items={groupKeys.map((key) => ({ name: key, label: key }))}>
         {renderList(((data as Record<string, any>)[activeTab] as any[]) || [])}
       </Tabs>
     </div>

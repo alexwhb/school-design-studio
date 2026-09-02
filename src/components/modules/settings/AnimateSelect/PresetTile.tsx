@@ -34,13 +34,7 @@ const PresetTile = forwardRef<PresetTileHandle, Props>(function PresetTile({ pre
   useEffect(() => () => cancelAll(running.current), [])
 
   return (
-    <button
-      type="button"
-      className={cx('tile', { 'tile--on': !!selected })}
-      onMouseEnter={play}
-      onFocus={play}
-      onClick={() => onChoose(preset.id)}
-    >
+    <button type="button" className={cx('tile', { 'tile--on': !!selected })} onMouseEnter={play} onFocus={play} onClick={() => onChoose(preset.id)}>
       <span className="tile__stage">
         <span ref={mockRef} className="tile__mock">
           <span className="tile__bar" />
