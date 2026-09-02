@@ -1,13 +1,18 @@
 /**
- * The box tool: arm it, drag anywhere on the page, and a rectangle is drawn at
- * whatever size you pulled it out to.
+ * The shape tools: arm one, drag anywhere on the page, and a rectangle or an
+ * ellipse is drawn at whatever size you pulled it out to.
  *
- * Adobe XD's rectangle tool, and the same three habits — Shift keeps it square,
- * Alt grows it out of the point you started from rather than towards you, and a
- * click with no drag behind it drops one at a readable default size instead of
- * a box four pixels wide. Edges are pulled into line with the page, its centre
- * and everything already on it, the same positions a dragged layer snaps to, so
- * a box drawn by hand lands where a box moved by hand would.
+ * Adobe XD's rectangle and ellipse tools, and the same three habits — Shift
+ * holds the two sides equal, Alt grows the shape out of the point you started
+ * from rather than towards you, and a click with no drag behind it drops one at
+ * a readable default size instead of a shape four pixels wide. Edges are pulled
+ * into line with the page, its centre and everything already on it, the same
+ * positions a dragged layer snaps to, so a shape drawn by hand lands where a
+ * shape moved by hand would.
+ *
+ * Both tools are one gesture with two outcomes, so they are one component: what
+ * the shape is called, what it is drawn from and what the rubber band looks
+ * like is all `TOOLS` knows, and the drag itself never asks which is armed.
  *
  * Nothing rendered here answers the mouse. The press is taken by a capture-phase
  * listener on the document, because the board selects and starts moving layers
@@ -27,11 +32,26 @@ import { canvasState, controlState, widgetState } from '@/store/state'
 import { setDrawTool } from '@/store/control'
 import { addWidget } from '@/store/widget'
 import { clearSelection } from '@/store/widget/select'
-import { RECT_DEFAULT_SIZE, RECT_MIN_SIZE, wRectSetting } from '@/components/modules/widgets/wRect/wRectSetting'
+import { cx } from '@/utils/dom'
+import { SHAPE_DEFAULT_SIZE, SHAPE_MIN_SIZE } from '@/components/modules/widgets/shape/shapeSetting'
+import { wRectSetting } from '@/components/modules/widgets/wRect/wRectSetting'
+import { wEllipseSetting } from '@/components/modules/widgets/wEllipse/wEllipseSetting'
+import type { TDrawTool } from '@/store/types'
 import './drawShape.less'
 
 /** How close an edge has to come, in screen pixels, before it is pulled into line. */
 const SNAP_THRESHOLD = 5
+
+/**
+ * What each tool draws and what to call it while it is being drawn.
+ *
+ * `round` is the rubber band: an ellipse is pulled out of the same box a
+ * rectangle is, and showing that box would be showing the wrong shape.
+ */
+const TOOLS: Record<TDrawTool, { setting: Record<string, any>; noun: string; equal: string; round: boolean }> = {
+  rect: { setting: wRectSetting, noun: 'a box', equal: 'square', round: false },
+  ellipse: { setting: wEllipseSetting, noun: 'an ellipse', equal: 'circular', round: true },
+}
 
 type TBox = { left: number; top: number; width: number; height: number }
 
@@ -42,7 +62,7 @@ function clamp(value: number, low: number, high: number) {
 /**
  * The canvas's own scale, measured rather than read off the zoom: the two agree
  * everywhere except for the instant between a zoom being set and the page being
- * drawn at it, and a box started in that instant would come out the wrong size.
+ * drawn at it, and a shape started in that instant would come out the wrong size.
  */
 function canvasScale(el: HTMLElement) {
   return el.getBoundingClientRect().width / el.offsetWidth || 1
@@ -65,12 +85,13 @@ function snap(value: number, positions: number[], tolerance: number) {
 export default function DrawShape() {
   const control = useSnapshot(controlState)
   const canvas = useSnapshot(canvasState)
-  const armed = control.dDrawTool === 'rect'
+  const tool = control.dDrawTool
+  const armed = !!tool
   const [canvasEl, setCanvasEl] = useState<HTMLElement | null>(null)
   const [band, setBand] = useState<TBox | null>(null)
   const [guides, setGuides] = useState<{ x: number | null; y: number | null }>({ x: null, y: null })
   const bandRef = useRef<TBox | null>(null)
-  /** Takes down a box being pulled right now, wherever the tool is let go of. */
+  /** Takes down a shape being pulled right now, wherever the tool is let go of. */
   const abandon = useRef<(() => void) | null>(null)
 
   useEffect(() => {
@@ -83,7 +104,7 @@ export default function DrawShape() {
 
     root?.classList.add('draw-case')
     setCanvasEl(document.getElementById('page-design-canvas'))
-    // Nothing is being edited while a box is being drawn, and the selection box
+    // Nothing is being edited while a shape is being drawn, and the selection box
     // would otherwise sit over the page taking presses meant for the tool.
     clearSelection()
 
@@ -162,10 +183,10 @@ export default function DrawShape() {
         ev.stopPropagation()
         const drawn = bandRef.current
         cancel()
-        // One box per arming, so what has just been drawn can be styled without
-        // the next click on it starting another one on top.
+        // One shape per arming, so what has just been drawn can be styled
+        // without the next click on it starting another one on top.
         setDrawTool(null)
-        addRect(drawn, snappedOrigin, page)
+        addShape(tool!, drawn, snappedOrigin, page)
       }
 
       abandon.current = cancel
@@ -177,13 +198,15 @@ export default function DrawShape() {
     return () => {
       document.removeEventListener('mousedown', down, true)
       root?.classList.remove('draw-case')
-      // Escape mid-drag disarms the tool, which lands here. The box being pulled
-      // goes with it rather than finishing itself off on the next mouseup.
+      // Escape mid-drag disarms the tool, which lands here. The shape being
+      // pulled goes with it rather than finishing itself off on the next mouseup.
       abandon.current?.()
     }
-  }, [armed])
+    // On the tool rather than on `armed`, so swapping one for the other rebuilds
+    // the listener around the shape that is now armed.
+  }, [tool])
 
-  if (!armed) return null
+  if (!tool) return null
 
   const scale = 100 / (canvas.dZoom || 100)
   const page = canvas.dPage
@@ -192,7 +215,7 @@ export default function DrawShape() {
   return (
     <>
       <div className="draw-hint" role="status">
-        <b>Drag to draw a box.</b> Shift keeps it square, Alt draws it from the centre, Esc cancels.
+        <b>Drag to draw {TOOLS[tool].noun}.</b> Shift keeps it {TOOLS[tool].equal}, Alt draws it from the centre, Esc cancels.
       </div>
       {canvasEl && band
         ? createPortal(
@@ -200,7 +223,7 @@ export default function DrawShape() {
               {guides.x !== null ? <i className="draw-guide draw-guide--v" style={{ left: `${guides.x}px`, width: `${scale}px` }} /> : null}
               {guides.y !== null ? <i className="draw-guide draw-guide--h" style={{ top: `${guides.y}px`, height: `${scale}px` }} /> : null}
               <div
-                className="draw-band"
+                className={cx('draw-band', { 'draw-band--round': TOOLS[tool].round })}
                 style={{
                   left: `${band.left}px`,
                   top: `${band.top}px`,
@@ -232,20 +255,20 @@ export default function DrawShape() {
 }
 
 /**
- * Puts the drawn box on the page, or drops a default one where it was clicked.
+ * Puts the drawn shape on the page, or drops a default one where it was clicked.
  *
  * Bracketed by hand because the tool swallows both ends of the gesture: see
- * `beginHistory`. Without it the box appears and Ctrl+Z has nothing to undo.
+ * `beginHistory`. Without it the shape appears and Ctrl+Z has nothing to undo.
  */
-function addRect(drawn: TBox | null, origin: { x: number; y: number }, page: { width: number; height: number }) {
-  const setting = JSON.parse(JSON.stringify(wRectSetting))
-  if (drawn && drawn.width >= RECT_MIN_SIZE && drawn.height >= RECT_MIN_SIZE) {
+function addShape(tool: TDrawTool, drawn: TBox | null, origin: { x: number; y: number }, page: { width: number; height: number }) {
+  const setting = JSON.parse(JSON.stringify(TOOLS[tool].setting))
+  if (drawn && drawn.width >= SHAPE_MIN_SIZE && drawn.height >= SHAPE_MIN_SIZE) {
     setting.left = Math.round(drawn.left)
     setting.top = Math.round(drawn.top)
     setting.width = Math.round(drawn.width)
     setting.height = Math.round(drawn.height)
   } else {
-    const size = Math.min(RECT_DEFAULT_SIZE, page.width, page.height)
+    const size = Math.min(SHAPE_DEFAULT_SIZE, page.width, page.height)
     setting.width = size
     setting.height = size
     setting.left = Math.round(clamp(origin.x - size / 2, 0, page.width - size))

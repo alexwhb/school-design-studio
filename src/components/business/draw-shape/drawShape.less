@@ -37,6 +37,12 @@
   background: @accent-a25;
 }
 
+// The ellipse tool pulls its shape out of the same box the rectangle tool does,
+// so the band has to be the shape that is coming, not the box it came from.
+.draw-band--round {
+  border-radius: 50%;
+}
+
 .draw-band__size {
   position: absolute;
   left: 0;

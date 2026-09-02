@@ -1,0 +1,17 @@
+.w-shape {
+  // The shape is drawn by .shape__paint; this is only the frame it and any
+  // grips sit in, and a grip has to be able to hang outside it.
+  overflow: visible;
+}
+
+.shape__paint {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.shape__outline {
+  position: absolute;
+  pointer-events: none;
+}

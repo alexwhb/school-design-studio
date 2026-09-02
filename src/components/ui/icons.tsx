@@ -140,6 +140,18 @@ export function UnlinkedIcon({ className, width = '1em', height = '1em' }: IconP
   )
 }
 
+/** The ring the ellipse tool draws, at the proportions its default one has. */
+export function EllipseIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="currentColor"
+        d="M512 160a352 352 0 1 1 0 704 352 352 0 0 1 0-704zm0 64a288 288 0 1 0 0 576 288 288 0 0 0 0-576z"
+      />
+    </svg>
+  )
+}
+
 /** The box the rectangle tool draws, with the rounded corner it is known for. */
 export function RectangleIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (

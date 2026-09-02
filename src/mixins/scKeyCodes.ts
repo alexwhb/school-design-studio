@@ -51,6 +51,14 @@ export default [
     info: `${ctrlKey} + D`,
   },
   {
+    feat: `Draw a rectangle`,
+    info: `R`,
+  },
+  {
+    feat: `Draw an ellipse`,
+    info: `E`,
+  },
+  {
     feat: `Delete`,
     info: `Delete / Backspace`,
   },

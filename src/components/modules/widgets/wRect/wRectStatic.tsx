@@ -1,35 +1,10 @@
-import { memo, useEffect, useRef } from 'react'
+import { memo } from 'react'
 import type { WidgetProps } from '../types'
-import RectPaint from './RectPaint'
-import './wRect.less'
+import { ShapeStatic } from '../shape/ShapeWidget'
+import { cornersCss, readCorners } from './rectRadius'
 
-function WRectStatic({ params, parent, className, ...rest }: WidgetProps) {
-  const p = params as any
-  const widgetRef = useRef<HTMLDivElement | null>(null)
-
-  // A turned box has to look the same here as it does on the canvas, or
-  // thumbnails, slides and exports quietly straighten it out.
-  useEffect(() => {
-    if (p.rotate && widgetRef.current) widgetRef.current.style.transform = `rotate(${p.rotate})`
-  }, [p.rotate])
-
-  return (
-    <div
-      {...rest}
-      ref={widgetRef}
-      className={className}
-      style={{
-        position: 'absolute',
-        left: p.left - parent.left + 'px',
-        top: p.top - parent.top + 'px',
-        width: p.width + 'px',
-        height: p.height + 'px',
-        opacity: p.opacity,
-      }}
-    >
-      <RectPaint params={p} />
-    </div>
-  )
+function WRectStatic(props: WidgetProps) {
+  return <ShapeStatic {...props} radius={cornersCss(readCorners(props.params))} />
 }
 
 export default memo(WRectStatic)

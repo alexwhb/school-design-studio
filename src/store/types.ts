@@ -144,6 +144,13 @@ export type TWidgetState = {
   activeMouseEvent: MouseEvent | null
 }
 
+/**
+ * A shape that can be drawn by hand rather than fetched from a library. The
+ * name is the widget's own type with the `w-` taken off, so the tool, the
+ * shortcut and the widget it makes are all one word.
+ */
+export type TDrawTool = 'rect' | 'ellipse'
+
 export type TControlState = {
   dMoving: boolean
   dDraging: boolean
@@ -158,10 +165,10 @@ export type TControlState = {
   dSnapEnabled: boolean
   /**
    * The shape tool waiting for a drag on the page, or null when the pointer is
-   * an ordinary pointer. Only one thing arms it so far; it is a name rather
-   * than a flag so the next tool does not have to rename it.
+   * an ordinary pointer. The name of the shape it draws rather than a flag, so
+   * one armed tool disarms the other for free.
    */
-  dDrawTool: 'rect' | null
+  dDrawTool: TDrawTool | null
 }
 
 export type TForceState = {

@@ -115,6 +115,62 @@ export async function setResizeSize(page: Page, width: number, height: number) {
   await page.waitForTimeout(300)
 }
 
+/** The canvas's own rectangle and the scale the page is drawn at. */
+export async function canvasBox(page: Page) {
+  const box = (await page.locator('#page-design-canvas').boundingBox())!
+  const scale = await page.evaluate(() => {
+    const el = document.getElementById('page-design-canvas')!
+    return el.getBoundingClientRect().width / el.offsetWidth
+  })
+  return { ...box, scale }
+}
+
+/** Arms a shape tool from the Tools panel, which is how it is first found. */
+export async function armShapeTool(page: Page, label: 'Rectangle' | 'Ellipse') {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
+  await page.waitForTimeout(300)
+  await page.locator('.tools-list-wrap .item', { hasText: label }).click()
+  await page.waitForTimeout(300)
+}
+
+/** Pulls a shape out of the page, from one screen offset to another. */
+export async function dragOnPage(page: Page, from: { x: number; y: number }, to: { x: number; y: number }, key?: string) {
+  const board = await canvasBox(page)
+  if (key) await page.keyboard.down(key)
+  await page.mouse.move(board.x + from.x, board.y + from.y)
+  await page.mouse.down()
+  for (let step = 1; step <= 10; step++) {
+    await page.mouse.move(board.x + from.x + ((to.x - from.x) * step) / 10, board.y + from.y + ((to.y - from.y) * step) / 10)
+  }
+  await page.mouse.up()
+  if (key) await page.keyboard.up(key)
+  await page.waitForTimeout(500)
+  return board
+}
+
+/** What the one shape on the page is, in design pixels. */
+export async function drawnShape(page: Page) {
+  return page.evaluate((selector) => {
+    const el = document.querySelector(selector) as HTMLElement
+    if (!el) return null
+    return {
+      type: el.getAttribute('data-type'),
+      left: Number.parseFloat(el.style.left),
+      top: Number.parseFloat(el.style.top),
+      width: Number.parseFloat(el.style.width),
+      height: Number.parseFloat(el.style.height),
+    }
+  }, WIDGET)
+}
+
+/** The corners the one shape on the page is drawn with, as CSS gives them back. */
+export function shapeRadius(page: Page) {
+  return page.evaluate(() => {
+    const el = document.querySelector('#page-design-canvas .shape__paint') as HTMLElement
+    return el ? getComputedStyle(el).borderRadius : null
+  })
+}
+
 export async function expandPageStrip(page: Page) {
   await page.locator('.artboards .btn').click()
   await page.locator('.artboards .list').waitFor()
