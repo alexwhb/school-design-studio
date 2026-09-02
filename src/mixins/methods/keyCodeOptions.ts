@@ -5,6 +5,7 @@ import { clearSelection } from '@/store/widget/select'
 import { escapeHitOverlay } from '../overlayEscape'
 import type { TdWidgetData } from '@/store/types'
 import { getAppRoot } from '@/common/hooks/appRoot'
+import { setUpdateRect } from '@/store/force'
 
 
 
@@ -120,8 +121,23 @@ function checkGroupChild(pid: number | string, key: keyof TdWidgetData) {
   return itHas
 }
 
+/**
+ * The arrow keys. One layer moves on its own; a multi-selection moves as one,
+ * every layer by the same step, with the page left where it is. The history
+ * hook brackets the key itself, so either is one undo entry per press.
+ */
 function udlr(type: keyof TdWidgetData, value: any, event: any) {
   if (!widgetState.dActiveElement) return
+  const selected = widgetState.dSelectWidgets
+  if (Number(widgetState.dActiveElement.uuid) == -1 && selected.length > 1) {
+    event.preventDefault()
+    for (const item of selected) {
+      updateWidgetData({ uuid: item.uuid, key: type, value: Number(item[type]) + value })
+    }
+    // The box round the selection is Moveable's, and it does not watch the store
+    setUpdateRect()
+    return
+  }
   if (Number(widgetState.dActiveElement.uuid) != -1) {
     if (widgetState.dActiveElement.editable) {
       return

@@ -168,3 +168,29 @@ test('a corner of a multi-selection scales every widget, type and all', async ({
   expect(undone[0].width).toBeCloseTo(before[0].width, 0)
   expect(undone[0].fontSize).toBeCloseTo(before[0].fontSize, 0)
 })
+
+/* ------------------------------------------------------- multi-select nudge */
+
+function widgetLefts(page: import('@playwright/test').Page) {
+  return page.locator(WIDGET).evaluateAll((els) => els.map((el) => Number.parseFloat((el as HTMLElement).style.left)))
+}
+
+test('arrow keys nudge a whole multi-selection, one pixel or ten, and undo takes it back', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Heading')
+  const before = await widgetLefts(page)
+
+  await boxSelectAll(page)
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(300)
+  expect(await widgetLefts(page)).toEqual(before.map((left) => left + 1))
+
+  await page.keyboard.down('Shift')
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.up('Shift')
+  await page.waitForTimeout(300)
+  expect(await widgetLefts(page)).toEqual(before.map((left) => left + 11))
+
+  await undo(page)
+  expect(await widgetLefts(page)).toEqual(before.map((left) => left + 1))
+})
