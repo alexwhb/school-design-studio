@@ -1,5 +1,19 @@
 import { expect, test } from '@playwright/test'
-import { WIDGET, addText, boxSelectAll, canvasBox, downloadBytes, openEditor, pixelOf, rotateWidgetBy, selectFirstWidget, widgetBox, widgetRotation } from './helpers'
+import {
+  WIDGET,
+  addText,
+  boxSelectAll,
+  canvasBox,
+  downloadBytes,
+  openEditor,
+  openResizeDialog,
+  pixelOf,
+  rotateWidgetBy,
+  selectFirstWidget,
+  setResizeSize,
+  widgetBox,
+  widgetRotation,
+} from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
@@ -358,4 +372,66 @@ test('a dragged layer lands on the grid', async ({ page }) => {
   const landed = await widgetBox(page)
   expect(onGrid(landed!.left, landed!.width)).toBe(true)
   expect(onGrid(landed!.top, landed!.height)).toBe(true)
+})
+
+/* --------------------------------------------------- page sizes and units */
+
+/** What the two size boxes of the open dialog read, as numbers. */
+async function sizeBoxes(page: import('@playwright/test').Page) {
+  const boxes = page.locator('.el-dialog .number-input2 input')
+  return [Number(await boxes.nth(0).inputValue()), Number(await boxes.nth(1).inputValue())]
+}
+
+async function pickUnit(page: import('@playwright/test').Page, unit: string) {
+  await page.locator('.el-dialog .size-units .size-unit', { hasText: new RegExp(`^${unit}$`) }).click()
+  await page.waitForTimeout(300)
+}
+
+test('the presets cover the paper a school prints on', async ({ page }) => {
+  await openResizeDialog(page)
+  const list = page.locator('.el-dialog .pre-list .item')
+  for (const [name, size] of [
+    ['A4 — portrait', '1240 × 1754 px'],
+    ['A4 — landscape', '1754 × 1240 px'],
+    ['A3 — portrait', '1754 × 2480 px'],
+    ['A3 — landscape', '2480 × 1754 px'],
+    ['A5 — portrait', '874 × 1240 px'],
+    ['Legal — portrait', '1275 × 2100 px'],
+  ]) {
+    await expect(list.filter({ hasText: name }).first()).toContainText(size)
+  }
+})
+
+test('the size boxes can be read and typed in millimetres', async ({ page }) => {
+  await openResizeDialog(page)
+  await page.locator('.el-dialog .pre-list .item', { hasText: 'A4 — portrait' }).click()
+  await page.waitForTimeout(400)
+  expect(await sizeBoxes(page)).toEqual([1240, 1754])
+
+  // The size A4 is actually called by, not the pixels it happens to be stored as.
+  await pickUnit(page, 'mm')
+  expect(await sizeBoxes(page)).toEqual([210, 297])
+  await pickUnit(page, 'in')
+  expect(await sizeBoxes(page)).toEqual([8.27, 11.69])
+  // Reading it a third way has not changed the page.
+  await pickUnit(page, 'px')
+  expect(await sizeBoxes(page)).toEqual([1240, 1754])
+
+  // And typing millimetres in gives the page those millimetres describe: A5.
+  await pickUnit(page, 'mm')
+  await setResizeSize(page, 148, 210)
+  await pickUnit(page, 'px')
+  expect(await sizeBoxes(page)).toEqual([874, 1240])
+})
+
+test('the page settings panel says what the page is on paper', async ({ page }) => {
+  await openResizeDialog(page)
+  await page.locator('.el-dialog .pre-list .item', { hasText: 'A4 — landscape' }).click()
+  await page.waitForTimeout(400)
+  await page.getByRole('button', { name: 'Resize', exact: true }).click()
+  await page.waitForTimeout(900)
+
+  const readout = page.locator('#page-style .page-size__value')
+  await expect(readout).toContainText('1754 × 1240 px')
+  await expect(page.locator('#page-style .page-size__paper')).toHaveText('A4 landscape · 297 × 210 mm')
 })

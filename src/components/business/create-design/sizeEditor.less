@@ -18,3 +18,32 @@
     color: @ink;
   }
 }
+
+// Which unit the two boxes above are read and typed in. Under them rather than
+// beside them: the row is already three controls wide in the resize dialog and
+// four in the new-design one.
+.size-units {
+  display: flex;
+  gap: @space-1;
+  justify-content: flex-end;
+  margin-top: @space-1;
+  .size-unit {
+    background: none;
+    border: 1px solid @line;
+    border-radius: @radius-sm;
+    color: @ink-3;
+    cursor: pointer;
+    font-size: @text-xs;
+    line-height: 1;
+    padding: 3px 7px;
+    &:hover {
+      border-color: @line-strong;
+      color: @ink;
+    }
+    &.is-on {
+      background: @accent-soft;
+      border-color: @accent-border;
+      color: @accent;
+    }
+  }
+}

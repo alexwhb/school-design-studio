@@ -232,6 +232,32 @@ Adding a fourth behaviour means adding one object to `RESIZE_STRATEGIES` in
 list — the dialog renders whatever it finds, and the store action looks
 strategies up by id.
 
+## Page sizes and units
+
+The preset list in **New design** and in **Resize design…** is the paper a
+school actually prints on: Letter and Legal, A3, A4 and A5, in both orientations
+where both are used, alongside the screen sizes. Every print size is its real
+sheet at 150 DPI — A4 is 210 × 297mm, which is 1240 × 1754 pixels — so a page
+picked from the list comes out of the PDF exporter as the sheet it is named
+after. See [PDF export](#pdf-export-and-export-quality) for why 150.
+
+Under the width and height boxes is the unit those two boxes are read and typed
+in: **px**, **in**, **mm** or **cm**. It is a way of reading the same page
+rather than a property of it — the design is stored in pixels whatever is
+chosen, so switching between units cannot change anything, and 210 × 297mm typed
+in by hand is the same page the A4 preset gives you. Type in centimetres if
+that is how the display board was measured, and pixels if the design is for a
+screen.
+
+The panel's own Page size readout says both: the pixels, and what the page is on
+paper underneath — "A4 landscape · 297 × 210 mm". Anything that is not a
+recognised sheet still gets its real size, so a slide reads as the 325 × 183mm
+it would print at.
+
+`src/common/methods/pageSize.ts` owns the conversion and the list of sheets;
+both dialogs and the panel read it, so there is one answer to "how big is this
+really" rather than three.
+
 ## Pages
 
 The strip along the bottom. Collapsed it is a pill telling you where you are;

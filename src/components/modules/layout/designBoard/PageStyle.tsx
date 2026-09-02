@@ -14,6 +14,7 @@ import ColorSelect, { type colorChangeData } from '@/components/modules/settings
 import ResizeDesign, { type ResizeDesignHandle } from '@/components/business/resize-design/ResizeDesign'
 import BgImgListWrap from '@/components/modules/panel/wrap/BgImgListWrap'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
+import { paperName, realSize } from '@/common/methods/pageSize'
 import type { TBackgroundTransform } from '@/common/methods/pageBackground'
 import type { TPageState } from '@/store/types'
 import BackgroundCrop from './comps/BackgroundCrop'
@@ -120,6 +121,10 @@ export default function PageStyle() {
             <div className="page-size">
               <span className="page-size__value">
                 {Math.round(active.width)} × {Math.round(active.height)} px
+                {/* What it is on paper, at the 150 DPI the PDF is written at */}
+                <em className="page-size__paper">
+                  {[paperName(active.width, active.height), realSize(active.width, active.height)].filter(Boolean).join(' · ')}
+                </em>
               </span>
               <Button plain size="small" onClick={openSizeEdit}>
                 Resize…
