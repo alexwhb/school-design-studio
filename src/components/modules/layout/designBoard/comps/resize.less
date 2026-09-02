@@ -1,59 +1,84 @@
-@bar-color: @line-strong;
+// The four grips that resize the page, shown while the page itself is
+// selected. They used to sit at full contrast the whole time, which put four
+// grey nubs around the artwork with nothing to say what they were — and the top
+// and bottom ones were 2px out of line with each other, at -14px and -12px.
+@grip-length: 24px;
+@grip-thickness: 4px;
+// How far the grip's centre sits outside the page edge. One value, so opposite
+// grips are the same distance out.
+@grip-offset: 12px;
+// The pointer target around the grip, which is larger than the grip itself.
+@grip-target: 12px;
 
 .page-resize {
   pointer-events: none;
   position: absolute;
   z-index: 10;
+
   .resize__bar {
     pointer-events: auto;
     position: absolute;
-    &-left {
-      left: -14px;
+
+    &::after {
+      position: absolute;
+      content: '';
+      border-radius: @radius-pill;
+      background: @line-strong;
+      // Quiet until you go for one, so the page reads as artwork rather than as
+      // artwork with handles on it.
+      opacity: 0.5;
+      transition: opacity 0.12s ease, background-color 0.12s ease;
     }
-    &-right {
-      right: -14px;
+
+    &:hover::after {
+      opacity: 1;
+      background: @accent;
     }
+
     &-left,
     &-right {
       cursor: ew-resize;
-      width: 10px;
-      height: 24px;
+      width: @grip-target;
+      height: @grip-length + @grip-target;
       top: 50%;
-      transform: translateY(-12px);
+      transform: translateY(-50%);
     }
-    &-left:after,
-    &-right:after {
-      position: absolute;
-      content: '';
-      left: 3px;
-      width: 4px;
-      height: 24px;
-      border-radius: 12px;
-      background: @bar-color;
+    &-left::after,
+    &-right::after {
+      top: 50%;
+      left: 50%;
+      width: @grip-thickness;
+      height: @grip-length;
+      transform: translate(-50%, -50%);
     }
-    &-top {
-      top: -14px;
+    &-left {
+      left: -(@grip-offset + (@grip-target / 2));
     }
-    &-bottom {
-      bottom: -12px;
+    &-right {
+      right: -(@grip-offset + (@grip-target / 2));
     }
+
     &-top,
     &-bottom {
       cursor: ns-resize;
-      width: 24px;
-      height: 10px;
+      width: @grip-length + @grip-target;
+      height: @grip-target;
       left: 50%;
-      transform: translateX(-12px);
+      transform: translateX(-50%);
     }
-    &-top:after,
-    &-bottom:after {
-      position: absolute;
-      content: '';
-      top: 4px;
-      width: 24px;
-      height: 4px;
-      border-radius: 12px;
-      background: @bar-color;
+    &-top::after,
+    &-bottom::after {
+      top: 50%;
+      left: 50%;
+      width: @grip-length;
+      height: @grip-thickness;
+      transform: translate(-50%, -50%);
+    }
+    &-top {
+      top: -(@grip-offset + (@grip-target / 2));
+    }
+    &-bottom {
+      bottom: -(@grip-offset + (@grip-target / 2));
     }
   }
 }

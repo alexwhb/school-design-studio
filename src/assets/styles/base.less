@@ -263,3 +263,26 @@ html.dark {
 .layer-lock {
   pointer-events: none;
 }
+
+// ---- keyboard focus -----------------------------------------------------
+// Before this the editor had two focus rings in the whole app, so tabbing
+// through it moved a selection nothing on screen showed. One ring, on
+// :focus-visible only — a mouse click leaves nothing behind — and it follows
+// whatever border-radius the element already has.
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+[role='button']:focus-visible,
+[role='tab']:focus-visible,
+[role='radio']:focus-visible,
+[tabindex]:focus-visible {
+  .focus-ring();
+}
+
+// A field shows focus on its own surface — an accent border and a soft ring —
+// so an outline on top of that would say it twice.
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}

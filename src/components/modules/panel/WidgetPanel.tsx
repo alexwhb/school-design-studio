@@ -29,19 +29,31 @@ const WidgetPanel = forwardRef<WidgetPanelHandle>(function WidgetPanel(_props, r
   return (
     <div id="widget-panel">
       <div className="widget-classify">
-        <ul className="classify-wrap">
-          {widgetClassifyListData.map((item, index) => (
-            <li
-              key={index}
-              className={cx('classify-item', { 'active-classify-item': activeWidgetClassify === index && active })}
-              onClick={() => clickClassify(index)}
-            >
-              <div className="icon-box">
-                <i className={cx('iconfont', 'rail-icon', item.icon)} style={item.style} />
-              </div>
-              <p>{item.name}</p>
-            </li>
-          ))}
+        {/*
+          The rail is how you reach every panel in the editor, so it is a tab
+          list you can get to from the keyboard rather than a list of divs that
+          only answer a mouse.
+        */}
+        <ul className="classify-wrap" role="tablist" aria-orientation="vertical" aria-label="Panels">
+          {widgetClassifyListData.map((item, index) => {
+            const selected = activeWidgetClassify === index && active
+            return (
+              <li key={index} role="presentation">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  className={cx('classify-item', { 'active-classify-item': selected })}
+                  onClick={() => clickClassify(index)}
+                >
+                  <span className="icon-box">
+                    <i className={cx('iconfont', 'rail-icon', item.icon)} style={item.style} />
+                  </span>
+                  <span className="classify-name">{item.name}</span>
+                </button>
+              </li>
+            )
+          })}
         </ul>
       </div>
       <div className="widget-wrap" style={{ display: active ? undefined : 'none' }}>
