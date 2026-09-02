@@ -8,6 +8,8 @@ import { setShowMoveable } from '@/store/control'
 import { resize } from '@/store/widget/resize'
 import { updateWidgetData, updateWidgetMultiple } from '@/store/widget/widget'
 import { clearSelection, selectWidget } from '@/store/widget/select'
+import { beginHistory, endHistory } from '@/common/hooks/history'
+import type { TdWidgetData } from '@/store/types'
 import useSelecto, { isBoxingSelection } from './Selecto'
 import getSnapPositions, { snapBox } from '@/common/methods/snapping'
 import './style/index.less'
@@ -41,6 +43,63 @@ function snapRotation(angle: number, shift: boolean) {
   return Math.abs(angle - nearest) <= ROTATE_MAGNET_RANGE ? nearest : angle
 }
 
+/**
+ * The handles a multi-selection gets: corners only, so everything in it scales
+ * together and keeps its shape. A side handle would have to stretch each layer
+ * a different amount — a heading and a photograph do not distort alike — and
+ * Canva does not offer one either.
+ */
+const GROUP_DIRECTIONS = ['nw', 'ne', 'sw', 'se']
+
+/** What a layer looked like when a multi-selection resize began. */
+type TScaleStart = {
+  left: number
+  top: number
+  width: number
+  height: number
+  fontSize?: number
+  children: { uuid: string; left: number; top: number; width: number; height: number; fontSize?: number }[]
+}
+
+function scaleStartOf(widget: TdWidgetData): TScaleStart {
+  const box = (item: TdWidgetData) => ({
+    uuid: item.uuid,
+    left: Number(item.left),
+    top: Number(item.top),
+    width: Number(item.width),
+    height: Number(item.height),
+    fontSize: typeof item.fontSize === 'number' ? item.fontSize : undefined,
+  })
+  const own = box(widget)
+  return {
+    ...own,
+    children: widget.isContainer ? widgetState.dWidgets.filter((item) => item.parent === widget.uuid).map(box) : [],
+  }
+}
+
+/**
+ * Puts a layer down scaled by `ratio` from where it started, with its top-left
+ * corner at the place Moveable worked out for it. Type scales with its box, or
+ * the words would only wrap differently; a group's members are laid out again
+ * inside it, at the same ratio, from where they sat relative to its corner.
+ */
+function applyScaled(widget: TdWidgetData, start: TScaleStart, ratio: number, left: number, top: number) {
+  widget.left = left
+  widget.top = top
+  widget.width = start.width * ratio
+  widget.height = start.height * ratio
+  if (typeof start.fontSize === 'number') widget.fontSize = start.fontSize * ratio
+  for (const child of start.children) {
+    const item = widgetState.dWidgets.find((w) => w.uuid === child.uuid)
+    if (!item) continue
+    item.left = left + (child.left - start.left) * ratio
+    item.top = top + (child.top - start.top) * ratio
+    item.width = child.width * ratio
+    item.height = child.height * ratio
+    if (typeof child.fontSize === 'number') item.fontSize = child.fontSize * ratio
+  }
+}
+
 /** One thing Moveable can align against, and which of its lines count. */
 type TElementGuideline = {
   element: Element
@@ -62,6 +121,8 @@ export default function Moveable() {
     let resetRatio = 0
     let resizeTempData: { width: number; height: number } | null = null
     let resizeStartWidth = 0
+    /** Where every layer of a multi-selection was when its corner was picked up. */
+    let groupResizeStart: Map<string, TScaleStart> | null = null
     /** See drawActiveTarget: the delayed insistence that nothing is selected. */
     let emptyTimer: any = null
 
@@ -468,9 +529,41 @@ export default function Moveable() {
         }
         holdGroupPosition = null
       })
-      .on('resizeGroupStart', () => {})
-      .on('resizeGroup', () => {})
-      .on('resizeGroupEnd', () => {})
+      /**
+       * A multi-selection scales as one. Moveable works out each layer's new
+       * size and where its corner has moved to, about the selection box; the
+       * store is written as it goes, the way a group drag is, so the layers
+       * follow the handle rather than jumping when it is let go.
+       *
+       * Bracketed by hand: the handle is Moveable's, not the document's, so the
+       * press that starts this is not one the history hook can see.
+       */
+      .on('resizeGroupStart', (e: any) => {
+        groupResizeStart = new Map()
+        for (const ev of e.events) {
+          const uuid = ev.target.getAttribute('data-uuid')
+          const widget = widgetState.dWidgets.find((item) => item.uuid === uuid)
+          if (uuid && widget) groupResizeStart.set(uuid, scaleStartOf(widget))
+        }
+        beginHistory()
+      })
+      .on('resizeGroup', (e: any) => {
+        if (!groupResizeStart) return
+        for (const ev of e.events) {
+          const uuid = ev.target.getAttribute('data-uuid')
+          const start = uuid && groupResizeStart.get(uuid)
+          const widget = widgetState.dWidgets.find((item) => item.uuid === uuid)
+          if (!start || !widget) continue
+          const ratio = start.width ? ev.width / start.width : 1
+          applyScaled(widget, start, ratio, start.left + ev.drag.beforeTranslate[0], start.top + ev.drag.beforeTranslate[1])
+        }
+      })
+      .on('resizeGroupEnd', () => {
+        if (!groupResizeStart) return
+        groupResizeStart = null
+        endHistory()
+        requestAnimationFrame(() => moveable?.updateRect())
+      })
       /**
        * Clicking inside a multi-selection picks out the one layer clicked, or
        * drops the selection when the click lands on bare canvas — which is what
@@ -600,7 +693,7 @@ export default function Moveable() {
         for (let i = 0; i < items.length; i++) {
           document.getElementById(items[i].uuid)?.classList.add('widget-selected')
         }
-        moveable.renderDirections = []
+        moveable.renderDirections = GROUP_DIRECTIONS
         moveable.rotatable = false
         const targetCollector = [].slice.call(document.querySelectorAll('.widget-selected'))
         moveable.target = targetCollector
@@ -633,8 +726,9 @@ export default function Moveable() {
           el.classList.add('widget-selected')
           marked.push(el)
         }
-        moveable.renderDirections = []
+        moveable.renderDirections = GROUP_DIRECTIONS
         moveable.rotatable = false
+        moveable.keepRatio = true
         const targetCollector = [].slice.call(document.querySelectorAll('.widget-selected'))
         moveable.target = targetCollector
         marked.forEach((el) => el.classList.remove('widget-selected'))

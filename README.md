@@ -299,6 +299,14 @@ out on top of it all. A group travels as one thing — its members go with it an
 keep their order — and a member of a group can only move within the group. All
 of it undoes with Ctrl/⌘ + Z.
 
+**Resizing several at once.** Select more than one thing — drag a box round
+them, or Shift-click — and the box round the lot has corner handles. Dragging a
+corner scales everything inside together: positions, sizes, and the type in any
+text, so a heading and its caption stay in proportion to each other and to the
+photo between them. There are no side handles on a multi-selection on purpose:
+a side handle would have to stretch each layer by a different amount, and a
+heading and a photograph do not distort alike.
+
 **Turning.** The handle under the selection box rotates it, and the angle is
 read out beside the pointer as you go. Hold Shift to turn in steps of 15°. Even
 without it, square and the diagonals — every multiple of 45° — pull the handle

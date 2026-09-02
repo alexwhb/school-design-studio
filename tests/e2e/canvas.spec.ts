@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { WIDGET, addText, openEditor, rotateWidgetBy, selectFirstWidget, widgetRotation } from './helpers'
+import { WIDGET, addText, boxSelectAll, openEditor, rotateWidgetBy, selectFirstWidget, widgetRotation } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
@@ -125,4 +125,46 @@ test('the angle is read out beside the pointer while turning', async ({ page }) 
   await expect(page.locator('.ds-rotate-readout')).toHaveText('45°')
   await page.mouse.up()
   await expect(page.locator('.ds-rotate-readout')).toHaveCount(0)
+})
+
+/* ------------------------------------------------------ multi-select resize */
+
+/** Size and type size of every widget on the page, in design pixels. */
+function widgetSizes(page: import('@playwright/test').Page) {
+  return page.locator(WIDGET).evaluateAll((els) =>
+    els.map((el) => {
+      const style = (el as HTMLElement).style
+      return { width: Number.parseFloat(style.width), fontSize: Number.parseFloat(style.fontSize) }
+    }),
+  )
+}
+
+test('a corner of a multi-selection scales every widget, type and all', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+  await expect(page.locator(WIDGET)).toHaveCount(2)
+  const before = await widgetSizes(page)
+
+  await boxSelectAll(page)
+  const corner = page.locator('.moveable-control.moveable-se').first()
+  await expect(corner).toBeVisible()
+  const grip = (await corner.boundingBox())!
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(grip.x + grip.width / 2 + 120, grip.y + grip.height / 2 + 120, { steps: 10 })
+  await page.mouse.up()
+  await page.waitForTimeout(500)
+
+  const after = await widgetSizes(page)
+  const ratio = after[0].width / before[0].width
+  expect(ratio).toBeGreaterThan(1.1)
+  // The same ratio for both, and for the type inside them.
+  expect(after[1].width / before[1].width).toBeCloseTo(ratio, 1)
+  expect(after[0].fontSize / before[0].fontSize).toBeCloseTo(ratio, 1)
+  expect(after[1].fontSize / before[1].fontSize).toBeCloseTo(ratio, 1)
+
+  await undo(page)
+  const undone = await widgetSizes(page)
+  expect(undone[0].width).toBeCloseTo(before[0].width, 0)
+  expect(undone[0].fontSize).toBeCloseTo(before[0].fontSize, 0)
 })
