@@ -757,6 +757,38 @@ does to a design is `src/store/widget/brand.ts`, which walks `dLayouts[].layers`
 the way find and replace does, so the page on screen updates along with the rest
 and there is no special case for it.
 
+## Tables
+
+A term calendar, a class list, a room timetable. **Tools → Table** puts a three
+by three grid on the page; double-click a cell to type into it.
+
+Tab and Shift+Tab run along the cells, Enter drops a row, Escape stops, and Tab
+off the last cell adds a row rather than losing what you were about to type.
+Right-click a cell to put a row or a column in or out *at that cell*; the panel
+adds and removes them at the end, which is the other thing people mean. With the
+table selected, the dividers between its columns can be dragged to trade width
+between neighbours.
+
+The height is never a number anyone types. A table is as tall as its rows, so it
+is measured after every render and the store told, the way a text box already
+works — type a long sentence into a cell and the table grows under it. Columns
+are held as fractions of the width rather than as pixels, so resizing the table
+scales them together for nothing.
+
+Each cell holds the same contentEditable markup a text box does. That is what
+lets **find and replace** search and rewrite cells through the same markup walk
+as everything else, and what lets the **PowerPoint export** put a real table on
+the slide — fills, borders, heading row and all — rather than a picture of one.
+A tilted table still goes in as a picture, because a PowerPoint table cannot be
+turned.
+
+A cell being typed into takes its own presses with a native listener rather than
+a React one: the board selects and starts moving a layer from below the React
+root, so a React handler would be too late to stop it. The undo entries for a
+cell edit and for a divider drag are bracketed by hand for the same reason.
+
+Code: `src/components/modules/widgets/wTable/`, `src/store/widget/table.ts`.
+
 ## Find and replace
 
 **Ctrl+F**, or **File → Find and replace…**. Type what to look for, type what
