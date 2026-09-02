@@ -197,6 +197,26 @@ export function BrandIcon({ className, width = '1em', height = '1em' }: IconProp
       <circle cx="17.5" cy="10.5" r="1" fill="currentColor" />
       <circle cx="8.5" cy="7.5" r="1" fill="currentColor" />
       <circle cx="6.5" cy="12" r="1" fill="currentColor" />
+/** Two overlapping squares, the upper one solid: this layer over the rest. */
+export function BringToFrontIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="currentColor"
+        d="M384 128h512v512H768v160H608v128H128V416h128V256h128zM224 512v320h288V512zM352 416h384V224H352z"
+      />
+    </svg>
+  )
+}
+
+/** The same two, the lower one solid: this layer under the rest. */
+export function SendToBackIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="currentColor"
+        d="M128 416h512v512H128zM384 128h512v512H768V384H384zM224 512v320h320V512z"
+      />
     </svg>
   )
 }

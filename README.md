@@ -280,6 +280,25 @@ go of it, because there is nothing left on the canvas for the selection box to
 hold. Both toggles belong to the design, so they are saved with it and undo
 puts them back.
 
+## Arrange and lock
+
+What sits in front of what. Every element's settings panel carries an Arrange
+row, and the same four moves are in the right-click menu and on the keyboard:
+
+| Move | Shortcut |
+| --- | --- |
+| Bring forward | Ctrl/⌘ + ] |
+| Bring to front | Ctrl/⌘ + Shift + ] |
+| Send backward | Ctrl/⌘ + [ |
+| Send to back | Ctrl/⌘ + Shift + [ |
+
+Forward and backward move one place at a time, which is what you want for a
+caption that has to sit just above one photo. Front and back go the whole way,
+for the background that belongs behind everything or the badge that has to come
+out on top of it all. A group travels as one thing — its members go with it and
+keep their order — and a member of a group can only move within the group. All
+of it undoes with Ctrl/⌘ + Z.
+
 ## Outlines and keylines
 
 Shapes and photographs both take a **Border** in the settings panel: a

@@ -91,6 +91,22 @@ export default [
     info: `${ctrlKey} + G`,
   },
   {
+    feat: `Bring forward`,
+    info: `${ctrlKey} + ]`,
+  },
+  {
+    feat: `Send backward`,
+    info: `${ctrlKey} + [`,
+  },
+  {
+    feat: `Bring to front`,
+    info: `${ctrlKey} + Shift + ]`,
+  },
+  {
+    feat: `Send to back`,
+    info: `${ctrlKey} + Shift + [`,
+  },
+  {
     feat: `Deselect`,
     info: `ESC`,
   },

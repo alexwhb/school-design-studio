@@ -5,6 +5,7 @@ import { handleHistory } from '@/store/history'
 import { copyWidget, duplicateOne, pasteWidget } from '@/store/widget/clone'
 import { selectAllWidgets } from '@/store/widget/select'
 import { recordHistory } from '@/common/hooks/history'
+import { arrangeLayer } from '@/components/modules/settings/ArrangeRow'
 
 export type ShortcutInstance = {
   save: () => void
@@ -56,6 +57,15 @@ export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) 
       e.preventDefault()
       _this.zoomSub()
       break
+    // ] and [ step a layer through the stack; with Shift they take it all the way
+    case 221:
+      e.preventDefault()
+      arrange(e.shiftKey ? { key: 'zOrder', value: 'front' } : { key: 'zIndex', value: 1 })
+      break
+    case 219:
+      e.preventDefault()
+      arrange(e.shiftKey ? { key: 'zOrder', value: 'back' } : { key: 'zIndex', value: -1 })
+      break
   }
 }
 
@@ -91,6 +101,14 @@ function find(e: KeyboardEvent, _this: ShortcutInstance) {
   if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement.uuid, 'editable')) return
   e.preventDefault()
   _this.findReplace?.()
+}
+
+/** The stacking shortcuts act on the one selected layer; a group goes as one. */
+function arrange(item: { key: string; value: string | number }) {
+  const active = widgetState.dActiveElement
+  if (!active || active.uuid === '-1' || active.editable) return
+  if (active.isContainer && checkGroupChild(active.uuid, 'editable')) return
+  arrangeLayer(active.uuid, item)
 }
 
 function copy() {

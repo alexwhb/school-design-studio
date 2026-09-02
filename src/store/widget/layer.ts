@@ -67,6 +67,47 @@ export function updateLayerIndex({ uuid, value, isGroup }: TupdateLayerIndexData
   }
 }
 
+export type TLayerOrderEnd = 'front' | 'back'
+
+/**
+ * Puts a layer at the very top of the stack, or the very bottom, in one move.
+ *
+ * Bring forward / send backward step one place at a time, which is what you
+ * want for a caption that has to sit just above one photo; this is for the
+ * background that has to go behind everything, or the badge that has to come
+ * out on top of all of it. A group travels as one thing: its members move with
+ * it and stay in the order they were in. A member of a group can only go to
+ * the top or bottom of that group, the same limit the single steps observe.
+ */
+export function setLayerOrder({ uuid, to }: { uuid: string; to: TLayerOrderEnd }) {
+  const widgets = widgetState.dWidgets
+  const index = widgets.findIndex((item) => item.uuid === uuid)
+  if (index === -1) return
+  const widget = widgets[index]
+
+  // Everything that moves, in the order it currently sits
+  const moving = [widget, ...widgets.filter((item) => item.parent === uuid)]
+  const movingIds = new Set(moving.map((item) => item.uuid))
+  const rest = widgets.filter((item) => !movingIds.has(item.uuid))
+
+  let at: number
+  if (widget.parent !== '-1') {
+    // Among its siblings only: the group's own entry sits just before them
+    const siblings = rest.map((item, i) => (item.parent === widget.parent ? i : -1)).filter((i) => i !== -1)
+    if (siblings.length === 0) {
+      at = rest.findIndex((item) => item.uuid === widget.parent) + 1
+    } else {
+      at = to === 'front' ? siblings[siblings.length - 1] + 1 : siblings[0]
+    }
+  } else {
+    at = to === 'front' ? rest.length : 0
+  }
+
+  rest.splice(at, 0, ...moving)
+  if (rest.every((item, i) => item === widgets[i])) return
+  widgets.splice(0, widgets.length, ...rest)
+}
+
 export function ungroup(uuid: string) {
   const widgets = widgetState.dWidgets
   const index = widgets.findIndex((item) => item.uuid === uuid)

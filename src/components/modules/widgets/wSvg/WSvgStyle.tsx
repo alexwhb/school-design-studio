@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
-import layerIconList from '@/assets/data/LayerIconList'
 import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import { widgetState } from '@/store/state'
-import { updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
+import { updateAlign, updateWidgetData } from '@/store/widget'
 import BorderControls from '../../settings/BorderControls'
 import ColorSelect from '../../settings/ColorSelect'
+import ArrangeRow from '../../settings/ArrangeRow'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
@@ -30,10 +30,6 @@ export default function WSvgStyle() {
     const colors = ((widgetState.dActiveElement as any)?.colors || []).slice()
     colors[index] = value
     finish('colors', colors)
-  }
-
-  function layerAction(item: TIconItemSelectData) {
-    updateLayerIndex({ uuid, value: Number(item.value) })
   }
 
   function alignAction(item: TIconItemSelectData) {
@@ -76,7 +72,7 @@ export default function WSvgStyle() {
           </div>
         </PanelSection>
         <br />
-        <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
+        <ArrangeRow uuid={uuid} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
       </PanelSections>

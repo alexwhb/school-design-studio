@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import { getTarget } from '@/common/methods/target'
 import { controlState, widgetState } from '@/store/state'
-import { copyWidget, deleteWidget, pasteWidget, selectWidget, ungroup, updateLayerIndex } from '@/store/widget'
+import { copyWidget, deleteWidget, pasteWidget, selectWidget, ungroup } from '@/store/widget'
+import { arrangeLayer } from '@/components/modules/settings/ArrangeRow'
 import { menuList as menu, pageMenu, widgetMenu, type TMenuItemData, type TWidgetItemData } from './rcMenuData'
 import { cx } from '@/utils/dom'
 import './rcMenu.less'
@@ -84,10 +85,16 @@ export default function RcMenu() {
         pasteWidget()
         break
       case 'index-up':
-        updateLayerIndex({ uuid: active?.uuid || '', value: 1, isGroup: active?.isContainer })
+        arrangeLayer(active?.uuid || '', { key: 'zIndex', value: 1 })
         break
       case 'index-down':
-        updateLayerIndex({ uuid: active?.uuid || '', value: -1, isGroup: active?.isContainer })
+        arrangeLayer(active?.uuid || '', { key: 'zIndex', value: -1 })
+        break
+      case 'index-front':
+        arrangeLayer(active?.uuid || '', { key: 'zOrder', value: 'front' })
+        break
+      case 'index-back':
+        arrangeLayer(active?.uuid || '', { key: 'zOrder', value: 'back' })
         break
       case 'del':
         deleteWidget()

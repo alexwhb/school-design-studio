@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
-import layerIconList from '@/assets/data/LayerIconList'
 import { getImage } from '@/common/methods/getImgDetail'
 import Button from '@/components/ui/Button'
 import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
@@ -9,9 +8,10 @@ import PictureSelector, { type PictureSelectorHandle } from '@/components/busine
 import { canvasState, controlState, widgetState } from '@/store/state'
 import { setCropUuid, setShowRotatable } from '@/store/control'
 import { setUpdateRect } from '@/store/force'
-import { updateAlign, updateLayerIndex, updateWidgetData, updateWidgetMultiple } from '@/store/widget'
+import { updateAlign, updateWidgetData, updateWidgetMultiple } from '@/store/widget'
 import type { TGetImageListResult } from '@/api/material'
 import BorderControls from '../../settings/BorderControls'
+import ArrangeRow from '../../settings/ArrangeRow'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
@@ -38,8 +38,6 @@ export default function WImageStyle() {
   const [toolBarStyle, setToolBarStyle] = useState<Record<string, any>>({})
   const picBoxRef = useRef<PictureSelectorHandle | null>(null)
   const lastUuid = useRef<string | undefined>(undefined)
-
-  const layerIcons = useMemo(() => layerIconList.concat(FLIP_ICONS), [])
 
   useEffect(() => {
     if (!active) return
@@ -82,12 +80,8 @@ export default function WImageStyle() {
     updateWidgetData({ uuid, key: 'sliceData', value: data })
   }
 
-  function layerAction(item: TIconItemSelectData) {
-    if (item.key === 'zIndex') {
-      updateLayerIndex({ uuid, value: Number(item.value) })
-    } else {
-      finish(item.key || '', item.value === widgetState.dActiveElement?.flip ? null : item.value)
-    }
+  function flipAction(item: TIconItemSelectData) {
+    finish(item.key || '', item.value === widgetState.dActiveElement?.flip ? null : item.value)
   }
 
   function alignAction(item: TIconItemSelectData) {
@@ -214,7 +208,7 @@ export default function WImageStyle() {
           </div>
         </PanelSection>
         <br />
-        <IconItemSelect className="style-item" label="Arrange" data={layerIcons} onFinish={layerAction} />
+        <ArrangeRow uuid={uuid} extra={FLIP_ICONS} onExtra={flipAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
       </PanelSections>

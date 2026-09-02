@@ -10,10 +10,10 @@
 import { useState, type ReactNode } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
-import layerIconList from '@/assets/data/LayerIconList'
 import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import { widgetState } from '@/store/state'
-import { updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
+import { updateAlign, updateWidgetData } from '@/store/widget'
+import ArrangeRow from '../../settings/ArrangeRow'
 import BorderControls from '../../settings/BorderControls'
 import ColorSelect from '../../settings/ColorSelect'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
@@ -38,10 +38,6 @@ export default function ShapeStyle({ shape }: { shape?: ReactNode }) {
 
   function finish(key: string, value: any) {
     updateWidgetData({ uuid, key: key as any, value })
-  }
-
-  function layerAction(item: TIconItemSelectData) {
-    updateLayerIndex({ uuid, value: Number(item.value) })
   }
 
   function alignAction(item: TIconItemSelectData) {
@@ -75,7 +71,7 @@ export default function ShapeStyle({ shape }: { shape?: ReactNode }) {
           </div>
         </PanelSection>
         <br />
-        <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
+        <ArrangeRow uuid={uuid} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
       </PanelSections>

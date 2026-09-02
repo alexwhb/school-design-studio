@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
-import layerIconList from '@/assets/data/LayerIconList'
 import Button from '@/components/ui/Button'
 import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import { widgetState } from '@/store/state'
-import { ungroup, updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
+import { ungroup, updateAlign, updateWidgetData } from '@/store/widget'
+import ArrangeRow from '../../settings/ArrangeRow'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
@@ -22,10 +22,6 @@ export default function WGroupStyle() {
 
   function finish(key: string, value: any) {
     updateWidgetData({ uuid, key: key as any, value })
-  }
-
-  function layerAction(item: TIconItemSelectData) {
-    updateLayerIndex({ uuid, value: Number(item.value), isGroup: true })
   }
 
   function alignAction(item: TIconItemSelectData) {
@@ -55,7 +51,7 @@ export default function WGroupStyle() {
             maxValue={1}
             onChange={(value) => finish('opacity', value)}
           />
-          <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
+          <ArrangeRow uuid={uuid} />
           <IconItemSelect label="Align" data={alignIconList} onFinish={alignAction} />
         </PanelSection>
       </PanelSections>

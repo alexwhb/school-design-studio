@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import { alignIconList, styleIconList1, styleIconList2 } from '@/assets/data/TextIconsData'
-import layerIconList from '@/assets/data/LayerIconList'
 import { FONT_GROUPS, type TFontItem } from '@/assets/data/FontsData'
 import { brandFontItems, brandState } from '@/common/methods/brandKit'
+import { FONT_GROUPS } from '@/assets/data/FontsData'
 import { useFontStore } from '@/common/methods/fonts'
 import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import { controlState, widgetState } from '@/store/state'
 import { setUpdateRect } from '@/store/force'
-import { setWidgetStyle, updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
+import { setWidgetStyle, updateAlign, updateWidgetData } from '@/store/widget'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
 import ColorSelect from '../../settings/ColorSelect'
+import ArrangeRow from '../../settings/ArrangeRow'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import TextInputArea from '../../settings/TextInputArea'
 import ValueSelect from '../../settings/ValueSelect'
@@ -152,10 +153,6 @@ export default function WTextStyle() {
     if (style) {
       finish('color', style.color || '')
     }
-  }
-
-  function layerAction(item: TIconItemSelectData) {
-    updateLayerIndex({ uuid, value: Number(item.value) })
   }
 
   /**
@@ -303,7 +300,7 @@ export default function WTextStyle() {
           onSelect={selectTextEffect}
         />
       </div>
-      <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
+      <ArrangeRow uuid={uuid} />
       <IconItemSelect className="style-item" label="Align" data={alignIconList} onFinish={alignAction} />
 
       <div className="line-layout style-item">

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useSnapshot } from 'valtio'
 import alignIconList from '@/assets/data/AlignListData'
-import layerIconList from '@/assets/data/LayerIconList'
 import localization from '@/assets/data/QrCodeLocalization'
 import Button from '@/components/ui/Button'
 import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
@@ -10,8 +9,9 @@ import Uploader, { type TUploadDoneData } from '@/components/common/Uploader/Upl
 import { widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import { setUpdateRect } from '@/store/force'
-import { updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
+import { updateAlign, updateWidgetData } from '@/store/widget'
 import ColorSelect from '../../settings/ColorSelect'
+import ArrangeRow from '../../settings/ArrangeRow'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
@@ -29,10 +29,6 @@ export default function WQrcodeStyle() {
 
   function finish(key: string, value: any) {
     updateWidgetData({ uuid, key: key as any, value })
-  }
-
-  function layerAction(item: TIconItemSelectData) {
-    updateLayerIndex({ uuid, value: Number(item.value) })
   }
 
   function alignAction(item: TIconItemSelectData) {
@@ -111,7 +107,7 @@ export default function WQrcodeStyle() {
           </div>
         </PanelSection>
         <br />
-        <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
+        <ArrangeRow uuid={uuid} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />
         <br />
       </PanelSections>
