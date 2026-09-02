@@ -20,7 +20,6 @@ export const PRESENTER_CHANNEL = 'design-presenter'
 /** Everything a presenter view needs that it cannot read out of the store itself. */
 export type TPresenterState = {
   index: number
-  total: number
   /** When the clock was started, so both windows count from the same instant. */
   startedAt: number
   /** False once the talk has ended, which is the view's cue to say so. */
@@ -31,7 +30,6 @@ export type TPresenterMessage =
   | ({ kind: 'state' } & TPresenterState)
   /** Forwards or back, from a press or a button in the view. */
   | { kind: 'step'; by: 1 | -1 }
-  | { kind: 'go'; index: number }
   | { kind: 'restartClock' }
   | { kind: 'hello' }
 

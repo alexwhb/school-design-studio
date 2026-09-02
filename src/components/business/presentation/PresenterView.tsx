@@ -47,7 +47,7 @@ const STEP_BACK = ['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace']
 
 export default function PresenterView() {
   const pages = useSnapshot(widgetState).dLayouts as readonly TdLayout[]
-  const [talk, setTalk] = useState<TPresenterState>({ index: 0, total: pages.length, startedAt: Date.now(), live: true })
+  const [talk, setTalk] = useState<TPresenterState>({ index: 0, startedAt: Date.now(), live: true })
 
   const rootRef = useRef<HTMLDivElement | null>(null)
   const nowRef = useRef<HTMLDivElement | null>(null)

@@ -97,7 +97,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   const viewWindow = useRef<TPresenterWindow | null>(null)
   const channel = useRef<BroadcastChannel | null>(null)
   /** The last state broadcast, so a view that says hello can be answered without re-deriving it. */
-  const broadcast = useRef<TPresenterState>({ index: 0, total: 0, startedAt: 0, live: false })
+  const broadcast = useRef<TPresenterState>({ index: 0, startedAt: 0, live: false })
   const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const lastWheel = useRef(0)
   const touchStartX = useRef(0)
@@ -323,21 +323,20 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
       }
       if (!live.current.isOpen) return
       if (message.kind === 'step') message.by > 0 ? next() : prev()
-      else if (message.kind === 'go') goTo(message.index, { closeOverview: true })
       else if (message.kind === 'restartClock') setStartedAt(Date.now())
     }
     return () => {
       link.close()
       channel.current = null
     }
-  }, [next, prev, goTo])
+  }, [next, prev])
 
   // Where the talk has got to. The view holds none of this itself, so this is
   // the only thing that tells it the slide has changed.
   useEffect(() => {
-    broadcast.current = { index, total: pages.length, startedAt, live: isOpen }
+    broadcast.current = { index, startedAt, live: isOpen }
     channel.current?.postMessage({ kind: 'state', ...broadcast.current } satisfies TPresenterMessage)
-  }, [index, pages.length, startedAt, isOpen])
+  }, [index, startedAt, isOpen])
 
   // A second window must not outlive the tab that opened it.
   useEffect(() => {
