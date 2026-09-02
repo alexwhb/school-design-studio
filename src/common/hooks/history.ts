@@ -17,15 +17,36 @@ function noPutHistory(target: any) {
 }
 
 /**
- * Records a change no pointer or key event brackets — one committed from an
- * inline editor or a dialog, which the mousedown/mouseup pair below would
- * otherwise never see, leaving it out of the undo stack.
+ * Where a change no pointer or key event brackets begins, and where it ends.
+ *
+ * The pair below are ordinary bubble listeners on the document, so a control
+ * that stops a press from propagating — which anything laid over the canvas has
+ * to, or the board underneath selects and starts dragging what the press was
+ * meant for — takes its own undo entry with it. Such a control marks the two
+ * ends itself: the shape tool between the press that starts a box and the
+ * release that puts it on the page, a corner grip either side of the drag that
+ * rounds it.
+ *
+ * An empty diff is not an entry, so a press that turned into nothing costs a
+ * press of Ctrl+Z later.
  */
-export function recordHistory(change: () => void) {
+export function beginHistory() {
   clearTimeout(historyTimer)
   diffLayouts.postMessage({ op: 'diff', data: JSON.stringify(widgetState.dLayouts) })
-  change()
+}
+
+export function endHistory() {
   diffLayouts.postMessage({ op: 'done', data: JSON.stringify(widgetState.dLayouts) })
+}
+
+/**
+ * The two together, for a change that happens all at once — one committed from
+ * an inline editor or a dialog, which the pair below would otherwise never see.
+ */
+export function recordHistory(change: () => void) {
+  beginHistory()
+  change()
+  endHistory()
 }
 
 export default function useHistory() {

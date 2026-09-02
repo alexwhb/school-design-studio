@@ -7,6 +7,8 @@
  * nothing to draw. That agreement lives here so a widget with `borderWidth: 0`
  * cannot end up outlined in one place and bare in the other.
  */
+import type { CSSProperties } from 'react'
+
 export type TWidgetBorder = {
   /** Design pixels, and always inside the element's own edge. */
   width: number
@@ -27,5 +29,52 @@ export function widgetBorder(params: Record<string, any> | null | undefined): TW
     // colour can only have come from hand-edited or imported data.
     color: params?.borderColor || '#000000ff',
     style: (STYLES as readonly string[]).includes(style) ? (style as TWidgetBorder['style']) : 'solid',
+  }
+}
+
+/**
+ * A gradient outline is a band of paint, not a border.
+ *
+ * `border` takes a colour and nothing else, so an outline that is a gradient
+ * has to be painted across the whole element and then masked down to a band of
+ * the asked-for width lying inside its edge — the border box minus the content
+ * box, which is the padding. It curves with whatever corner radius it is given,
+ * and it is always solid: a band cut out of a mask has no run of line to break
+ * into dashes.
+ *
+ * Both the keyline round a photograph and the outline round a drawn box use
+ * this, so the two curve and sit identically.
+ */
+
+/** Only asked once, and only in a browser; `CSS` is absent when it is not. */
+let ringSupported: boolean | null = null
+
+export function supportsMaskRing(): boolean {
+  if (ringSupported === null) {
+    ringSupported =
+      typeof CSS !== 'undefined' &&
+      typeof CSS.supports === 'function' &&
+      (CSS.supports('mask-composite', 'exclude') || CSS.supports('-webkit-mask-composite', 'xor'))
+  }
+  return ringSupported
+}
+
+/**
+ * @param radius any CSS `border-radius` value — one length, or the four a box
+ * with its corners held apart needs.
+ */
+export function gradientRingStyle(width: number, color: string, radius: string): CSSProperties {
+  const layers = 'linear-gradient(#000 0 0), linear-gradient(#000 0 0)'
+  return {
+    background: color,
+    borderRadius: radius,
+    padding: `${width}px`,
+    boxSizing: 'border-box',
+    WebkitMaskImage: layers,
+    WebkitMaskClip: 'content-box, border-box',
+    WebkitMaskComposite: 'xor',
+    maskImage: layers,
+    maskClip: 'content-box, border-box',
+    maskComposite: 'exclude',
   }
 }

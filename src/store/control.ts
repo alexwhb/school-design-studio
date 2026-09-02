@@ -1,4 +1,5 @@
 import { SNAP_STORAGE_KEY, controlState } from './state'
+import type { TControlState } from './types'
 
 export function setdMoving(bool: boolean) {
   controlState.dMoving = bool
@@ -57,4 +58,16 @@ export function setSnapEnabled(enabled: boolean) {
 
 export function toggleSnapEnabled() {
   setSnapEnabled(!controlState.dSnapEnabled)
+}
+
+/**
+ * Arms a shape tool, or puts the pointer back. Nothing else is allowed to be
+ * mid-flight while a tool is armed: what the tool draws becomes the selection.
+ */
+export function setDrawTool(tool: TControlState['dDrawTool']) {
+  controlState.dDrawTool = tool
+}
+
+export function toggleDrawTool(tool: NonNullable<TControlState['dDrawTool']>) {
+  setDrawTool(controlState.dDrawTool === tool ? null : tool)
 }

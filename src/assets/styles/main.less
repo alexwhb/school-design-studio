@@ -40,6 +40,13 @@ default;
 .move-case:active {
   cursor: grabbing;
 }
+// A shape tool is armed and the next press on the board draws rather than
+// selects. Only the board: the panels are still panels, and a crosshair over a
+// colour swatch says the tool is about to draw on it.
+.draw-case #page-design,
+.draw-case #page-design * {
+  cursor: crosshair;
+}
 
 * {
   box-sizing: border-box;

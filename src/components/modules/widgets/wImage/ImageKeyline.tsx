@@ -24,25 +24,12 @@
  * A keyline can be a gradient. The masked case takes one for nothing, since it
  * is a ring of background and background paints gradients. A plain rectangular
  * one cannot, because `border` only takes a colour, so it is cut out of a
- * rounded rectangle the same way — which is also why a gradient keyline is
- * always solid: a ring cut from a mask has no run of line to break into dashes.
+ * rounded rectangle the same way — `gradientRingStyle`, which the outline round
+ * a drawn box uses too.
  */
 import type { CSSProperties } from 'react'
 import { isGradient } from '@/packages/color-picker/utils/gradient'
-import { widgetBorder } from '../widgetBorder'
-
-/** Only asked once, and only in a browser; `CSS` is absent when it is not. */
-let ringSupported: boolean | null = null
-
-function supportsMaskRing(): boolean {
-  if (ringSupported === null) {
-    ringSupported =
-      typeof CSS !== 'undefined' &&
-      typeof CSS.supports === 'function' &&
-      (CSS.supports('mask-composite', 'exclude') || CSS.supports('-webkit-mask-composite', 'xor'))
-  }
-  return ringSupported
-}
+import { gradientRingStyle, supportsMaskRing, widgetBorder } from '../widgetBorder'
 
 function ringStyle(mask: string, width: number, color: string): CSSProperties {
   const inner = `calc(100% - ${width * 2}px)`
@@ -58,29 +45,6 @@ function ringStyle(mask: string, width: number, color: string): CSSProperties {
     maskSize: `100% 100%, ${inner} ${inner}`,
     maskPosition: 'center, center',
     maskRepeat: 'no-repeat, no-repeat',
-    maskComposite: 'exclude',
-  }
-}
-
-/**
- * A ring of gradient round a rectangular picture.
- *
- * The whole element is painted, then masked down to its own border box minus
- * its content box, which leaves the padding: a band of the asked-for width
- * lying inside the edge, curving with the corner radius.
- */
-function gradientRingStyle(width: number, color: string, radius: string): CSSProperties {
-  const layers = 'linear-gradient(#000 0 0), linear-gradient(#000 0 0)'
-  return {
-    background: color,
-    borderRadius: radius,
-    padding: `${width}px`,
-    boxSizing: 'border-box',
-    WebkitMaskImage: layers,
-    WebkitMaskClip: 'content-box, border-box',
-    WebkitMaskComposite: 'xor',
-    maskImage: layers,
-    maskClip: 'content-box, border-box',
     maskComposite: 'exclude',
   }
 }

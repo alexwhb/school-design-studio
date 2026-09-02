@@ -67,6 +67,7 @@ export const controlState = proxy<TControlState>({
   dCropUuid: '-1',
   dSpaceDown: false,
   dSnapEnabled: readStoredSnap(),
+  dDrawTool: null,
 })
 
 export const forceState = proxy<TForceState>({

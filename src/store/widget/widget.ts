@@ -13,7 +13,7 @@ type TUpdateWidgetKey = keyof TdWidgetData
 export type TUpdateWidgetPayload = {
   uuid: string
   key: TUpdateWidgetKey
-  value: number | string | boolean | Record<string, any> | null
+  value: number | string | boolean | number[] | Record<string, any> | null
 }
 
 export function getWidgets() {

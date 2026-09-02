@@ -1,5 +1,5 @@
 import { controlState, widgetState } from '@/store/state'
-import { setSpaceDown } from '@/store/control'
+import { setDrawTool, setSpaceDown, toggleDrawTool } from '@/store/control'
 import { deleteWidget, lockWidgets, updateWidgetData } from '@/store/widget/widget'
 import { clearSelection } from '@/store/widget/select'
 import { escapeHitOverlay } from '../overlayEscape'
@@ -25,6 +25,11 @@ export default function keyCodeOptions(e: any, params: any) {
       break
     case 27:
       escape()
+      break
+    // R, as it is in Adobe XD. Pressed again it puts the pointer back, so the
+    // key that arms the tool is also the key that gets you out of it.
+    case 82:
+      if (!isTyping()) toggleDrawTool('rect')
       break
     case 46:
     case 8:
@@ -52,9 +57,24 @@ export default function keyCodeOptions(e: any, params: any) {
 }
 
 /**
+ * True while somebody is typing into the artwork, so a letter is a letter
+ * rather than a shortcut.
+ *
+ * The caller's own guard misses this: it tests `contentEditable === 'true'`,
+ * and a text layer is `plaintext-only`. Every other key handled here already
+ * checks `editable` for itself, and Escape wants the keystroke precisely so it
+ * can end the edit — so the guard is fixed here rather than there, where
+ * widening it would take Escape away from the text it is meant to leave.
+ */
+function isTyping() {
+  return !!(document.activeElement as HTMLElement | null)?.isContentEditable
+}
+
+/**
  * Escape backs out one step, the way it does in a design tool: text being
- * edited goes back to being a layer you have selected, and a selection — one
- * layer or a whole boxful — goes back to nothing.
+ * edited goes back to being a layer you have selected, an armed tool goes back
+ * to the pointer, and a selection — one layer or a whole boxful — goes back to
+ * nothing.
  *
  * Anything laid over the editor gets Escape first and closes on it, and what is
  * selected underneath should still be there afterwards.
@@ -66,6 +86,12 @@ function escape() {
     return
   }
   if (escapeHitOverlay()) return
+  // An armed tool has nothing selected behind it to drop, so this is the whole
+  // step rather than the first half of one.
+  if (controlState.dDrawTool) {
+    setDrawTool(null)
+    return
+  }
   clearSelection()
 }
 

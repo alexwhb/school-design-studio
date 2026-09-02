@@ -14,6 +14,9 @@
     user-select: none;
   }
   .item {
+    width: calc(100% - @space-4 * 2);
+    text-align: left;
+    border: 1px solid transparent;
     opacity: 0.85;
     position: relative;
     border-radius: 4px;
@@ -29,6 +32,17 @@
   }
   .item:hover {
     opacity: 1;
+  }
+  // An armed tool is a held-down state, not a hover: it stays lit while the
+  // pointer is away on the page drawing the thing it was armed for.
+  .item--armed {
+    opacity: 1;
+    border-color: @accent;
+    background-color: @accent-soft;
+    color: @accent;
+  }
+  .item:focus-visible {
+    .focus-ring();
   }
   .icon {
     margin: 0 @space-4;

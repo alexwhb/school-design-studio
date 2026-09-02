@@ -1,0 +1,30 @@
+.corner-radius {
+  width: 100%;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: @space-2;
+    margin-bottom: @space-2;
+  }
+
+  &__hint {
+    font-size: @text-xs;
+    color: @ink-3;
+    user-select: none;
+  }
+
+  &__link {
+    .icon-button();
+    flex: none;
+    color: @ink-3;
+
+    &.is-active {
+      color: @accent;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+  }
+}

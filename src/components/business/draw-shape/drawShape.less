@@ -1,0 +1,66 @@
+// The line of instructions, pinned to the workspace rather than to the page, so
+// it stays the same size and in the same place at any zoom.
+.draw-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 84px;
+  z-index: 3100;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: @space-2;
+  max-width: calc(100vw - @space-6 * 2);
+  padding: @space-2 @space-4;
+  border-radius: @radius-pill;
+  background: @ink;
+  color: @surface;
+  font-size: @text-sm;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  user-select: none;
+}
+
+// Everything below is drawn inside the page, so its lengths are design pixels
+// and the canvas's own scale carries them onto the screen.
+.draw-band__wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.draw-band {
+  position: absolute;
+  border-style: solid;
+  border-color: @accent;
+  background: @accent-a25;
+}
+
+.draw-band__size {
+  position: absolute;
+  left: 0;
+  margin: 4px 0;
+  padding: 1px 5px;
+  border-radius: @radius-sm;
+  background: @accent;
+  color: @accent-on;
+  font-size: @text-xs;
+  line-height: 1.5;
+  white-space: nowrap;
+  transform-origin: left top;
+}
+
+.draw-guide {
+  position: absolute;
+  background: @snap-line;
+
+  &--v {
+    top: 0;
+    bottom: 0;
+  }
+  &--h {
+    left: 0;
+    right: 0;
+  }
+}

@@ -103,6 +103,15 @@ export type TdWidgetData = TPageState &
     borderColor?: string
     /** 'solid', 'dashed' or 'dotted'. Absent reads as solid. */
     borderStyle?: string
+    /**
+     * How round the corners are, in design pixels: photographs have had this
+     * all along, drawn boxes take it too. `radii` holds the four apart —
+     * top-left, top-right, bottom-right, bottom-left — and is absent whenever
+     * they are all the same, which is nearly always. See wRect/rectRadius.ts,
+     * which is the only thing that should be reading either of them.
+     */
+    radius?: number
+    radii?: number[]
     record?: TWidgetRecord
     /**
      * Images and shapes: the shadow the artwork casts. Absent means none, the
@@ -147,6 +156,12 @@ export type TControlState = {
   dCropUuid: string
   /** Snap moves and resizes to other objects, the page and the guides */
   dSnapEnabled: boolean
+  /**
+   * The shape tool waiting for a drag on the page, or null when the pointer is
+   * an ordinary pointer. Only one thing arms it so far; it is a name rather
+   * than a flag so the next tool does not have to rename it.
+   */
+  dDrawTool: 'rect' | null
 }
 
 export type TForceState = {

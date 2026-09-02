@@ -114,3 +114,40 @@ export function NumberListIcon({ className, width = '1em', height = '1em' }: Ico
     </svg>
   )
 }
+
+/**
+ * The chain that holds a box's four corner radii together, and the same chain
+ * broken. Drawn here rather than taken from either icon font, which have no
+ * link icon between them.
+ */
+const linkHalves = 'M416 608a176 176 0 0 1 0-249l112-112a176 176 0 0 1 249 249l-56 56a48 48 0 0 1-68-68l56-56a80 80 0 0 0-113-113L484 427a80 80 0 0 0 0 113 48 48 0 0 1-68 68zM608 416a176 176 0 0 1 0 249L496 777a176 176 0 0 1-249-249l56-56a48 48 0 0 1 68 68l-56 56a80 80 0 0 0 113 113l112-112a80 80 0 0 0 0-113 48 48 0 0 1 68-68z'
+
+export function LinkedIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" d={linkHalves} />
+    </svg>
+  )
+}
+
+export function UnlinkedIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" d={linkHalves} />
+      {/* The break: a stroke through the middle, cased so it reads on either half. */}
+      <path fill="currentColor" d="M232 168a48 48 0 0 0-68 68l624 624a48 48 0 0 0 68-68z" />
+    </svg>
+  )
+}
+
+/** The box the rectangle tool draws, with the rounded corner it is known for. */
+export function RectangleIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="currentColor"
+        d="M320 160h384a160 160 0 0 1 160 160v384a160 160 0 0 1-160 160H320a160 160 0 0 1-160-160V320a160 160 0 0 1 160-160zm0 64a96 96 0 0 0-96 96v384a96 96 0 0 0 96 96h384a96 96 0 0 0 96-96V320a96 96 0 0 0-96-96z"
+      />
+    </svg>
+  )
+}
