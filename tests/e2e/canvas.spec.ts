@@ -435,3 +435,67 @@ test('the page settings panel says what the page is on paper', async ({ page }) 
   await expect(readout).toContainText('1754 × 1240 px')
   await expect(page.locator('#page-style .page-size__paper')).toHaveText('A4 landscape · 297 × 210 mm')
 })
+
+/* ---------------------------------------------------------- context menu */
+
+test('Duplicate on the right-click menu puts a copy on the page', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await openContextMenu(page)
+  await page.locator('.menu-list .menu-item', { hasText: 'Duplicate' }).click()
+  await page.waitForTimeout(500)
+  await expect(page.locator(WIDGET)).toHaveCount(2)
+
+  await undo(page)
+  await expect(page.locator(WIDGET)).toHaveCount(1)
+})
+
+test('Hide on the right-click menu takes the layer off the canvas', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await openContextMenu(page)
+  await page.locator('.menu-list .menu-item', { hasText: 'Hide' }).click()
+  await page.waitForTimeout(500)
+  await expect(page.locator(WIDGET)).toHaveCount(0)
+
+  // Off the canvas, not gone: it is still a layer, and undo brings it back.
+  await undo(page)
+  await expect(page.locator(WIDGET)).toHaveCount(1)
+})
+
+test('the menu groups a selection, and ungroups what it made', async ({ page }) => {
+  await addText(page, 'Heading')
+  await addText(page, 'Body text')
+  await boxSelectAll(page)
+
+  // The box round several things covers them, so this is where the right-click
+  // that means "these ones" actually lands.
+  await page.locator('.moveable-area').first().click({ button: 'right', position: { x: 20, y: 10 } })
+  await page.waitForTimeout(400)
+  await page.locator('.menu-list .menu-item', { hasText: 'Group' }).click()
+  await page.waitForTimeout(500)
+  await expect(page.locator('#page-design-canvas > [data-type="w-group"]')).toHaveCount(1)
+
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+  await page.locator('#page-design-canvas > [data-type="w-group"]').click({ button: 'right', position: { x: 20, y: 20 } })
+  await page.waitForTimeout(400)
+  await page.locator('.menu-list .menu-item', { hasText: 'Ungroup' }).click()
+  await page.waitForTimeout(500)
+  await expect(page.locator('#page-design-canvas > [data-type="w-group"]')).toHaveCount(0)
+  await expect(page.locator(WIDGET)).toHaveCount(2)
+})
+
+test('every stacking item fits on one line', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await openContextMenu(page)
+
+  const items = page.locator('.menu-list .menu-item')
+  for (const label of ['Bring forward', 'Send backward', 'Bring to front', 'Send to back', 'Lock', 'Duplicate', 'Hide']) {
+    await expect(items.filter({ hasText: label }).first()).toBeVisible()
+  }
+  // A wrapped item is twice as tall as one that fits, which is the whole test.
+  const heights = await items.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().height)))
+  expect(new Set(heights).size).toBe(1)
+})

@@ -19,7 +19,7 @@ export const menuList: TMenuItemData = {
 }
 
 export type TWidgetItemData = {
-  type: 'copy' | 'paste' | 'index-up' | 'index-down' | 'index-front' | 'index-back' | 'lock' | 'del' | 'ungroup'
+  type: 'copy' | 'paste' | 'duplicate' | 'index-up' | 'index-down' | 'index-front' | 'index-back' | 'lock' | 'hide' | 'del' | 'group' | 'ungroup'
   text: string
 }
 
@@ -31,6 +31,10 @@ export const widgetMenu: TWidgetItemData[] = [
   {
     type: 'paste',
     text: 'Paste',
+  },
+  {
+    type: 'duplicate',
+    text: 'Duplicate',
   },
   {
     type: 'index-up',
@@ -51,6 +55,42 @@ export const widgetMenu: TWidgetItemData[] = [
   {
     type: 'lock',
     text: 'Lock',
+  },
+  {
+    type: 'hide',
+    text: 'Hide',
+  },
+  {
+    type: 'del',
+    text: 'Delete',
+  },
+]
+
+/**
+ * More than one thing selected. Everything here works on the whole selection,
+ * which is why the stacking moves are not: they take one layer through the
+ * order, and "bring these four forward" has no single answer.
+ */
+export const multiMenu: TWidgetItemData[] = [
+  {
+    type: 'copy',
+    text: 'Copy',
+  },
+  {
+    type: 'paste',
+    text: 'Paste',
+  },
+  {
+    type: 'duplicate',
+    text: 'Duplicate',
+  },
+  {
+    type: 'group',
+    text: 'Group',
+  },
+  {
+    type: 'hide',
+    text: 'Hide',
   },
   {
     type: 'del',

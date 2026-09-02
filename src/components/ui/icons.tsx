@@ -197,6 +197,10 @@ export function BrandIcon({ className, width = '1em', height = '1em' }: IconProp
       <circle cx="17.5" cy="10.5" r="1" fill="currentColor" />
       <circle cx="8.5" cy="7.5" r="1" fill="currentColor" />
       <circle cx="6.5" cy="12" r="1" fill="currentColor" />
+    </svg>
+  )
+}
+
 /** Two overlapping squares, the upper one solid: this layer over the rest. */
 export function BringToFrontIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (

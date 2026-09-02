@@ -1,16 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import { getTarget } from '@/common/methods/target'
 import { controlState, widgetState } from '@/store/state'
-import { copyWidget, deleteWidget, pasteWidget, selectWidget, ungroup } from '@/store/widget'
+import { copyWidget, deleteWidget, duplicateOne, pasteWidget, selectWidget, setLayerHidden, ungroup } from '@/store/widget'
+import { realCombined } from '@/store/group'
+import { recordHistory } from '@/common/hooks/history'
 import { arrangeLayer } from '@/components/modules/settings/ArrangeRow'
-import { menuList as menu, pageMenu, widgetMenu, type TMenuItemData, type TWidgetItemData } from './rcMenuData'
+import { menuList as menu, multiMenu, pageMenu, widgetMenu, type TMenuItemData, type TWidgetItemData } from './rcMenuData'
 import { cx } from '@/utils/dom'
 import './rcMenu.less'
 
 export default function RcMenu() {
   const [menuListData, setMenuListData] = useState<TMenuItemData>({ ...menu })
   const [showMenuBg, setShowMenuBg] = useState(false)
+  /**
+   * The layer the open menu is about, or '-1' for the page and for a selection
+   * of several. Held here rather than read back off dActiveElement, which is
+   * only set a tick after the right-click that chose it — long enough that the
+   * menu was being built from whatever had been selected before, which is why
+   * Ungroup could act on a layer nobody had pointed at.
+   */
+  const menuUuid = useRef('-1')
   const { dCopyElement } = useSnapshot(widgetState)
 
   useEffect(() => {
@@ -28,6 +38,26 @@ export default function RcMenu() {
       return
     }
     if (!e.target) return
+
+    // The selection box covers what it is drawn round, and a box round several
+    // things covers all of them — so a right-click aimed at the selection lands
+    // on Moveable rather than on the page and used to open nothing at all. The
+    // menu it wants is the one for what is selected.
+    const onSelectionBox = e.target instanceof Element && e.target.closest('.moveable-control-box')
+    if (onSelectionBox) {
+      const active = widgetState.dActiveElement
+      if (widgetState.dSelectWidgets.length > 1) {
+        menuUuid.current = '-1'
+      } else {
+        // The box Moveable parks off-screen when nothing is selected is not a
+        // selection, and has no menu.
+        if (!active || active.uuid === '-1') return false
+        menuUuid.current = active.uuid
+      }
+      showMenu(e)
+      return false
+    }
+
     const target = await getTarget(e.target as HTMLElement)
     if (!target) return
     const type = target.getAttribute('data-type')
@@ -41,24 +71,34 @@ export default function RcMenu() {
           uuid = widget?.parent || ''
         }
       }
-      selectWidget({ uuid: uuid ?? '-1' })
+      // A right-click inside a selection of several is asking about the lot,
+      // not picking one out of it — selecting again would break the selection
+      // apart and take Group off the menu it was opened for.
+      // '-1' is the page, which every top-level layer is a child of — asking
+      // whether it is in the selection would answer yes for all of them.
+      const selected = widgetState.dSelectWidgets
+      const withinSelection =
+        !!uuid && uuid !== '-1' && selected.length > 1 && selected.some((item) => item.uuid === uuid || item.parent === uuid)
+      if (!withinSelection) selectWidget({ uuid: uuid ?? '-1' })
+      menuUuid.current = withinSelection ? '-1' : uuid || '-1'
       showMenu(e)
     }
     return false
   }
 
   function showMenu(e: MouseEvent) {
-    const active = widgetState.dActiveElement
-    const isPage = active?.uuid === '-1'
-    let list: TWidgetItemData[] = isPage ? pageMenu : widgetMenu
-    if (active?.isContainer) {
+    const layer = widgetState.dWidgets.find((item) => item.uuid === menuUuid.current)
+    const several = widgetState.dSelectWidgets.length > 1
+    let list: TWidgetItemData[] = several ? multiMenu : layer ? widgetMenu : pageMenu
+    if (!several && layer?.isContainer) {
       list = ([{ type: 'ungroup', text: 'Ungroup' }] as TWidgetItemData[]).concat(list)
     }
     // The item names what it will do, not what the layer is
-    list = list.map((item) => (item.type === 'lock' ? { ...item, text: active?.lock ? 'Unlock' : 'Lock' } : item))
+    list = list.map((item) => (item.type === 'lock' ? { ...item, text: layer?.lock ? 'Unlock' : 'Lock' } : item))
     let mx = e.pageX
     let my = e.pageY
-    const listWidth = 160
+    // Kept in step with .menu-list in rcMenu.less, which is what decides it
+    const listWidth = 156
     if (mx + listWidth > window.innerWidth) {
       mx -= listWidth
     }
@@ -75,7 +115,9 @@ export default function RcMenu() {
   }
 
   function selectMenu(type: TWidgetItemData['type']) {
-    const active = widgetState.dActiveElement
+    // Whatever was pointed at, which by now is also what is selected — the
+    // moves that name one layer say which one rather than asking again.
+    const uuid = menuUuid.current
     switch (type) {
       case 'copy':
         copyWidget()
@@ -87,25 +129,39 @@ export default function RcMenu() {
         pasteWidget()
         break
       case 'index-up':
-        arrangeLayer(active?.uuid || '', { key: 'zIndex', value: 1 })
+        arrangeLayer(uuid, { key: 'zIndex', value: 1 })
         break
       case 'index-down':
-        arrangeLayer(active?.uuid || '', { key: 'zIndex', value: -1 })
+        arrangeLayer(uuid, { key: 'zIndex', value: -1 })
         break
       case 'index-front':
-        arrangeLayer(active?.uuid || '', { key: 'zOrder', value: 'front' })
+        arrangeLayer(uuid, { key: 'zOrder', value: 'front' })
         break
       case 'index-back':
-        arrangeLayer(active?.uuid || '', { key: 'zOrder', value: 'back' })
+        arrangeLayer(uuid, { key: 'zOrder', value: 'back' })
         break
       case 'lock':
-        arrangeLayer(active?.uuid || '', { key: 'lock', value: 'toggle' })
+        arrangeLayer(uuid, { key: 'lock', value: 'toggle' })
+        break
+      case 'duplicate':
+        recordHistory(duplicateOne)
+        break
+      case 'hide':
+        // The whole selection, or the one layer: hiding four things one at a
+        // time from a menu that offered to hide them together is not the offer.
+        recordHistory(() => {
+          const targets = widgetState.dSelectWidgets.length > 0 ? widgetState.dSelectWidgets.map((item) => item.uuid) : [uuid]
+          targets.forEach((item) => item !== '-1' && setLayerHidden({ uuid: item, hidden: true }))
+        })
         break
       case 'del':
         deleteWidget()
         break
+      case 'group':
+        recordHistory(realCombined)
+        break
       case 'ungroup':
-        ungroup(active?.uuid || '')
+        ungroup(uuid)
         break
     }
     closeMenu()

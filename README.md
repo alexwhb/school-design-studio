@@ -352,6 +352,25 @@ without it, square and the diagonals — every multiple of 45° — pull the han
 in from a couple of degrees away, gently enough that 43° is still there if 43°
 is what you want.
 
+## The right-click menu
+
+Right-click anything on the page and the menu is what you would do to it: Copy,
+Paste, Duplicate, the four stacking moves, Lock or Unlock, Hide, Delete — and
+Ungroup, on a group. Right-click a selection of several and it changes to what
+applies to all of them at once: Copy, Paste, Duplicate, **Group**, Hide, Delete.
+The stacking moves are left off that list on purpose; they take one layer
+through the order, and "bring these four forward" has no single answer.
+
+The box Moveable draws round a selection sits over everything inside it, so a
+right-click aimed at several things lands on the box rather than on the page.
+That opens the menu for the selection, which is what was being pointed at.
+
+Everything here does the same thing the panel and the keyboard do, from the same
+place — see `arrangeLayer` — so a move cannot mean one thing on the menu and
+another on Ctrl/⌘ + ]. The menu acts on the layer you pointed at rather than on
+whatever happened to be selected a moment earlier, which is what the right-click
+was in the middle of changing.
+
 ## Grid
 
 **File → Show grid** rules the page into squares, and **Grid spacing** on the

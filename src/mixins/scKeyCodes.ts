@@ -51,6 +51,10 @@ export default [
     info: `${ctrlKey} + D`,
   },
   {
+    feat: `Find and replace`,
+    info: `${ctrlKey} + F`,
+  },
+  {
     feat: `Draw a rectangle`,
     info: `R`,
   },
