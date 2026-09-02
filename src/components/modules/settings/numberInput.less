@@ -1,84 +1,96 @@
-@color0: @line;
-@color1: @line-strong;
-
-.number-input {
-  height: 60px;
-  line-height: 1.15;
-  width: 60px;
-  .input-label {
-    user-select: none;
-    font-size: 12px;
-    line-height: 12px;
-    padding: 8px 0;
-  }
-  .input-wrap {
-    border-radius: 3px;
-    border: 1px solid @color0;
-    display: flex;
-    flex-direction: row;
-    width: 60px;
-    .real-input {
-      border-radius: 3px;
-      border: 0px;
-      font-size: 12px;
-      height: 30px;
-      outline: none;
-      padding: 5px;
-      text-align: center;
-      width: 100%;
-    }
-    .real-input.disable {
-      color: @ink-2;
-      cursor: not-allowed;
-    }
-  }
-  .input-wrap.active {
-    border: 1px solid @accent;
-    box-shadow: 0 0 0 2px @accent-a25;
-  }
-}
+// Two shapes, both on the shared row height.
+//
+// `.number-input2` is the axis field — X, Y, W, H — which carries its own name
+// inside the box on the right, the way a property inspector does. `.small-input`
+// is the bare variant used inside a row that already has a label of its own.
+//
+// A third shape, `.number-input`, used to sit here at 60px tall with its own
+// label and border. Nothing rendered it: the component only ever returns the
+// two below.
 
 .number-input2 {
-  margin-right: 10px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  width: 45%;
-  height: 40px;
-  background: @surface-2;
-  border-radius: 4px;
-  font-size: 14px;
-  color: @ink;
-  padding: 0 16px 0 11px;
-  cursor: pointer;
+  gap: @space-1;
+  // Two to a row, with the row's gap taken out of each one's share.
+  flex: 1 1 calc(50% - @space-2);
+  min-width: 0;
+  height: @control-h;
+  padding: 0 @space-2;
+  background: @surface;
+  border: 1px solid @line;
+  border-radius: @radius-sm;
+  cursor: text;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+
+  &:hover {
+    border-color: @line-strong;
+  }
+  &:focus-within {
+    border-color: @accent;
+    box-shadow: 0 0 0 2px @accent-a25;
+  }
+
   .input-wrap {
     display: flex;
+    flex: 1;
+    min-width: 0;
   }
   .real-input {
-    background: transparent;
-    border-radius: 3px;
-    border: 0px;
-    font-size: 12px;
-    height: 30px;
-    outline: none;
-    padding: 5px;
-    text-align: left;
     width: 100%;
+    min-width: 0;
+    height: @control-h - 2px;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: @ink;
+    font-size: @text-sm;
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+  }
+  .real-input.disable {
+    color: @ink-3;
+    cursor: not-allowed;
+  }
+  // The axis this field sets, sitting quietly at the end of its own box.
+  .input-axis {
+    flex: none;
+    color: @ink-4;
+    font-size: @text-xs;
+    font-weight: 500;
+    user-select: none;
   }
 }
+
 .small-input {
-  font-size: 12px;
   width: 100%;
-  padding: 4px 7px;
-  box-shadow: 0 0 0 1px var(--el-input-border-color, var(--el-border-color)) inset;
-  border-radius: var(--el-input-border-radius, var(--el-border-radius-base));
+  height: @control-h;
+  padding: 0 @space-2;
+  border: 1px solid @line;
+  border-radius: @radius-sm;
+  background: @surface;
+  color: @ink;
+  font-size: @text-sm;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
   cursor: text;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+
+  &:hover {
+    border-color: @line-strong;
+  }
+  &:focus {
+    border-color: @accent;
+    box-shadow: 0 0 0 2px @accent-a25;
+    outline: none;
+  }
 }
+
 .prepend {
-  font-size: 12px;
   position: absolute;
   margin: -14px 0 0 3px;
-  transform: scale(0.85);
-  transform-origin: left;
+  font-size: @text-xs;
   color: @ink-3;
+  transform-origin: left;
 }

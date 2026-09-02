@@ -1,36 +1,39 @@
 #text-input-area {
-  align-items: flex-start;
   display: flex;
-  flex-direction: row;
-  font-size: 12px;
-  line-height: 12px;
+  flex-direction: column;
   width: 100%;
+
   .input-label {
-    user-select: none;
-    padding-right: 14px;
-    line-height: 28px;
-    font-size: 14px;
-    color: @ink-3;
+    .field-label();
   }
   .input-wrap {
-    border-radius: 3px;
+    width: 100%;
+    padding: @space-2;
     border: 1px solid @line;
-    flex: 1;
-    padding: 5px;
+    border-radius: @radius-sm;
+    background: @surface;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+
+    &:hover {
+      border-color: @line-strong;
+    }
     .real-input {
-      border-radius: 3px;
-      border: 0px;
+      width: 100%;
+      border: 0;
       outline: none;
       resize: none;
-      width: 100%;
+      background: transparent;
+      color: @ink;
+      font-size: @text-sm;
+      line-height: 1.5;
     }
     .real-input.disable {
-      color: @ink-2;
+      color: @ink-3;
       cursor: not-allowed;
     }
   }
   .input-wrap.active {
-    border: 1px solid @accent;
+    border-color: @accent;
     box-shadow: 0 0 0 2px @accent-a25;
   }
 }

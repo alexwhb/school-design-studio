@@ -7,12 +7,11 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 8px;
+    gap: @space-2;
 
     .label {
-      user-select: none;
-      color: @ink-2;
-      font-size: @text-base;
+      .field-label();
+      margin-bottom: 0;
     }
     .value {
       color: @ink-3;

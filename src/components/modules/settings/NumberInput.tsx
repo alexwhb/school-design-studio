@@ -149,7 +149,7 @@ export default function NumberInput({
           onKeyDown={opNumber}
         />
       </div>
-      <span style={{ color: 'var(--ds-ink-3)' }}>{label}</span>
+      <span className="input-axis">{label}</span>
     </div>
   )
 }

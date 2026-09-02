@@ -1,70 +1,60 @@
 .value-select-list {
   min-width: 10px !important;
-  padding: 5px !important;
+  padding: @space-1 !important;
 }
 
 .value-select {
-  line-height: 1.15;
   width: 80px;
+
   .input-label {
-    user-select: none;
-    line-height: 20px;
-    padding: 0 0 6px;
-    font-size: @text-base;
-    color: @ink-2;
+    .field-label();
   }
   .input-unit {
-    font-size: 14px;
-    margin-right: 5px;
-    line-height: 30px;
+    margin-right: @space-1;
+    font-size: @text-sm;
     color: @ink-3;
   }
   .input-wrap {
-    border-radius: @radius;
-    border: 1px solid @line;
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    width: 80px;
-    background: @surface;
-    height: 34px;
-    transition: border-color 0.12s ease;
-    &:hover {
-      border-color: @line-strong;
-    }
+    .field-control();
+    width: 100%;
+    padding: 0 0 0 @space-2;
+    cursor: pointer;
+
     .preview {
       overflow: hidden;
     }
     .real-input {
-      background: transparent;
-      border-radius: 3px;
-      border: 0px;
-      font-size: @text-base;
-      color: @ink;
-      height: 32px;
-      outline: none;
-      padding: 6px;
-      text-align: center;
       width: 100%;
+      min-width: 0;
+      height: @control-h - 2px;
+      padding: 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: @ink;
+      font-size: @text-sm;
+      font-variant-numeric: tabular-nums;
+      text-align: left;
     }
     .real-input.disable {
-      color: @ink-2;
+      color: @ink-3;
       cursor: not-allowed;
     }
     .op-btn {
       display: flex;
       align-items: center;
-      height: 32px;
+      flex: none;
+      height: @control-h - 2px;
       .icon-down1 {
-        font-size: 18px;
-        margin-right: 6px;
+        margin-right: @space-1;
+        font-size: 16px;
         color: @ink-4;
-        line-height: 32px;
       }
     }
   }
   .input-wrap.active {
     border-color: @accent;
+    box-shadow: 0 0 0 2px @accent-a25;
   }
 }
 
@@ -74,12 +64,13 @@
   li {
     display: flex;
     align-items: center;
+    min-height: @control-h;
+    padding: @space-1 @space-2;
+    border-radius: @radius-sm;
     color: @ink;
     cursor: pointer;
-    font-size: 15px;
+    font-size: @text-base;
     overflow: hidden;
-    padding: 7px 10px;
-    border-radius: @radius-sm;
     text-overflow: ellipsis;
     white-space: nowrap;
     &:hover {
@@ -99,12 +90,12 @@
   width: 300px;
 
   .el-tabs__header {
-    margin-bottom: 6px;
+    margin-bottom: @space-1;
   }
   .el-tabs__item {
+    height: @control-h-lg;
+    padding: 0 @space-3;
     font-size: @text-sm;
-    padding: 0 10px;
-    height: 34px;
     color: @ink-3;
     &.is-active {
       color: @accent;

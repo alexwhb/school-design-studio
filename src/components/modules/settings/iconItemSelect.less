@@ -1,9 +1,9 @@
 .icon-item-select {
   width: 100%;
   .label {
-    margin-right: 10px;
-    color: @ink-2;
-    font-size: @text-base;
+    .field-label();
+    margin-right: @space-2;
+    margin-bottom: 0;
   }
   .list {
     line-height: 1;
@@ -19,7 +19,7 @@
       justify-content: center;
       flex: 1;
       margin: 0;
-      height: 26px;
+      height: @control-h-sm;
       border-radius: @radius-sm;
       transition: background-color 0.12s ease, color 0.12s ease;
 
@@ -58,12 +58,15 @@
   flex-direction: row;
 }
 
+// A segmented bar of icons — alignment, list style. The bar is one control row
+// tall and its segments are the nested size, so it lines up with the fields
+// above and below it.
 .icon-item-select .btn__bar {
-  margin-bottom: 12px;
-  padding: 3px;
+  margin-bottom: @field-gap;
+  padding: ((@control-h-lg - @control-h-sm) / 2);
   background: @surface;
   border: 1px solid @line;
-  border-radius: @radius;
-  height: 34px;
+  border-radius: @radius-sm;
+  height: @control-h-lg;
   gap: 2px;
 }

@@ -64,6 +64,37 @@
 @shadow-pop: var(--ds-shadow-pop);
 @shadow-page: var(--ds-shadow-page);
 
+// ---- space --------------------------------------------------------------
+// A panel is laid out on a 4px grid. Every gap in the settings and widget
+// panels is one of these; nothing invents a value of its own, and nothing uses
+// rem — the root font size is not what a panel's spacing should track.
+@space-1: 4px;
+@space-2: 8px;
+@space-3: 12px;
+@space-4: 16px;
+@space-5: 20px;
+@space-6: 24px;
+
+// The three gaps that give a panel its rhythm.
+@label-gap: 6px; // a label to the control it names
+@field-gap: 12px; // a control to the next control
+@section-gap: 20px; // a section to the next section
+@panel-gutter: @space-4; // the panel's own left and right margin
+
+// ---- control geometry ---------------------------------------------------
+// One row height for everything you can click or type into, so a column of
+// controls lines up whatever it is made of. Before these existed the settings
+// panel shipped controls at 26, 28, 30, 31, 32, 34 and 40px, and no two
+// stacked fields agreed on a baseline.
+@control-h: 28px; // the standard row: an input, a swatch, a select
+@control-h-sm: 22px; // a control nested inside a row — a segment, an icon
+@control-h-lg: 32px; // a control that owns its row — a full-width button, a bar
+@label-h: 18px;
+
+// A labelled field is therefore always this tall, which is what lets two of
+// them sit side by side without either one shifting.
+@field-h: @label-h + @label-gap + @control-h;
+
 // ---- type ---------------------------------------------------------------
 @font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
@@ -99,4 +130,104 @@
   background: @surface;
   border: 1px solid @line;
   border-radius: @radius;
+}
+
+// ---- panel primitives ---------------------------------------------------
+// The four rules the settings and widget panels were each writing out by hand.
+// `.line-layout` alone was declared identically in five files and had already
+// drifted; `.style-item` was 14px in one and 10px in the rest. Put them here
+// once and a panel gets its geometry by naming it.
+
+// The label above a control. One size, one colour, one height, everywhere.
+.field-label() {
+  display: block;
+  height: @label-h;
+  line-height: @label-h;
+  margin-bottom: @label-gap;
+  font-size: @text-sm;
+  font-weight: 500;
+  color: @ink-3;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// A control's own surface: an input, a swatch button, a select trigger. Sits at
+// @control-h so a row of them lines up, and carries the one hover and the one
+// focus treatment rather than each control inventing its own.
+.field-control() {
+  display: flex;
+  align-items: center;
+  height: @control-h;
+  padding: 0 @space-2;
+  background: @surface;
+  border: 1px solid @line;
+  border-radius: @radius-sm;
+  color: @ink;
+  font-size: @text-sm;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+
+  &:hover {
+    border-color: @line-strong;
+  }
+  &.is-active,
+  &:focus-within {
+    border-color: @accent;
+    box-shadow: 0 0 0 2px @accent-a25;
+  }
+}
+
+// A row of controls that share the panel's width — two half-width fields, or a
+// label and its value. Wraps, and keeps the vertical gap when it does.
+.panel-row() {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: @space-2;
+  row-gap: @field-gap;
+  width: 100%;
+}
+
+// The space under one control before the next one starts.
+.panel-field() {
+  width: 100%;
+  margin-bottom: @field-gap;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// A small square button carrying nothing but an icon — the overlay buttons on a
+// background thumbnail, a row's delete affordance.
+.icon-button() {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: @control-h-sm;
+  height: @control-h-sm;
+  padding: 0;
+  border: none;
+  border-radius: @radius-sm;
+  background: @surface;
+  color: @ink-2;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    background: @surface-2;
+    color: @ink;
+  }
+}
+
+// The one keyboard focus treatment. Only ever on :focus-visible, so a mouse
+// click does not leave a ring behind.
+.focus-ring() {
+  outline: 2px solid @accent;
+  outline-offset: 1px;
+  border-radius: @radius-sm;
 }
