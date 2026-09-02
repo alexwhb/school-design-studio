@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSnapshot } from 'valtio'
+import { brandState } from '@/common/methods/brandKit'
 import { cx } from '@/utils/dom'
 import ColorPicker, { type ColorChangeData } from '@/packages/color-picker/ColorPicker'
 import Popover from '@/components/ui/Popover'
@@ -24,6 +26,9 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
   const [open, setOpen] = useState(false)
   // Held here so it survives the popover closing; see ColorPicker.
   const [history, setHistory] = useState<string[]>([])
+  // The school's colours, offered above the recent ones in every picker.
+  const brandColors = useSnapshot(brandState).kit.colors
+  const presets = useMemo(() => (brandColors.length ? [{ label: 'Brand', colors: brandColors.slice() }] : undefined), [brandColors])
 
   useEffect(() => {
     if (!value) return
@@ -56,7 +61,7 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
     <div className={cx('color__select', className || '')} style={{ width }}>
       {label ? <p className="input-label">{label}</p> : null}
       <div className="content">
-        <Popover placement="left-end" width="auto" open={open} onOpenChange={handleOpenChange} content={<ColorPicker value={innerColor} modes={modes} history={history} onHistoryChange={setHistory} onValueChange={handleValueChange} onChange={onChange} />}>
+        <Popover placement="left-end" width="auto" open={open} onOpenChange={handleOpenChange} content={<ColorPicker value={innerColor} modes={modes} history={history} presets={presets} onHistoryChange={setHistory} onValueChange={handleValueChange} onChange={onChange} />}>
           <div className="color__field">
             <span className="color__chip transparent-bg">
               <span className="color__chip-fill" style={{ background: innerColor }} />

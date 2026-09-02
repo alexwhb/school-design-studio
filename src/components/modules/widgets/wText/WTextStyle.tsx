@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import { alignIconList, styleIconList1, styleIconList2 } from '@/assets/data/TextIconsData'
 import layerIconList from '@/assets/data/LayerIconList'
-import { FONT_GROUPS } from '@/assets/data/FontsData'
+import { FONT_GROUPS, type TFontItem } from '@/assets/data/FontsData'
+import { brandFontItems, brandState } from '@/common/methods/brandKit'
 import { useFontStore } from '@/common/methods/fonts'
 import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
 import { controlState, widgetState } from '@/store/state'
@@ -22,9 +23,12 @@ import './wTextStyle.less'
 
 const FONT_SIZE_LIST = [12, 14, 24, 26, 28, 30, 36, 48, 60, 72, 96, 108, 120, 140, 180, 200, 250, 300, 400, 500]
 
-function buildFontLists() {
+function buildFontLists(brand: TFontItem[] = []) {
   const localFonts = useFontStore.list
   const fontLists: Record<string, any> = {}
+  // The school's own fonts first, so they are one click away. The same
+  // families still sit in their own groups below.
+  if (brand.length) fontLists.Brand = brand.map(({ id, oid, value, url, alias, preview }) => ({ id, oid, value, url, alias, preview }))
   for (const group of Object.values(FONT_GROUPS)) fontLists[group] = []
   for (const font of localFonts) {
     const { id, oid, value, url, alias, preview, kind } = font
@@ -39,10 +43,11 @@ export default function WTextStyle() {
   const [activeNames, setActiveNames] = useState<string[]>([])
   const [fontClassList, setFontClassList] = useState<Record<string, any>>({})
 
+  const brandFonts = useSnapshot(brandState).kit.fonts
   useEffect(() => {
-    const timer = setTimeout(() => setFontClassList(buildFontLists()), 100)
+    const timer = setTimeout(() => setFontClassList(buildFontLists(brandFontItems(brandFonts))), 100)
     return () => clearTimeout(timer)
-  }, [])
+  }, [brandFonts.heading, brandFonts.body])
 
   const styleIcons1 = useMemo(() => {
     if (!active) return styleIconList1

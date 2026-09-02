@@ -40,6 +40,11 @@ type Props = {
    */
   history?: string[]
   onHistoryChange?: (history: string[]) => void
+  /**
+   * Named rows of colours offered above the recent ones — the school's brand
+   * colours, so they are one click away from every swatch in the editor.
+   */
+  presets?: { label: string; colors: string[] }[]
 }
 
 const hasEyeDrop = typeof window !== 'undefined' && 'EyeDropper' in window
@@ -59,6 +64,7 @@ export default function ColorPicker({
   onBlurColor,
   history,
   onHistoryChange,
+  presets,
 }: Props) {
   const [mode, setMode] = useState(() => parseBackgroundValue(value))
   const [angle, setAngle] = useState(90)
@@ -524,6 +530,17 @@ export default function ColorPicker({
           <div ref={elSliderAlphaPointer} className="cpst__pointer" />
         </div>
       </div>
+
+      {presets?.map((group) =>
+        group.colors.length ? (
+          <div key={group.label} className="cp__presets">
+            <span className="cp__presets-label">{group.label}</span>
+            {group.colors.map((pc) => (
+              <div key={pc} className="item item-color" style={{ background: pc }} title={pc} onClick={() => onClickStraw(pc)} />
+            ))}
+          </div>
+        ) : null,
+      )}
 
       <div className="cp__box">
         <div className="item" onClick={() => hasEyeDrop && onClickStraw()}>
