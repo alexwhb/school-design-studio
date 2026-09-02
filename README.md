@@ -197,6 +197,8 @@ A4, flyers, name badges, display boards.
 
 **Image adjustments.** New. See below.
 
+**Background removal.** New. See below.
+
 **Curved text.** New. See below.
 
 **Gradients.** New. See below.
@@ -511,6 +513,66 @@ adjusted photograph is pre-rendered by the browser first, the same path a shadow
 takes. A .pptx gets a picture of the adjusted photograph rather than the
 original with the adjustments quietly dropped, because PowerPoint has no way to
 brighten, blur or wash a picture that would survive the round trip.
+
+## Removing a background
+
+Select a photograph and press **Remove background** in the settings panel. What
+comes back is the same picture with everything behind the subject cut away to
+transparency, which is what a head-and-shoulders photo needs before it goes on a
+certificate or a staff board.
+
+The cut-out replaces the picture and nothing else: the crop, the size, the
+corner radius, the keyline and any adjustments are all still there, because only
+the image behind them changed. The original is kept, and **Restore original**
+puts it back — the cut is a guess, and on a busy photograph it sometimes takes
+an ear off. The whole thing is one undo entry either way. The cut-out is stored
+the way an upload is, as a data URL run through the same downscaling rules, so
+it survives a reload and embeds cleanly into a PowerPoint export.
+
+### Where the work happens, and why not the obvious library
+
+In this browser, on this computer. The photograph is not uploaded anywhere.
+
+The catch is the model, which is a 44MB download the first time anyone on a
+machine presses the button. After that the browser has it cached and the feature
+works offline; before that it needs a connection, and says so rather than
+failing silently. Expect a few seconds per photograph on a school laptop.
+
+The two libraries every tutorial reaches for are both unusable here.
+**`@imgly/background-removal` is AGPL**, which reaches into whatever closed
+application the editor is embedded in — the whole point of
+[Using it inside School Planner](#using-it-inside-school-planner). And **BRIA's
+`RMBG-1.4`, which is what most browser demos actually run, is licensed for
+non-commercial use only**, whatever the licence field on the dozen re-uploads of
+it says. The IS-Net weights it shares an architecture with are AGPL again.
+
+So the built-in path is [Transformers.js](https://github.com/huggingface/transformers.js)
+(Apache 2.0) running
+[`onnx-community/ormbg-ONNX`](https://huggingface.co/onnx-community/ormbg-ONNX),
+which is Apache 2.0 and — unusually, and the reason it was picked over the MIT
+BiRefNet and BEN2 ports — so is the data it was trained on. Licences on model
+weights are only worth as much as the provenance behind them. The library is
+bundled rather than loaded from a CDN, for the same reason the fonts and the
+icon font are; only the weights come from the network, and they come from
+Hugging Face's CDN.
+
+Note that `npm install` grows by a few hundred megabytes for this, most of it
+ONNX Runtime's Node build and `sharp` — neither of which is used or shipped,
+but both of which Transformers.js declares.
+
+### Pointing it somewhere else
+
+`src/common/methods/backgroundRemoval.ts` is the seam, and it tries three things
+in order:
+
+| Who does the work | How to say so |
+| --- | --- |
+| A host app's own | `setBackgroundRemover(async (blob) => blob)`, exported from the package |
+| A server | `configure({ BACKGROUND_REMOVAL_URL: '/api/cutout' })` — the picture is POSTed as the request body, and a transparent PNG is expected back |
+| The browser | the default above; `BACKGROUND_REMOVAL_MODEL` swaps the model, including for a folder of the same shape served from your own origin |
+
+`configure({ BACKGROUND_REMOVAL: false })` takes the button away entirely, for a
+deployment that would rather not offer it.
 
 ## Curved text
 
@@ -1021,3 +1083,7 @@ Bundled fonts carry their own licences — all SIL OFL or Apache 2.0 — recorde
 `service/src/mock/materials/LICENSES.md`. Photos fetched through the Photos
 panel at runtime come from Unsplash under the
 [Unsplash licence](https://unsplash.com/license).
+
+The background-removal model is fetched at runtime rather than bundled, and is
+Apache 2.0 — see [Removing a background](#removing-a-background) for why that
+took some choosing, and for how to point the feature at something else.

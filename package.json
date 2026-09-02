@@ -21,6 +21,7 @@
     "dev:embed-demo": "cross-env NODE_ENV=development vite --config vite.embed-demo.config.ts"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-dropdown-menu": "^2.1.24",
     "@radix-ui/react-popover": "^1.1.23",

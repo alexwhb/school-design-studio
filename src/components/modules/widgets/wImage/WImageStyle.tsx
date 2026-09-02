@@ -18,6 +18,7 @@ import NumberSlider from '../../settings/NumberSlider'
 import ShadowSelect from '../../settings/ShadowSelect'
 import ContainerWrap from '../../settings/EffectSelect/ContainerWrap'
 import ImageAdjust from './components/ImageAdjust'
+import ImageBackground from './components/ImageBackground'
 import InnerToolBar from './components/InnerToolBar'
 import './wImageStyle.less'
 
@@ -96,6 +97,9 @@ export default function WImageStyle() {
 
   async function selectDone(img: TGetImageListResult) {
     finish('imgUrl', img.url)
+    // A different picture has no earlier version of itself, so Restore original
+    // must not offer to put back the one this replaced.
+    finish('originalImgUrl', null)
     const loadImg = await getImage(img.url)
     finish('width', (loadImg.width * canvasState.dZoom) / 100)
     finish('height', (loadImg.height * canvasState.dZoom) / 100)
@@ -209,6 +213,7 @@ export default function WImageStyle() {
           </div>
         </PanelSection>
         <ImageAdjust uuid={uuid} filters={active.filters} />
+        <ImageBackground key={uuid} uuid={uuid} imgUrl={active.imgUrl} originalImgUrl={active.originalImgUrl} />
         <br />
         <ArrangeRow uuid={uuid} extra={FLIP_ICONS} onExtra={flipAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />

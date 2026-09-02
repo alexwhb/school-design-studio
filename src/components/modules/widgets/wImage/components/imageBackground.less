@@ -1,0 +1,40 @@
+.image-background__note {
+  margin: 0 0 @space-2;
+  color: @ink-3;
+  font-size: @text-xs;
+}
+
+.image-background__button {
+  width: 100%;
+}
+
+.image-background__progress {
+  position: relative;
+  overflow: hidden;
+  height: 3px;
+  margin-top: @space-2;
+  border-radius: @radius-pill;
+  background: @surface-3;
+}
+
+.image-background__bar {
+  height: 100%;
+  border-radius: @radius-pill;
+  background: @accent;
+  transition: width 0.2s ease;
+
+  // No share to show, so the bar paces the width of the track instead.
+  &.is-waiting {
+    width: 35%;
+    animation: image-background-sweep 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes image-background-sweep {
+  0% {
+    margin-left: -35%;
+  }
+  100% {
+    margin-left: 100%;
+  }
+}

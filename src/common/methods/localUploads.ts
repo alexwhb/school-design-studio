@@ -72,8 +72,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
  * long edge is capped and anything sizeable is re-encoded as JPEG.
  *
  * Returns the data URL plus the dimensions the editor should lay it out at.
+ *
+ * Exported because it is the rule for any picture the browser makes and then
+ * has to keep — a background cut out of a photo goes through it too, so a
+ * cut-out is stored on the same terms as the photo it came from.
  */
-async function downscale(file: File): Promise<{ url: string; width: number; height: number }> {
+export async function downscale(file: File): Promise<{ url: string; width: number; height: number }> {
   const original = await readAsDataUrl(file)
   const img = await loadImage(original)
   const scale = Math.min(1, MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight))

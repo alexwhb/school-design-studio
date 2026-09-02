@@ -17,6 +17,17 @@ const config = {
   // app rendered as a blank square. Refresh with `npm run fetch-iconfont`.
   ICONFONT_URL: 'iconfont/iconfont.css',
   supportSubFont: false,
+  // Background removal. Off in a host that would rather not offer it; see
+  // `common/methods/backgroundRemoval.ts` for the rest of the seam.
+  BACKGROUND_REMOVAL: true,
+  /** A repository on the Hugging Face hub, or a folder of the same shape served yourself. */
+  BACKGROUND_REMOVAL_MODEL: 'onnx-community/ormbg-ONNX',
+  /**
+   * Set to hand the work to a server instead of doing it in the browser: the
+   * picture is POSTed as the whole request body, and the reply should be a PNG
+   * with a transparent background.
+   */
+  BACKGROUND_REMOVAL_URL: '',
 }
 
 export type DesignStudioConfig = Partial<typeof config>

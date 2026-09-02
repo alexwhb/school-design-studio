@@ -150,6 +150,11 @@ export type TdWidgetData = TPageState &
      * held. See `imageFilters`, which is the only thing that should read it.
      */
     filters?: TImageFilters
+    /**
+     * Images: the picture as it was before its background was cut out, so it
+     * can be put back. Absent when it never was, and again once it has been.
+     */
+    originalImgUrl?: string
   }
 
 export type TdLayout = {
