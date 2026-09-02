@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef } from 'react'
 import { useSnapshot } from 'valtio'
+import { imageFilterCss } from '@/common/methods/imageFilters'
 import { shadowFilter } from '@/common/methods/shadow'
 import { canvasState, controlState, widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
@@ -357,7 +358,9 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
     >
       {cropEdit ? (
         <div id={params.uuid + '_ebox'} ref={editBoxRef} className="svg__edit__wrap" style={{ transformOrigin: 'center' }}>
-          <img className="edit__model" src={p.imgUrl} />
+          {/* The faded whole picture behind the crop frame, adjusted the same way
+              so the part being kept does not look like a different photograph. */}
+          <img className="edit__model" style={{ filter: imageFilterCss(p.filters) }} src={p.imgUrl} />
         </div>
       ) : null}
       {cropEdit ? (
@@ -394,10 +397,18 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
             style={{
               border: `${(p.height * p.sliceData.ratio) / 2}px solid transparent`,
               borderImage: `url('${p.imgUrl}') ${p.sliceData.left} round`,
+              filter: imageFilterCss(p.filters),
             }}
           />
         ) : (
-          <img ref={targetRef} className="target" style={{ transformOrigin: 'center' }} src={p.imgUrl} />
+          <img
+            ref={targetRef}
+            className="target"
+            // On the picture and not on the frame, so a keyline stays crisp and
+            // a shadow keeps its colour whatever is done to the photo inside them.
+            style={{ transformOrigin: 'center', filter: imageFilterCss(p.filters) }}
+            src={p.imgUrl}
+          />
         )}
       </div>
       <ImageKeyline params={p} />

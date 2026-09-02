@@ -17,6 +17,7 @@ import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
 import ShadowSelect from '../../settings/ShadowSelect'
 import ContainerWrap from '../../settings/EffectSelect/ContainerWrap'
+import ImageAdjust from './components/ImageAdjust'
 import InnerToolBar from './components/InnerToolBar'
 import './wImageStyle.less'
 
@@ -207,6 +208,7 @@ export default function WImageStyle() {
             <ShadowSelect value={active.shadow} onChange={(value) => finish('shadow', value)} />
           </div>
         </PanelSection>
+        <ImageAdjust uuid={uuid} filters={active.filters} />
         <br />
         <ArrangeRow uuid={uuid} extra={FLIP_ICONS} onExtra={flipAction} />
         <IconItemSelect data={alignIconList} onFinish={alignAction} />

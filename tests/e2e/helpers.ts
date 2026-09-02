@@ -401,3 +401,43 @@ export async function downloadBytes(page: Page, act: () => Promise<void>, timeou
   for await (const chunk of stream!) chunks.push(chunk as Buffer)
   return { file, bytes: Buffer.concat(chunks) }
 }
+
+/**
+ * Puts a photo on the page without the network: a flat colour drawn in the
+ * browser, uploaded through the Uploads panel and placed from its list. Flat,
+ * so a test can sample one pixel and know what it should be.
+ */
+export async function addFlatImage(page: Page, color = '#808080', size = { width: 400, height: 300 }) {
+  const dataUrl = await page.evaluate(
+    ([fill, w, h]) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = w as number
+      canvas.height = h as number
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = fill as string
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/png')
+    },
+    [color, size.width, size.height] as const,
+  )
+  await page.locator('#widget-panel .classify-item', { hasText: 'Uploads' }).click()
+  await page.waitForTimeout(400)
+  await page.locator('.user-wrap input[type="file"]').setInputFiles({
+    name: 'flat.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(dataUrl.split(',')[1], 'base64'),
+  })
+  const thumb = page.locator('.user-wrap .list__img').first()
+  await thumb.waitFor()
+  await page.waitForTimeout(400)
+  await thumb.click()
+  await page.waitForTimeout(600)
+}
+
+/** The `filter` the one photo on the page is drawn with, as the browser computes it. */
+export function imageFilter(page: Page) {
+  return page.evaluate(() => {
+    const img = document.querySelector('#page-design-canvas .w-image img.target') as HTMLElement | null
+    return img ? getComputedStyle(img).filter : null
+  })
+}

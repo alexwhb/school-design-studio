@@ -193,6 +193,10 @@ below.
 listing pages) are replaced with sizes a school actually uses: slides, Letter,
 A4, flyers, name badges, display boards.
 
+**Lines and arrows.** New. See below.
+
+**Image adjustments.** New. See below.
+
 **Curved text.** New. See below.
 
 **Gradients.** New. See below.
@@ -453,6 +457,60 @@ and both PowerPoint exports — html2canvas cannot draw a CSS filter, so a
 shadowed element is pre-rendered by the browser instead, with room left round it
 for the shadow to fall into. A .pptx gets a real PowerPoint shadow rather than a
 picture of one, so whoever opens the deck can still edit it.
+
+## Lines and arrows
+
+The **Line** tool in the Tools panel, or the `L` key. Drag from one point to
+another; hold Shift to hold it to a right angle or a diagonal, Alt to draw it
+out from the middle, and a plain click drops a level line of a readable length.
+The Elements panel has an **Arrows** row of ready-made ones to drag on instead.
+
+A line is an open path, so it takes the same stroke colour, thickness and dash
+as any other path, and its points can still be moved. What is new is the ends:
+select the line and the settings panel shows **Line ends**, with a picker for
+each end — an open arrow, a filled triangle, a dot, a bar or nothing — and a
+button to swap the two over. A head is sized from the stroke, so thickening the
+line thickens its arrowhead with it, and painted in the stroke's colour.
+
+The heads are drawn as ordinary SVG geometry rather than as SVG markers.
+html2canvas has no SVG renderer at all, so a path is exported by serialising its
+whole `<svg>` into an `<img>` and letting the browser draw it; a polygon inside
+that `<svg>` comes through the same door, where a marker would not. The line is
+also drawn back to where a solid head begins, so a dashed stroke stops at the
+arrow rather than running on through it.
+
+Closing a path takes its heads off — a closed shape has no ends to put them on —
+and both the switch and the pickers refit the frame afterwards, so the line
+stays where it was drawn even though a head needs more room round the curve than
+a bare stroke does. Every change is one undo entry, and the heads draw in the
+page thumbnails, the presenter and the PNG, PDF and PowerPoint exports.
+
+## Adjusting a photo
+
+Select a photograph and the settings panel has an **Adjust** section, folded
+until you want it. Inside are six looks to start from — Original, Warm, Cool,
+Black and white, Vivid, Faded — and a slider for each adjustment underneath:
+brightness, contrast, saturation, warmth, blur, black and white, and sepia.
+**Reset** puts the photograph back to how it arrived. The section heading says
+which look is on, or *Edited* once the sliders have been moved off one.
+
+Warmth runs both ways from the middle: warmer is a sepia wash, and cooler is the
+same wash with the hues turned half way round and back again, which lands it on
+the blues instead of the yellows. CSS has no cooling filter of its own.
+
+The adjustments are applied to the picture and not to the frame around it, so a
+keyline stays its own colour and a drop shadow keeps its edge whatever is done
+to the photograph inside them. A design only carries the adjustments that have
+actually been moved, and none at all when none have, so a design saved before
+any of this existed reads exactly as it did.
+
+Dragging a slider is one undo entry however far the thumb travels. The page
+thumbnails and the presenter draw the same adjustments the canvas does, and so
+do the PNG and PDF exports — html2canvas cannot draw a CSS filter, so an
+adjusted photograph is pre-rendered by the browser first, the same path a shadow
+takes. A .pptx gets a picture of the adjusted photograph rather than the
+original with the adjustments quietly dropped, because PowerPoint has no way to
+brighten, blur or wash a picture that would survive the round trip.
 
 ## Curved text
 

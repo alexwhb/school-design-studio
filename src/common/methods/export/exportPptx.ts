@@ -16,6 +16,7 @@
  *    editable, but it is guaranteed to look exactly like the editor.
  */
 import PptxGenJS from 'pptxgenjs'
+import { imageFilterCss } from '../imageFilters'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 import { htmlToText, imageToDataUrl, isInvisible, pxToInches, pxToPoints, readRotation, safeFileName, toPptxColor } from './utils'
 
@@ -55,6 +56,9 @@ function needsRaster(widget: TdWidgetData): boolean {
   // wearing one goes in as a picture of itself rather than as a bare photograph
   // with the outline quietly dropped.
   if (type === 'w-image' && Number((widget as any).borderWidth) > 0) return true
+  // Nor any way to brighten, blur or wash a picture, so an adjusted photograph
+  // goes in as a picture of itself with the adjustments already made.
+  if (type === 'w-image' && imageFilterCss(widget.filters)) return true
   if (type === 'w-text' && hasUnsupportedTextEffects(widget)) return true
   // A PowerPoint text box runs in a straight line, and the WordArt shapes that
   // do not are a different object with none of this one's styling, so a curved

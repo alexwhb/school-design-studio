@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef } from 'react'
+import { imageFilterCss } from '@/common/methods/imageFilters'
 import { shadowFilter } from '@/common/methods/shadow'
 import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
@@ -48,10 +49,18 @@ function WImageStatic({ params, parent, className, ...rest }: WidgetProps) {
             style={{
               border: `${(p.height * p.sliceData.ratio) / 2}px solid transparent`,
               borderImage: `url('${p.imgUrl}') ${p.sliceData.left} round`,
+              filter: imageFilterCss(p.filters),
             }}
           />
         ) : (
-          <img ref={targetRef} className="target" style={{ transformOrigin: 'center' }} src={p.imgUrl} />
+          <img
+            ref={targetRef}
+            className="target"
+            // On the picture and not on the frame, so a keyline stays crisp and
+            // a shadow keeps its colour whatever is done to the photo inside them.
+            style={{ transformOrigin: 'center', filter: imageFilterCss(p.filters) }}
+            src={p.imgUrl}
+          />
         )}
       </div>
       <ImageKeyline params={p} />

@@ -1,0 +1,41 @@
+.image-adjust__state {
+  color: @ink-3;
+  font-size: @text-xs;
+}
+
+.image-adjust__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: @space-1 @space-2;
+  margin-bottom: @field-gap;
+}
+
+// A look is a chip: small, quiet, and lit while it is the one in use.
+.image-adjust__preset {
+  height: @control-h-sm;
+  padding: 0 @space-2;
+  border: 1px solid @line;
+  border-radius: @radius-pill;
+  background: @surface;
+  color: @ink-2;
+  font-size: @text-xs;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    border-color: @line-strong;
+    color: @ink;
+  }
+  &.is-active {
+    border-color: @accent-border;
+    background: @accent-soft;
+    color: @accent;
+  }
+  &:focus-visible {
+    .focus-ring();
+  }
+}
+
+.image-adjust__reset {
+  margin-top: @field-gap;
+}

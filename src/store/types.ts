@@ -1,6 +1,7 @@
 import type { TWidgetAnimation } from '@/common/animations/presets'
 import type { TBackgroundTransform } from '@/common/methods/pageBackground'
 import type { TWidgetShadow } from '@/common/methods/shadow'
+import type { TImageFilters } from '@/common/methods/imageFilters'
 
 export type TScreeData = {
   width: number
@@ -143,6 +144,12 @@ export type TdWidgetData = TPageState &
     shadow?: TWidgetShadow
     /** Entrance animation, played in the presenter. Absent means the element is simply there. */
     animation?: TWidgetAnimation
+    /**
+     * Images: the adjustments made to the picture — brightness, contrast and
+     * so on. Absent means untouched, and only the keys that were moved are
+     * held. See `imageFilters`, which is the only thing that should read it.
+     */
+    filters?: TImageFilters
   }
 
 export type TdLayout = {
