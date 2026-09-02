@@ -66,12 +66,12 @@ test('a drop shadow on a photo survives the PNG export', async ({ page }) => {
   // to be impossible — html2canvas cannot draw a filter, and the picture the
   // export draws instead is only as big as the element unless it is told to
   // leave room.
-  await page.locator('#w-image-style .shadow-select .el-checkbox').click()
+  await page.locator('#style-panel .shadow-select .el-checkbox').click()
   await page.waitForTimeout(300)
-  const blur = page.locator('#w-image-style .shadow-select .field--full input')
+  const blur = page.locator('#style-panel .shadow-select .field--full input')
   await blur.fill('0')
   await blur.blur()
-  const offsetY = page.locator('#w-image-style .shadow-select .field').nth(2).locator('input')
+  const offsetY = page.locator('#style-panel .shadow-select .field').nth(2).locator('input')
   await offsetY.fill('60')
   await offsetY.blur()
   await page.waitForTimeout(400)

@@ -184,7 +184,7 @@ export async function openGradient(page: Page, swatch: Locator, type: 'linear' |
   await swatch.click()
   await page.waitForTimeout(600)
   const picker = page.locator('.color-picker:visible')
-  await picker.locator('.my-tab__title', { hasText: 'Gradient' }).click()
+  await picker.locator('.ds-segmented__option', { hasText: 'Gradient' }).click()
   await page.waitForTimeout(600)
   if (type === 'radial') {
     await picker.locator('.cpgt__option').nth(1).click()

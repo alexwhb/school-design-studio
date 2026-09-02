@@ -727,7 +727,7 @@ async function addPhoto(page: Page) {
 }
 
 async function startCrop(page: Page) {
-  await page.locator('#w-image-style button', { hasText: 'Crop' }).click()
+  await page.locator('#style-panel button', { hasText: 'Crop' }).click()
   await page.waitForTimeout(400)
 }
 
@@ -804,18 +804,18 @@ test('leaving an image mid-crop and coming back offers to crop it again', async 
 
   await expect(page.locator('.inner-tool-bar')).toHaveCount(0)
   await expect(page.locator('.svg__edit__wrap')).toHaveCount(0)
-  await expect(page.locator('#w-image-style button', { hasText: 'Crop' })).toHaveCount(1)
+  await expect(page.locator('#style-panel button', { hasText: 'Crop' })).toHaveCount(1)
 })
 
 test('cropping gives a flipped image its flip back', async ({ page }) => {
   await addPhoto(page)
   const box = page.locator('.w-image .img__box').first()
-  await page.locator('#w-image-style .icon.sd-zuoyoufanzhuan').click()
+  await page.locator('#style-panel .icon.sd-zuoyoufanzhuan').click()
   await page.waitForTimeout(300)
   await expect(box).toHaveCSS('transform', /matrix/)
 
   await startCrop(page)
-  await page.locator('#w-image-style button', { hasText: 'Done' }).click()
+  await page.locator('#style-panel button', { hasText: 'Done' }).click()
   await page.waitForTimeout(400)
   await expect(box).toHaveCSS('transform', /matrix/)
 })
@@ -832,7 +832,7 @@ test('clicking a shape in the Elements panel places it', async ({ page }) => {
 
 /** The Shadow section's on/off switch, which both artwork panels share. */
 function shadowToggle(page: Page) {
-  return page.locator('#w-image-style .shadow-select .el-checkbox')
+  return page.locator('#style-panel .shadow-select .el-checkbox')
 }
 
 test('a photo can be given a drop shadow, and lose it again', async ({ page }) => {
@@ -858,7 +858,7 @@ test('the blur and offsets survive switching the shadow off and on', async ({ pa
   await shadowToggle(page).click()
   await page.waitForTimeout(400)
 
-  const blur = page.locator('#w-image-style .shadow-select .field--full input')
+  const blur = page.locator('#style-panel .shadow-select .field--full input')
   await blur.fill('40')
   await blur.blur()
   await page.waitForTimeout(400)
@@ -1093,19 +1093,19 @@ function shapeArt(page: Page) {
 test('a shape can be filled with a gradient', async ({ page }) => {
   await addShape(page, 'Rectangle')
   await selectFirstWidget(page)
-  await openGradient(page, page.locator('#w-image-style .color__select').first().locator('.color__field'))
+  await openGradient(page, page.locator('#style-panel .color__select').first().locator('.color__field'))
 
   // An SVG attribute cannot hold a CSS gradient, so the fill is a reference to
   // a paint server the shape carries with it.
   await expect(shapeArt(page)).toHaveAttribute('fill', /^url\(#/)
   await expect(page.locator(`${WIDGET} svg defs linearGradient`)).toHaveCount(1)
-  await expect(page.locator('#w-image-style .color__select').first().locator('.color__value')).toHaveText('Gradient')
+  await expect(page.locator('#style-panel .color__select').first().locator('.color__value')).toHaveText('Gradient')
 })
 
 test('a gradient can be radial as well as linear', async ({ page }) => {
   await addShape(page, 'Rectangle')
   await selectFirstWidget(page)
-  await openGradient(page, page.locator('#w-image-style .color__select').first().locator('.color__field'), 'radial')
+  await openGradient(page, page.locator('#style-panel .color__select').first().locator('.color__field'), 'radial')
 
   await expect(page.locator(`${WIDGET} svg defs radialGradient`)).toHaveCount(1)
   await expect(page.locator(`${WIDGET} svg defs linearGradient`)).toHaveCount(0)
