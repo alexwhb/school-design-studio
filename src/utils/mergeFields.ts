@@ -40,8 +40,10 @@ export function valuesResolver(values: Record<string, string | undefined>): TFie
 /** Whether a text box carries any field at all. Cheap enough to run on every widget. */
 export function hasFields(html: string | undefined): boolean {
   if (!html || !html.includes('{{')) return false
-  FIELD_PATTERN.lastIndex = 0
-  return FIELD_PATTERN.test(renderedText(html))
+  // `search` rather than `test`: a global regex remembers where its last match
+  // ended, and `matchAll` starts from there — so a `test` left un-reset would
+  // make the next `fieldsInText` or `fillText` skip the first field.
+  return renderedText(html).search(FIELD_PATTERN) !== -1
 }
 
 /**
