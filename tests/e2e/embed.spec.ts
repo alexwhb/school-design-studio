@@ -163,6 +163,52 @@ test.describe('embedded in a host app', () => {
     await expect(page.locator('.present')).toHaveCount(0)
   })
 
+  test('a host that keeps the brand kit hands it in and is told about changes', async ({ page }) => {
+    // The planner owns the school's details; the editor is given them, uses
+    // them, and reports back rather than writing to the browser's own copy.
+    await page.goto(EMBED_URL + '?brand=1')
+    await page.waitForSelector('.ds-root #page-design-canvas')
+    await page.waitForTimeout(1200)
+
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Brand' }).click()
+    await page.waitForTimeout(600)
+    await expect(page.locator('.ds-root #brand-name')).toHaveValue('Riverbend Academy')
+    await expect(page.locator('.ds-root .brand-swatch__chip')).toHaveCount(1)
+
+    // A template picks the host's school up as it lands.
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Templates' }).click()
+    await page.waitForTimeout(600)
+    await page.locator('.ds-root .img-box:has(img[src="/covers/template-101.png"])').click()
+    await page.waitForTimeout(2500)
+    const lines = await page.locator('.ds-root #page-design-canvas [data-uuid] .edit-text').allInnerTexts()
+    expect(lines).toContain('RIVERBEND ACADEMY')
+
+    // And an edit in the panel comes back out to the host, which is showing
+    // its own copy in the bar above the editor.
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Brand' }).click()
+    await page.waitForTimeout(600)
+    await page.locator('.ds-root #brand-name').fill('Riverbend Middle')
+    await expect(page.locator('#host-school')).toHaveText('Riverbend Middle')
+
+    // The browser's own store was left alone, so another editor on this origin
+    // that is not host-managed still gets an empty kit.
+    const stored = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('design-studio')
+          open.onsuccess = () => {
+            const db = open.result
+            if (!db.objectStoreNames.contains('brand')) return resolve('no store')
+            const request = db.transaction('brand', 'readonly').objectStore('brand').getAll()
+            request.onsuccess = () => resolve(request.result.length)
+            request.onerror = () => resolve('error')
+          }
+          open.onerror = () => resolve('error')
+        }),
+    )
+    expect(stored === 0 || stored === 'no store').toBe(true)
+  })
+
   test('the resize dialog opens inside the editor and is styled', async ({ page }) => {
     await page.locator('.ds-root').getByText('File', { exact: true }).click()
     await page.waitForTimeout(400)

@@ -416,6 +416,114 @@ The gradient itself is parsed and written in
 through the same code, so page thumbnails, presentation mode and every export
 draw a shape the way the canvas does.
 
+## Brand kit
+
+The **Brand** tab in the left-hand rail. The school's crest, its colours, its
+two fonts and its contact line, set once and then used by everything else.
+
+A school office makes the same handful of things over and over — a notice, a
+flyer, a slide deck — and every one of them carries the same name, the same
+crest, the same navy, the same address at the bottom. Without somewhere to keep
+them they get retyped and re-picked each time, and each time slightly
+differently: the name in three capitalisations, four navies within a few points
+of each other, the old phone number on the newsletter nobody caught. The kit
+holds them once.
+
+Everything typed into the panel is **saved as it is typed**. There is no Save
+button and no dialog. It lives in the browser's IndexedDB, in the same database
+as the uploads and the draft, so it is there the next morning; when the editor
+is embedded, the host app hands the kit in and is told about every change
+instead — see [EMBEDDING.md](EMBEDDING.md).
+
+The panel is five blocks, top to bottom.
+
+- **Logo.** Upload a PNG or an SVG. Neither is ever re-encoded as JPEG, so a
+  crest with a transparent background keeps it rather than picking up a white
+  box (the same rule the Uploads panel follows — see **Uploads** above).
+  **Add to page** puts it down at a fifth of the page's width, and never larger
+  than the file itself, so a small crest is not blown up soft.
+- **Colours.** Up to eight, main colour first. Clicking one puts it on whatever
+  is selected: the words of a text box, the fill of a shape, the first colour of
+  a piece of line art, or — with nothing selected — the page itself. That is one
+  undo step. They also appear as a **Brand** row at the top of every colour
+  picker in the editor, above the recent colours, so the school's navy is one
+  click away from any swatch.
+- **Fonts.** A heading font and a body font. Both appear as a **Brand** group at
+  the top of the text panel's font list. The families stay in their own groups
+  further down too; the group at the top is a shortcut, not a filter.
+- **Details.** Name, short name, tagline, address, phone, email, website. Each
+  box shows the sample school's answer as its placeholder, so an empty kit still
+  reads as an example rather than as a form.
+- **Fields.** `{{school.name}}`, `{{school.tagline}}`, `{{school.email}}` and
+  the rest, each shown next to what it currently reads as. Clicking one adds it
+  to the end of the selected text box, or drops a new text box carrying it in
+  the middle of the page.
+
+### Fields, and what a template does with them
+
+A merge field is `{{something}}` typed into a text box, filled in from somewhere
+else. The bundled templates are written with them: the footer of the Field Day
+poster is `{{school.name|upper}}`, not one made-up school's name. **A template
+is filled in as it is added**, so picking it out of the gallery puts your
+school's name on it and there is nothing to overwrite. Saved element groups and
+a template opened by `?tempid=` go through the same fill.
+
+With **no kit set up at all**, the fields answer with a sample school —
+Springfield Elementary, `office@springfield.k12.us`, and so on — which is
+exactly the copy the templates used to carry outright. So the gallery looks the
+same to somebody who has never opened the Brand panel.
+
+Once *any* detail is filled in, the kit answers only what it has: an empty email
+box leaves `{{school.email}}` standing on the page rather than quietly filling
+it with somebody else's. A field nothing answers is always left exactly as it
+was, so the author can see what is still waiting.
+
+`|upper` after a field name sets the value in capitals. The bundled footers are
+set that way, and a school's name should be stored as it is written rather than
+as one template happens to set it.
+
+Fields are found in the **rendered text**, never in the markup, which is what
+lets one survive being half-bolded: contentEditable writes `{{<b>school</b>.name}}`
+and it still fills. That machinery is shared with find and replace and is
+described under it. The field code is `src/utils/mergeFields.ts`; the school's
+answers are `brandResolver()` in `src/common/methods/brandKit.ts`, which other
+features can compose with their own.
+
+### Apply brand to this design
+
+The button pinned under the panel, for the design that was made before the kit
+was, or brought in from somewhere else. One dialog, one confirmation, and the
+whole thing is **one undo step** however many pages it touches.
+
+It does three passes:
+
+1. **Fields.** Every `{{school.…}}` on every page is filled in, not just the
+   page on screen — the same reason find and replace works across the design.
+2. **Fonts**, when the kit has any. Bold text, and text at or above four and a
+   half per cent of the page's shorter side, is set in the heading font;
+   everything else in the body font. That threshold is 49px on a slide and 57px
+   on Letter paper at 150dpi. A fixed pixel size would call every line on a
+   poster a heading and nothing on a slide one. The dialog states the rule in
+   numbers for the page you are on, because a guess about which lines are
+   headings should be checkable before it runs.
+3. **Colours**, if the checkbox is ticked. It is offered, and ticked, only when
+   the kit has colours to recolour with. The design's most-used colour becomes
+   the kit's first, its second the kit's second, and so on. Counting is by how
+   many places a colour is painted rather than by area: the colour a design is
+   "in" is the one it reaches for most often, not the one on its biggest
+   rectangle. Whites, blacks and greys are left alone, because a brand kit says
+   what the school's colours are, not what colour the paper is. Each place keeps
+   its own transparency, so a wash that was the old navy at 7% comes out as the
+   new blue at 7%.
+
+Afterwards a notification says what changed, including how many fields were left
+standing for want of a detail the kit does not have.
+
+The model and its storage are in `src/common/methods/brandKit.ts`; what the kit
+does to a design is `src/store/widget/brand.ts`, which walks `dLayouts[].layers`
+the way find and replace does, so the page on screen updates along with the rest
+and there is no special case for it.
+
 ## Find and replace
 
 **Ctrl+F**, or **File → Find and replace…**. Type what to look for, type what
