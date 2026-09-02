@@ -83,7 +83,7 @@ export default function StylePanel() {
         />
       </div>
       <div className="style-wrap" style={{ display: activeTab === 0 ? undefined : 'none' }}>
-        <div style={{ padding: '2rem 0', display: showGroupCombined ? undefined : 'none' }}>
+        <div className="multi-select" style={{ display: showGroupCombined ? undefined : 'none' }}>
           <Button plain type="primary" className="gounp__btn" onClick={handleCombine}>
             Group
           </Button>

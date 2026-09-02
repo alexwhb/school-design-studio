@@ -172,7 +172,7 @@ export default function PageStyle() {
               style={{ display: mode === 'Image' && !backgroundImage ? undefined : 'none' }}
               onDone={uploadImgDone}
             >
-              <Button style={{ width: '100%' }} plain>
+              <Button className="block-btn" plain>
                 Upload background
               </Button>
             </Uploader>

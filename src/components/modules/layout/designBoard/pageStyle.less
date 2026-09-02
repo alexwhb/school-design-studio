@@ -23,18 +23,19 @@
   }
 
   .select {
-    margin-bottom: 10px;
+    margin-bottom: @field-gap;
   }
-  .btn-wrap {
+  .btn-wrap,
+  .block-btn {
     width: 100%;
-    margin-top: 1.2rem;
+    margin-top: @field-gap;
   }
 
   // The library takes over the panel, so its own back link is the way out.
   .bg-library {
     display: flex;
     flex-direction: column;
-    width: 256px;
+    width: 100%;
     height: 100%;
     min-height: 0;
 
@@ -45,20 +46,20 @@
     }
     // The panel around it already provides the gutter.
     .search__wrap {
-      padding: 0 0 8px;
+      padding: 0 0 @space-2;
     }
   }
 
   .bg-library-open {
     width: 100%;
-    margin: 0 0 1.2rem;
+    margin: 0 0 @field-gap;
     // The button puts its content in a span of its own, so that is what has to
     // space the icon away from the label.
     > span {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: @space-2;
     }
     .iconfont {
       font-size: 15px;
@@ -68,8 +69,8 @@
 
   .bg-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 0.8rem;
+    gap: @space-2;
+    margin-top: @field-gap;
     // The uploader is a wrapper around its button, so it has to be told to
     // share the row rather than sit at its content's width.
     > * {
@@ -88,9 +89,9 @@
       align-items: center;
       flex-shrink: 0;
       color: @ink;
-      font-size: 14px;
+      font-size: @text-md;
       font-weight: 600;
-      height: 2.9rem;
+      height: @panel-header-h;
       background: @surface;
       .icon-right {
         transform: rotate(180deg);
@@ -101,30 +102,23 @@
   .backgroud-wrap {
     overflow: hidden;
     position: relative;
-    padding: 12px;
-    margin-top: 1.2rem;
+    padding: @space-3;
+    margin-top: @field-gap;
     background-color: @surface-3;
-    border-radius: 8px;
+    border-radius: @radius;
     .bg-options {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: @space-2;
+      right: @space-2;
       display: flex;
+      gap: @space-1;
       z-index: 1;
     }
+    // Sits over the picture, so it keeps the popover surface and the one
+    // shadow rather than the panel's.
     .btn-item {
-      margin-left: 5px;
-      cursor: pointer;
+      .icon-button();
       background-color: @popover;
-      width: 24px;
-      height: 24px;
-      padding: 0;
-      font-size: 14px;
-      border-radius: 4px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: none;
       box-shadow: @shadow-pop;
     }
   }
