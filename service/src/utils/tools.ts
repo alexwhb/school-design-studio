@@ -32,7 +32,6 @@ export const buildTree = (data: any[]) => {}
 
 export const groupBy = (array: any[], property: any) => {}
 
-// 检测目录并创建目录（支持深层级）
 export const checkCreateFolder = (folder: string) => {
   try {
     const pathArr = splitPath(folder)
@@ -46,7 +45,6 @@ export const checkCreateFolder = (folder: string) => {
   } catch (e) {}
 }
 
-// 检测文件
 export const checkCreateFile = (filePath: string) => {
   try {
     if (!fs.existsSync(filePath)) {
@@ -57,7 +55,6 @@ export const checkCreateFile = (filePath: string) => {
   }
 }
 
-// 生成随机码
 export const randomCode = (length = 5) => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   let result = ''
@@ -68,7 +65,6 @@ export const randomCode = (length = 5) => {
   return result
 }
 
-// 取数组差集
 export const findDifference = (a: any, b: any) => {
   return a.concat(b).filter((v: any) => !a.includes(v) || !b.includes(v))
 }
@@ -76,7 +72,6 @@ export const findDifference = (a: any, b: any) => {
 export { copyFile, readFile, filesReader }
 
 /**
- * 将路径切割为数组
  * @param dirPath
  * @returns Array
  */

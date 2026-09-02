@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2023-07-12 19:37:14
- * @Description: 下载 base64
  * @LastEditors: ShawnPhang <site: book.palxp.com>
  * @LastEditTime: 2023-07-12 19:37:39
  */

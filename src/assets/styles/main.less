@@ -47,8 +47,8 @@ default;
   border-style: solid;
   border-color: @line;
   // font-size: 14px;
-  // scrollbar-width: none; /* 火狐滚动条无法自定义宽度，只能通过此属性使滚动条宽度变细 */
-  -ms-overflow-style: none; /* 隐藏滚动条（在IE和Edge两个浏览器中很难更改样式，固采取隐藏方式） */
+  // scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 @-moz-document url-prefix() {
   * {
@@ -86,7 +86,6 @@ textarea:-webkit-autofill:hover textarea:-webkit-autofill:focus,
 select:-webkit-autofill,
 select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
-  //取消浏览器记住密码的样式
   transition: background-color 5000s ease-in-out 0s;
 }
 

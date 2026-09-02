@@ -30,7 +30,6 @@ module.exports = {
             loader: 'ts-loader',
             options: {
               transpileOnly: true,
-              // 指定特定的ts编译配置，为了区分脚本的ts配置
               configFile: path.resolve(__dirname, './tsconfig.json'),
             },
           },
@@ -40,9 +39,9 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.json'],  // 解析的文件类型
+    extensions: ['.ts', '.tsx', '.js', '.json'],
     alias: {
-      '@': path.resolve(__dirname, 'src')  // 配置路径别名，指向 src 目录
+      '@': path.resolve(__dirname, 'src')
     }
   },
   // plugins: [new BundleAnalyzerPlugin()],

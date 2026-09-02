@@ -14,7 +14,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 MAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'i18n-map.json')
 CJK = re.compile(r'[一-鿿　-〿＀-￯]')
 
-# '背景' here matches a Photoshop layer name inside a .psd file, not UI text.
+# This matches a Photoshop layer name inside a .psd file, not UI text.
 SKIP_LINES = {
     ('src/utils/plugins/psd/index.ts', "['Background', 'background', '背景']"),
 }

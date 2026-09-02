@@ -6,7 +6,6 @@
  * @LastEditTime: 2022-04-15 11:22:49
  */
 /**
- * 显示全局提示
  * @param content
  * @param tooltipVisible
  * @returns

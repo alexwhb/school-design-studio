@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang <https://m.palxp.cn>
  * @Date: 2021-08-27 14:42:15
- * @Description: 媒体相关接口
  * @LastEditors: Jeremy Yu <https://github.com/JeremyYu-cn>
  * @LastEditTime: 2024-09-25 00:39:00
  */
@@ -9,7 +8,6 @@ import fetch from '@/utils/axios'
 import _config from '@/config'
 import { IGetTempListData } from './home'
 
-// 获取素材分类：
 export const getKinds = (params: Type.Object = {}) => fetch('design/cate', params)
 
 type TGetListParam = {
@@ -39,14 +37,12 @@ export type TGetListData = {
 
 export type TGetListResult = TPageRequestResult<TGetListData[]>
 
-// 获取素材列表：
 export const getList = (params: TGetListParam) => fetch<TGetListResult>('design/material', params)
 
 export type TGetFontParam = {
   pageSize?: number
 }
 
-/** 字体item数据 */
 export type TGetFontItemData = {
   id: number
   alias: string
@@ -57,7 +53,6 @@ export type TGetFontItemData = {
   lang: string
 }
 
-// 获取字体
 export const getFonts = (params: TGetFontParam = {}) => fetch<TPageRequestResult<TGetFontItemData[]>>('design/fonts', params)
 
 type TGetFontSubParam = {
@@ -110,7 +105,6 @@ export type TGetImageListResponse = TPageRequestResult<TGetImageListResult[]> & 
   provider?: 'unsplash' | 'bundled'
 }
 
-// 图库列表
 export const getImagesList = (params: TGetImageListParams) => fetch<TGetImageListResponse>('design/imgs', params, 'get')
 
 /**
@@ -138,7 +132,6 @@ type TMyPhotoParams = {
   pageSize?: number
 }
 
-/** 获取我的Manage files返回 */
 export type TMyPhotoResult = {
   created_time: string
   height: number
@@ -148,7 +141,6 @@ export type TMyPhotoResult = {
   width: number
 } & IGetTempListData
 
-// 我的上传列表
 export const getMyPhoto = (params: TMyPhotoParams) => fetch<TPageRequestResult<TMyPhotoResult[]>>('design/user/image', params)
 
 type TDeleteMyPhotoParams = {
@@ -170,10 +162,8 @@ type TAddMyPhotoParam = {
   url: string
 }
 
-// 添加图片
 export const addMyPhoto = (params: TAddMyPhotoParam) => fetch<void>('design/user/add_image', params)
 
-// 上传接口
 export const upload = ({ file, folder = 'user' }: any, cb: Function) => {
   const formData = new FormData()
   formData.append('file', file)

@@ -1,11 +1,9 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2021-08-10 15:42:12
- * @Description: 处理与目标组件相关
  * @LastEditors: ShawnPhang
  * @LastEditTime: 2022-03-13 16:17:54
  */
-// TODO: Group类型比较特殊，所以需要全量循环并判断是否为group
 const arr = ['w-text', 'w-image', 'w-svg', 'w-group', 'w-qrcode']
 
 export function getTarget(currentTarget: HTMLElement): Promise<HTMLElement | null> {

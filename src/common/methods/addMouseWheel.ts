@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2022-03-25 13:43:07
- * @Description: 添加滚动监听
  * @LastEditors: ShawnPhang <site: book.palxp.com>, Jeremy Yu <https://github.com/JeremyYu-cn>
  * @LastEditTime: 2024-03-02 11:50:00
  */
@@ -19,11 +18,6 @@ export default function(el: HTMLElement | string, cb: Function, altLimit: boolea
   const onWheel = (e: any) => {
     const ev = e || window.event
     const down = ev.wheelDelta ? ev.wheelDelta < 0 : ev.detail > 0
-    // if (down) {
-    //   console.log('鼠标滚轮向下---------')
-    // } else {
-    //   console.log('鼠标滚轮向上++++++++++')
-    // }
     if ((altLimit && controlState.dAltDown) || !altLimit) {
       ev.preventDefault()
       cb(down)

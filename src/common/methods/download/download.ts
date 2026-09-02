@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2021-09-30 15:52:59
- * @Description: 下载远程图片
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-08-12 17:01:59
  */
@@ -21,7 +20,6 @@ export default (src: string, cb: TCallBack, fileName?: string) => {
         const randomName = String(new Date().getTime()) + `.${suffix || 'png'}`
         a.download = fileName || randomName
         a.href = event?.target?.result as string
-        // 触发a的单击事件
         a.dispatchEvent(mE)
         resolve(res)
       }

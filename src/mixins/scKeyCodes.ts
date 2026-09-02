@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2024-04-04 00:36:13
- * @Description: 快捷键支持列表
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-04-11 15:05:41
  */

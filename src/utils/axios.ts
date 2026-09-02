@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2021-07-13 02:48:38
- * @Description: 本地测试用户身份写死
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-04-03 20:56:23
  */
@@ -13,7 +12,6 @@ axios.defaults.timeout = 30000
 // const version = app_config.VERSION;
 const baseUrl = () => app_config.API_URL
 
-// 请求拦截器
 axios.interceptors.request.use(
   (config: AxiosRequestConfig) => {
     const url = config.url ?? ""
@@ -38,10 +36,8 @@ axios.interceptors.request.use(
   },
 )
 
-// 响应拦截器
 axios.interceptors.response.use((res: AxiosResponse<any>) => {
     // store.dispatch('hideLoading');
-    // 接口规则：只有正确code为200时返回result结果对象，错误返回整个结果对象
     if (!res.data) {
       return Promise.reject(res)
     }
@@ -119,8 +115,6 @@ const fetch = <T = any> (
 ): Promise<T> => {
   if (params?._noLoading) {
     delete params._noLoading
-  } else {
-    // store.commit('loading', '加载中..');
   }
 
   // Upstream hardcoded a demo JWT here, so every request went out wearing a

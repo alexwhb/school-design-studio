@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2022-02-22 15:06:14
- * @Description: 设置图片类型元素
  * @LastEditors: ShawnPhang <https://m.palxp.cn>, Jeremy Yu <https://github.com/JeremyYu-cn>
  * @LastEditTime: 2024-03-01 20:55:51
  */
@@ -34,11 +33,9 @@ export default async function setItem2Data(item: TItem2DataParam): Promise<Requi
     cloneItem.height = imgHeight = actual.height
   }
   let ratio = 1
-  // 先限制在画布内，保证不超过边界
   if (imgWidth > screenWidth || imgHeight > screenHeight) {
     ratio = Math.min(screenWidth / imgWidth, screenHeight / imgHeight)
   }
-  // 根据画布缩放比例再进行一次调整
   if (ratio < 1) {
     cloneItem.width = cloneItem.width * ratio * (canvasState.dZoom / 100)
     cloneItem.height = cloneItem.height * ratio * (canvasState.dZoom / 100)

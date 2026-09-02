@@ -3,7 +3,6 @@ export const config = app_config
 
 type TComObj = Record<string,any>
 
-// 判断是否在数组中并返回下标
 export const isInArray = (arr: (string | number)[], value: (string | number)) => {
   const index = arr.indexOf(value)
   if (index >= 0) {
@@ -12,7 +11,6 @@ export const isInArray = (arr: (string | number)[], value: (string | number)) =>
   return false
 }
 
-/** 删除多个对象元素 */
 export const deleteSome = <R extends TComObj, T extends TComObj = TComObj>(obj: T, arr: string[]) => {
   arr.forEach((key) => {
     delete obj[key]
@@ -20,7 +18,6 @@ export const deleteSome = <R extends TComObj, T extends TComObj = TComObj>(obj: 
   return obj as R extends T ? R : Partial<T>
 }
 
-/** 拾取对象元素 */
 export const pickSome = <R extends TComObj, T extends TComObj = TComObj>(obj: T, arr: string[]) => {
   const newObj: Record<string, any> = {}
   arr.forEach((key) => {
@@ -29,13 +26,11 @@ export const pickSome = <R extends TComObj, T extends TComObj = TComObj>(obj: T,
   return newObj as R extends T ? R : Partial<T>
 }
 
-/** 随机数 */
 export const rndNum = (n: number, m: number) => {
   const random = Math.floor(Math.random() * (m - n + 1) + n)
   return random
 }
 
-/** 计算差值 */
 export const findClosestNumber = (target: number, numbers: number[]) => {
   if (!Array.isArray(numbers) || numbers.length === 0) {
     throw new Error('The list cannot be empty')

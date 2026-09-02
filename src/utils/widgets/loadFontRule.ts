@@ -1,15 +1,11 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2023-08-23 17:37:16
- * @Description: 提取字体子集
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-12-28 19:52:55
  */
-/**
- * 只有ttf/otf这种原始字体支持提取，如果服务端不支持该功能请设置false，以保证页面能加载字体。
- */
 import _config from '@/config'
-export const fontMinWithDraw = _config.supportSubFont // true 开启，false 关闭
+export const fontMinWithDraw = _config.supportSubFont
 
 import api from '@/api'
 import { blob2Base64, generateFontStyle } from '@/common/methods/fonts/utils'
@@ -44,7 +40,6 @@ export const font2style = async (fontContent: any, fontData: any = []) => {
 }
 
 function shortText(text: string) {
-  // 文字去重
   const textArr = Array.from(new Set(text.split('')))
   return textArr.join('')
 }

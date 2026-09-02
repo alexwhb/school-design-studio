@@ -16,7 +16,6 @@ import handleTimeout from './utils/timeout'
 const port = process.env.PORT || servicePort
 const app = express()
 
-// 创建目录
 const createFolder = (folder: string) => {
   try {
     fs.accessSync(folder)

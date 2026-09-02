@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2023-07-10 14:58:48
- * @Description: 拖拽优化
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-04-18 16:17:36
  */
@@ -47,7 +46,6 @@ export default class DragHelper {
         this.finish()
       }
     })
-    // 鼠标抬起
     window.addEventListener('mouseup', (e) => {
       const el = getAppRoot()
       if (!el || !e.target) return
@@ -65,18 +63,13 @@ export default class DragHelper {
         }, 10)
       } else this.finish()
     })
-    // 鼠标离开了视窗
     document.addEventListener('mouseleave', (e) => {
       this.finish()
     })
-    // 用户可能离开了浏览器
     window.onblur = () => {
       this.finish()
     }
   }
-  /**
-   * 拖动开始 mousedown
-   */
   public start(e: MouseEvent, finallySize: number) {
     // Callers measure the artwork before starting, so the button may already
     // be back up by the time we get here. Picking the piece up now would leave
@@ -89,12 +82,9 @@ export default class DragHelper {
       if (!app || !e) return
       app.classList.add('drag_active') // Show the grab cursor everywhere
       const target = e.target as HTMLElement
-      // 选中了元素
       this.cloneEl = (target.cloneNode(true) as HTMLElement)
       this.cloneEl.classList.add('flutter')
-      // 初始化数据
       this.init(e, target, finallySize || target.offsetWidth, Math.random())
-      // 加载原图
       // simulate(cloneEl.src, initial.flag)
       this.cloneEl.style.width = `${target.offsetWidth}`
       // e.target.parentElement.parentElement.appendChild(this.cloneEl)
@@ -102,13 +92,12 @@ export default class DragHelper {
       if (!widgetPanel) return
       widgetPanel.appendChild(this.cloneEl)
       this.dragging = true
-      target.classList.add('hide') // 放在最后
+      target.classList.add('hide')
       this.queue.push(() => {
         target.classList.remove('hide')
       })
     }
   }
-  // 开始拖动初始化
   private init(
     { offsetX, offsetY, pageX, pageY, x, y }: MouseEvent,
     { offsetWidth: width, offsetHeight: height }: HTMLElement,
@@ -122,7 +111,6 @@ export default class DragHelper {
       this.moveFlutter(pageX - width / 2, pageY - height / 2, 0, 0.3)
     }, 10)
   }
-  // 改变漂浮元素（合并多个操作）
   private moveFlutter(x: number, y: number, d = 0, lazy = 0) {
     const { width, height, finallySize } = this.initial as TInitial
     let scale: string | null = null
@@ -145,7 +133,6 @@ export default class DragHelper {
     original.pop()
     this.cloneEl.style.cssText = original.concat(arr).join(';') + ';'
   }
-  // 结束/完成处理（动画）
   private finish(done = false) {
     
     if (!this.dragging) {
@@ -170,7 +157,6 @@ export default class DragHelper {
       done ? 0 : 300,
     )
   }
-  // 计算两点之间距离
   private distance({ pageX, pageY }: { pageX: number, pageY: number }) {
     const { pageX: x, pageY: y } = this.initial as TInitial
     return Math.hypot(pageX - x, pageY - y)

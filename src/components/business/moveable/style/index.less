@@ -1,8 +1,6 @@
-// 2层 .zk-moveable-style 增加css权重层级，避免太多 important
 .zk-moveable-style.zk-moveable-style {
   --moveable-color: #6ccfff;
 
-  // 缩放圆点
   .moveable-control {
     background: #fff;
     box-sizing: border-box;
@@ -21,7 +19,6 @@
     //   display: none;
     // }
 
-    // 上下缩放点
     &.moveable-n,
     &.moveable-s {
       width: 16px;
@@ -30,7 +27,6 @@
       margin-left: -8px;
       border-radius: 6px;
     }
-    // 左右缩放点
     &.moveable-e,
     &.moveable-w {
       width: 8px;
@@ -86,7 +82,6 @@
     line-height: 1.5;
   }
 
-  // 旋转按钮
   .moveable-rotation {
     height: 35px;
     display: block;
@@ -101,7 +96,6 @@
       // margin-top: -11px;
     }
 
-    // 旋转的操作条
     .moveable-rotation-line {
       display: none;
     }

@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2023-07-12 19:36:16
- * @Description: 下载 blob
  * @LastEditors: ShawnPhang <site: book.palxp.com>
  * @LastEditTime: 2023-07-12 19:36:41
  */

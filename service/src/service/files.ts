@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2024-05-16 18:25:10
- * @Description: 文件操作示例代码，仅供参考
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-08-12 18:52:18
  */
@@ -13,18 +12,17 @@ const { checkCreateFolder, randomCode, copyFile, send } = require('../utils/tool
 const FileUrl = 'http://localhost:7001/static/'
 
 
-// api/file/upload 上传接口
+// api/file/upload
 export async function upload(req: Request, res: Response) {
   /**
-   * @api {post} /api/file/upload 上传接口
+   * @api {post} /api/file/upload
    * @apiVersion 1.0.0
    * @apiGroup file
    *
-   * @apiParam {File} file 二进制文件
-   * @apiParam {String} folder 目标文件夹，空为根目录
-   * @apiParam {String} name 文件名，默认随机
+   * @apiParam {File} file
+   * @apiParam {String} folder
+   * @apiParam {String} name
    *
-   * @apiSuccess (__组__) {__类型__} __字段名__ __返回字段说明__
    */
   const form = new multiparty.Form()
   form.parse(req, async function (err: any, fields: any, files: any) {
@@ -39,7 +37,7 @@ export async function upload(req: Request, res: Response) {
       const Suffix = originalFilename.split('.').pop() || fileType || 'png'
       const { folder = '', name = `${randomCode(12)}.${Suffix}` } = fields
       const folderPath = `${filePath}${folder ? `${folder}/` : ''}`
-      checkCreateFolder(folderPath) // 检测对应目录是否存在
+      checkCreateFolder(folderPath)
       const targetPath = `${folderPath}${name}`
       copyFile(file.path, targetPath)
         .then(() => {

@@ -47,7 +47,6 @@ export const registerMoveableElement = (el: HTMLElement, { onmousedown, onmousem
   }
 
   const _onmousedown = (event: MouseEvent) => {
-    // elRect 可能不准确，这里更新一下
     elRect = el.getBoundingClientRect()
 
     update(event)

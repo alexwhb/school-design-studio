@@ -14,7 +14,6 @@ export const parseBackgroundValue = (value: string): string => {
 }
 
 /**
- * 显示全局提示
  * @param content
  * @param tooltipVisible
  * @returns

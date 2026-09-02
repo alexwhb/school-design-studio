@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2022-01-31 10:45:53
- * @Description: 用于修改transform字符串
  * @LastEditors: ShawnPhang <site: book.palxp.com>, Jeremy Yu <https://github.com/JeremyYu-cn>
  * @LastEditTime: 2024-03-02 11:50:00
  */

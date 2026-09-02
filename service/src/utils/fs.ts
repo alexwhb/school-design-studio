@@ -1,7 +1,6 @@
 /*
  * @Author: ShawnPhang
  * @Date: 2024-05-28 17:10:51
- * @Description: 文件操作相关方法
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-08-12 06:29:58
  */
@@ -32,7 +31,6 @@ export function copyFile(sourceFile: string, destinationFile: string): Promise<v
   })
 }
 
-// 读取目录
 export function filesReader(directoryPath: string) {
   return new Promise((resolve) => {
     try {
@@ -50,8 +48,8 @@ export function filesReader(directoryPath: string) {
             // link: FileUrl + directoryPath,
             url: `${FileUrl + directoryPath}/${file}`,
             // filepath: StaticPath + filePath
-            // size: stats.size, // 文件大小
-            // modified: stats.mtime // 最后修改时间
+            // size: stats.size,
+            // modified: stats.mtime
           }
           filesArray.push(fileInfo)
         }
@@ -64,7 +62,6 @@ export function filesReader(directoryPath: string) {
   })
 }
 
-// 读取文件
 export function readFile(directoryPath: string) {
   return new Promise((resolve) => {
     try {
