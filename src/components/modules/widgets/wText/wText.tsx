@@ -239,10 +239,13 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   }
 
   /**
-   * The keys the box takes for itself. The editor's own shortcuts leave a
-   * contentEditable alone, so Escape has to end the edit from here — and
-   * Ctrl+B, which the browser would apply on its own, goes through the session
-   * so the panel sees it.
+   * The keys the box takes for itself.
+   *
+   * Escape ends the edit here rather than leaving it to the editor's own
+   * handler, which would do no more than blur the field: the change wants an
+   * undo step round it, and a picker standing open over the box should have
+   * the key first. Ctrl+B and its two neighbours the browser would apply on
+   * its own, but they go through the session so the panel sees what happened.
    */
   function keydown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key === 'Escape') {
@@ -396,8 +399,9 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
           spellCheck={spellcheck}
           // Real markup, not plaintext-only: a bolded word and a list item are
           // both elements, and the caret has to be able to move through them.
-          // The editor's global shortcuts stand aside for an element like
-          // this, so the keys the box needs are handled in `keydown`.
+          // Every shortcut the editor has checks for itself whether text is
+          // being typed — see mixins/shortcuts.ts — so the only keys handled
+          // in `keydown` are the ones this box wants for its own.
           contentEditable={editable}
           suppressContentEditableWarning
           onInput={() => writingText()}
