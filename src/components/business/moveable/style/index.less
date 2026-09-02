@@ -107,3 +107,19 @@
   left: -9999px;
   top: -9999px;
 }
+
+// The angle beside the pointer while something is being turned. The same chip
+// as the snap distances, so the two readouts look like one family.
+.ds-rotate-readout {
+  position: fixed;
+  z-index: 3000;
+  pointer-events: none;
+  background: @snap-line;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: @radius-sm;
+  font-size: @text-xs;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

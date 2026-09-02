@@ -25,6 +25,22 @@ const SNAP_THRESHOLD = 5
  */
 const SNAP_TIDY_PX = 1.5
 
+/**
+ * Rotation. Shift turns in steps of ROTATE_STEP; without it, the angles that
+ * matter most — square, and the diagonals — pull the handle in from within
+ * ROTATE_MAGNET_RANGE degrees, gently enough that 43° is still there for the
+ * asking.
+ */
+const ROTATE_STEP = 15
+const ROTATE_MAGNET = 45
+const ROTATE_MAGNET_RANGE = 2
+
+function snapRotation(angle: number, shift: boolean) {
+  if (shift) return Math.round(angle / ROTATE_STEP) * ROTATE_STEP
+  const nearest = Math.round(angle / ROTATE_MAGNET) * ROTATE_MAGNET
+  return Math.abs(angle - nearest) <= ROTATE_MAGNET_RANGE ? nearest : angle
+}
+
 /** One thing Moveable can align against, and which of its lines count. */
 type TElementGuideline = {
   element: Element
@@ -195,6 +211,29 @@ export default function Moveable() {
       )
     }
 
+    /**
+     * The angle, shown beside the pointer while the handle is being dragged.
+     * Moveable has a readout for snap distances but none for rotation, and a
+     * turn is the one transform you cannot judge from the box alone.
+     */
+    let rotateReadout: HTMLElement | null = null
+    function showRotateReadout(angle: number, inputEvent?: MouseEvent) {
+      if (!inputEvent) return
+      if (!rotateReadout) {
+        rotateReadout = document.createElement('div')
+        rotateReadout.className = 'ds-rotate-readout'
+        document.body.appendChild(rotateReadout)
+      }
+      const shown = Math.round(((angle % 360) + 360) % 360)
+      rotateReadout.textContent = `${shown}°`
+      rotateReadout.style.left = `${inputEvent.clientX + 14}px`
+      rotateReadout.style.top = `${inputEvent.clientY + 14}px`
+    }
+    function hideRotateReadout() {
+      rotateReadout?.remove()
+      rotateReadout = null
+    }
+
     const containerEl = document.querySelector('#main') as HTMLElement
     if (!containerEl) return
     moveable = new MoveableClass(containerEl, moveableOptions as any)
@@ -259,11 +298,17 @@ export default function Moveable() {
           holdPosition = null
         }
       })
-      .on('rotate', ({ target, transform }: any) => {
-        target.style.transform = transform
+      .on('rotate', ({ target, transform, rotate, inputEvent }: any) => {
+        const angle = snapRotation(rotate, !!inputEvent?.shiftKey)
+        // The string Moveable hands over carries exactly this term, and rotateEnd
+        // reads the angle back out of the style, so this is the one place to
+        // put the snapped value.
+        target.style.transform = angle === rotate ? transform : transform.replace(`rotate(${rotate}deg)`, `rotate(${angle}deg)`)
         target.style.height = widgetState.dActiveElement?.height + 'px'
+        showRotateReadout(angle, inputEvent)
       })
       .on('rotateEnd', (e: any) => {
+        hideRotateReadout()
         const tf = e.target.style.transform
         const iof = tf.indexOf('rotate')
         let rotate = ''
@@ -659,6 +704,7 @@ export default function Moveable() {
 
     return () => {
       clearTimeout(emptyTimer)
+      hideRotateReadout()
       mainEl?.removeEventListener('scroll', onScroll)
       unsubActive()
       unsubShowMoveable()

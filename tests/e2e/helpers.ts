@@ -71,6 +71,38 @@ export async function rotateWidget(page: Page, index = 0) {
   await page.waitForTimeout(400)
 }
 
+/**
+ * Turns the selected widget by about `degrees`, clockwise, by dragging the
+ * rotation handle round an arc — the same sweep as rotateWidget, to an angle
+ * of your choosing. Holding Shift is what the snapping test is about.
+ */
+export async function rotateWidgetBy(page: Page, degrees: number, { shift = false, index = 0 } = {}) {
+  const handle = page.locator('.moveable-rotation .moveable-control').first()
+  await handle.waitFor()
+  const grip = await handle.boundingBox()
+  const box = await page.locator(WIDGET).nth(index).boundingBox()
+  const cx = box!.x + box!.width / 2
+  const cy = box!.y + box!.height / 2
+  const gx = grip!.x + grip!.width / 2
+  const gy = grip!.y + grip!.height / 2
+  const radius = Math.hypot(gx - cx, gy - cy)
+  // From wherever the handle is now, which is straight below the centre only
+  // for a widget that has not been turned yet.
+  const start = Math.atan2(gy - cy, gx - cx)
+  const sweep = (degrees * Math.PI) / 180
+
+  if (shift) await page.keyboard.down('Shift')
+  await page.mouse.move(gx, gy)
+  await page.mouse.down()
+  for (let step = 1; step <= 12; step++) {
+    const angle = start + sweep * (step / 12)
+    await page.mouse.move(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius)
+  }
+  await page.mouse.up()
+  if (shift) await page.keyboard.up('Shift')
+  await page.waitForTimeout(400)
+}
+
 /** The rotation the widget is actually drawn with, in degrees, or 0 for none. */
 export async function widgetRotation(page: Page, index = 0) {
   return page.evaluate(

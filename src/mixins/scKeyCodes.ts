@@ -107,6 +107,10 @@ export default [
     info: `${ctrlKey} + Shift + [`,
   },
   {
+    feat: `Rotate in 15° steps`,
+    info: `Shift + drag the rotation handle`,
+  },
+  {
     feat: `Deselect`,
     info: `ESC`,
   },

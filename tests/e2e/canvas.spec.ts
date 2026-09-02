@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { WIDGET, addText, openEditor, selectFirstWidget } from './helpers'
+import { WIDGET, addText, openEditor, rotateWidgetBy, selectFirstWidget, widgetRotation } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
@@ -79,4 +79,50 @@ test('the Arrange row in the settings panel brings a layer to the front', async 
   await page.locator('#style-panel .icon-item-select .list-item[aria-label="Bring to front"]').click()
   await page.waitForTimeout(300)
   expect(await widgetIds(page)).toEqual([before[1], before[0]])
+})
+
+/* --------------------------------------------------------------- rotation */
+
+test('holding Shift while rotating lands on a multiple of 15 degrees', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+
+  await rotateWidgetBy(page, 37, { shift: true })
+  const turned = await widgetRotation(page)
+  expect(turned).toBeGreaterThan(20)
+  expect(Math.abs(turned) % 15).toBe(0)
+})
+
+test('without Shift the angle is whatever you turned it to, unless it is nearly a diagonal', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+
+  await rotateWidgetBy(page, 37)
+  const free = await widgetRotation(page)
+  expect(free).toBeGreaterThan(30)
+  expect(free).toBeLessThan(42)
+  expect(Math.abs(free) % 15).not.toBe(0)
+
+  // Another eight degrees or so brings it within reach of 45, which takes it.
+  await rotateWidgetBy(page, 7)
+  expect(await widgetRotation(page)).toBe(45)
+})
+
+test('the angle is read out beside the pointer while turning', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  const handle = page.locator('.moveable-rotation .moveable-control').first()
+  const grip = (await handle.boundingBox())!
+  const box = (await page.locator(WIDGET).first().boundingBox())!
+  const cx = box.x + box.width / 2
+  const cy = box.y + box.height / 2
+  const radius = Math.hypot(grip.x + grip.width / 2 - cx, grip.y + grip.height / 2 - cy)
+
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+  await page.mouse.down()
+  const angle = Math.PI / 2 + Math.PI / 4
+  await page.mouse.move(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius, { steps: 6 })
+  await expect(page.locator('.ds-rotate-readout')).toHaveText('45°')
+  await page.mouse.up()
+  await expect(page.locator('.ds-rotate-readout')).toHaveCount(0)
 })
