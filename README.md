@@ -482,6 +482,74 @@ grouped elements are in it too.
 No regular expressions, no searching of layer or page names, no search across
 saved designs. This is for a school office.
 
+## Bulk documents
+
+**File → Make one for each person…** Forty certificates for a year group, a
+name badge for everyone coming to the open evening, an award letter to each
+family. The design is made once, with `{{Name}}` typed where the name goes;
+the list of people is pasted from wherever it already lives; and every copy is
+filled in.
+
+This is the job that otherwise gets done by hand, and the one where a mistake
+is only found at the printer. The office has the list already — in the
+management system, in a spreadsheet, in an email — and what it does not have
+is an afternoon to type forty names into forty copies of the same page.
+
+**The list.** Paste it, or choose a `.csv`, `.tsv` or `.txt` file. The
+separator is worked out from the text (commas, tabs, semicolons, or one name
+per line), quoted cells are honoured so "Lovelace, Ada" is one name, and blank
+lines are dropped. Whether the first row is column names is guessed — a header
+has no numbers in it, names no column twice, and is a different shape from the
+row beneath it — and shown as a checkbox, so a wrong guess costs one click.
+The parsing is pure functions in `src/utils/tabular.ts`, apart from the dialog
+that uses them.
+
+**The fields.** A field is `{{anything}}` typed into a text box. The dialog
+lists every field the template asks for and the column it will read from,
+matched by name without regard to case or spacing — `{{Pupil}}` finds a
+column called `pupil`. A field with no matching column is flagged and left as
+typed, or can be pointed at a column by hand. The list's columns are shown as
+chips: clicking one puts `{{Column}}` on the end of the selected text box, or
+into a new text box when nothing is selected, so a teacher can start from any
+template and add the fields it is missing. Fields named `school.*` belong to
+the brand kit, which fills them from the school's own details, and are listed
+as such rather than offered for matching.
+
+Filling goes through `src/utils/mergeFields.ts`, which finds fields in the
+rendered text and splices values back through the same machinery find and
+replace uses — so a field somebody has half-bolded still fills, and markup is
+never touched.
+
+**Two outputs.**
+
+- **Add pages to this design** puts the filled copies in after the template,
+  one page per person per template page, each named after its person so the
+  strip reads as a register. Every element is renumbered the way a duplicated
+  page is. The template can be removed in the same step, and the whole batch is
+  **one undo**. Use this when the copies want a look-over or a touch-up before
+  they go out.
+- **Download a PDF** draws the copies straight to a file, one page per person,
+  at the quality chosen under Export, and adds nothing to the design. The
+  filename says how many are in it — `Sports Day certificate – 42 copies.pdf`
+  — and a running count with a Cancel button sits in the dialog while it draws.
+  Use this when the list is long.
+
+The choice is offered as "This page" or "All pages": a two-sided certificate,
+or a letter with a badge on its second page, copies both pages per person.
+
+**Two caps, for two reasons.** A design holds 50 pages (see Pages), so a list
+that would take it past that is steered to the PDF, and the dialog says so
+before anything is made rather than after. A PDF run takes up to 500 people at
+a time: each page is drawn through the browser and held in memory until the
+file is assembled, and five hundred pages at Print quality is a few minutes and
+a few hundred megabytes, which is about where a browser tab stops being a
+reasonable place to do it. A whole school is usually more than one list anyway.
+
+The copies for a PDF are rendered without ever being added to the design: the
+page renderer (`renderLayout` in `renderPage.ts`) puts a page on the canvas
+directly, so the autosave and the undo stack see no change and the page strip
+does not fill with copies.
+
 ## Spelling
 
 On by default, and switched off in **File → Check spelling**.

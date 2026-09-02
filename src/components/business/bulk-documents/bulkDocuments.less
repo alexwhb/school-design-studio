@@ -1,0 +1,274 @@
+.el-dialog.ds-bulk-documents {
+  .steps {
+    display: flex;
+    gap: 18px;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+    &__item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: @ink-4;
+      font-size: @text-sm;
+      font-weight: 500;
+      &.is-on {
+        color: @ink;
+      }
+      &.is-done {
+        color: @ink-2;
+      }
+    }
+    &__num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid @line;
+      font-size: @text-xs;
+      .is-on > & {
+        border-color: @accent;
+        background: @accent;
+        color: @accent-on;
+      }
+      .is-done > & {
+        border-color: @accent;
+        color: @accent;
+      }
+    }
+  }
+
+  .block {
+    & + .block {
+      margin-top: 18px;
+    }
+    &__title {
+      .section-label();
+      margin: 0 0 8px;
+    }
+  }
+
+  .lead,
+  .hint,
+  .empty,
+  .reserved,
+  .quality-note {
+    margin: 0;
+    color: @ink-3;
+    font-size: @text-sm;
+    line-height: 1.45;
+  }
+  .lead {
+    margin-bottom: 10px;
+  }
+
+  .paste {
+    width: 100%;
+    min-height: 120px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: @text-base;
+    line-height: 1.4;
+  }
+
+  .list-tools {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 10px;
+    .el-upload {
+      display: inline-block;
+    }
+  }
+  .people-count {
+    margin-left: auto;
+    color: @ink-2;
+    font-size: @text-base;
+    font-weight: 500;
+  }
+
+  .preview {
+    margin-top: 12px;
+    .control-surface();
+    overflow: auto;
+    max-height: 190px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: @text-sm;
+    }
+    th,
+    td {
+      padding: 5px 10px;
+      text-align: left;
+      white-space: nowrap;
+      border-bottom: 1px solid @line-soft;
+    }
+    th {
+      .section-label();
+      background: @surface-2;
+    }
+    td {
+      color: @ink-2;
+    }
+    &__more {
+      margin: 0;
+      padding: 6px 10px;
+      color: @ink-4;
+      font-size: @text-xs;
+    }
+  }
+
+  .step--fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+    align-items: center;
+    padding: 6px 0;
+    & + .field-row {
+      border-top: 1px solid @line-soft;
+    }
+    &__name {
+      font-size: @text-base;
+      color: @ink;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    &__flag {
+      grid-column: 1 / -1;
+      color: @danger;
+      font-size: @text-xs;
+    }
+    &.is-unmatched &__name {
+      color: @danger;
+    }
+  }
+
+  .reserved {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid @line-soft;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    padding: 4px 9px;
+    .control-surface();
+    border-radius: @radius-pill;
+    color: @ink;
+    font-family: inherit;
+    font-size: @text-sm;
+    cursor: pointer;
+    &:hover {
+      border-color: @accent;
+      background: @accent-a25;
+    }
+  }
+  .hint {
+    margin-top: 12px;
+  }
+
+  // The output cards and the scope buttons share the treatment the resize
+  // dialog uses: a hairline that becomes the accent.
+  .choice {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid @line;
+    border-radius: @radius;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+    & + .choice {
+      margin-top: 6px;
+    }
+    &:hover {
+      border-color: @accent;
+    }
+    &.is-on {
+      border-color: @accent;
+      background: @accent-a25;
+    }
+    &__name {
+      color: @ink;
+      font-size: @text-base;
+      font-weight: 500;
+    }
+    &__hint {
+      color: @ink-3;
+      font-size: @text-sm;
+      line-height: 1.35;
+    }
+  }
+
+  .scopes {
+    display: flex;
+    gap: 6px;
+  }
+  .scope {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid @line;
+    border-radius: @radius;
+    background: transparent;
+    color: @ink-2;
+    font-family: inherit;
+    font-size: @text-base;
+    cursor: pointer;
+    &:hover {
+      border-color: @accent;
+      color: @ink;
+    }
+    &.is-on {
+      border-color: @accent;
+      background: @accent-a25;
+      color: @ink;
+    }
+  }
+
+  .summary {
+    margin: 16px 0 0;
+    padding: 8px 10px;
+    .control-surface();
+    background: @surface-2;
+    color: @ink-2;
+    font-size: @text-base;
+  }
+
+  .cap-note {
+    margin: 10px 0 0;
+    padding: 8px 10px;
+    border: 1px solid @danger;
+    border-radius: @radius;
+    color: @danger;
+    font-size: @text-sm;
+    line-height: 1.4;
+  }
+
+  .remove-toggle,
+  .quality-note {
+    display: block;
+    margin-top: 12px;
+  }
+
+  .progress {
+    margin-right: auto;
+    color: @ink-2;
+    font-size: @text-base;
+  }
+}

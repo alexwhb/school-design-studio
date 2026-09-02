@@ -13,9 +13,10 @@ import { setPathEditUuid, setShowMoveable } from '@/store/control'
 import { setDPage, updateZoom } from '@/store/canvas'
 import { getWidgets, setDWidgets } from '@/store/widget/widget'
 import { selectWidget } from '@/store/widget/select'
+import { setLayoutsChange } from '@/store/force'
 import { rasterBleed, rasterizeElement, subtreeNeedsRasterizing } from './rasterizeElement'
 import { withTimeout } from './utils'
-import type { TdWidgetData } from '@/store/types'
+import type { TdLayout, TdWidgetData } from '@/store/types'
 
 const CANVAS_ID = 'page-design-canvas'
 
@@ -274,6 +275,13 @@ export type PageRenderer = {
   /** `scale` multiplies the output resolution; 1 is the design's true pixel size. */
   renderPage: (pageIndex: number, scale?: number) => Promise<string | null>
   renderWidget: (pageIndex: number, widget: TdWidgetData, scale?: number) => Promise<string | null>
+  /**
+   * Draws a page that is not part of the design — a filled copy made for bulk
+   * documents — without it ever entering `dLayouts`, so nothing is added to the
+   * design, the autosave and the undo stack see no change, and the page strip
+   * does not fill with copies.
+   */
+  renderLayout: (layout: TdLayout, scale?: number) => Promise<string | null>
 }
 
 /**
@@ -303,6 +311,20 @@ export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Prom
     }
   }
 
+  // Assigned directly rather than through setDWidgets and setDPage: both write
+  // what they are given back into dLayouts[dCurrentPage], which would put the
+  // copy's artwork onto the page it was copied from. Telling the board the list
+  // is new is what makes it repaint (see showPage); the finally block below
+  // puts the real page back the same way it does after any other render.
+  const showLayout = async (layout: TdLayout) => {
+    widgetState.dWidgets = layout.layers
+    canvasState.dPage = layout.global
+    setLayoutsChange()
+    selectWidget({ uuid: '-1' })
+    await nextTick()
+    await afterPaint()
+  }
+
   // Capture at 100% so the output is the design's true pixel size regardless
   // of how far the user happens to be zoomed in.
   const scaleForZoom = () => 100 / (canvasState.dZoom || 100)
@@ -318,6 +340,11 @@ export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Prom
       const el = document.getElementById(String(widget.uuid))
       return el ? capture(el, scaleForZoom() * scale) : null
     },
+    async renderLayout(layout, scale = 1) {
+      await showLayout(layout)
+      const el = document.getElementById(CANVAS_ID)
+      return el ? capture(el, scaleForZoom() * scale) : null
+    },
   }
 
   try {
@@ -325,6 +352,10 @@ export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Prom
   } finally {
     canvasState.dCurrentPage = originalPage
     setDWidgets(getWidgets())
+    // Say the list is a different one, or the board keeps drawing whatever was
+    // rendered last: a page whose layers look the same as this one's — a copy
+    // of it, say — compares equal to valtio's snapshot. See showPage.
+    setLayoutsChange()
     setDPage(widgetState.dLayouts[originalPage].global)
     updateZoom(originalZoom)
     selectWidget({ uuid: '-1' })

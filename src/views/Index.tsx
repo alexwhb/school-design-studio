@@ -15,6 +15,7 @@ import DownloadProgress from '@/components/common/ProgressLoading/DownloadProgre
 import CreateDesign, { type CreateDesignHandle } from '@/components/business/create-design/CreateDesign'
 import ResizeDesign, { type ResizeDesignHandle } from '@/components/business/resize-design/ResizeDesign'
 import FindReplace, { type FindReplaceHandle } from '@/components/business/find-replace/FindReplace'
+import BulkDocuments, { type BulkDocumentsHandle } from '@/components/business/bulk-documents/BulkDocuments'
 import PresentMode, { type PresentModeHandle } from '@/components/business/presentation/PresentMode'
 import Tour, { type TourHandle } from './components/Tour'
 import HeaderOptions, { type HeaderOptionsHandle } from './components/HeaderOptions'
@@ -55,6 +56,7 @@ export default function Index() {
   const createDesignRef = useRef<CreateDesignHandle | null>(null)
   const resizeDesignRef = useRef<ResizeDesignHandle | null>(null)
   const findReplaceRef = useRef<FindReplaceHandle | null>(null)
+  const bulkDocumentsRef = useRef<BulkDocumentsHandle | null>(null)
   const presentRef = useRef<PresentModeHandle | null>(null)
   const loaded = useRef(false)
   const tourRef = useRef<TourHandle | null>(null)
@@ -170,6 +172,7 @@ export default function Index() {
     newDesign: () => createDesignRef.current?.open(),
     resizeDesign: () => resizeDesignRef.current?.open(),
     findReplace: () => findReplaceRef.current?.open(),
+    bulkDocuments: () => bulkDocumentsRef.current?.open(),
   }
 
   const dealWith = (fnName: string, params?: any) => {
@@ -265,6 +268,7 @@ export default function Index() {
       <CreateDesign ref={createDesignRef} />
       <ResizeDesign ref={resizeDesignRef} />
       <FindReplace ref={findReplaceRef} />
+      <BulkDocuments ref={bulkDocumentsRef} getTitle={getDesignTitle} />
       <PresentMode ref={presentRef} />
     </div>
   )

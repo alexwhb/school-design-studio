@@ -5,6 +5,7 @@ import Dropdown, { DropdownItem } from '@/components/ui/DropdownMenu'
 import message from '@/components/ui/message'
 import exportPptx, { type PptxMode } from '@/common/methods/export/exportPptx'
 import exportPdf, { DESIGN_DPI, type ExportScale } from '@/common/methods/export/exportPdf'
+import { exportQuality, setExportScale } from '@/common/methods/export/quality'
 import { withPageRenderer } from '@/common/methods/export/renderPage'
 import { canvasState, widgetState } from '@/store/state'
 import { cx } from '@/utils/dom'
@@ -34,7 +35,9 @@ export default function ExportMenu({ getTitle, onSelect, onProgress }: Props) {
   const { dPage } = useSnapshot(canvasState)
   const [busy, setBusy] = useState(false)
   const [open, setOpen] = useState(false)
-  const [scale, setScale] = useState<ExportScale>(1)
+  // Shared rather than local, so a bulk-document PDF comes out at the same quality.
+  const { scale } = useSnapshot(exportQuality)
+  const setScale = setExportScale
 
   /** What the export will actually produce, in both the units people think in. */
   const inches = (px: number) => Math.round((px / DESIGN_DPI) * 10) / 10

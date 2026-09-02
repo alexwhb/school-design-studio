@@ -75,18 +75,16 @@ export function addPage() {
 }
 
 /**
- * Copies a page, artwork and all, and moves to the copy.
+ * A copy of a page, artwork and all, that can stand in the same design as the
+ * original.
  *
  * Every widget needs a new uuid: two copies of the same id on one design would
  * fight over selection, and grouped elements point at their container by id, so
  * the whole page is renumbered together and the parent links are rewritten to
- * match.
+ * match. Duplicating a page and making one page per person (bulkPages.ts) both
+ * start from here.
  */
-export function duplicatePage(index: number) {
-  if (widgetState.dLayouts.length >= MAX_PAGES) return
-  const source = widgetState.dLayouts[index]
-  if (!source) return
-
+export function copyLayout(source: TdLayout): TdLayout {
   const copy: TdLayout = JSON.parse(JSON.stringify(source))
   const renamed = new Map<string, string>()
   for (const widget of copy.layers) {
@@ -98,6 +96,16 @@ export function duplicatePage(index: number) {
     // '-1' is the page itself, which is not renumbered.
     if (widget.parent && renamed.has(widget.parent)) widget.parent = renamed.get(widget.parent) as string
   }
+  return copy
+}
+
+/** Copies a page and moves to the copy. */
+export function duplicatePage(index: number) {
+  if (widgetState.dLayouts.length >= MAX_PAGES) return
+  const source = widgetState.dLayouts[index]
+  if (!source) return
+
+  const copy = copyLayout(source)
   copy.global.name = `${source.global.name || 'Page'} copy`
 
   widgetState.dLayouts.splice(index + 1, 0, copy)

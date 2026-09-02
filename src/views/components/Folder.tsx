@@ -53,6 +53,9 @@ export default function Folder({ onSelect, showGuides, children }: Props) {
           <DropdownItem onSelect={() => onSelect('findReplace')}>
             <div className="item">Find and replace…</div>
           </DropdownItem>
+          <DropdownItem onSelect={() => onSelect('bulkDocuments')}>
+            <div className="item">Make one for each person…</div>
+          </DropdownItem>
           <DropdownItem onSelect={openPSD}>Import file</DropdownItem>
           <DropdownItem divided onSelect={() => onSelect('save')}>
             Save
