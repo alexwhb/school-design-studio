@@ -13,7 +13,15 @@ let checkCtrl: any
 export function handleKeydowm(instance: ShortcutInstance) {
   return (e: any) => {
     const nodeName = e.target.nodeName
-    if (ignoreNode.indexOf(nodeName) !== -1 || (nodeName === 'DIV' && e.target.contentEditable === 'true')) {
+    // A field is a field and takes every key. Text being edited in the artwork
+    // is not: the shortcuts that are still wanted there — Ctrl+S, the zoom, the
+    // key that starts the presentation — are wanted precisely while somebody is
+    // typing the words. So each case guards itself on `editable` or on whether
+    // the caret is in the artwork, and there is no blanket rule here. Upstream
+    // had one for a contentEditable div; it never fired, because a text layer
+    // used to be `plaintext-only` rather than `true`, and every case was
+    // written round its absence.
+    if (ignoreNode.indexOf(nodeName) !== -1) {
       return
     }
     const ctrl = e.key === 'Control' || e.key === 'Meta'

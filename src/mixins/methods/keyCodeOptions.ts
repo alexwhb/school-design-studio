@@ -75,11 +75,10 @@ export default function keyCodeOptions(e: any, params: any) {
  * True while somebody is typing into the artwork, so a letter is a letter
  * rather than a shortcut.
  *
- * The caller's own guard misses this: it tests `contentEditable === 'true'`,
- * and a text layer is `plaintext-only`. Every other key handled here already
- * checks `editable` for itself, and Escape wants the keystroke precisely so it
- * can end the edit — so the guard is fixed here rather than there, where
- * widening it would take Escape away from the text it is meant to leave.
+ * The caller's own guard is about fields — INPUT and TEXTAREA — and text in the
+ * artwork is not one: Ctrl+S and the zoom are wanted while somebody is typing
+ * the words. So every key handled here checks for itself, this being the check
+ * for the ones that are letters.
  */
 function isTyping() {
   return !!(document.activeElement as HTMLElement | null)?.isContentEditable

@@ -85,9 +85,9 @@ function checkGroupChild(pid: number | string, key: any) {
 }
 
 /**
- * Text being edited keeps the browser's own select-all — its contentEditable is
- * `plaintext-only`, which the INPUT/TEXTAREA guard upstream does not catch, so
- * the check has to happen here the way copy and paste do it.
+ * Text being edited keeps the browser's own select-all. A text layer is a
+ * contentEditable div, which the INPUT/TEXTAREA guard upstream does not catch,
+ * so the check has to happen here the way copy and paste do it.
  */
 function selectAll(e: KeyboardEvent) {
   if (widgetState.dActiveElement?.editable) return
