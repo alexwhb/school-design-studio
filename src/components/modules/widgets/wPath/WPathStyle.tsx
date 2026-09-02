@@ -8,6 +8,9 @@
  * the two and back with nothing else changing under it — which is what Adobe
  * XD's own toggle does.
  *
+ * An open path is a line, and a line takes a head on either end: that section
+ * is its own file, and only mounted while the path is open.
+ *
  * Editing the points is a mode, and the panel is the second way into it after
  * double-clicking the path itself: the same pair of ways the crop tool offers,
  * because a mode entered only by a double-click is a mode nobody finds. Leaving
@@ -19,9 +22,9 @@ import { useSnapshot } from 'valtio'
 import Switch from '@/components/ui/Switch'
 import { controlState, widgetState } from '@/store/state'
 import { setPathEditUuid } from '@/store/control'
-import { updateWidgetData } from '@/store/widget'
 import { PanelSection } from '@/components/ui/PanelSection'
 import ShapeStyle from '../shape/ShapeStyle'
+import LineEnds, { applyLineEnds } from './LineEndsSection'
 import { isClosed, readPoints } from './pathGeometry'
 import './wPathStyle.less'
 
@@ -39,27 +42,32 @@ export default function WPathStyle() {
   return (
     <ShapeStyle
       shape={
-        <PanelSection name="3" title="Path">
-          <div className="path-style__row">
-            <span className="path-style__label">Closed</span>
-            <Switch
-              className="path-style__closed"
-              value={closed}
-              // A path of two points has nothing to close: run the second back
-              // to the first and the return lies on top of the way out.
-              disabled={points.length < 3}
-              onChange={(value) => updateWidgetData({ uuid: active.uuid, key: 'closed', value })}
-            />
-          </div>
-          <div className="path-style__row">
-            <span className="path-style__label">Edit points</span>
-            <Switch className="path-style__edit" value={editing} onChange={(value) => setPathEditUuid(value ? active.uuid : '-1')} />
-          </div>
-          <p className="path-style__hint">
-            {points.length} points. Double-click the path to open it up, then drag a point to move it or Alt-click one to curve or
-            square it off.
-          </p>
-        </PanelSection>
+        <>
+          <PanelSection name="3" title="Path">
+            <div className="path-style__row">
+              <span className="path-style__label">Closed</span>
+              <Switch
+                className="path-style__closed"
+                value={closed}
+                // A path of two points has nothing to close: run the second back
+                // to the first and the return lies on top of the way out.
+                disabled={points.length < 3}
+                onChange={(value) => applyLineEnds(active, { closed: value })}
+              />
+            </div>
+            <div className="path-style__row">
+              <span className="path-style__label">Edit points</span>
+              <Switch className="path-style__edit" value={editing} onChange={(value) => setPathEditUuid(value ? active.uuid : '-1')} />
+            </div>
+            <p className="path-style__hint">
+              {points.length} points. Double-click the path to open it up, then drag a point to move it or Alt-click one to curve or
+              square it off.
+            </p>
+          </PanelSection>
+          {/* Only a line has ends to put anything on; a closed path keeps its
+              setting out of sight in case it is opened again. */}
+          {closed ? null : <LineEnds active={active} />}
+        </>
       }
     />
   )

@@ -12,7 +12,8 @@
  * The tools split into two. A drag tool is pulled out of the page in one press
  * and comes out at whatever size it was pulled to; the pen is a point at a time
  * and is not finished until it is told it is, and it is drawn by its own
- * component. Everything the Tools panel shows is common to both and lives in
+ * component. The line is a drag too, but it is pulled from one point to another
+ * rather than out of a box, so it has a component of its own as well. Everything the Tools panel shows is common to both and lives in
  * `drawTools`; what a drag needs to make a shape out of a rectangle is in
  * `dragTools`, which is what `DrawShape` reads and what makes "is this drag
  * mine?" a lookup rather than a list of names.
@@ -21,7 +22,7 @@
  * held, so the two cannot drift apart without the compiler noticing.
  */
 import type { ComponentType } from 'react'
-import { EllipseIcon, PenIcon, PolygonIcon, RectangleIcon } from '@/components/ui/icons'
+import { EllipseIcon, LineIcon, PenIcon, PolygonIcon, RectangleIcon } from '@/components/ui/icons'
 import { wEllipseSetting } from '@/components/modules/widgets/wEllipse/wEllipseSetting'
 import { wPolygonSetting } from '@/components/modules/widgets/wPolygon/wPolygonSetting'
 import { wRectSetting } from '@/components/modules/widgets/wRect/wRectSetting'
@@ -51,7 +52,7 @@ export type TDragToolSpec = TDrawToolSpec & {
 }
 
 /** In the order Adobe XD has them, which is also the order of their shortcuts. */
-export const drawToolOrder: TDrawTool[] = ['rect', 'ellipse', 'polygon', 'pen']
+export const drawToolOrder: TDrawTool[] = ['rect', 'ellipse', 'polygon', 'line', 'pen']
 
 /** The tools a shape is pulled out of the page with, in one press. */
 export const dragTools: Record<TDragTool, TDragToolSpec> = {
@@ -87,9 +88,15 @@ export const dragTools: Record<TDragTool, TDragToolSpec> = {
   },
 }
 
-/** Every tool the panel lists, which is the drag tools and the pen. */
+/** Every tool the panel lists: the drag tools, the line and the pen. */
 export const drawTools: Record<TDrawTool, TDrawToolSpec> = {
   ...dragTools,
+  line: {
+    label: 'Line',
+    desc: 'Drag a straight line, then put an arrowhead on either end',
+    Icon: LineIcon,
+    shortcut: 'L',
+  },
   pen: {
     label: 'Pen',
     desc: 'Click a point at a time to draw a line, or close it into a shape',

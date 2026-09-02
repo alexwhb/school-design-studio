@@ -35,6 +35,7 @@ import { canvasState } from '@/store/state'
 import { updateWidgetData } from '@/store/widget/widget'
 import type { TdWidgetData } from '@/store/types'
 import { widgetBorder } from '../widgetBorder'
+import { endsPad } from './lineEnds'
 import {
   clonePoints,
   isClosed,
@@ -68,7 +69,7 @@ export default function PointHandles({ params }: { params: TdWidgetData }) {
   const points = readPoints(p)
   const closed = isClosed(p)
   const stroke = widgetBorder(p)?.width || 0
-  const box = paintBox(p.width, p.height, stroke)
+  const box = paintBox(p.width, p.height, stroke, endsPad(p))
 
   // Re-registered each render rather than once, so the handler always closes
   // over the path's current size and points: both change under it, and a stale
@@ -95,7 +96,7 @@ export default function PointHandles({ params }: { params: TdWidgetData }) {
     if (params.rotate) return
     const width = widgetBorder(params)?.width || 0
     const frame = { left: params.left, top: params.top, width: params.width, height: params.height }
-    const fitted = refitFrame(readPoints(params), isClosed(params), frame, width)
+    const fitted = refitFrame(readPoints(params), isClosed(params), frame, width, endsPad(params))
     if (!fitted) return
     updateWidgetData({ uuid: params.uuid, key: 'points', value: fitted.points })
     updateWidgetData({ uuid: params.uuid, key: 'left', value: fitted.box.left })
@@ -143,7 +144,7 @@ export default function PointHandles({ params }: { params: TdWidgetData }) {
       moved = true
 
       const width = widgetBorder(params)?.width || 0
-      const area = paintBox(params.width, params.height, width)
+      const area = paintBox(params.width, params.height, width, endsPad(params))
       // Design pixels of travel, turned back out of the widget's rotation and
       // then read as a fraction of the box the points are measured in.
       const dx = (travelX * cos - travelY * sin) / (area.width || 1)

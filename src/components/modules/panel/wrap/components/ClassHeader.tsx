@@ -11,10 +11,12 @@ type Props = {
   onSelect?: (item: any) => void
   onBack?: () => void
   renderSection?: (index: number) => ReactNode
+  /** Drawn above the first row, inside the same scrolling column. */
+  before?: ReactNode
   children?: ReactNode
 }
 
-export default function ClassHeader({ types, isBack, onSelect, onBack, renderSection, children }: Props) {
+export default function ClassHeader({ types, isBack, onSelect, onBack, renderSection, before, children }: Props) {
   if (isBack) {
     return (
       <span className="types__header-back" onClick={onBack}>
@@ -25,6 +27,7 @@ export default function ClassHeader({ types, isBack, onSelect, onBack, renderSec
   }
   return (
     <div className="content__wrap">
+      {before}
       {(types || []).map((t, ti) => (
         <div key={ti + 't'}>
           <div className="types__header" onClick={() => onSelect?.(t)}>

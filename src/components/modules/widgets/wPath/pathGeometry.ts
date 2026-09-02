@@ -101,20 +101,21 @@ export function clonePoints(points: TPathPoint[]): TPathPoint[] {
 /**
  * The rectangle the points are fractions of: the frame, less half the outline's
  * thickness on every side, which is the room the stroke needs to lie inside the
- * widget's own edge.
+ * widget's own edge — and less `pad`, which is any further room the widget has
+ * asked for, such as a line keeps for its arrowheads (see lineEnds.ts).
  *
  * Everything measures against this and not against the frame — the curve, the
  * grips, and the frame that is fitted round a path when it is first drawn — so
  * that a point at 0 is on the outline's outer edge whatever the outline is.
  */
-export function paintBox(width: number, height: number, strokeWidth = 0): TPaintBox {
-  const inset = Math.min(strokeWidth / 2, width / 2, height / 2)
+export function paintBox(width: number, height: number, strokeWidth = 0, pad = 0): TPaintBox {
+  const inset = Math.min(strokeWidth / 2 + pad, width / 2, height / 2)
   return { x: inset, y: inset, width: Math.max(width - inset * 2, 0), height: Math.max(height - inset * 2, 0) }
 }
 
 /** The same rectangle, placed on the page rather than inside the widget. */
-export function innerBox(box: TBox, strokeWidth = 0): TBox {
-  const inner = paintBox(box.width, box.height, strokeWidth)
+export function innerBox(box: TBox, strokeWidth = 0, pad = 0): TBox {
+  const inner = paintBox(box.width, box.height, strokeWidth, pad)
   return { left: box.left + inner.x, top: box.top + inner.y, width: inner.width, height: inner.height }
 }
 
@@ -282,8 +283,8 @@ function span(low: number, high: number): [number, number] {
  *
  * @returns null when the frame already fits, which is the usual case.
  */
-export function refitFrame(points: TPathPoint[], closed: boolean, box: TBox, strokeWidth = 0): { box: TBox; points: TPathPoint[] } | null {
-  const fitted = fitFrame(absolutePoints(points, innerBox(box, strokeWidth)), closed, strokeWidth / 2)
+export function refitFrame(points: TPathPoint[], closed: boolean, box: TBox, strokeWidth = 0, pad = 0): { box: TBox; points: TPathPoint[] } | null {
+  const fitted = fitFrame(absolutePoints(points, innerBox(box, strokeWidth, pad)), closed, strokeWidth / 2 + pad)
   const same =
     fitted.box.left === box.left && fitted.box.top === box.top && fitted.box.width === box.width && fitted.box.height === box.height
   return same ? null : fitted

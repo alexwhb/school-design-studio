@@ -10,6 +10,7 @@ import { setShowMoveable } from '@/store/control'
 import { addWidget, setSelectItem } from '@/store/widget'
 import wImageSetting from '../../widgets/wImage/wImageSetting'
 import { wSvgSetting } from '../../widgets/wSvg/wSvgSetting'
+import ArrowPresets from './components/ArrowPresets'
 import SearchHeader from './components/SearchHeader'
 import ClassHeader from './components/ClassHeader'
 import { cx } from '@/utils/dom'
@@ -201,6 +202,8 @@ export default function GraphListWrap() {
         <ClassHeader
           types={types}
           onSelect={selectTypes}
+          // Before the library's own rows: the arrows are built in, not fetched.
+          before={<ArrowPresets />}
           renderSection={(index) => (
             <div className="list-wrap">
               {(showList[index] || []).map((item, i) => (

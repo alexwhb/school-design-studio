@@ -126,6 +126,13 @@ export type TdWidgetData = TPageState &
      */
     points?: { x: number; y: number; in?: { x: number; y: number }; out?: { x: number; y: number } }[]
     closed?: boolean
+    /**
+     * Open paths only: what is drawn on each end of the line — 'arrow',
+     * 'triangle', 'circle' or 'bar'. Absent means a bare end, so a line drawn
+     * before ends existed saves exactly as it did. See wPath/lineEnds.ts.
+     */
+    lineStart?: string
+    lineEnd?: string
     record?: TWidgetRecord
     /**
      * Images and shapes: the shadow the artwork casts. Absent means none, the
@@ -170,7 +177,7 @@ export type TWidgetState = {
  */
 export type TDragTool = 'rect' | 'ellipse' | 'polygon'
 
-export type TDrawTool = TDragTool | 'pen'
+export type TDrawTool = TDragTool | 'pen' | 'line'
 
 export type TControlState = {
   dMoving: boolean

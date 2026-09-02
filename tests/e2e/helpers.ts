@@ -158,10 +158,11 @@ export async function canvasBox(page: Page) {
 }
 
 /** Arms a drawing tool from the Tools panel, which is how it is first found. */
-export async function armShapeTool(page: Page, label: 'Rectangle' | 'Ellipse' | 'Polygon' | 'Pen') {
+export async function armShapeTool(page: Page, label: 'Rectangle' | 'Ellipse' | 'Polygon' | 'Line' | 'Pen') {
   await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
   await page.waitForTimeout(300)
-  await page.locator('.tools-list-wrap .item', { hasText: label }).click()
+  // By title rather than text: the pen's description mentions a line.
+  await page.locator(`.tools-list-wrap .item[title^="${label} ("]`).click()
   await page.waitForTimeout(300)
 }
 

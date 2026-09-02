@@ -1,0 +1,25 @@
+// Drawn inside the page, so its lengths are design pixels and the canvas's own
+// scale carries them onto the screen — which is why every width here is divided
+// back out of the zoom before it is set.
+.draw-line {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.draw-line__line {
+  stroke: @accent;
+}
+
+.draw-line__guide {
+  stroke: @snap-line;
+}
+
+// The length so far, beside the end being pulled.
+.draw-line__readout {
+  fill: @accent;
+  font-family: @font-ui;
+  font-weight: 600;
+  user-select: none;
+}

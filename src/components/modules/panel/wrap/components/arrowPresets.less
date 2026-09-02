@@ -1,0 +1,41 @@
+.arrow-presets {
+  padding: 0 14px;
+
+  &__header {
+    cursor: default;
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: @space-3;
+  }
+
+  // A tile like the stickers' beside it, drawn in the panel's own ink so a
+  // line reads in both themes.
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: var(--art-tile);
+    color: @ink;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+
+    &:hover {
+      background: var(--art-tile-hover);
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+    .path__paint {
+      display: block;
+      overflow: visible;
+    }
+  }
+}

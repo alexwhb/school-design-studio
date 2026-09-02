@@ -224,3 +224,15 @@ export function SendToBackIcon({ className, width = '1em', height = '1em' }: Ico
     </svg>
   )
 }
+
+/** The line tool: a diagonal with an arrowhead, which is what most lines end up with. */
+export function LineIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="currentColor"
+        d="M832 160a32 32 0 0 1 32 32v288a32 32 0 0 1-64 0V301L237 864a32 32 0 1 1-45-45l563-563H544a32 32 0 0 1 0-64z"
+      />
+    </svg>
+  )
+}

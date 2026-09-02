@@ -1,0 +1,14 @@
+.line-ends__row {
+  .panel-row();
+  flex-wrap: nowrap;
+
+  // Two pickers sharing the row, so neither claims the width it asks for.
+  .value-select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.line-ends__swap {
+  margin-top: @field-gap;
+}
