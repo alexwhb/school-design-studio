@@ -24,7 +24,43 @@ import 'design-studio/style.css'
 | `homeUrl`       | `'/'`    | Where the app name in the toolbar links back to.                              |
 | `appName`       | `'Design Studio'` | Name shown in the toolbar.                                          |
 | `theme`         | `'host'` | `host` follows the `dark` class on `<html>`; `light`/`dark` pin it.           |
+| `brand`         | —        | The school's brand kit. Given, the host owns it; left out, it lives in the browser. |
+| `onBrandChange` | —        | Called with the whole kit whenever the Brand panel changes it.                |
 | `config`        | —        | Anything else from `src/config.ts`.                                     |
+
+### The brand kit
+
+The **Brand** panel holds the school's crest, colours, fonts and contact line,
+and everything else in the editor reads from it — templates fill their
+`{{school.name}}` fields as they land, the colour pickers offer its colours, the
+font list offers its fonts. See **Brand kit** in [README.md](README.md) for what
+it does; this is only where it is kept.
+
+Left alone, the kit lives in the browser alongside the uploads and the draft.
+That is right for the standalone editor and wrong for a planner that already
+knows which school the user belongs to, so the two props hand ownership over:
+
+```tsx
+const [brand, setBrand] = useState<TBrandKit>(school.brandKit)
+
+<DesignStudio brand={brand} onBrandChange={(kit) => { setBrand(kit); void save(kit) }} />
+```
+
+Passing `brand` at all switches the editor to host-managed: the kit is used as
+given, the browser's own copy is neither read nor written, and every change made
+in the panel comes back through `onBrandChange` as a whole plain kit, debounced
+so that typing a name is one call rather than one per letter. Storing it is the
+host's job — nothing is kept if the host drops it.
+
+Changing the prop later is followed, which is what a planner does when the user
+switches school. It is compared by contents rather than by identity, so a kit
+built inline in `render` is not a change and does not interrupt typing in the
+panel.
+
+`TBrandKit`, `TBrandFonts` and `TBrandLogo` are exported from the package. Every
+field is optional in practice: anything missing, and any font id the editor no
+longer bundles, is dropped rather than trusted. The logo is a data URL, so a kit
+is self-contained JSON with no second fetch behind it.
 
 ## Building it
 
@@ -112,8 +148,9 @@ Copy `public/` from this repo into the planner's `public/`.
 
 Everything the editor saves lives in the browser, in one IndexedDB database
 called `design-studio`: uploaded pictures in `uploads`, the design being worked
-on in `designs`. Two consequences worth knowing before this goes near a real
-school:
+on in `designs`, and the school's brand kit in `brand` — that last one only when
+the host has not taken it over with the `brand` prop. Two consequences worth
+knowing before this goes near a real school:
 
 - It is per-origin and per-browser. A teacher who starts a poster on the
   staffroom machine will not find it on their laptop, and clearing site data
