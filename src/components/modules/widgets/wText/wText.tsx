@@ -299,10 +299,17 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   /** Ends the edit and stores what was typed. Safe to call more than once. */
   function finishEdit() {
     const el = editWrapRef.current
-    if (!editing.current || !el) return
-    editing.current = false
-    setEditable(false)
-    el.blur()
+    if (!el) return
+    if (editing.current) {
+      editing.current = false
+      setEditable(false)
+      el.blur()
+    }
+    // Stored whether or not an edit was open. The field is where the words are
+    // while they are being typed, so anything that leaves it is a commit, and
+    // storing what has not changed costs nothing — updateText only writes a
+    // difference. tools/test-export.mjs is what drives the box this way, by
+    // writing to the field and leaving it.
     updateText({ target: el })
   }
 

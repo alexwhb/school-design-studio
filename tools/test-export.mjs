@@ -42,7 +42,10 @@ const typed = await page.evaluate((marker) => {
 	if (!el) return false
 	el.innerHTML = marker
 	el.dispatchEvent(new Event('input', { bubbles: true }))
-	el.dispatchEvent(new Event('blur', { bubbles: true }))
+	// focusout, not blur: React's onBlur is the focusout listener it puts on
+	// the root, and a dispatched 'blur' never reaches it. Leaving the field is
+	// what stores the words.
+	el.dispatchEvent(new Event('focusout', { bubbles: true }))
 	return true
 }, MARKER)
 await page.waitForTimeout(600)
