@@ -4,6 +4,7 @@ import { realCombined } from '@/store/group'
 import { handleHistory } from '@/store/history'
 import { copyWidget, duplicateOne, pasteWidget } from '@/store/widget/clone'
 import { selectAllWidgets } from '@/store/widget/select'
+import { recordHistory } from '@/common/hooks/history'
 
 export type ShortcutInstance = {
   save: () => void
@@ -23,7 +24,7 @@ export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) 
       break
     case 71:
       e.preventDefault()
-      realCombined()
+      recordHistory(realCombined)
       break
     case 67:
       copy()
@@ -107,7 +108,7 @@ function duplicate() {
   } else if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement?.uuid, 'editable')) {
     return
   }
-  !widgetState.dActiveElement?.editable && duplicateOne()
+  !widgetState.dActiveElement?.editable && recordHistory(duplicateOne)
 }
 
 let pasteImageFile: any = null
@@ -126,7 +127,7 @@ async function paste() {
       } else if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement?.uuid, 'editable')) {
         return
       }
-      !widgetState.dActiveElement?.editable && pasteWidget()
+      !widgetState.dActiveElement?.editable && recordHistory(pasteWidget)
     })
   }, 10)
 }

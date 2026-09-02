@@ -121,7 +121,9 @@ export default function Psd() {
   function cancel() {
     setDownloadPercent(100)
     const { id } = readQuery()
-    window.open(`${window.location.protocol + '//' + window.location.host}/home?id=${id}`)
+    const destination = new URL('/home', window.location.origin)
+    if (id) destination.searchParams.set('id', id)
+    window.open(destination.toString())
   }
 
   const shelterWidth = (canvas.dPage.width * canvas.dZoom) / 100 + 'px'

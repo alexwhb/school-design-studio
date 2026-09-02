@@ -27,7 +27,14 @@ export default function Draw() {
     if (id || tempid) {
       const postData = { id: (id || tempid) as any, type: Number(type) }
       const { data, width, height } = await api.home[id ? 'getWorks' : 'getTempDetail'](postData)
-      let content = JSON.parse(data)
+      if (!data) return
+      let content: any
+      try {
+        content = JSON.parse(data)
+      } catch (error) {
+        console.warn('[draw] requested design was not valid JSON', error)
+        return
+      }
       const isGroupTemplate = Number(type) == 1
 
       if (Array.isArray(content) && !isGroupTemplate) {

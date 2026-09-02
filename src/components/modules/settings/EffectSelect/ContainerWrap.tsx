@@ -51,23 +51,23 @@ export default function ContainerWrap({ value, onChange }: Props) {
                   <span className="box__title">Shape</span>
                 </div>
                 <div className="select__box">
-                  <div className="select__box__select-item" onClick={() => select()}>
+                  <div className={`select__box__select-item${!value ? ' active' : ''}`} onClick={() => select()}>
                     None
                   </div>
                   {list.map((item, i) => (
-                    <Image key={i + 'l'} className="select__box__select-item" src={item.thumb} fit="contain" onClick={() => select(item.url)} />
+                    <Image key={i + 'l'} className={`select__box__select-item${item.url === value ? ' active' : ''}`} src={item.thumb} fit="contain" onClick={() => select(item.url)} />
                   ))}
                 </div>
               </>
             }
           >
             <Button className="button" link onClick={() => setVisible(!visible)}>
-              {visible ? 'Cancel' : 'Choose'}
+              {visible ? 'Cancel' : value ? 'Change mask' : 'Choose'}
             </Button>
           </Popover>
         </div>
       </div>
-      <div className="el-card__body" style={{ padding: 0 }} />
+          <div className="el-card__body" style={{ padding: 0 }} />
     </div>
   )
 }

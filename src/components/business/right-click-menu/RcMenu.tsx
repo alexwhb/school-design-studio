@@ -55,7 +55,7 @@ export default function RcMenu() {
     }
     let mx = e.pageX
     let my = e.pageY
-    const listWidth = 120
+    const listWidth = 160
     if (mx + listWidth > window.innerWidth) {
       mx -= listWidth
     }

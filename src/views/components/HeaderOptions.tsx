@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef, useState, type ReactNode } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type ReactNode } from 'react'
 import { useSnapshot } from 'valtio'
 import api from '@/api'
 import _config from '@/config'
@@ -51,6 +51,18 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
   titleRef.current = title
   const loadingRef = useRef(false)
 
+  // Gallery selection replaces the whole canvas in place, so unlike a deep
+  // link it has no load response that would otherwise populate the title.
+  useEffect(() => {
+    const setTemplateTitle = (event: Event) => {
+      const next = (event as CustomEvent<string>).detail
+      setTitle(next || '')
+      onTitleChange?.()
+    }
+    window.addEventListener('design-title', setTemplateTitle)
+    return () => window.removeEventListener('design-title', setTemplateTitle)
+  }, [onTitleChange])
+
   async function save() {
     await saveTemp()
   }
@@ -96,14 +108,14 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
         height: canvasState.dPage.height,
       })
     }
-    res.stat != 0 && useNotification('Saved', 'Your template has been updated')
+    res?.stat != null && res.stat !== 0 && useNotification('Saved', 'Your template has been updated')
     !tempid && replaceQuery({ tempid: res.id })
   }
 
   async function stateChange(e: boolean) {
     const { tempid, tempType: type } = readQuery()
     const { stat }: any = await api.home.saveTemp({ id: tempid, type, state: e ? 1 : 0 })
-    stat != 0 && useNotification('Saved', 'Your template has been updated')
+    stat != null && stat !== 0 && useNotification('Saved', 'Your template has been updated')
   }
 
   /**
@@ -169,15 +181,30 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
       cb()
       return
     }
-    const {
-      data: content,
-      title: loadedTitle,
-      state: _state,
-      width,
-      height,
-    } = await api.home[apiName]({ id: (id || tempId) as any, type: type as any })
-    if (!content) return
-    const data = JSON.parse(content)
+    let response: any
+    try {
+      response = await api.home[apiName]({ id: (id || tempId) as any, type: type as any })
+    } catch (error) {
+      console.warn('[design] could not load the requested design', error)
+      initBoard()
+      cb()
+      return
+    }
+    const { data: content, title: loadedTitle, state: _state, width, height } = response
+    if (!content) {
+      initBoard()
+      cb()
+      return
+    }
+    let data: any
+    try {
+      data = JSON.parse(content)
+    } catch (error) {
+      console.warn('[design] requested design was not valid JSON', error)
+      initBoard()
+      cb()
+      return
+    }
     setTitle(loadedTitle)
     setShowMoveable(false)
     if (Number(type) == 1) {
@@ -205,10 +232,6 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
   function initBoard() {
     setDWidgets(getWidgets())
     setDPage(getDPage())
-  }
-
-  function jump2Edit() {
-    managerEdit(true)
   }
 
   useImperativeHandle(
@@ -239,11 +262,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
             <Button onClick={() => managerEdit(false)}>Cancel</Button>
             <div className="top-nav-divider" />
           </>
-        ) : (
-          <Button text onClick={jump2Edit}>
-            Edit template
-          </Button>
-        )}
+        ) : null}
         <ThemeToggle />
         <div className="top-nav-divider" />
         {children}

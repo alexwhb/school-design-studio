@@ -177,6 +177,7 @@ export default function TempListWrap() {
     setTimeout(() => {
       setZoomScreenChange()
     }, 300)
+    window.dispatchEvent(new CustomEvent('design-title', { detail: item.title || '' }))
     selectWidget({ uuid: '-1' })
   }
 

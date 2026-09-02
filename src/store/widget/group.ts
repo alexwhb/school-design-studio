@@ -4,6 +4,14 @@ import type { TdWidgetData } from '../types'
 
 const nanoid = customAlphabet('1234567890abcdef', 12)
 
+function decodeText(text: string) {
+  try {
+    return decodeURIComponent(text)
+  } catch {
+    return text
+  }
+}
+
 export function addGroup(group: TdWidgetData[]) {
   let parent: TdWidgetData | null = null
   group.forEach((item) => {
@@ -12,7 +20,7 @@ export function addGroup(group: TdWidgetData[]) {
   })
   group.forEach((item) => {
     !item.isContainer && parent && (item.parent = (parent as TdWidgetData).uuid)
-    item.text && (item.text = decodeURIComponent(item.text))
+    item.text && (item.text = decodeText(item.text))
     widgetState.dWidgets.push(item)
   })
   const len = widgetState.dWidgets.length

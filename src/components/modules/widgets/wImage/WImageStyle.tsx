@@ -164,7 +164,7 @@ export default function WImageStyle() {
               Enhance
             </Button>
           </div>
-          <ContainerWrap onChange={changeContainer} />
+          <ContainerWrap value={active.mask} onChange={changeContainer} />
           <div className="slide-wrap">
             <NumberSlider
               value={active.opacity}

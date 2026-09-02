@@ -224,7 +224,7 @@ export default function WTextStyle() {
           label="Size"
           suffix="px"
           data={FONT_SIZE_LIST}
-          onFinish={(value) => finish('fontSize', Number(value))}
+          onFinish={(value) => finish('fontSize', Math.max(1, Math.min(500, Number(value) || 1)))}
         />
       </div>
 
@@ -232,6 +232,14 @@ export default function WTextStyle() {
       <IconItemSelect className="style-item" data={styleIcons2} onFinish={textStyleAction} />
 
       <div className="style-item slide-wrap">
+        <NumberSlider
+          value={active.opacity ?? 1}
+          style={{ fontSize: 14 }}
+          label="Opacity"
+          step={0.05}
+          maxValue={1}
+          onChange={(value) => finish('opacity', value)}
+        />
         <NumberSlider
           value={active.letterSpacing}
           style={{ fontSize: 14 }}

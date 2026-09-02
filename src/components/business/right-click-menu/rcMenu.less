@@ -8,13 +8,16 @@
     box-shadow: @shadow-pop;
     padding: 5px;
     position: absolute;
-    width: 120px;
+    // The long layer commands should remain one deliberate click, rather than
+    // wrapping into a taller, shifting menu.
+    width: 160px;
     .menu-item {
       cursor: pointer;
       font-size: 14px;
       line-height: 1;
       padding: 5px 15px;
       width: 100%;
+      white-space: nowrap;
       &:hover {
         background-color: @surface-2;
       }

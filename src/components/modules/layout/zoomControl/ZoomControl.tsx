@@ -139,9 +139,10 @@ function nearZoom(isAdd?: boolean) {
 function mousewheelZoom(down: boolean) {
   const value = Number(canvasState.dZoom.toFixed(0))
   if (down && value <= 1) return
-  updateZoom(down ? value - 2 : value + 2)
-  local.zoom.text = value + '%'
-  local.zoom.value = value
+  const next = down ? value - 2 : value + 2
+  updateZoom(next)
+  local.zoom.text = next + '%'
+  local.zoom.value = next
   autoFixTop()
   const closest = findClosestNumber(
     value,
