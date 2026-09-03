@@ -5,6 +5,7 @@
  * @LastEditors: ShawnPhang <https://m.palxp.cn>
  * @LastEditTime: 2024-04-16 15:37:54
  */
+import type { TTemplateBrand } from '@/common/methods/brandKit'
 import fetch from '@/utils/axios'
 
 type IGetTempListParam = {
@@ -32,6 +33,8 @@ export type IGetTempListData = {
   url: string
   model?: string
   color?: string
+  /** Only on the inline `data` path; see `TTempDetail.brand`. */
+  brand?: TTemplateBrand
 }
 type IGetTempListResult = TPageRequestResult<IGetTempListData[]>
 
@@ -56,6 +59,12 @@ export type TTempDetail = {
   title: string
   updated_time: string
   width: number
+  /**
+   * Which of the template's own colours play which brand role, and whether it
+   * would rather keep its palette. Absent on anything made before templates
+   * said, and on every saved design, which is why nothing may require it.
+   */
+  brand?: TTemplateBrand
 }
 
 export const getTempDetail = (params: TGetTempDetail) => fetch<TTempDetail>('design/temp', params, 'get')

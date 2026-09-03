@@ -47,6 +47,7 @@ export type TBrandKit = {
   fonts: TBrandFonts
 }
 
+/** As many as there are roles a template can name; see `BRAND_ROLES`. */
 export const MAX_BRAND_COLORS = 8
 
 /** The written details, which are also the merge fields. */
@@ -112,6 +113,36 @@ export function normaliseBrandColor(value: string): string | null {
   if (hex.length === 6) return `#${hex}ff`
   if (hex.length === 8) return `#${hex}`
   return null
+}
+
+/**
+ * What one of a template's own colours is *for*.
+ *
+ * A template that says which of its colours is the primary, which the
+ * secondary and which the accent can be recoloured the moment it is added,
+ * without guessing: the school's first colour goes wherever the template said
+ * primary, at whatever transparency that place was painted at. The names run
+ * out at eight because the kit holds eight, and they are positions rather than
+ * descriptions for the same reason `brandColorRole` is — "primary" is the
+ * first colour of the kit, not a shade of blue.
+ */
+export const BRAND_ROLES = ['primary', 'secondary', 'accent', 'colour4', 'colour5', 'colour6', 'colour7', 'colour8'] as const
+export type TBrandRole = (typeof BRAND_ROLES)[number]
+
+/**
+ * The `brand` block a template file carries beside its `data`. Keys are the
+ * template's colours as lower case six-digit hex without `#` and without
+ * alpha; every place one of them is painted follows its role's kit colour.
+ * `keep` is the opt-out for a design whose palette and fonts are the point.
+ */
+export type TTemplateBrand = {
+  colors: Record<string, TBrandRole>
+  keep?: boolean
+}
+
+/** Which of the kit's ordered colours a role asks for, or -1 for a name nobody defined. */
+export function brandRoleIndex(role: string): number {
+  return BRAND_ROLES.indexOf(String(role || '').toLowerCase() as TBrandRole)
 }
 
 /**

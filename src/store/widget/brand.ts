@@ -11,11 +11,13 @@
  * None of these record history themselves — the caller decides how much one
  * undo takes back, and wraps the call in `recordHistory`.
  */
-import { brandFont, brandResolver, isBrandField, type TBrandKit } from '@/common/methods/brandKit'
+import { brandFont, brandResolver, brandRoleIndex, isBrandField, type TBrandKit, type TTemplateBrand } from '@/common/methods/brandKit'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
+import effectColors from '@/components/modules/widgets/wText/effectColors'
 import recolorEffects from '@/components/modules/widgets/wText/recolorEffects'
 import { wTextSetting } from '@/components/modules/widgets/wText/wTextSetting'
 import type { TFontItem } from '@/assets/data/FontsData'
+import { isGradient, parseGradient, toGradientString } from '@/packages/color-picker/utils/gradient'
 import { fieldsInLayers, fillText, hasFields } from '@/utils/mergeFields'
 import { updatePageData } from '../canvas'
 import { canvasState, widgetState } from '../state'
@@ -225,33 +227,101 @@ type TColorSlot = {
   write: (value: string) => void
 }
 
-/** Every place a flat colour is painted, across the whole design. */
+/**
+ * The slots one painted property is worth.
+ *
+ * A flat colour is one. A gradient is one per stop, because the two ends of a
+ * band are two of the design's colours and following only the first would
+ * leave a stripe of the old palette running through the new one. Which it is
+ * is decided as the slots are gathered, so a slot never has to answer for both.
+ */
+function paintSlots(kind: TColorSlot['kind'], read: () => unknown, write: (value: string) => void): TColorSlot[] {
+  const value = read()
+  if (typeof value !== 'string' || !isGradient(value)) return [{ kind, read, write }]
+  const parsed = parseGradient(value)
+  if (!parsed) return []
+  return parsed.stops.map((_, index) => ({
+    kind,
+    read: () => parseGradient(String(read() ?? ''))?.stops[index]?.color,
+    // Re-read rather than closed over, so two stops of the same gradient can
+    // both be repainted in one pass without the second undoing the first.
+    write: (color: string) => {
+      const current = parseGradient(String(read() ?? ''))
+      if (!current) return
+      const stops = current.stops.map((stop, at) => (at === index ? { ...stop, color } : stop))
+      write(toGradientString(current.type, current.angle, stops))
+    },
+  }))
+}
+
+/**
+ * The colours an effect stack paints that are not the text's own — the second
+ * tone of a check, the middle band of a retro gradient. The text's own colour
+ * is carried through the stack by the `color` slot below, so listing it here
+ * as well would repaint it twice.
+ */
+function effectSlots(layer: any): TColorSlot[] {
+  return effectColors(layer.textEffects, layer.color).map((entry) => ({
+    kind: 'layer' as const,
+    read: () => entry.value,
+    write: (value: string) => {
+      layer.textEffects = recolorEffects(JSON.parse(JSON.stringify(layer.textEffects)), entry.value, value)
+    },
+  }))
+}
+
+/** Every place a colour is painted, across the whole design. */
 function colorSlots(layouts: TdLayout[]): TColorSlot[] {
   const slots: TColorSlot[] = []
   for (const layout of layouts) {
     const page = layout.global as any
-    if (!page.backgroundImage && !page.backgroundGradient) {
-      slots.push({ kind: 'page', read: () => page.backgroundColor, write: (value) => (page.backgroundColor = value) })
+    // A picture over the page hides whatever is under it, so neither the flat
+    // colour nor the gradient is one of the design's colours while it is there.
+    if (!page.backgroundImage) {
+      if (page.backgroundGradient) {
+        slots.push(...paintSlots('page', () => page.backgroundGradient, (value) => (page.backgroundGradient = value)))
+      } else {
+        slots.push(...paintSlots('page', () => page.backgroundColor, (value) => (page.backgroundColor = value)))
+      }
     }
     for (const layer of layout.layers as any[]) {
-      if (layer.type === 'w-text' || SHAPE_TYPES.has(layer.type)) {
-        slots.push({ kind: 'layer', read: () => layer.color, write: (value) => (layer.color = value) })
+      if (layer.type === 'w-text') {
+        slots.push(...paintSlots('layer', () => layer.color, (value) => paintTextColor(layer, value)))
+        slots.push(...effectSlots(layer))
+      } else if (SHAPE_TYPES.has(layer.type)) {
+        slots.push(...paintSlots('layer', () => layer.color, (value) => (layer.color = value)))
       } else if (layer.type === 'w-svg' && Array.isArray(layer.colors)) {
         layer.colors.forEach((_: unknown, index: number) => {
-          slots.push({
-            kind: 'layer',
-            read: () => layer.colors[index],
-            write: (value) => {
-              const next = layer.colors.slice()
-              next[index] = value
-              layer.colors = next
-            },
-          })
+          slots.push(
+            ...paintSlots(
+              'layer',
+              () => layer.colors[index],
+              (value) => {
+                const next = layer.colors.slice()
+                next[index] = value
+                layer.colors = next
+              },
+            ),
+          )
         })
+      }
+      // An outline is a colour of the design wherever there is one to see; a
+      // design saved before outlines existed has neither key at all.
+      if (Number(layer.borderWidth) > 0 && layer.borderColor) {
+        slots.push(...paintSlots('layer', () => layer.borderColor, (value) => (layer.borderColor = value)))
       }
     }
   }
   return slots
+}
+
+/** A text box's colour, and every part of its effect stack that was following it. */
+function paintTextColor(layer: any, value: string) {
+  const effects = layer.textEffects
+  if (Array.isArray(effects) && effects.length) {
+    layer.textEffects = recolorEffects(JSON.parse(JSON.stringify(effects)), layer.color, value)
+  }
+  layer.color = value
 }
 
 /**
@@ -376,4 +446,88 @@ export function describeBrandOutcome(outcome: TApplyBrandOutcome): string {
     text += ` ${plural(outcome.unresolved, 'field is', 'fields are')} still waiting for a detail the kit does not have.`
   }
   return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+// ---- the kit onto a template as it lands -------------------------------------
+
+export type TTemplateBrandResult = {
+  layers: TdWidgetData[]
+  page: TPageState
+  /** Places repainted, the page background among them. */
+  recoloured: number
+  /** Text boxes moved onto one of the kit's fonts. */
+  fonts: number
+}
+
+/**
+ * A template in the school's colours and fonts, as it lands.
+ *
+ * Apply brand has to guess which of a design's colours is the main one, by
+ * counting where each is painted, because a design made before the kit never
+ * said. A template can say: its `brand` block names which of its own colours
+ * plays which role, so the answer is looked up rather than ranked, and adding
+ * the same template twice gives the same design both times. Each place keeps
+ * its own transparency, so a wash of the template's navy at 7% comes out as
+ * the school's first colour at 7%.
+ *
+ * Pure: the layers and the page given are read and never written, and what
+ * comes back is a copy — the template object the API returned is shared with
+ * whatever cached it, and the kit belongs to the Brand panel. When there is
+ * nothing to do the same objects come back, so a caller can tell by identity.
+ */
+export function applyTemplateBrand(layers: TdWidgetData[], page: TPageState, brand: TTemplateBrand | undefined, kit: TBrandKit): TTemplateBrandResult {
+  const unchanged: TTemplateBrandResult = { layers, page, recoloured: 0, fonts: 0 }
+  // `keep` is the template whose palette and lettering are the point of it —
+  // the fields still fill, which is what the caller does either side of here.
+  if (!brand || brand.keep) return unchanged
+
+  // The block names colours the way a designer would write them down: six hex
+  // digits, no hash, no alpha. Neutrals are never listed, so nothing here has
+  // to leave the paper alone — saying a colour has a role is saying it is not
+  // the paper.
+  const mapping = new Map<string, string>()
+  for (const [hex, role] of Object.entries(brand.colors || {})) {
+    const from = parseHex(`#${String(hex).replace(/^#/, '')}`)
+    const index = brandRoleIndex(role)
+    // A role the kit has no colour for leaves the template's own colour alone,
+    // which is what makes a three-colour template safe on a one-colour kit.
+    const to = index >= 0 ? parseHex(kit.colors[index]) : null
+    if (from && to && from.rgb !== to.rgb) mapping.set(from.rgb, to.rgb)
+  }
+
+  const heading = brandFont(kit.fonts.heading)
+  const body = brandFont(kit.fonts.body)
+  if (!mapping.size && !heading && !body) return unchanged
+
+  const copy: TdLayout = JSON.parse(JSON.stringify({ global: page, layers }))
+  let recoloured = 0
+  let fonts = 0
+
+  if (mapping.size) {
+    for (const slot of colorSlots([copy])) {
+      const parsed = parseHex(slot.read())
+      const to = parsed && mapping.get(parsed.rgb)
+      if (!parsed || !to) continue
+      slot.write(`#${to}${parsed.alpha}`)
+      recoloured++
+    }
+  }
+
+  if (heading || body) {
+    const threshold = headingThreshold(copy.global)
+    for (const layer of copy.layers) {
+      if (!carriesText(layer)) continue
+      const role = layer.brandRole
+      if (role === 'keep') continue
+      const wantsHeading = role ? role === 'heading' : isBold(layer) || Number((layer as any).fontSize) >= threshold
+      // No falling back to the other font, which is where this parts company
+      // with Apply brand: a kit that named only a body font has said nothing
+      // about headings, and putting the body face on them would undo the
+      // pairing the template was drawn with.
+      const font = wantsHeading ? heading : body
+      if (font && setFont(layer, font)) fonts++
+    }
+  }
+
+  return { layers: copy.layers, page: copy.global, recoloured, fonts }
 }

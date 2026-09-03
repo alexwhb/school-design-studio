@@ -87,6 +87,13 @@ export type TdWidgetData = TPageState &
      */
     label?: string
     editable?: boolean
+    /**
+     * Text in a template: which of the kit's two fonts this box asks for as it
+     * lands. Absent leaves the guess in `store/widget/brand.ts` to decide from
+     * the box's weight and size, and 'keep' is for the one line whose face is
+     * the artwork — a hand-lettered word mark that a school font would ruin.
+     */
+    brandRole?: 'heading' | 'body' | 'keep'
     lock?: boolean
     /**
      * Taken off the canvas, and out of every export, until it is shown again.
