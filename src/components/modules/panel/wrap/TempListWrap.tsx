@@ -228,7 +228,7 @@ export default function TempListWrap() {
     window.open(`${window.location.protocol + '//' + window.location.host}/home?id=${item.id}`)
   }
 
-  const deleteDesign = async ({ item }: { i: number; item: IGetTempListData }) => {
+  const deleteDesign = async ({ item }: { item: IGetTempListData }) => {
     const isPass = await useConfirm('Warning', 'This cannot be undone. Are you sure?', 'warning')
     if (!isPass) return
     await api.material.deleteMyWorks({ id: item.id })
@@ -259,7 +259,7 @@ export default function TempListWrap() {
             <CardGrid columns={2}>
               {designList.map((item) => (
                 <Card key={item.id} ratio={ratioOf(item)} name={item.title} meta={sizeOf(item)} onClick={() => openDesign(item)}>
-                  <EditModel options={[{ name: 'Delete', fn: deleteDesign }] as any} data={{ item, i: 0 }}>
+                  <EditModel options={[{ name: 'Delete', fn: deleteDesign }] as any} data={{ item }}>
                     <Image className="img" src={item.cover} fit="cover" lazy />
                   </EditModel>
                 </Card>

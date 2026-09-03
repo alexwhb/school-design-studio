@@ -213,7 +213,7 @@ export default function PhotoListWrap() {
     setUploads((prev) => [res as unknown as LocalUpload, ...prev])
   }
 
-  const deleteUploadItem = async ({ item }: { i: number; item: LocalUpload }) => {
+  const deleteUploadItem = async ({ item }: { item: LocalUpload }) => {
     setShowMoveable(false)
     const isPass = await useConfirm('Remove this upload?', 'It will disappear from anything on the page that uses it.', 'warning')
     if (!isPass) {
@@ -247,7 +247,7 @@ export default function PhotoListWrap() {
                 title={item.title}
                 {...thumbProps(item)}
               >
-                <EditModel options={[{ name: 'Delete', fn: deleteUploadItem }] as any} data={{ item, i: 0 }}>
+                <EditModel options={[{ name: 'Delete', fn: deleteUploadItem }] as any} data={{ item }}>
                   <Image className="list__img transparent-bg" src={item.url} fit="cover" lazy />
                 </EditModel>
               </Card>
