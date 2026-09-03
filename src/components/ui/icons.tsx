@@ -179,11 +179,9 @@ export function PolygonIcon({ className, width = '1em', height = '1em' }: IconPr
 /** The pen's nib, pointing down and to the left the way every pen tool's does. */
 export function PenIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (
-    <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-      <path
-        fill="currentColor"
-        d="M556 108a48 48 0 0 1 68 0l292 292a48 48 0 0 1 0 68L620 772a48 48 0 0 1-24 13l-52 11-73 73a112 112 0 1 1-68-68l73-73 11-52a48 48 0 0 1 13-24zm34 102L494 306l224 224 96-96zM426 374l-46 214 214-46zM320 764a48 48 0 1 0 0 96 48 48 0 0 0 0-96z"
-      />
+    <svg className={className} width={width} height={height} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <path d="M4 16c0-6 3-9 9-11-2 8-5 10-9 11z" />
+      <path d="M4 16l3.2-3.2" />
     </svg>
   )
 }
