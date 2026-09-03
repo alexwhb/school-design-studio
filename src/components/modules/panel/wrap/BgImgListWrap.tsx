@@ -152,7 +152,7 @@ export default function BgImgListWrap({ model, style }: TProps) {
 
   return (
     <div className="wrap bg-img-list-wrap" style={style}>
-      <SearchHeader type="none" placeholder="Search backgrounds" onSearch={search} />
+      <SearchHeader placeholder="Search backgrounds" onSearch={search} />
       {!keyword ? (
         <div className="color__box" style={modelStyle.color}>
           {COLORS.map((c) => (

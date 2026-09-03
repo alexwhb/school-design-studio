@@ -311,3 +311,13 @@ export function PlusIcon({ className, width = '1em', height = '1em' }: IconProps
     </svg>
   )
 }
+
+/** The glyph in a panel's search well. */
+export function SearchIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <circle cx="7" cy="7" r="4.3" />
+      <path d="M10.3 10.3 13.5 13.5" strokeLinecap="round" />
+    </svg>
+  )
+}

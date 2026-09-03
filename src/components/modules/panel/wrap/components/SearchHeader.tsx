@@ -1,27 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
-import Dropdown, { DropdownItem } from '@/components/ui/DropdownMenu'
+import { SearchIcon } from '@/components/ui/icons'
 import { cx } from '@/utils/dom'
 import './searchHeader.less'
 
-export type TMaterialCatesData = { id: string | number; name: string }
-
 type Props = {
-  type?: string
   value?: string
   placeholder?: string
+  /** Search as you type, rather than waiting for Enter. */
   live?: boolean
   onChange?: (value: string) => void
-  onCateChange?: (data: TMaterialCatesData) => void
   onSearch?: (value: string) => void
 }
 
 const LIVE_DELAY = 200
 
-export default function SearchHeader({ type, value, placeholder, live, onChange, onCateChange, onSearch }: Props) {
+/**
+ * The search well at the top of a browsing panel.
+ *
+ * Its own markup rather than an Element Plus input: this is a well — a filled
+ * box with a glyph in it — not a bordered field, and the two look nothing alike
+ * once Element Plus has had its say about padding and height.
+ */
+export default function SearchHeader({ value, placeholder, live, onChange, onSearch }: Props) {
   const [searchValue, setSearchValue] = useState(value || '')
-  const [currentIndex, setCurrentIndex] = useState<number | string>(1)
   const [focused, setFocused] = useState(false)
-  const materialCates: TMaterialCatesData[] = type != 'none' ? [{ id: 0, name: 'Sample templates' }] : []
   const liveTimer = useRef<any>(null)
   const searchRef = useRef(searchValue)
   searchRef.current = searchValue
@@ -46,76 +48,35 @@ export default function SearchHeader({ type, value, placeholder, live, onChange,
     liveTimer.current = setTimeout(submit, LIVE_DELAY)
   }
 
-  function action(cate: TMaterialCatesData) {
-    cate.id && setCurrentIndex(cate.id)
-    onCateChange?.(cate)
-  }
-
   return (
-    <div className="search__wrap">
-      {type !== 'none' ? (
-        <Dropdown
-          placement="bottom-start"
-          menu={
-            <>
-              {materialCates.map((cate) => (
-                <DropdownItem key={cate.id} onSelect={() => action(cate)}>
-                  <span className={cx('cate__text', { 'cate--select': +currentIndex === cate.id })}>{cate.name}</span>
-                </DropdownItem>
-              ))}
-            </>
-          }
+    <div className={cx('search-well', { 'search-well--focus': focused })}>
+      <SearchIcon className="search-well__glyph" width={14} height={14} />
+      <input
+        className="search-well__input"
+        value={searchValue}
+        placeholder={placeholder || 'Search'}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onChange={(e) => update(e.target.value)}
+        onKeyUp={(e) => e.key === 'Enter' && submit()}
+      />
+      {/* Clearing runs the search again, so the list comes back rather than
+          sitting on the results of a query that is no longer in the box. */}
+      {searchValue ? (
+        <button
+          type="button"
+          className="search-well__clear"
+          aria-label="Clear the search"
+          onClick={() => {
+            update('')
+            submit()
+          }}
         >
-          <div className="search__type">
-            <i className="iconfont icon-ego-caidan" />
-          </div>
-        </Dropdown>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 4l8 8M12 4l-8 8" />
+          </svg>
+        </button>
       ) : null}
-
-      <div className="el-input el-input--large search__input">
-        <div className={cx('el-input__wrapper', { 'is-focus': focused })}>
-          <span className="el-input__prefix">
-            <span className="el-input__prefix-inner">
-              <i className="iconfont icon-search" />
-            </span>
-          </span>
-          <input
-            className="el-input__inner"
-            value={searchValue}
-            placeholder={placeholder || 'Search'}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onChange={(e) => update(e.target.value)}
-            onKeyUp={(e) => e.key === 'Enter' && submit()}
-          />
-          {/* Clearing runs the search again, so the list comes back rather than
-              sitting on the results of a query that is no longer in the box. */}
-          {searchValue ? (
-            <span className="el-input__suffix">
-              <span className="el-input__suffix-inner">
-                <i
-                  className="el-icon el-input__icon el-input__clear"
-                  onClick={() => {
-                    update('')
-                    submit()
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-                    <path
-                      fill="currentColor"
-                      d="m466.752 512-90.496-90.496a32 32 0 0 1 45.248-45.248L512 466.752l90.496-90.496a32 32 0 1 1 45.248 45.248L557.248 512l90.496 90.496a32 32 0 1 1-45.248 45.248L512 557.248l-90.496 90.496a32 32 0 0 1-45.248-45.248z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M512 896a384 384 0 1 0 0-768 384 384 0 0 0 0 768m0 64a448 448 0 1 1 0-896 448 448 0 0 1 0 896"
-                    />
-                  </svg>
-                </i>
-              </span>
-            </span>
-          ) : null}
-        </div>
-      </div>
     </div>
   )
 }

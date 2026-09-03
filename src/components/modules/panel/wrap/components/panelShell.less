@@ -1,0 +1,55 @@
+.panel-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+
+  &__head {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    padding: 11px @panel-gutter 10px;
+  }
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: @space-1 @panel-gutter @space-5;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    // The panel is narrow enough that a scrollbar down its right edge would
+    // take a column of thumbnails with it.
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  &__body::-webkit-scrollbar {
+    display: none;
+  }
+
+  // A heading and the grid under it move together, so they are one block and
+  // the body's gap sits between blocks rather than inside them.
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .panel-wrap__note {
+    margin: 0;
+    padding: @space-2 0;
+    color: @ink-3;
+    font-size: @text-base;
+    line-height: 1.5;
+  }
+
+  .panel-wrap__status {
+    padding: @space-4 0 @space-2;
+    text-align: center;
+    color: @ink-3;
+    font-size: @text-sm;
+  }
+}

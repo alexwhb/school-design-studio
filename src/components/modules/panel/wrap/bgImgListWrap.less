@@ -7,10 +7,16 @@
   flex-direction: column;
   min-height: 0;
 
-  .search__wrap,
+  .search-well,
   .color__box,
   .search__summary {
     flex-shrink: 0;
+  }
+
+  // The well draws no margin of its own, so the swatches under it get their gap
+  // from here.
+  .search-well {
+    margin-bottom: @space-2;
   }
 
   .search__summary {

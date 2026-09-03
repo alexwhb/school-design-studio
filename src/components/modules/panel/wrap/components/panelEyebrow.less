@@ -1,0 +1,41 @@
+.panel-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: @space-2;
+  min-height: 16px;
+  user-select: none;
+
+  &__label {
+    .section-label();
+    letter-spacing: 0.09em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__note {
+    flex: none;
+    color: @ink-3;
+    font-size: @text-xs;
+  }
+
+  &__more {
+    flex: none;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: @ink-3;
+    font-family: inherit;
+    font-size: @text-xs;
+    cursor: pointer;
+    transition: color 0.12s ease;
+
+    &:hover {
+      color: @ink;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+  }
+}

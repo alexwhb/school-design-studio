@@ -1,0 +1,39 @@
+.cates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cates__chip {
+  height: @control-h;
+  padding: 0 @space-3;
+  border: 1px solid @line;
+  background: @surface-2;
+  color: @ink-2;
+  font-family: inherit;
+  font-size: @text-sm;
+  font-weight: 500;
+  line-height: 1;
+  border-radius: @radius-pill;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+
+  &:hover {
+    background: @surface-3;
+    color: @ink;
+  }
+
+  &:focus-visible {
+    .focus-ring();
+  }
+
+  &--on,
+  &--on:hover {
+    background: @accent-soft;
+    border-color: @accent-border;
+    color: @accent;
+  }
+}

@@ -1,55 +1,53 @@
-.search__wrap {
-  padding: 14px 14px 6px;
+.search-well {
   display: flex;
-  gap: 8px;
-  cursor: pointer;
+  align-items: center;
+  gap: @space-2;
+  flex: none;
+  height: @control-h-lg;
+  padding: 0 @space-3;
+  border: 1px solid @line;
+  border-radius: @radius;
+  background: @surface-2;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 
-  .search__input {
+  &--focus {
+    border-color: @accent;
+    box-shadow: 0 0 0 2px @accent-a25;
+  }
+
+  &__glyph {
+    flex: none;
+    color: @ink-3;
+  }
+
+  &__input {
     flex: 1;
     min-width: 0;
+    height: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: @ink;
+    font-family: inherit;
+    font-size: @text-base;
 
-    .el-input__wrapper {
-      padding-left: 10px;
-    }
-    .el-input__prefix {
-      color: @ink-4;
-      .iconfont {
-        font-size: 15px;
-      }
-    }
-    .el-input__inner {
-      font-size: @text-md;
+    &::placeholder {
+      color: @ink-3;
     }
   }
 
-  .search__type {
-    border: 1px solid @line;
-    color: @ink-2;
-    width: 36px;
-    flex-shrink: 0;
-    border-radius: @radius;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition:
-      background-color 0.12s ease,
-      color 0.12s ease;
-    .iconfont {
-      font-size: 16px;
-    }
+  &__clear {
+    .icon-button();
+    width: 18px;
+    height: 18px;
+    background: transparent;
+    color: @ink-3;
+
     &:hover {
-      background: @surface-2;
+      background: @surface-3;
       color: @ink;
     }
-  }
-}
-
-.cate {
-  &__text {
-    font-size: @text-base;
-  }
-  &--select {
-    color: @accent;
-    font-weight: 600;
   }
 }
