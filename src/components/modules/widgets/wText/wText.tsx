@@ -78,12 +78,16 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     [editable, p.text, p.curve, p.fontSize, p.lineHeight, p.letterSpacing, fontFamily, p.fontWeight, p.fontStyle, fontTick, loading],
   )
 
+  // The straight run's element is filled by hand, and taking the curve off
+  // mounts a fresh empty one — so this has to run when the arc goes as well as
+  // when the words or the caret change, or the box comes back blank.
+  const straight = !curved
   useLayoutEffect(() => {
     const el = editWrapRef.current
     if (el && el.innerHTML !== p.text) {
       el.innerHTML = p.text ?? ''
     }
-  }, [p.text, editable])
+  }, [p.text, editable, straight])
 
   useEffect(() => {
     updateRecord()
@@ -133,25 +137,66 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   }, [params, p.fontClass.value, p.fontClass.url, isDraw])
 
   /**
-   * Fits the widget's box to the arc.
+   * The width the line had before it bent, so it can be given back.
+   *
+   * A text box's width is how far the words run before they wrap, and only the
+   * person who dragged the edge knows what it should be. The arc takes it away,
+   * and the straightened line has nothing left to read it off — so it is kept
+   * here rather than guessed at from the words.
+   */
+  const straightWidth = useRef<number | null>(null)
+  const wasCurved = useRef(false)
+
+  /**
+   * Fits the widget's box to the arc, and hands the straight box back when the
+   * arc goes.
    *
    * Straight text is laid out by the browser and measured back off the element,
    * which is what `writingText` does. A curved run is placed by us, so nothing
    * on the page knows how big it came out and the box has to be told.
+   *
+   * Run after every render rather than off a dependency list: the arc is one
+   * memo, so it is the same `null` from one straight render to the next, and a
+   * box resized while the text is straight would otherwise never be noticed.
    */
   useEffect(() => {
-    if (!curved) return
+    const boxWidth = Math.round(Number(params.width) || 0)
+    if (!curved) {
+      if (!wasCurved.current) {
+        straightWidth.current = boxWidth
+        return
+      }
+      wasCurved.current = false
+      const was = straightWidth.current
+      // Put the width back the way the arc took it: half the difference off the
+      // left edge, so the line straightens where it stands. The height is left
+      // to `writingText`, which measures it off the element as usual.
+      if (was === null || was === boxWidth) return
+      updateWidgetMultiple({
+        uuid: String(params.uuid),
+        data: [
+          { key: 'left', value: Math.round(Number(params.left) + (boxWidth - was) / 2) },
+          { key: 'width', value: was },
+        ],
+      })
+      requestAnimationFrame(() => setUpdateRect())
+      return
+    }
+    wasCurved.current = true
+    // A box opened from a saved design already curved has no straight width on
+    // record. The arc knows how long the line is laid out flat, which is the
+    // narrowest box that holds it without wrapping.
+    if (straightWidth.current === null) straightWidth.current = Math.round(curved.flatWidth)
     const width = Math.round(curved.width)
     const height = Math.round(curved.height)
-    const wasWidth = Math.round(Number(params.width) || 0)
-    if (wasWidth === width && Math.round(Number(params.height) || 0) === height) return
+    if (boxWidth === width && Math.round(Number(params.height) || 0) === height) return
     updateWidgetMultiple({
       uuid: String(params.uuid),
       data: [
         // Deepening the curve draws the ends of the line in, so the box loses
         // width. Give half of that back to the left edge and the text bends
         // where it stands, rather than creeping across the page as it goes.
-        { key: 'left', value: Math.round(Number(params.left) + (wasWidth ? (wasWidth - width) / 2 : 0)) },
+        { key: 'left', value: Math.round(Number(params.left) + (boxWidth ? (boxWidth - width) / 2 : 0)) },
         { key: 'width', value: width },
         { key: 'height', value: height },
       ],
@@ -159,7 +204,7 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     // Next frame, not this one: the selection box is measured off the element,
     // and the element is still the size it was until the new box has rendered.
     requestAnimationFrame(() => setUpdateRect())
-  }, [curved, params])
+  })
 
   const lastEditable = useRef(editable)
   useEffect(() => {
