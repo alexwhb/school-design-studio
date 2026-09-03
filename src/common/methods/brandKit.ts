@@ -114,6 +114,62 @@ export function normaliseBrandColor(value: string): string | null {
   return null
 }
 
+/**
+ * What to call the nth colour of the kit.
+ *
+ * The kit stores an order, not names: the first colour is the school's main
+ * one everywhere it is used, so the label follows the position rather than
+ * being typed in and then left behind when the order changes.
+ */
+export function brandColorRole(index: number): string {
+  if (index === 0) return 'Primary'
+  if (index === 1) return 'Secondary'
+  return `Colour ${index + 1}`
+}
+
+/**
+ * A one-word name for a colour — navy, gold, paper — so two blues in a list
+ * can be told apart at a glance without reading their hexes. It is the
+ * nearest common name for the hue, not a match, and it is only ever shown
+ * beside the swatch it describes.
+ */
+export function brandColorTone(color: string): string {
+  const hex = (normaliseBrandColor(color) || '').slice(1, 7)
+  if (hex.length !== 6) return ''
+  const r = parseInt(hex.slice(0, 2), 16) / 255
+  const g = parseInt(hex.slice(2, 4), 16) / 255
+  const b = parseInt(hex.slice(4, 6), 16) / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const lightness = (max + min) / 2
+  const span = max - min
+  if (span < 0.09) {
+    if (lightness > 0.9) return 'paper'
+    if (lightness < 0.12) return 'ink'
+    return 'grey'
+  }
+  const saturation = span / (1 - Math.abs(2 * lightness - 1))
+  let hue = 0
+  if (max === r) hue = ((g - b) / span) % 6
+  else if (max === g) hue = (b - r) / span + 2
+  else hue = (r - g) / span + 4
+  hue = (hue * 60 + 360) % 360
+  const dark = lightness < 0.32
+  const pale = lightness > 0.8 && saturation < 0.6
+  if (hue < 15 || hue >= 345) return dark ? 'maroon' : 'red'
+  if (hue < 35) return dark ? 'brown' : 'orange'
+  if (hue < 55) return pale ? 'cream' : 'gold'
+  if (hue < 70) return 'yellow'
+  if (hue < 90) return 'lime'
+  if (hue < 155) return dark ? 'forest' : 'green'
+  if (hue < 185) return 'teal'
+  if (hue < 205) return 'cyan'
+  if (hue < 255) return dark ? 'navy' : 'blue'
+  if (hue < 285) return 'indigo'
+  if (hue < 325) return 'purple'
+  return 'pink'
+}
+
 // ---- fonts -----------------------------------------------------------------
 
 export function brandFont(id: number | undefined): TFontItem | undefined {
