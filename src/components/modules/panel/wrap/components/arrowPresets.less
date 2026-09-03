@@ -1,18 +1,11 @@
 .arrow-presets {
-  padding: 0 14px;
-
-  &__header {
-    cursor: default;
-  }
-
   &__list {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    margin-bottom: @space-3;
+    gap: @space-2;
   }
 
-  // A tile like the stickers' beside it, drawn in the panel's own ink so a
+  // A tile like the artwork cards beside it, drawn in the panel's own ink so a
   // line reads in both themes.
   &__item {
     display: flex;
@@ -20,15 +13,15 @@
     justify-content: center;
     height: 44px;
     padding: 0;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    background: var(--art-tile);
+    border: 1px solid @line;
+    border-radius: @radius-lg;
+    background: @surface-2;
     color: @ink;
     cursor: pointer;
-    transition: background-color 0.12s ease;
+    transition: border-color 0.12s ease;
 
     &:hover {
-      background: var(--art-tile-hover);
+      border-color: @accent-border;
     }
     &:focus-visible {
       .focus-ring();

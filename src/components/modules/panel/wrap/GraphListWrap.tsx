@@ -12,15 +12,25 @@ import wImageSetting from '../../widgets/wImage/wImageSetting'
 import { wSvgSetting } from '../../widgets/wSvg/wSvgSetting'
 import ArrowPresets from './components/ArrowPresets'
 import SearchHeader from './components/SearchHeader'
-import ClassHeader from './components/ClassHeader'
+import FilterChips from './components/FilterChips'
+import PanelEyebrow from './components/PanelEyebrow'
+import Card, { CardGrid, CardRows } from './components/Card'
+import useCompPresets from './components/compPresets'
+import { PanelBody, PanelHead, PanelSectionBlock, PanelWrap } from './components/PanelShell'
 import { cx } from '@/utils/dom'
 import './graphListWrap.less'
 
-type TCurrentCategory = {
-  name: string
-  cate?: string | number
-  id?: number
-}
+/** The library's own three shelves, plus the "everything" chip in front. */
+const ALL = { id: '', name: 'All' }
+const TYPES = [
+  { id: 'png', name: 'Stickers' },
+  { id: 'svg', name: 'Shapes' },
+  { id: 'mask', name: 'Masks' },
+]
+const CHIPS = [ALL, ...TYPES]
+
+/** How many of a shelf are shown before you have to ask for all of it. */
+const PREVIEW = 6
 
 const dragHelper = new DragHelper()
 
@@ -28,32 +38,29 @@ export default function GraphListWrap() {
   const [loading, setLoading] = useState(false)
   const [loadDone, setLoadDone] = useState(false)
   const [list, setList] = useState<TGetListData[]>([])
-  const [currentCategory, setCurrentCategory] = useState<TCurrentCategory | null>(null)
-  const [types, setTypes] = useState<{ cate: string; name: string }[]>([])
+  /** The chip in force; '' is the overview of every shelf. */
+  const [cate, setCate] = useState('')
   const [showList, setShowList] = useState<TGetListData[][]>([])
   const [searchKeyword, setSearchKeyword] = useState('')
-  const listRef = useRef<HTMLUListElement | null>(null)
+  const listRef = useRef<HTMLDivElement | null>(null)
+  const { list: groups, itemProps: groupProps } = useCompPresets('comp')
 
   const isDrag = useRef(false)
   const startPoint = useRef({ x: 99999, y: 99999 })
   const loadingRef = useRef(false)
   const doneRef = useRef(false)
-  const categoryRef = useRef<TCurrentCategory | null>(null)
+  const cateRef = useRef('')
   const keywordRef = useRef('')
   const pageOptions = useRef({ page: 0, pageSize: 20 })
 
+  const isBrowsing = Boolean(cate) || Boolean(searchKeyword)
+
   useEffect(() => {
     let cancelled = false
-    const nextTypes = [
-      { cate: 'png', name: 'Stickers' },
-      { cate: 'svg', name: 'Shapes' },
-      { cate: 'mask', name: 'Masks' },
-    ]
-    setTypes(nextTypes)
     ;(async () => {
       const collected: TGetListData[][] = []
-      for (const iterator of nextTypes) {
-        const { list: items } = await api.material.getList({ cate: iterator.cate })
+      for (const type of TYPES) {
+        const { list: items } = await api.material.getList({ cate: type.id })
         collected.push(items)
       }
       if (!cancelled) setShowList(collected)
@@ -89,6 +96,7 @@ export default function GraphListWrap() {
       pageOptions.current.page = 0
       doneRef.current = false
       setLoadDone(false)
+      if (listRef.current) listRef.current.scrollTop = 0
     }
     if (doneRef.current || loadingRef.current) {
       return
@@ -97,7 +105,7 @@ export default function GraphListWrap() {
     setLoading(true)
     pageOptions.current.page += 1
     const res = await api.material.getList({
-      cate: categoryRef.current?.id || categoryRef.current?.cate,
+      cate: cateRef.current || undefined,
       search: keywordRef.current,
       ...pageOptions.current,
     } as any)
@@ -116,41 +124,33 @@ export default function GraphListWrap() {
     }, 100)
   }, [])
 
-  useInfiniteScroll(listRef, load, 150, !!currentCategory)
+  useInfiniteScroll(listRef, load, 150, isBrowsing)
 
   const searchChange = (keyword: string) => {
     setSearchKeyword(keyword)
     keywordRef.current = keyword
-    if (!keyword) {
-      categoryRef.current = null
-      setCurrentCategory(null)
-      return
-    }
-    const next = { name: `Results for "${keyword}"` }
-    categoryRef.current = next
-    setCurrentCategory(next)
+    // Clearing the box with no chip selected goes back to the shelves, which
+    // are already loaded and need no fetch of their own.
+    if (!keyword && !cateRef.current) return
     load(true)
   }
 
-  const selectTypes = (item: TCurrentCategory) => {
+  const cateChange = (item: { id: string | number; name: string }) => {
     setSearchKeyword('')
     keywordRef.current = ''
-    categoryRef.current = item
-    setCurrentCategory(item)
-    load(true)
+    setCate(String(item.id))
+    cateRef.current = String(item.id)
+    item.id && load(true)
   }
 
-  const back = () => {
-    setSearchKeyword('')
-    keywordRef.current = ''
-    categoryRef.current = null
-    setCurrentCategory(null)
-  }
+  const heading = useMemo(() => {
+    if (searchKeyword) return `Results for “${searchKeyword}”`
+    return TYPES.find((type) => type.id === cate)?.name ?? 'All graphics'
+  }, [cate, searchKeyword])
 
   const emptyText = useMemo(() => {
-    if (list.length > 0) return 'That is everything'
-    return searchKeyword ? `Nothing matches "${searchKeyword}"` : 'Nothing here yet'
-  }, [list.length, searchKeyword])
+    return searchKeyword ? `Nothing matches “${searchKeyword}”` : 'Nothing here yet'
+  }, [searchKeyword])
 
   async function selectItem(item: TGetListData) {
     if (isDrag.current) {
@@ -194,75 +194,79 @@ export default function GraphListWrap() {
     setSelectItem({ data: { value: item }, type: item.type })
   }
 
-  return (
-    <div className="wrap graph-list-wrap">
-      <SearchHeader value={searchKeyword} live placeholder="Search elements" onChange={setSearchKeyword} onSearch={searchChange} />
-      <div style={{ height: '0.5rem' }} />
-      {!currentCategory ? (
-        <ClassHeader
-          types={types}
-          onSelect={selectTypes}
-          // Before the library's own rows: the arrows are built in, not fetched.
-          before={<ArrowPresets />}
-          renderSection={(index) => (
-            <div className="list-wrap">
-              {(showList[index] || []).map((item, i) => (
-                <div
-                  key={i + 'sl'}
-                  draggable={false}
-                  onMouseDown={(e) => dragStart(e, item)}
-                  onMouseMove={mousemove}
-                  onMouseUp={mouseup}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    selectItem(item)
-                  }}
-                  onDragStart={(e) => e.preventDefault()}
-                >
-                  <Image className={cx('list__img-thumb', `art--${item.type}`)} src={item.thumb} fit="contain" lazy />
-                </div>
-              ))}
-            </div>
-          )}
-        />
-      ) : null}
+  /** One piece of artwork, wherever it is drawn — a shelf or the full list. */
+  const artCard = (item: TGetListData, key: string) => (
+    <Card
+      key={key}
+      ratio="1"
+      meta={item.title}
+      className={cx('list__item', `art--${item.type}`)}
+      thumbClassName="panel-card__thumb--art"
+      draggable={false}
+      onMouseDown={(e) => dragStart(e, item)}
+      onMouseMove={mousemove}
+      onMouseUp={mouseup}
+      onClick={(e) => {
+        e.stopPropagation()
+        selectItem(item)
+      }}
+      onDragStart={(e) => e.preventDefault()}
+    >
+      <Image className={cx('list__img', `art--${item.type}`)} src={item.thumb} fit="contain" lazy />
+    </Card>
+  )
 
-      {currentCategory ? (
-        <ul ref={listRef} className="infinite-list" style={{ overflow: 'auto' }}>
-          <ClassHeader isBack onBack={back}>
-            {currentCategory.name}
-          </ClassHeader>
-          <div className="list">
-            {list.map((item, i) => (
-              <div
-                key={i + 'i'}
-                className={cx('list__item', `art--${item.type}`)}
-                draggable={false}
-                onMouseDown={(e) => dragStart(e, item)}
-                onMouseMove={mousemove}
-                onMouseUp={mouseup}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  selectItem(item)
-                }}
-                  onDragStart={(e) => e.preventDefault()}
-              >
-                <Image className={cx('list__img', `art--${item.type}`)} src={item.thumb} fit="contain" lazy />
-              </div>
+  return (
+    <PanelWrap className="graph-list-wrap">
+      <PanelHead>
+        <SearchHeader value={searchKeyword} live placeholder="Search graphics" onChange={setSearchKeyword} onSearch={searchChange} />
+        <FilterChips items={CHIPS} value={searchKeyword ? '\u0000search' : cate} onChange={cateChange} />
+      </PanelHead>
+
+      <PanelBody ref={listRef}>
+        {!isBrowsing ? (
+          <>
+            {/* Before the library's own shelves: the arrows are built in, not
+                fetched. */}
+            <ArrowPresets />
+
+            {TYPES.map((type, index) => (
+              <PanelSectionBlock key={type.id}>
+                <PanelEyebrow label={type.name} onAction={() => cateChange(type)} />
+                <CardGrid columns={3}>{(showList[index] || []).slice(0, PREVIEW).map((item, i) => artCard(item, type.id + i))}</CardGrid>
+              </PanelSectionBlock>
             ))}
-          </div>
-          {loading ? (
-            <div className="loading">
-              <i className="el-icon-loading" /> Loading
-            </div>
-          ) : null}
-          {loadDone ? (
-            <div style={list.length <= 0 ? { paddingTop: '4rem' } : undefined} className="loading">
-              {emptyText}
-            </div>
-          ) : null}
-        </ul>
-      ) : null}
-    </div>
+
+            {groups.length > 0 ? (
+              <PanelSectionBlock>
+                <PanelEyebrow label="Ready-made groups" />
+                <CardRows>
+                  {groups.map((item) => (
+                    <Card
+                      key={item.id}
+                      className="panel-card--row group-card"
+                      ratio="74 / 38"
+                      name={item.title}
+                      meta={`${item.width} × ${item.height}`}
+                      thumbClassName="panel-card__thumb--art"
+                      {...groupProps(item)}
+                    >
+                      <Image className="list__img" src={item.cover} fit="contain" lazy />
+                    </Card>
+                  ))}
+                </CardRows>
+              </PanelSectionBlock>
+            ) : null}
+          </>
+        ) : (
+          <PanelSectionBlock>
+            <PanelEyebrow label={heading} onAction={() => cateChange(ALL)} actionLabel="Back" />
+            <CardGrid columns={3}>{list.map((item, i) => artCard(item, i + 'i'))}</CardGrid>
+            {loading ? <div className="panel-wrap__status">Loading</div> : null}
+            {loadDone ? <div className="panel-wrap__status">{list.length ? 'That is everything' : emptyText}</div> : null}
+          </PanelSectionBlock>
+        )}
+      </PanelBody>
+    </PanelWrap>
   )
 }

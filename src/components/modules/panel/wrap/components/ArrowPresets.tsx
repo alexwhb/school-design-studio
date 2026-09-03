@@ -13,6 +13,8 @@ import { LINE_PRESETS, linePresetSetting, type TLinePreset } from '@/components/
 import { canvasState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import { addWidget } from '@/store/widget'
+import PanelEyebrow from './PanelEyebrow'
+import { PanelSectionBlock } from './PanelShell'
 import './arrowPresets.less'
 
 const THUMB = { width: 72, height: 28 }
@@ -32,10 +34,8 @@ export default function ArrowPresets() {
   }
 
   return (
-    <div className="arrow-presets">
-      <div className="types__header arrow-presets__header">
-        <span style={{ flex: 1 }}>Arrows</span>
-      </div>
+    <PanelSectionBlock className="arrow-presets">
+      <PanelEyebrow label="Arrows" />
       <div className="arrow-presets__list">
         {LINE_PRESETS.map((preset) => (
           <button key={preset.name} type="button" className="arrow-presets__item" title={preset.name} onClick={() => add(preset)}>
@@ -43,6 +43,6 @@ export default function ArrowPresets() {
           </button>
         ))}
       </div>
-    </div>
+    </PanelSectionBlock>
   )
 }
