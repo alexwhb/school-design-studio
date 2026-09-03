@@ -19,8 +19,6 @@ const PANEL_HINTS: Record<string, string> = {
   'text-list-wrap': 'styles + effects',
   'graph-list-wrap': 'stickers · groups',
   'photo-list-wrap': 'free for schools',
-  'user-wrap': 'from this computer',
-  'tools-list-wrap': 'draw on the page',
   'brand-wrap': 'set by your school',
 }
 
