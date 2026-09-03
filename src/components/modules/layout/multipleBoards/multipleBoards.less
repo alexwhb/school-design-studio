@@ -198,45 +198,55 @@
   }
 }
 
-// The pill grows with the page name rather than spilling out of its own border,
-// and a name long enough to crowd the canvas is cut with an ellipsis.
+// The chip names the page, counts them and adds one. It grows with the page
+// name rather than spilling out of its own border, and a name long enough to
+// crowd the canvas is cut with an ellipsis.
 .fold {
-  cursor: pointer;
   width: max-content;
   min-width: 130px;
-  // The folded pill stops short of the zoom pill too. Escaped because Less
-  // folds an unescaped min() with a calc() argument down to its first term.
-  max-width: ~"min(320px, calc(100% - @{zoom-control-slot}))";
-  text-align: center;
-  height: 34px;
-  margin-bottom: 12px;
+  // The chip stops short of the zoom pill too. Escaped because Less folds an
+  // unescaped min() with a calc() argument down to its first term.
+  max-width: ~"min(360px, calc(100% - @{zoom-control-slot}))";
+  height: 36px;
+  margin-bottom: @zoom-control-inset;
 
+  // The same frosted pill the dock and the zoom control are: floating chrome
+  // over the board rather than a panel edge.
   .wrap {
     display: flex;
     align-items: center;
+    gap: 2px;
     height: 100%;
-    background-color: @surface;
+    padding: 0 4px;
+    background: @surface-glass;
     border: 1px solid @line;
-    border-radius: @radius;
+    border-radius: @radius-lg;
+    backdrop-filter: blur(8px);
   }
   .icon {
-    margin-left: 6px;
+    margin-left: 2px;
     font-size: 11px;
     flex-shrink: 0;
   }
   .btn {
-    padding: 0 14px;
     display: flex;
-    width: 100%;
     align-items: center;
-    justify-content: center;
-    height: 100%;
+    gap: 6px;
+    height: 28px;
+    padding: 0 8px;
+    min-width: 0;
     white-space: nowrap;
-    border-radius: @radius;
-    overflow: hidden;
+    border-radius: @radius-sm;
+    cursor: pointer;
+    color: @ink;
     &__label {
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    &__count {
+      flex-shrink: 0;
+      font-weight: 400;
+      color: @ink-4;
     }
     &:hover {
       background: @surface-2;
@@ -244,6 +254,49 @@
   }
   .btn:hover > .sd-zhankai {
     transform: rotate(180deg);
+  }
+
+  .chip-divider {
+    flex-shrink: 0;
+    width: 1px;
+    height: 18px;
+    margin: 0 2px;
+    background: @line;
+  }
+
+  .chip-add {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    height: 28px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: @radius-sm;
+    background: transparent;
+    color: @ink-2;
+    font: inherit;
+    font-size: @text-base;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &__icon {
+      width: 13px;
+      height: 13px;
+    }
+    &:hover {
+      background: @surface-2;
+      color: @ink;
+    }
+    &.is-disabled {
+      color: @ink-4;
+      cursor: not-allowed;
+      &:hover {
+        background: transparent;
+        color: @ink-4;
+      }
+    }
   }
 }
 

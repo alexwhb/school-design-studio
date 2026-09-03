@@ -30,11 +30,19 @@
   }
 }
 
-// In the collapsed pill it is the pill's right-hand end, divided off by a rule.
+// In the collapsed chip it is one more segment, sized like the rest of them;
+// the chip draws its own rule to divide it off.
 .fold .notes-toggle {
-  border-radius: 0 @radius @radius 0;
+  height: 28px;
+  padding: 0 9px;
+  border-left: 0;
+  border-radius: @radius-sm;
   &:hover {
     background: @surface-2;
+  }
+  &.has-notes::after {
+    top: 5px;
+    right: 3px;
   }
 }
 

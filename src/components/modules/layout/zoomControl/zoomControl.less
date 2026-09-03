@@ -13,16 +13,21 @@
     bottom: @zoom-control-inset + @notes-drawer-height;
   }
 
+  // The same frosted pill as the tool dock and the page chip: floating chrome
+  // over the board, not a panel edge.
   .zoom-control-wrap {
     display: flex;
     flex-direction: row;
     align-items: center;
+    gap: 2px;
     width: 100%;
-    height: 34px;
-    background: @surface;
+    height: 36px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    background: @surface-glass;
     border: 1px solid @line;
-    border-radius: @radius;
-    overflow: hidden;
+    border-radius: @radius-lg;
+    backdrop-filter: blur(8px);
 
     .zoom-icon {
       align-items: center;
@@ -31,8 +36,9 @@
       display: flex;
       flex: none;
       justify-content: center;
-      width: 32px;
-      height: 100%;
+      width: 28px;
+      height: 28px;
+      border-radius: @radius-sm;
       font-size: 13px;
       &:hover {
         background-color: @surface-2;
@@ -52,34 +58,56 @@
     .zoom-text {
       user-select: none;
       align-items: center;
-      color: @ink-2;
+      color: @ink;
       cursor: pointer;
       display: flex;
       flex: 1;
       justify-content: center;
-      min-width: 0;
-      padding: 0 10px;
-      height: 100%;
+      min-width: 52px;
+      height: 28px;
+      padding: 0 @space-1;
+      border-radius: @radius-sm;
       font-size: @text-base;
-      font-weight: 500;
+      font-variant-numeric: tabular-nums;
       white-space: nowrap;
-      border-left: 1px solid @line;
-      border-right: 1px solid @line;
       &:hover {
         background-color: @surface-2;
-        color: @ink;
       }
     }
     .zoom-text-active {
       background-color: @surface-2;
-      color: @ink;
+    }
+
+    .zoom-divider {
+      flex: none;
+      width: 1px;
+      height: 18px;
+      margin: 0 @space-1;
+      background: @line;
+    }
+
+    .zoom-fit {
+      user-select: none;
+      display: flex;
+      align-items: center;
+      flex: none;
+      height: 28px;
+      padding: 0 9px;
+      border-radius: @radius-sm;
+      color: @ink-2;
+      font-size: @text-base;
+      cursor: pointer;
+      &:hover {
+        background-color: @surface-2;
+        color: @ink;
+      }
     }
   }
 
   .zoom-selecter {
     background-color: @surface;
     border: 1px solid @line;
-    border-radius: @radius;
+    border-radius: @radius-lg;
     box-shadow: @shadow-pop;
     color: @ink-2;
     position: absolute;

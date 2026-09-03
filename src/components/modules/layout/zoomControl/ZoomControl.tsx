@@ -212,7 +212,24 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
     local.show = false
   }
 
+  /**
+   * Fits the page to the well. Its own button rather than the last row of the
+   * list, because it is the one zoom anybody asks for by name, and because the
+   * pill now reads as a number: "Fit to screen" is not one.
+   */
+  function fitToScreen() {
+    setOtherIndex(-1)
+    setActiveZoomIndex(ZoomList.length - 1)
+    // The page may have moved since the last fit, which leaves the index where
+    // it already was and nothing else to do it.
+    screenChange()
+    local.show = false
+  }
+
   const notesOpen = useSnapshot(notesState).open
+  // The pill says what the zoom is, not which preset was picked: the presets
+  // are all percentages bar one, and "Fit to screen" has a button of its own.
+  const zoomLabel = Math.round(useSnapshot(canvasState).dZoom) + '%'
 
   return (
     <div id="zoom-control" className={notesOpen ? 'above-notes' : undefined}>
@@ -249,7 +266,7 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
               local.show = !local.show
             }}
           >
-            {snap.zoom.text}
+            {zoomLabel}
           </div>
           <div
             className={'zoom-icon radius-right' + (snap.otherIndex === OtherList.length - 1 ? ' disable' : '')}
@@ -259,6 +276,16 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
             }}
           >
             <i className="iconfont icon-add" />
+          </div>
+          <div className="zoom-divider" />
+          <div
+            className="zoom-fit"
+            onClick={(e) => {
+              e.stopPropagation()
+              fitToScreen()
+            }}
+          >
+            Fit
           </div>
         </div>
       ) : null}

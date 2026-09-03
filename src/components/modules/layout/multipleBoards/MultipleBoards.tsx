@@ -13,6 +13,8 @@ import { pageBackgroundStyle } from '@/common/methods/pageBackground'
 import { staticWidgetComponents } from '../../widgets/registry'
 import { NOTES_DRAWER_HEIGHT, notesState } from '@/store/notes'
 import NotesToggle from '@/components/business/notes/NotesToggle'
+import ToolDock from '@/components/business/tool-dock/ToolDock'
+import { PlusIcon } from '@/components/ui/icons'
 import PageTransitionGlyph from './PageTransitionGlyph'
 import { cx } from '@/utils/dom'
 import type { TdLayout, TdWidgetData, TPageState } from '@/store/types'
@@ -159,14 +161,15 @@ export default function MultipleBoards() {
   const atLimit = dLayouts.length >= MAX_PAGES
 
   /**
-   * "Page 2/5" while pages are unnamed, and the name plus its position once one
-   * has been given — "Welcome · 2/5" — because a bare "Welcome/5" reads like a
-   * fraction.
+   * The chip names the page and then counts them: "Page 2" "of 5". A page that
+   * has been given a name has no number in it any more, so the count carries
+   * the position instead — "Welcome" "2 of 5".
    */
-  const foldLabel = useMemo(() => {
+  const fold = useMemo(() => {
     const total = dLayouts.length
-    const label = pageLabel(dLayouts[index] as TdLayout, index)
-    return label.startsWith('Page ') ? `${label}/${total}` : `${label} · ${index + 1}/${total}`
+    const name = pageLabel(dLayouts[index] as TdLayout, index)
+    const count = name.startsWith('Page ') ? `of ${total}` : `${index + 1} of ${total}`
+    return { name, count }
   }, [dLayouts, index])
 
   useEffect(() => {
@@ -297,50 +300,68 @@ export default function MultipleBoards() {
   }, [])
 
   return (
-    <div
-      style={{ position: 'absolute', bottom: notesHeight - st + 'px', left: sl + 'px' }}
-      className={cx('artboards', isFold ? 'fold' : 'unfold')}
-    >
-      <div ref={listRef} className="wrap">
-        {isFold ? (
-          <>
-            <div
-              className="btn"
-              title={foldLabel}
-              style={{ display: dLayouts.length > 0 ? undefined : 'none' }}
-              onClick={() => setIsFold(!isFold)}
-            >
-              <span className="btn__label">{foldLabel}</span> <i className="icon sd-zhankai" />
-            </div>
-            <NotesToggle />
-          </>
-        ) : (
-          <div className="list">
-            <span onClick={() => setIsFold(!isFold)} className="icon-btn">
-              <i className="icon sd-zhankai" />
-            </span>
-            <NotesToggle />
-            <div ref={pagesRef} className="pages">
-              {dLayouts.map((l, li) => (
-                <Page
-                  key={pageKey(li)}
-                  layout={l as TdLayout}
-                  index={li}
-                  isCurrent={index === li}
-                  isFirst={li === 0}
-                  isLast={li === dLayouts.length - 1}
-                  onCommand={runPageCommand}
-                />
-              ))}
-            </div>
-            <Tooltip content={atLimit ? `A design can have ${MAX_PAGES} pages` : 'Add a page'} placement="top" showAfter={400}>
-              <div className={cx('item-add', { 'is-disabled': atLimit })} onClick={add}>
-                <i className="iconfont icon-add" />
+    <>
+      {/*
+        The dock stands on the same bottom edge as this strip and the notes
+        drawer, and all three are placed inside #main, so it is drawn from here
+        rather than from the editor's root.
+      */}
+      <ToolDock />
+      <div
+        style={{ position: 'absolute', bottom: notesHeight - st + 'px', left: sl + 'px' }}
+        className={cx('artboards', isFold ? 'fold' : 'unfold')}
+      >
+        <div ref={listRef} className="wrap">
+          {isFold ? (
+            <>
+              <div
+                className="btn"
+                title={`${fold.name} ${fold.count} — show every page`}
+                style={{ display: dLayouts.length > 0 ? undefined : 'none' }}
+                onClick={() => setIsFold(!isFold)}
+              >
+                <span className="btn__label">{fold.name}</span>
+                <span className="btn__count">{fold.count}</span>
+                <i className="icon sd-zhankai" />
               </div>
-            </Tooltip>
-          </div>
-        )}
+              <div className="chip-divider" />
+              <Tooltip content={atLimit ? `A design can have ${MAX_PAGES} pages` : 'Add a page after this one'} placement="top" showAfter={400}>
+                <button type="button" className={cx('chip-add', { 'is-disabled': atLimit })} onClick={add}>
+                  <PlusIcon className="chip-add__icon" />
+                  <span className="chip-add__label">Add page</span>
+                </button>
+              </Tooltip>
+              <div className="chip-divider" />
+              <NotesToggle />
+            </>
+          ) : (
+            <div className="list">
+              <span onClick={() => setIsFold(!isFold)} className="icon-btn">
+                <i className="icon sd-zhankai" />
+              </span>
+              <NotesToggle />
+              <div ref={pagesRef} className="pages">
+                {dLayouts.map((l, li) => (
+                  <Page
+                    key={pageKey(li)}
+                    layout={l as TdLayout}
+                    index={li}
+                    isCurrent={index === li}
+                    isFirst={li === 0}
+                    isLast={li === dLayouts.length - 1}
+                    onCommand={runPageCommand}
+                  />
+                ))}
+              </div>
+              <Tooltip content={atLimit ? `A design can have ${MAX_PAGES} pages` : 'Add a page'} placement="top" showAfter={400}>
+                <div className={cx('item-add', { 'is-disabled': atLimit })} onClick={add}>
+                  <i className="iconfont icon-add" />
+                </div>
+              </Tooltip>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
