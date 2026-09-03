@@ -1,7 +1,8 @@
-// One heading row height and one gap under a section, everywhere. The collapse
-// this replaced used a 44px header — off the grid, and a third again the height
-// of the hand-rolled headings it sat next to.
-@section-head-h: @control-h-lg;
+// A section is an eyebrow over its content, with a hairline between one section
+// and the next. The hairline runs the full width of the panel rather than the
+// content's, so the panel reads as a stack of bands — which is what tells you
+// where one setting ends and the next begins without a box round either.
+@section-rule-gap: @space-4;
 
 .ds-section {
   width: 100%;
@@ -10,7 +11,7 @@
     display: flex;
     align-items: center;
     width: 100%;
-    min-height: @section-head-h;
+    margin-bottom: @field-gap;
   }
 
   &__toggle {
@@ -18,7 +19,6 @@
     align-items: center;
     gap: @space-2;
     width: 100%;
-    min-height: @section-head-h;
     padding: 0;
     background: transparent;
     border: 0;
@@ -36,12 +36,17 @@
   }
 
   &__title {
-    .section-label();
     flex: 1;
     min-width: 0;
+    font-size: @text-xs;
+    font-weight: 500;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: @ink-3;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    user-select: none;
   }
 
   // Whatever the section wants beside its name: a current value, a Choose
@@ -52,39 +57,45 @@
     gap: @space-2;
     flex: none;
     min-width: 0;
+    color: @ink-3;
+    font-size: @text-xs;
     cursor: default;
   }
 
+  // Quiet, because almost nothing in the panel folds any more: the chevron is
+  // there for the two sections that still do, not as a decoration on the rest.
   &__arrow {
     display: flex;
     align-items: center;
     justify-content: center;
     flex: none;
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     color: @ink-4;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, color 0.12s ease;
     svg {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
     }
-  }
-
-  &__body {
-    padding-bottom: @section-gap;
   }
 
   &.is-collapsible.is-open &__arrow {
     transform: rotate(90deg);
   }
 
-  &__toggle:hover &__title {
+  &__toggle:hover &__title,
+  &__toggle:hover &__arrow {
     color: @ink-2;
   }
 }
 
-// Sections stacked in a group divide the panel; the last one does not need a
-// gap under it because the panel's own bottom padding is already there.
-.ds-sections > .ds-section:last-child > .ds-section__body {
-  padding-bottom: 0;
+// The band between two sections. It is a pseudo-element on the second of the
+// pair, so a section knows nothing about the rule above it and a panel can put
+// its sections in any order.
+.ds-section + .ds-section::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: @line;
+  margin: @section-rule-gap -@panel-gutter;
 }
