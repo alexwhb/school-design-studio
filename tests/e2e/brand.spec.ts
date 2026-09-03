@@ -38,18 +38,20 @@ async function setSchoolName(page: Page, name: string) {
   await page.waitForTimeout(900)
 }
 
-/** Adds one colour to the kit through the picker in the Colours section. */
+/** Adds one colour to the kit through the card the Add row opens. */
 async function addBrandColor(page: Page, hex: string) {
   await openPanel(page, 'Brand')
   await page.locator('.brand-swatch--add').click()
   await page.waitForTimeout(500)
-  const hexField = page.locator('.brand-add .cp__box .input')
-  await hexField.fill(hex)
-  // The field commits on blur, which pressing the button does anyway.
-  await hexField.press('Enter')
-  await page.waitForTimeout(400)
-  await page.locator('.brand-add .el-button').click()
+  await page.locator('.brand-editor__hex input').fill(hex)
+  await page.waitForTimeout(300)
+  await page.locator('.brand-editor__save').click()
   await page.waitForTimeout(600)
+}
+
+/** The hexes the Colours section is showing, in kit order. */
+function kitHexes(page: Page) {
+  return page.locator('.brand-swatch__hex').allInnerTexts()
 }
 
 /** Every text layer on the page, markup taken off. */
@@ -159,14 +161,71 @@ test('the brand colours sit above the swatches in every colour picker', async ({
   expect(colour).toBe('rgb(200, 16, 46)')
 })
 
+test('a colour is edited in its own row, and nothing changes until it is saved', async ({ page }) => {
+  await addBrandColor(page, '#C8102E')
+  // The label is derived from the place in the kit, not typed in.
+  await expect(page.locator('.brand-swatch__role').first()).toHaveText('Primary · red')
+
+  await page.locator('.brand-swatch__edit').first().click()
+  await page.waitForTimeout(400)
+  await expect(page.locator('.brand-editor')).toBeVisible()
+  // The card says where the colour already is before it is changed.
+  await expect(page.locator('.brand-editor__note')).toHaveText('Not used in this design yet.')
+
+  await page.locator('.brand-editor__hex input').fill('#1F3B63')
+  await page.waitForTimeout(300)
+  await page.locator('.brand-editor__cancel').click()
+  await page.waitForTimeout(400)
+  expect(await kitHexes(page)).toEqual(['#C8102E'])
+
+  await page.locator('.brand-swatch__edit').first().click()
+  await page.waitForTimeout(400)
+  await page.locator('.brand-editor__hex input').fill('#1F3B63')
+  await page.waitForTimeout(300)
+  await page.locator('.brand-editor__save').click()
+  await page.waitForTimeout(500)
+  expect(await kitHexes(page)).toEqual(['#1F3B63'])
+  await expect(page.locator('.brand-swatch__role').first()).toHaveText('Primary · navy')
+})
+
+test('the editing card says where the colour is already painted, and can take it out', async ({ page }) => {
+  await addBrandColor(page, '#C8102E')
+  // Nothing selected, so this paints the page itself.
+  await page.locator('.brand-swatch__chip').first().click()
+  await page.waitForTimeout(600)
+
+  await page.locator('.brand-swatch__edit').first().click()
+  await page.waitForTimeout(400)
+  await expect(page.locator('.brand-editor__note')).toHaveText('Used as the background on 1 page.')
+
+  await page.locator('.brand-editor__remove').click()
+  await page.waitForTimeout(500)
+  await expect(page.locator('.brand-swatch')).toHaveCount(0)
+  await expect(page.locator('.brand-editor')).toHaveCount(0)
+  // The page keeps the colour it was painted; the kit is what changed.
+  expect(await page.locator('#page-design-canvas').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(200, 16, 46)')
+})
+
+test('the same colour is not added twice', async ({ page }) => {
+  await addBrandColor(page, '#C8102E')
+  await addBrandColor(page, '#C8102E')
+  expect(await kitHexes(page)).toEqual(['#C8102E'])
+  await expect(page.locator('.el-message')).toContainText('already in the kit')
+})
+
 /* --------------------------------------------------------------- the fonts */
 
 test('the school fonts head the text panel’s font list', async ({ page }) => {
   await openPanel(page, 'Brand')
-  await page.locator('.brand-font', { hasText: 'Headings' }).locator('.el-select__wrapper').click()
+  await page.locator('.brand-font--heading').click()
   await page.waitForTimeout(500)
-  await page.locator('.el-select-dropdown__item', { hasText: 'Bebas Neue' }).first().click()
+  await page.locator('.brand-fonts__option', { hasText: 'Bebas Neue' }).first().click()
   await page.waitForTimeout(700)
+
+  // The card is the preview: the name is set in the font it names.
+  const card = page.locator('.brand-font--heading .brand-font__name')
+  await expect(card).toHaveText('Bebas Neue')
+  expect(await card.evaluate((el) => getComputedStyle(el).fontFamily)).toContain('Bebas Neue')
 
   await addText(page, 'Heading')
   await selectFirstWidget(page)
@@ -193,14 +252,43 @@ test('the logo can be uploaded and put on the page', async ({ page }) => {
   const source = await thumb.getAttribute('src')
   expect(source).toContain('data:image/png')
 
-  await page.locator('.brand-logo__actions .el-button', { hasText: 'Add to page' }).click()
+  // The tile is the button: clicking the crest puts the crest on the page.
+  await page.locator('.brand-logo__thumb').click()
   await page.waitForTimeout(800)
   await expect(page.locator(WIDGET)).toHaveCount(1)
   await expect(page.locator(WIDGET).first()).toHaveAttribute('data-type', 'w-image')
 
-  await page.locator('.brand-logo__actions .el-button', { hasText: 'Remove' }).click()
+  // Uploading again replaces the one logo rather than adding a second tile.
+  await expect(page.locator('.brand-upload')).toContainText('Replace')
+
+  await page.locator('.brand-logo__remove').click()
   await page.waitForTimeout(500)
   await expect(page.locator('.brand-logo__thumb')).toHaveCount(0)
+  await expect(page.locator('.brand-upload')).toContainText('Upload')
+})
+
+/* ------------------------------------------------- the school's own card */
+
+test('the card counts the pages Apply brand would touch', async ({ page }) => {
+  await openPanel(page, 'Brand')
+  const card = page.locator('.brand-card')
+  await expect(card.locator('.brand-card__name')).toHaveText('Your school')
+  await expect(card.locator('.brand-card__impact')).toContainText('across this page')
+  // Nothing in the kit, so there is nothing for the button to apply.
+  await expect(card.locator('.brand-card__apply')).toBeDisabled()
+
+  await expandPageStrip(page)
+  await addPage(page)
+  await openPanel(page, 'Brand')
+  await expect(card.locator('.brand-card__impact')).toContainText('across all 2 pages')
+
+  // The card takes its name and its line from the details underneath it.
+  await setSchoolName(page, 'Oakridge Primary')
+  await page.locator('#brand-tagline').fill('Learning together')
+  await page.waitForTimeout(400)
+  await expect(card.locator('.brand-card__name')).toHaveText('Oakridge Primary')
+  await expect(card.locator('.brand-card__note')).toHaveText('Learning together')
+  await expect(card.locator('.brand-card__apply')).toBeEnabled()
 })
 
 /* --------------------------------------------------------- apply the brand */
@@ -217,7 +305,7 @@ test('apply brand fills the fields on every page, in one undo step', async ({ pa
   expect(await widgetText(page)).toBe('{{school.name}}')
 
   await setSchoolName(page, 'Oakridge Primary')
-  await page.locator('.brand-wrap__footer .el-button').click()
+  await page.locator('.brand-card__apply').click()
   await page.waitForTimeout(600)
   await expect(page.locator('.ds-apply-brand')).toBeVisible()
   await page.locator('.ds-apply-brand .el-button--primary').click()
@@ -249,6 +337,6 @@ test('the kit is still there after a reload', async ({ page }) => {
   await openPanel(page, 'Brand')
 
   await expect(page.locator('#brand-name')).toHaveValue('Oakridge Primary')
-  await expect(page.locator('.brand-swatch__chip')).toHaveCount(1)
-  await expect(page.locator('.brand-swatch__chip').first()).toHaveAttribute('title', '#C8102E')
+  await expect(page.locator('.brand-swatch')).toHaveCount(1)
+  expect(await kitHexes(page)).toEqual(['#C8102E'])
 })
