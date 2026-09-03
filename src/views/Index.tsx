@@ -66,6 +66,7 @@ export default function Index() {
   const bulkDocumentsRef = useRef<BulkDocumentsHandle | null>(null)
   const presentRef = useRef<PresentModeHandle | null>(null)
   const loaded = useRef(false)
+  const rootRef = useRef<HTMLDivElement | null>(null)
   const tourRef = useRef<TourHandle | null>(null)
   const step1Ref = useRef<HTMLDivElement | null>(null)
   const step2Ref = useRef<HTMLDivElement | null>(null)
@@ -92,8 +93,9 @@ export default function Index() {
     // The zoom pill is pinned to the right edge of the board, which moves with
     // the panel. It follows a custom property rather than the panel's width
     // token so that it lands on the strip's edge when the panel is away.
-    const right = document.querySelector('#style-panel, .style-panel-strip') as HTMLElement | null
-    document.getElementById('page-design-index')?.style.setProperty('--ds-right-panel-w', `${right?.offsetWidth ?? 0}px`)
+    const root = rootRef.current
+    const right = root?.querySelector('#style-panel, .style-panel-strip') as HTMLElement | null
+    root?.style.setProperty('--ds-right-panel-w', `${right?.offsetWidth ?? 0}px`)
 
     const board = document.getElementById('page-design')
     if (!board) return
@@ -212,7 +214,7 @@ export default function Index() {
   const shelterHeight = Math.floor((canvas.dPage.height * canvas.dZoom) / 100) + 'px'
 
   return (
-    <div id="page-design-index" className="page-design-bg-color">
+    <div id="page-design-index" ref={rootRef} className="page-design-bg-color">
       <div style={navStyle} className="top-nav">
         <div className="top-nav-wrap">
           <div className="top-left">
