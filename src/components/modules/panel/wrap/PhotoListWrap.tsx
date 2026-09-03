@@ -157,7 +157,7 @@ export default function PhotoListWrap() {
 
   return (
     <div className="wrap photo-list-wrap">
-      <SearchHeader type="none" placeholder="Search photos" onSearch={searchChange} />
+      <SearchHeader placeholder="Search photos" onSearch={searchChange} />
       <div style={{ height: '0.5rem' }} />
 
       {!isViewingList ? (

@@ -196,7 +196,7 @@ export default function GraphListWrap() {
 
   return (
     <div className="wrap graph-list-wrap">
-      <SearchHeader value={searchKeyword} type="none" live placeholder="Search elements" onChange={setSearchKeyword} onSearch={searchChange} />
+      <SearchHeader value={searchKeyword} live placeholder="Search elements" onChange={setSearchKeyword} onSearch={searchChange} />
       <div style={{ height: '0.5rem' }} />
       {!currentCategory ? (
         <ClassHeader

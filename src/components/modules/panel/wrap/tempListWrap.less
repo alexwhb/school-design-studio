@@ -1,73 +1,8 @@
 .temp-list-wrap {
-  width: 100%;
-  height: 100%;
-
-  .infinite-list {
-    height: 100%;
-    margin-top: @space-4;
-    padding-bottom: 150px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .infinite-list::-webkit-scrollbar {
-    display: none;
-  }
-
-  .loading {
-    padding-top: @space-4;
-    text-align: center;
-    font-size: 14px;
-    color: @ink-3;
-  }
-
-  .cates {
-    display: flex;
-    flex-wrap: wrap;
-    gap: @space-1 @space-2;
-    padding: @space-3 @panel-gutter @space-1;
-  }
-
-  // A filter over many categories rather than a switch between two, so these
-  // stay chips rather than becoming a Segmented. They share its height and type
-  // so the two read as the same family.
-  .cates__chip {
-    height: @control-h;
-    padding: 0 @space-3;
-    border: 1px solid @line;
+  // A design of your own is a thing you made, not a thing on offer, so its
+  // cards keep the panel's own surface and only the gallery below reads as a
+  // shelf of cards to pick from.
+  &__designs .panel-card {
     background: @surface;
-    color: @ink-2;
-    font-family: inherit;
-    font-size: @text-sm;
-    font-weight: 500;
-    line-height: 1;
-    border-radius: @radius-pill;
-    cursor: pointer;
-    transition:
-      background-color 0.12s ease,
-      border-color 0.12s ease,
-      color 0.12s ease;
-
-    &:hover {
-      background: @surface-2;
-      color: @ink;
-    }
-
-    &:focus-visible {
-      .focus-ring();
-    }
-
-    &--on,
-    &--on:hover {
-      background: @accent-soft;
-      border-color: @accent-border;
-      color: @accent;
-    }
-  }
-
-  .upload-psd {
-    // The divider above it is gone, so the button supplies its own gap under the
-    // search box rather than sitting flush against it.
-    margin: @space-2 @panel-gutter 0;
-    width: calc(100% - 32px);
   }
 }
