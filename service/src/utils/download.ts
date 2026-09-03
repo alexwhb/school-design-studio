@@ -64,18 +64,18 @@ export const saveScreenshot = async (url: string, { path, width, height, thumbPa
       console.log('任务超时，已失败')
       resolve()
     }, forceTimeOut * 1000)
-    
+
     clearTimeout(release)
     release = setTimeout(() => {
       browser && browser.close()
       browser = null
-    }, releaseTime * 1000);
+    }, releaseTime * 1000)
 
     function compress() {
       try {
-          images(path)
-            .size(+size || 300)
-            .save(thumbPath, { quality: +quality || 70 })
+        images(path)
+          .size(+size || 300)
+          .save(thumbPath, { quality: +quality || 70 })
       } catch (err) {
         console.log(err)
       }

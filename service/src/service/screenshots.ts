@@ -73,7 +73,6 @@ export async function screenshots(req: any, res: any) {
  * @apiParam {Number} scale
  */
 export async function printscreen(req: any, res: any) {
-  
   let { width = 375, height = 0, url, type = 'file', size, quality, prevent = false, ua, devices, scale, wait } = req.query
   const path = filePath + `screenshot_${new Date().getTime()}_${uuid()}.png`
   const thumbPath = type === 'cover' ? path.replace('.png', '.jpg') : null

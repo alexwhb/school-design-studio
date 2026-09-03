@@ -1,6 +1,5 @@
 declare namespace Type {
-    export interface Object {
-        [propName: string]: any
-    }
+  export interface Object {
+    [propName: string]: any
+  }
 }
-

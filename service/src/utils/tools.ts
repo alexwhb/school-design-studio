@@ -80,4 +80,3 @@ function splitPath(dirPath: string) {
   const separator = path.sep
   return normalizedPath.split(separator)
 }
-
