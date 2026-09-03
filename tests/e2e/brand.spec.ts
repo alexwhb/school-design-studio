@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { WIDGET, addPage, addText, armShapeTool, expandPageStrip, goToPage, openEditor, selectFirstWidget, setWidgetText, widgetText } from './helpers'
+import { WIDGET, addPage, addText, armShapeTool, expandPageStrip, goToPage, openEditor, selectFirstWidget, setWidgetText, widgetCount, widgetText } from './helpers'
 
 /*
  * The brand kit: the school's own name, colours, fonts and contact line, set
@@ -54,6 +54,53 @@ function kitHexes(page: Page) {
   return page.locator('.brand-swatch__hex').allInnerTexts()
 }
 
+/** Picks one of the kit's two fonts out of its card. */
+async function setBrandFont(page: Page, slot: 'heading' | 'body', name: string) {
+  await openPanel(page, 'Brand')
+  await page.locator(`.brand-font--${slot}`).click()
+  await page.waitForTimeout(400)
+  await page.locator('.brand-fonts__popper:visible .brand-fonts__option', { hasText: name }).first().click()
+  await page.waitForTimeout(600)
+}
+
+/**
+ * Every colour the line art on the page is painted in, alpha and all. The
+ * shapes are where a template's palette mostly lives, and reading the SVG's
+ * own attributes rather than a computed style is what keeps the eight digits:
+ * a 7% wash comes back as `#rrggbb12` instead of an `rgba()` rounded to three.
+ */
+function svgPaints(page: Page) {
+  return page.$$eval(`${WIDGET}[data-type="w-svg"] svg`, (nodes) =>
+    nodes.flatMap((node) => [...node.outerHTML.matchAll(/(?:fill|stroke)="(#[0-9a-fA-F]{6,8})"/g)].map((match) => match[1].toLowerCase())),
+  )
+}
+
+/** The colour and the face of each text box, in the order they are stacked. */
+function textFaces(page: Page) {
+  return page.$$eval(`${WIDGET} .edit-text`, (nodes) =>
+    nodes.map((node) => ({
+      text: (node as HTMLElement).innerText.slice(0, 20),
+      color: getComputedStyle(node).color,
+      font: getComputedStyle(node).fontFamily.replace(/"/g, ''),
+    })),
+  )
+}
+
+/**
+ * Serves one template doctored on the way past, for the cases the bundled
+ * three do not cover — a template that would rather keep its own palette, or
+ * a line whose face is the artwork. The block is what the file carries, so
+ * changing it here is the same as authoring it.
+ */
+async function serveTemplate(page: Page, change: (detail: any) => void) {
+  await page.route('**/design/temp*', async (route) => {
+    const response = await route.fetch()
+    const body = await response.json()
+    change(body.result)
+    await route.fulfill({ response, json: body })
+  })
+}
+
 /** Every text layer on the page, markup taken off. */
 function pageText(page: Page) {
   return page.locator(`${WIDGET} .edit-text`).allInnerTexts()
@@ -95,6 +142,101 @@ test('a field clicked in the panel lands in the text box that is selected', asyn
   // Appended, not replaced, and not filled in: the field is what was asked for.
   await expect(page.locator(WIDGET)).toHaveCount(1)
   expect(await widgetText(page)).toContain('{{school.name}}')
+})
+
+/* ------------------------------ a template in the school's colours and fonts */
+
+test('a template lands in the school’s colours, at the template’s own alphas', async ({ page }) => {
+  await addBrandColor(page, '#0F7A6E')
+  await addBrandColor(page, '#E4572E')
+  await pickTemplate(page, FIELD_DAY)
+
+  const paints = await svgPaints(page)
+  // The poster says its navy is the primary and its gold the secondary, so the
+  // school's first colour goes wherever the navy was and its second where the
+  // gold was — no counting, no guessing.
+  expect(paints).toContain('#0f7a6eff')
+  expect(paints).toContain('#e4572eff')
+  // Including the 7% wash behind the details, which stays a 7% wash.
+  expect(paints).toContain('#0f7a6e12')
+  expect(paints.join(' ')).not.toContain('1e3a5f')
+  expect(paints.join(' ')).not.toContain('e1a731')
+
+  // Text painted the navy follows it too.
+  const faces = await textFaces(page)
+  expect(faces.find((face) => face.text.startsWith('Friday'))?.color).toBe('rgb(15, 122, 110)')
+  // The paper and the ink are neutrals, which a kit says nothing about.
+  expect(await page.locator('#page-design-canvas').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(251, 247, 239)')
+  expect(faces.find((face) => face.text.startsWith('Grades'))?.color).toBe('rgb(34, 37, 42)')
+})
+
+test('with no colours in the kit, a template lands in its own', async ({ page }) => {
+  await pickTemplate(page, FIELD_DAY)
+
+  const paints = await svgPaints(page)
+  expect(paints).toContain('#1e3a5fff')
+  expect(paints).toContain('#e1a731ff')
+  expect(paints).toContain('#1e3a5f12')
+})
+
+test('a template lands in the school’s fonts, headings and body apart', async ({ page }) => {
+  await setBrandFont(page, 'heading', 'Playfair Display')
+  await setBrandFont(page, 'body', 'Karla')
+  await pickTemplate(page, FIELD_DAY)
+
+  const faces = await textFaces(page)
+  expect(faces.find((face) => face.text.startsWith('FIELD DAY'))?.font).toBe('Playfair Display')
+  expect(faces.find((face) => face.text.startsWith('Friday'))?.font).toBe('Playfair Display')
+  expect(faces.find((face) => face.text.startsWith('Grades'))?.font).toBe('Karla')
+  expect(faces.find((face) => face.text.startsWith('Sunscreen'))?.font).toBe('Karla')
+})
+
+test('a text box that asks to keep its face keeps it', async ({ page }) => {
+  await serveTemplate(page, (detail) => {
+    const pages = JSON.parse(detail.data)
+    pages[0].layers.find((layer: any) => (layer.text || '').includes('FIELD DAY')).brandRole = 'keep'
+    detail.data = JSON.stringify(pages)
+  })
+  await setBrandFont(page, 'heading', 'Playfair Display')
+  await setBrandFont(page, 'body', 'Karla')
+  await pickTemplate(page, FIELD_DAY)
+
+  const faces = await textFaces(page)
+  // The title is the artwork, so it is left in the face it was drawn in; the
+  // heading beneath it, which said nothing, still follows the kit.
+  expect(faces.find((face) => face.text.startsWith('FIELD DAY'))?.font).toBe('Anton')
+  expect(faces.find((face) => face.text.startsWith('Friday'))?.font).toBe('Playfair Display')
+})
+
+test('a template that would rather keep its palette keeps it, and still fills', async ({ page }) => {
+  await serveTemplate(page, (detail) => {
+    detail.brand.keep = true
+  })
+  await setSchoolName(page, 'Oakridge Primary')
+  await addBrandColor(page, '#0F7A6E')
+  await setBrandFont(page, 'heading', 'Playfair Display')
+  await pickTemplate(page, FIELD_DAY)
+
+  const paints = await svgPaints(page)
+  expect(paints).toContain('#1e3a5fff')
+  expect(paints).toContain('#e1a731ff')
+  const faces = await textFaces(page)
+  expect(faces.find((face) => face.text.startsWith('FIELD DAY'))?.font).toBe('Anton')
+  // Only the palette and the lettering are the template's own; the name is the
+  // school's either way.
+  expect(faces.map((face) => face.text)).toContain('OAKRIDGE PRIMARY')
+})
+
+test('undo after adding a recoloured template takes the whole template off', async ({ page }) => {
+  await addBrandColor(page, '#0F7A6E')
+  await pickTemplate(page, FIELD_DAY)
+  expect(await widgetCount(page)).toBeGreaterThan(10)
+
+  await page.keyboard.press('ControlOrMeta+z')
+  await page.waitForTimeout(900)
+  // One entry, not two: the recolour is part of adding the template rather
+  // than a step of its own to be peeled off first.
+  expect(await widgetCount(page)).toBe(0)
 })
 
 /* ------------------------------------------------------------- the colours */
