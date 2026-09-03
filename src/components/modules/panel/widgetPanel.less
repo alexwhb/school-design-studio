@@ -1,3 +1,7 @@
+// The strip that stands in for a hidden panel. Wide enough to hit and to hold a
+// chevron, narrow enough that hiding a panel still reads as gaining the space.
+@panel-strip-width: 26px;
+
 #widget-panel {
   display: flex;
   flex-direction: row;
@@ -15,12 +19,13 @@
     flex-shrink: 0;
 
     .classify-wrap {
-      padding: 8px 8px 0;
+      padding: 10px 0 8px;
       user-select: none;
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      align-items: center;
+      gap: @space-1;
 
       .classify-item {
         position: relative;
@@ -29,20 +34,21 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-        gap: @space-1;
-        width: 100%;
-        padding: @space-2 2px;
+        gap: 5px;
+        width: 64px;
+        padding: 9px 0 7px;
         border: 0;
         background: transparent;
         font-family: inherit;
-        border-radius: @radius;
+        border-radius: @radius-lg;
         transition: background-color 0.12s ease, color 0.12s ease;
 
         .classify-name {
-          color: @ink-3;
+          color: @ink-2;
           font-size: @text-xs;
           font-weight: 500;
           line-height: 1.2;
+          letter-spacing: 0.01em;
           white-space: nowrap;
         }
 
@@ -50,23 +56,27 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          height: 22px;
+          height: 21px;
         }
         // Named rail-icon, not icon: `.icon` is the base class of the second
         // iconfont project and sets font-family with !important, so an element
         // carrying both it and `.iconfont` renders these glyphs from the wrong
         // font — as boxes.
         .rail-icon {
-          font-size: 20px;
+          font-size: 21px;
           color: @ink-2;
           transition: color 0.12s ease;
         }
 
         &:hover {
           background: @surface-2;
-          .classify-name {
-            color: @ink-2;
+          .classify-name,
+          .rail-icon {
+            color: @ink;
           }
+        }
+        &:focus-visible {
+          .focus-ring();
         }
       }
 
@@ -88,43 +98,103 @@
     width: @panel-width;
     background-color: @surface;
     border-right: 1px solid @line;
-    flex: 1;
-    height: 100%;
-  }
-
-  .side-wrap {
-    position: absolute;
-    left: @rail-width + @panel-width;
-    pointer-events: none;
-    z-index: 99;
+    flex: none;
     height: 100%;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    min-height: 0;
+  }
 
-    .pack__up {
-      pointer-events: all;
-      cursor: pointer;
-      width: 18px;
-      height: 44px;
-      margin-left: -1px;
+  // Whose panel this is, and what is in it. The tabs are one word each, so the
+  // hint is where "Photos" gets to say the pictures are free to use.
+  .panel-head {
+    flex: none;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: @space-2;
+    padding: 14px @panel-gutter 0;
+
+    &__title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: @ink;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &__meta {
+      display: flex;
+      align-items: center;
+      gap: @space-2;
+      flex: none;
+    }
+
+    &__hint {
+      font-size: @text-xs;
+      color: @ink-3;
+      white-space: nowrap;
+    }
+
+    &__collapse {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: @surface;
-      border: 1px solid @line;
-      border-left: none;
-      border-radius: 0 @radius @radius 0;
-      color: @ink-4;
-      transition: color 0.12s ease, background-color 0.12s ease;
+      flex: none;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border: 0;
+      border-radius: @radius-sm;
+      background: transparent;
+      color: @ink-3;
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
 
-      .iconfont {
-        font-size: 12px;
-        transform: rotate(180deg);
-      }
       &:hover {
-        color: @ink;
         background: @surface-2;
+        color: @ink;
       }
+      &:focus-visible {
+        .focus-ring();
+      }
+    }
+  }
+
+  // What is left for the panel itself. Every wrap is height: 100%, and this is
+  // the box that height resolves against, so the panel's own scrolling stays
+  // inside it instead of pushing the title row off the top.
+  .widget-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-strip {
+    width: @panel-strip-width;
+    flex: none;
+    height: 100%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: @surface;
+    border: 0;
+    border-right: 1px solid @line;
+    color: @ink-3;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+
+    &:hover {
+      background: @surface-2;
+      color: @ink;
+    }
+    &:focus-visible {
+      .focus-ring();
+      outline-offset: -2px;
     }
   }
 }

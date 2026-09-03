@@ -16,13 +16,45 @@
   width: @style-panel-width;
   flex-shrink: 0;
 
-  // The panel switch. The control brings its own geometry; this is the slot it
-  // sits in.
+  // The panel switch and the way out. No hairline under it: the switch already
+  // reads as a band across the top, and a rule as well made two.
   .style-tab {
-    padding: @space-2 @panel-gutter;
-    border-bottom: 1px solid @line;
+    display: flex;
+    align-items: center;
+    gap: @space-2;
+    flex: none;
+    padding: 10px 10px 10px 12px;
     width: 100%;
     z-index: 10;
+
+    &__switch {
+      flex: 1;
+      min-width: 0;
+    }
+
+    &__collapse {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border: 0;
+      border-radius: @radius-sm;
+      background: transparent;
+      color: @ink-3;
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+
+      &:hover {
+        background: @surface-2;
+        color: @ink;
+      }
+      &:focus-visible {
+        .focus-ring();
+      }
+    }
   }
 
   // What the panel shows when more than one thing is selected: group them, or
@@ -42,6 +74,32 @@
     flex: 1;
     overflow: auto;
     width: 100%;
+  }
+}
+
+// What stands in for the panel while it is hidden: the same edge, 26px of it.
+.style-panel-strip {
+  width: 26px;
+  flex: none;
+  height: 100%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: @surface;
+  border: 0;
+  border-left: 1px solid @line;
+  color: @ink-3;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    background: @surface-2;
+    color: @ink;
+  }
+  &:focus-visible {
+    .focus-ring();
+    outline-offset: -2px;
   }
 }
 

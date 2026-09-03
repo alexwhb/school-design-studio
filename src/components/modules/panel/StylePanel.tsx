@@ -5,7 +5,9 @@ import IconItemSelect, { type TIconItemSelectData } from '../settings/IconItemSe
 import AnimateWrap from '../settings/AnimateSelect/AnimateWrap'
 import Button from '@/components/ui/Button'
 import Segmented from '@/components/ui/Segmented'
-import { DistributeHorizontalIcon, DistributeVerticalIcon } from '@/components/ui/icons'
+import Tooltip from '@/components/ui/Tooltip'
+import { ChevronLeftIcon, ChevronRightIcon, DistributeHorizontalIcon, DistributeVerticalIcon } from '@/components/ui/icons'
+import { panelState, setRightOpen } from '@/store/panels'
 import { widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import { getCombined, realCombined } from '@/store/group'
@@ -27,6 +29,7 @@ export default function StylePanel() {
   const [activeTab, setActiveTab] = useState(0)
   const [showGroupCombined, setShowGroupCombined] = useState(false)
   const snap = useSnapshot(widgetState)
+  const { rightOpen } = useSnapshot(panelState)
   const activeType = snap.dActiveElement?.type
   const activeUuid = snap.dActiveElement?.uuid
   const selectCount = snap.dSelectWidgets.length
@@ -69,18 +72,36 @@ export default function StylePanel() {
 
   const StyleComp = activeType ? styleComponents[`${activeType}-style`] : undefined
 
+  // With the panel away this strip holds its edge, so the way back is where the
+  // panel itself was rather than somewhere over the artwork.
+  if (!rightOpen) {
+    return (
+      <Tooltip content="Show panel" placement="left" showAfter={300}>
+        <button type="button" className="style-panel-strip" aria-label="Show panel" onClick={() => setRightOpen(true)}>
+          <ChevronLeftIcon width={14} height={14} />
+        </button>
+      </Tooltip>
+    )
+  }
+
   return (
     <div id="style-panel">
       <div className="style-tab">
         <Segmented
+          className="style-tab__switch"
           aria-label="Panel"
-          value={activeTab === 0 ? 'settings' : 'layers'}
+          value={activeTab === 0 ? 'design' : 'layers'}
           options={[
-            { label: 'Settings', value: 'settings' },
+            { label: 'Design', value: 'design' },
             { label: 'Layers', value: 'layers' },
           ]}
-          onChange={(next) => setActiveTab(next === 'settings' ? 0 : 1)}
+          onChange={(next) => setActiveTab(next === 'design' ? 0 : 1)}
         />
+        <Tooltip content="Hide panel" placement="bottom" showAfter={300}>
+          <button type="button" className="style-tab__collapse" aria-label="Hide panel" onClick={() => setRightOpen(false)}>
+            <ChevronRightIcon width={14} height={14} />
+          </button>
+        </Tooltip>
       </div>
       <div className="style-wrap" style={{ display: activeTab === 0 ? undefined : 'none' }}>
         <div className="multi-select" style={{ display: showGroupCombined ? undefined : 'none' }}>

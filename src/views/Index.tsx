@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import _config from '@/config'
 import Moveable from '@/components/business/moveable/Moveable'
@@ -10,7 +10,7 @@ import DesignBoard from '@/components/modules/layout/designBoard/DesignBoard'
 import ZoomControl, { type ZoomControlHandle } from '@/components/modules/layout/zoomControl/ZoomControl'
 import LineGuides from '@/components/modules/layout/LineGuides'
 import MultipleBoards from '@/components/modules/layout/multipleBoards/MultipleBoards'
-import WidgetPanel, { type WidgetPanelHandle } from '@/components/modules/panel/WidgetPanel'
+import WidgetPanel from '@/components/modules/panel/WidgetPanel'
 import StylePanel from '@/components/modules/panel/StylePanel'
 import DownloadProgress from '@/components/common/ProgressLoading/DownloadProgress'
 import CreateDesign, { type CreateDesignHandle } from '@/components/business/create-design/CreateDesign'
@@ -32,6 +32,9 @@ import { handleKeydowm, handleKeyup } from '@/mixins/shortcuts'
 import { watchOverlayEscape } from '@/mixins/overlayEscape'
 import { wGroupSetting } from '@/components/modules/widgets/wGroup/groupSetting'
 import { canvasState, historyState } from '@/store/state'
+import { panelState } from '@/store/panels'
+import { updateScreen } from '@/store/canvas'
+import { setUpdateRect } from '@/store/force'
 import { readQuery } from '@/common/hooks/useRouteQuery'
 import { initGroupJson } from '@/store/group'
 import { toggleNotes } from '@/store/notes'
@@ -45,6 +48,7 @@ export default function Index() {
 
   const canvas = useSnapshot(canvasState)
   const history = useSnapshot(historyState)
+  const panels = useSnapshot(panelState)
 
   const [navStyle, setNavStyle] = useState<{ left: string }>({ left: '0px' })
   const [downloadPercent, setDownloadPercent] = useState(0)
@@ -55,7 +59,6 @@ export default function Index() {
 
   const optionsRef = useRef<HeaderOptionsHandle | null>(null)
   const zoomControlRef = useRef<ZoomControlHandle | null>(null)
-  const widgetPanelRef = useRef<WidgetPanelHandle | null>(null)
   const createDesignRef = useRef<CreateDesignHandle | null>(null)
   const resizeDesignRef = useRef<ResizeDesignHandle | null>(null)
   const findReplaceRef = useRef<FindReplaceHandle | null>(null)
@@ -77,6 +80,27 @@ export default function Index() {
 
   const undoable = history.dHistoryParams.stackPointer >= 0
   const redoable = !(history.dHistoryParams.stackPointer === history.dHistoryStack.changes.length - 1)
+
+  // Hiding a panel widens the workspace, and the board only knows how wide it
+  // is because something measured it. Nothing does that on its own here — the
+  // window has not resized — so this is the same measurement the resize
+  // listener takes, which is what puts the page back in the middle and lets
+  // "Fit to screen" work out the new zoom. Neither panel animates its width,
+  // so by the time this runs the columns are already where they will be.
+  useLayoutEffect(() => {
+    // The zoom pill is pinned to the right edge of the board, which moves with
+    // the panel. It follows a custom property rather than the panel's width
+    // token so that it lands on the strip's edge when the panel is away.
+    const right = document.querySelector('#style-panel, .style-panel-strip') as HTMLElement | null
+    document.getElementById('page-design-index')?.style.setProperty('--ds-right-panel-w', `${right?.offsetWidth ?? 0}px`)
+
+    const board = document.getElementById('page-design')
+    if (!board) return
+    updateScreen({ width: board.offsetWidth, height: board.offsetHeight })
+    // The selection box is positioned against the page, so it has to be asked
+    // for its rectangle again or it stays where the widget used to be.
+    setUpdateRect()
+  }, [panels.leftOpen, panels.rightOpen])
 
   useEffect(() => {
     const beforeUnload = function (e: BeforeUnloadEvent): any {
@@ -241,7 +265,7 @@ export default function Index() {
       </div>
       <div className="page-design-index-wrap">
         <div ref={step2Ref} style={{ display: 'contents' }}>
-          <WidgetPanel ref={widgetPanelRef} />
+          <WidgetPanel />
         </div>
         <DesignBoard
           className="page-design-wrap"

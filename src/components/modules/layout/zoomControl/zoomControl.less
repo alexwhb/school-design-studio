@@ -1,7 +1,7 @@
 #zoom-control {
   bottom: @zoom-control-inset;
   position: absolute;
-  right: @style-panel-width + @zoom-control-inset;
+  right: calc(var(--ds-right-panel-w, @style-panel-width) + @zoom-control-inset);
   // Pinned rather than sized by its longest label, so the bottom strip can
   // reserve the room it takes.
   width: @zoom-control-width;
