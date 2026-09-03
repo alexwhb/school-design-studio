@@ -43,6 +43,7 @@ import {
   UploadArrowIcon,
 } from '@/components/ui/icons'
 import { cx } from '@/utils/dom'
+import type { TDrawTool } from '@/store/types'
 import { addQrcode, addTable, addTextBox } from './addFromDock'
 import './toolDock.less'
 
@@ -88,7 +89,7 @@ export default function ToolDock() {
   const stripHeight = Math.max(bottomHeight - notesHeight, 0)
   const bottom = notesHeight + (stripHeight || CHIP_ROW) + DOCK_GAP - st
 
-  function pick(tool: 'rect' | 'ellipse' | 'polygon' | 'line' | 'pen') {
+  function pick(tool: TDrawTool) {
     toggleDrawTool(tool)
     setOpen(null)
   }
