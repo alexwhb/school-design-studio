@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { WIDGET, addPage, addText, expandPageStrip, goToPage, openEditor, selectFirstWidget, setWidgetText, widgetText } from './helpers'
+import { WIDGET, addPage, addText, armShapeTool, expandPageStrip, goToPage, openEditor, selectFirstWidget, setWidgetText, widgetText } from './helpers'
 
 /*
  * The brand kit: the school's own name, colours, fonts and contact line, set
@@ -16,8 +16,8 @@ const LOGO_PNG =
 /** The Field Day poster, whose footer is `{{school.name|upper}}`. */
 const FIELD_DAY = 101
 
-async function openPanel(page: Page, name: 'Templates' | 'Brand' | 'Tools' | 'Text') {
-  const wrap = { Templates: '.temp-list-wrap', Brand: '.brand-wrap', Tools: '.tools-list-wrap', Text: '#text-list-wrap' }[name]
+async function openPanel(page: Page, name: 'Templates' | 'Brand' | 'Text') {
+  const wrap = { Templates: '.temp-list-wrap', Brand: '.brand-wrap', Text: '#text-list-wrap' }[name]
   // Clicking the tab that is already open folds the panel away, so only switch
   // when the panel is not already on screen.
   if (await page.locator(wrap).first().isVisible().catch(() => false)) return
@@ -102,9 +102,7 @@ test('a field clicked in the panel lands in the text box that is selected', asyn
 test('a brand colour paints the shape that is selected, in one undo step', async ({ page }) => {
   await addBrandColor(page, '#C8102E')
 
-  await openPanel(page, 'Tools')
-  await page.locator('.tools-list-wrap .item', { hasText: 'Rectangle' }).click()
-  await page.waitForTimeout(300)
+  await armShapeTool(page, 'Rectangle')
   const canvas = (await page.locator('#page-design-canvas').boundingBox())!
   await page.mouse.move(canvas.x + 100, canvas.y + 100)
   await page.mouse.down()

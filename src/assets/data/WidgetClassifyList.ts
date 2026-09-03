@@ -56,12 +56,6 @@ export default [
   //   component: 'bg-img-list-wrap',
   // },
   {
-    name: 'Tools',
-    icon: 'icon-zujian01',
-    show: false,
-    component: 'tools-list-wrap',
-  },
-  {
     name: 'Brand',
     icon: '',
     Icon: BrandIcon,

@@ -198,9 +198,7 @@ test('undo takes a rotation back off and redo puts it on again', async ({ page }
 })
 
 test('undo takes a rotation off a QR code too', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
-  await page.waitForTimeout(300)
-  await page.getByText('QR code', { exact: true }).click()
+  await page.locator('.tool-dock__item[data-tool="qrcode"]').click()
   await page.waitForTimeout(900)
   await selectFirstWidget(page)
 
@@ -229,10 +227,8 @@ test('dragging a widget moves it and the move survives the drop', async ({ page 
   expect(Number.parseFloat(after!.top)).toBeGreaterThan(Number.parseFloat(before!.top))
 })
 
-test('adds a QR code from the tools panel', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
-  await page.waitForTimeout(300)
-  await page.getByText('QR code', { exact: true }).click()
+test('adds a QR code from the dock', async ({ page }) => {
+  await page.locator('.tool-dock__item[data-tool="qrcode"]').click()
   await page.waitForTimeout(900)
   await expect(page.locator(`${WIDGET}[data-type="w-qrcode"]`)).toHaveCount(1)
   await expect(page.locator(`${WIDGET} canvas`).first()).toBeVisible()
@@ -377,10 +373,6 @@ test('switching panels shows the matching content', async ({ page }) => {
   await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(1200)
   await expect(page.getByText('Stickers', { exact: true }).first()).toBeVisible()
-
-  await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
-  await page.waitForTimeout(400)
-  await expect(page.getByText('QR code', { exact: true })).toBeVisible()
 
   // Uploads are a section of Photos now, not a tab of their own.
   await page.locator('#widget-panel .classify-item', { hasText: 'Photos' }).click()

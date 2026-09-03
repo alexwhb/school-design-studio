@@ -8,11 +8,9 @@ test.beforeEach(async ({ page }) => {
 
 const CELL = `${WIDGET}.w-table td`
 
-/** Puts a table on the page from the Tools panel, which is how it is first found. */
+/** Puts a table on the page from the dock, which is how it is first found. */
 async function addTable(page: Page) {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
-  await page.waitForTimeout(300)
-  await page.locator('.tools-list-wrap .item', { hasText: 'Table' }).click()
+  await page.locator('.tool-dock__item[data-tool="table"]').click()
   await page.waitForTimeout(600)
 }
 
@@ -38,7 +36,7 @@ async function downloadFrom(page: Page, click: () => Promise<void>) {
   return { name: file.suggestedFilename(), bytes: Buffer.concat(chunks) }
 }
 
-test('the Tools panel places a three by three table', async ({ page }) => {
+test('the dock places a three by three table', async ({ page }) => {
   await addTable(page)
   await expect(page.locator(WIDGET)).toHaveCount(1)
   await expect(page.locator(WIDGET).first()).toHaveAttribute('data-type', 'w-table')
