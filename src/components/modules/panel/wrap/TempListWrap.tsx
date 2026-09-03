@@ -32,6 +32,13 @@ const ALL: TGetCategoriesData = { id: '', name: 'All' }
 /** The mono line under a template's name; a design with no size gets nothing. */
 const sizeOf = (item: IGetTempListData) => (item.width && item.height ? `${item.width} × ${item.height}` : '')
 
+/**
+ * A thumbnail keeps the page's own shape rather than being cropped to a fixed
+ * one. Most of the gallery is portrait and the headline is at the top, which is
+ * exactly what a landscape crop cuts off.
+ */
+const ratioOf = (item: IGetTempListData) => (item.width && item.height ? `${item.width} / ${item.height}` : '4 / 3')
+
 export default function TempListWrap() {
   const listRef = useRef<HTMLDivElement | null>(null)
   const [loading, setLoading] = useState(false)
@@ -251,7 +258,7 @@ export default function TempListWrap() {
             <PanelEyebrow label="Your designs" note="only you" />
             <CardGrid columns={2}>
               {designList.map((item) => (
-                <Card key={item.id} name={item.title} meta={sizeOf(item)} onClick={() => openDesign(item)}>
+                <Card key={item.id} ratio={ratioOf(item)} name={item.title} meta={sizeOf(item)} onClick={() => openDesign(item)}>
                   <EditModel options={[{ name: 'Delete', fn: deleteDesign }] as any} data={{ item, i: 0 }}>
                     <Image className="img" src={item.cover} fit="cover" lazy />
                   </EditModel>
@@ -268,7 +275,7 @@ export default function TempListWrap() {
           <PanelEyebrow label={sectionLabel()} onAction={openPSD} actionLabel="Import a PSD" />
           <CardGrid columns={2}>
             {list.map((item) => (
-              <Card key={item.id} name={item.title} meta={sizeOf(item)} onClick={() => selectItem(item)}>
+              <Card key={item.id} ratio={ratioOf(item)} name={item.title} meta={sizeOf(item)} onClick={() => selectItem(item)}>
                 <Image className="img" src={item.cover} fit="cover" lazy />
               </Card>
             ))}

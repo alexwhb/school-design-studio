@@ -14,10 +14,19 @@
   display: flex;
   flex-direction: column;
   gap: @space-2;
+
+  // A row card spans the panel; only the cards in a grid keep their own height.
+  > .panel-card {
+    align-self: stretch;
+  }
 }
 
 .panel-card {
   position: relative;
+  // Cards in a row can be different heights — a portrait poster next to a
+  // landscape slide — and a stretched card would leave its caption floating
+  // away from the picture it names.
+  align-self: start;
   overflow: hidden;
   border: 1px solid @line;
   border-radius: @radius-lg;
