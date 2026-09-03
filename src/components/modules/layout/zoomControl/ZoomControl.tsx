@@ -175,7 +175,13 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
     const changeScreen = () => {
       clearTimeout(resizeTimer.current)
       resizeTimer.current = setTimeout(() => {
-        const screen = document.getElementById('page-design')
+        // #main rather than #page-design, which is what this used to measure.
+        // #page-design carries an inline min-width of the page at its current
+        // zoom, so its width can grow with the window but never shrink back:
+        // narrow the window at a fixed zoom and the board stayed measured at
+        // whatever it had been, and "fit to screen" fitted a workspace that was
+        // no longer there. #main is the board's own box and gives both.
+        const screen = document.getElementById('main')
         if (!screen) return
         updateScreen({ width: screen.offsetWidth, height: screen.offsetHeight })
       }, 300)
