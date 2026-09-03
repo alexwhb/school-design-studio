@@ -7,7 +7,7 @@ import useNotification from '@/common/methods/notification'
 import { recordHistory } from '@/common/hooks/history'
 import { brandFont, brandState, snapshotBrandKit } from '@/common/methods/brandKit'
 import { canvasState } from '@/store/state'
-import { applyBrandToDesign, describeBrandOutcome, headingThreshold, type TApplyBrandOutcome } from '@/store/widget/brand'
+import { applyBrandToDesign, describeBrandOutcome, headingThreshold, noReadabilityCounts, type TApplyBrandOutcome } from '@/store/widget/brand'
 import './applyBrand.less'
 
 type Props = {
@@ -50,7 +50,7 @@ export default function ApplyBrand({ open, onOpenChange }: Props) {
   }
 
   function apply() {
-    let outcome: TApplyBrandOutcome = { filled: 0, fieldPages: 0, unresolved: 0, fonts: 0, recoloured: 0, backgrounds: 0 }
+    let outcome: TApplyBrandOutcome = { filled: 0, fieldPages: 0, unresolved: 0, fonts: 0, recoloured: 0, backgrounds: 0, readability: noReadabilityCounts() }
     const plain = snapshotBrandKit()
     // One undo step, however many pages it touches.
     recordHistory(() => {

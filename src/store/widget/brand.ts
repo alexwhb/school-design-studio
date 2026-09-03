@@ -12,6 +12,17 @@
  * undo takes back, and wraps the call in `recordHistory`.
  */
 import { brandFont, brandResolver, brandRoleIndex, isBrandField, type TBrandKit, type TTemplateBrand } from '@/common/methods/brandKit'
+import {
+  DECORATIVE_TARGET,
+  INK,
+  PAPER,
+  adjustForContrast,
+  composite,
+  contrastRatio,
+  contrastTarget,
+  readableOn,
+  relativeLuminance,
+} from '@/common/methods/contrast'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
 import effectColors from '@/components/modules/widgets/wText/effectColors'
 import recolorEffects from '@/components/modules/widgets/wText/recolorEffects'
@@ -166,6 +177,8 @@ export type TApplyBrandOutcome = {
   /** Layers and page backgrounds repainted. */
   recoloured: number
   backgrounds: number
+  /** What the readability guard had to do afterwards. See `ensureReadable`. */
+  readability: TReadabilityCounts
 }
 
 /**
@@ -362,6 +375,285 @@ export function countColorUsage(layouts: TdLayout[], color: string): { layers: n
   return { layers, pages }
 }
 
+// ---- keeping the words readable ---------------------------------------------
+
+/**
+ * What can be the paper under a line of text: the drawn shapes and a piece of
+ * line art. A photograph is deliberately not one of them — a picture has no
+ * one colour, so text over it is left exactly as the designer set it.
+ */
+const SURFACE_TYPES = new Set([...SHAPE_TYPES, 'w-svg'])
+
+type TBounds = { left: number; top: number; right: number; bottom: number }
+
+function boundsOf(layer: TdWidgetData): TBounds {
+  const left = Number(layer.left) || 0
+  const top = Number(layer.top) || 0
+  return { left, top, right: left + (Number(layer.width) || 0), bottom: top + (Number(layer.height) || 0) }
+}
+
+function holds(box: TBounds, x: number, y: number): boolean {
+  return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom
+}
+
+function holdsAll(outer: TBounds, inner: TBounds): boolean {
+  return outer.left <= inner.left && outer.top <= inner.top && outer.right >= inner.right && outer.bottom >= inner.bottom
+}
+
+/**
+ * Where a layer sits in the stack, as a pair.
+ *
+ * Z-order is array order, except that a group draws its members inside itself:
+ * a shape in a group that is early in the list is under everything the group is
+ * under, whatever index the shape itself has. So the first number is where the
+ * layer's group sits among the page's layers, and the second is where the layer
+ * sits inside it. Comparing the pairs in order is comparing what is on top.
+ */
+function stackKeys(layers: TdWidgetData[]): number[][] {
+  const at = new Map<string, number>()
+  layers.forEach((layer, index) => at.set(layer.uuid, index))
+  return layers.map((layer, index) => {
+    const parent = layer.parent ? at.get(layer.parent) : undefined
+    return [parent === undefined ? index : parent, index]
+  })
+}
+
+function above(a: number[], b: number[]): boolean {
+  return a[0] !== b[0] ? a[0] > b[0] : a[1] > b[1]
+}
+
+/** The one colour a layer paints, flat: a shape's fill, or the first colour of line art. */
+function paintOf(layer: TdWidgetData): unknown {
+  if (SHAPE_TYPES.has(layer.type)) return (layer as any).color
+  if (layer.type === 'w-svg') return Array.isArray((layer as any).colors) ? (layer as any).colors[0] : undefined
+  return undefined
+}
+
+/** What a text box turns out to be sitting on: the colour a reader sees, and the paint it came from. */
+type TSurface = {
+  /** Opaque, with anything translucent already composited over what is behind it. */
+  color: string
+  /** The paint as it is stored, so the caller can tell whether the brand pass put it there. */
+  rgb: string
+}
+
+/**
+ * What a layer is drawn on top of, or null for "no idea".
+ *
+ * The topmost thing below it whose bounds hold its centre, which is the same
+ * rough answer a person gives when asked what a headline is sitting on. Bounds
+ * rather than the artwork itself: a piece of line art is a path inside a box
+ * and following the path would mean rasterising it, while the templates that
+ * matter here paint bands and washes that fill their boxes.
+ *
+ * Null is the honest answer over a photograph, over a gradient and over a page
+ * with a picture for a background — none of those has one colour to be read
+ * against — and the guard leaves anything it cannot see under alone rather
+ * than repainting on a guess.
+ */
+function surfaceUnder(layer: TdWidgetData, layers: TdWidgetData[], page: TPageState): TSurface | null {
+  const keys = stackKeys(layers)
+  const index = layers.indexOf(layer)
+  if (index < 0) return null
+  const box = boundsOf(layer)
+  const x = (box.left + box.right) / 2
+  const y = (box.top + box.bottom) / 2
+
+  let found: TdWidgetData | null = null
+  let foundKey: number[] | null = null
+  layers.forEach((other, at) => {
+    if (at === index || other.hidden || other.isContainer) return
+    if (!above(keys[index], keys[at])) return
+    if (!holds(boundsOf(other), x, y)) return
+    if (foundKey && !above(keys[at], foundKey)) return
+    found = other
+    foundKey = keys[at]
+  })
+
+  const backdrop = pageSurface(page)
+  if (!found) return backdrop
+  const covering = found as TdWidgetData
+  if (!SURFACE_TYPES.has(covering.type)) return null
+  const parsed = parseHex(paintOf(covering))
+  if (!parsed) return null
+  // A shape painted at nothing at all is not what the text is read against,
+  // but neither is it something to give up over — fall through to the page.
+  if (parsed.alpha === '00') return backdrop
+  if (!backdrop) return null
+  return { color: composite(`#${parsed.rgb}${parsed.alpha}`, backdrop.color), rgb: parsed.rgb }
+}
+
+/** The page itself as a surface, or null when a picture or a gradient is on it. */
+function pageSurface(page: TPageState): TSurface | null {
+  if (page.backgroundImage || page.backgroundGradient) return null
+  const parsed = parseHex(page.backgroundColor)
+  if (!parsed) return null
+  return { color: composite(`#${parsed.rgb}${parsed.alpha}`, PAPER), rgb: parsed.rgb }
+}
+
+/**
+ * The darkest neutral a design already sets text in — its ink. Falling back to
+ * the template's own near-black rather than to pure black is what keeps a
+ * rescued headline looking like it belongs to the rest of the poster.
+ */
+function inkOf(layers: TdWidgetData[]): string {
+  let ink: string | null = null
+  let darkest = 1
+  for (const layer of layers) {
+    if (layer.type !== 'w-text') continue
+    const parsed = parseHex((layer as any).color)
+    if (!parsed || !isNeutralColor(parsed.rgb)) continue
+    const luminance = relativeLuminance(`#${parsed.rgb}`)
+    if (luminance < darkest) {
+      ink = `#${parsed.rgb}ff`
+      darkest = luminance
+    }
+  }
+  return ink ?? INK
+}
+
+export type TReadabilityCounts = {
+  /** Text boxes whose own colour was moved, keeping its hue, until it could be read. */
+  adjusted: number
+  /** Text boxes swapped between the paper and the ink, because moving them was not the answer. */
+  swapped: number
+  /** Text boxes that could not be got to the target, and were left as legible as they could be. */
+  unreadable: number
+  /** Decorative marks nudged off a band they had disappeared into. */
+  marks: number
+}
+
+export function noReadabilityCounts(): TReadabilityCounts {
+  return { adjusted: 0, swapped: 0, unreadable: 0, marks: 0 }
+}
+
+/**
+ * Puts back the contrast the recolour took away.
+ *
+ * Swapping a template's colours for the school's is a swap of hues, and hues
+ * carry lightness with them. The Field Day poster is a white headline on a
+ * navy band and a navy sub-heading on cream; a school whose primary is a pale
+ * yellow gets a white headline on pale yellow — which is nothing — and a pale
+ * yellow sub-heading on cream, which is nearly nothing. Neither is a bug in
+ * the template or in the kit. It is what happens when two independent choices
+ * meet, and it has to be repaired afterwards rather than prevented.
+ *
+ * So: every text box that the colour pass either painted or moved the ground
+ * out from under is checked against WCAG's targets for its size, and the two
+ * repairs are the two the situation allows. Text that was a neutral — white on
+ * a band — swaps to whichever of the paper and the ink can be read, because a
+ * white headline made grey is neither. Text in one of the school's own colours
+ * is darkened or lightened in its own hue until it passes, because that keeps
+ * the design in the school's colours; only if that cannot reach the target
+ * does it fall back to ink or paper.
+ *
+ * Nothing else is touched. Text over a photograph, over a gradient or over
+ * anything this cannot see under is left as it was drawn, and the colours a
+ * text effect brought with it — the second tone of a check, a white outline —
+ * stay as they are; only the parts of the stack that were following the text's
+ * own colour follow it here too.
+ */
+export function ensureReadable(layers: TdWidgetData[], page: TPageState, kit: TBrandKit): TReadabilityCounts {
+  const counts = noReadabilityCounts()
+  const brandRgbs = new Set<string>()
+  for (const color of kit.colors) {
+    const parsed = parseHex(color)
+    if (parsed) brandRgbs.add(parsed.rgb)
+  }
+  if (!brandRgbs.size) return counts
+
+  const ink = inkOf(layers)
+
+  for (const layer of layers) {
+    if (layer.type !== 'w-text' || layer.hidden) continue
+    const text = parseHex((layer as any).color)
+    if (!text) continue
+    const surface = surfaceUnder(layer, layers, page)
+    if (!surface) continue
+    // Only what the pass reached: either the words are now one of the school's
+    // colours, or the ground under them is. A line of black on cream that the
+    // recolour never came near is none of this function's business.
+    const surfaceIsBrand = brandRgbs.has(surface.rgb)
+    const textIsBrand = brandRgbs.has(text.rgb)
+    if (!surfaceIsBrand && !textIsBrand) continue
+
+    const target = contrastTarget(Number((layer as any).fontSize) || 0, isBold(layer), page)
+    const shown = composite(`#${text.rgb}${text.alpha}`, surface.color)
+    if (contrastRatio(shown, surface.color) >= target) continue
+
+    if (isNeutralColor(text.rgb)) {
+      const pick = readableOn(surface.color, [PAPER, ink])
+      const parsed = parseHex(pick)!
+      paintTextColor(layer, `#${parsed.rgb}${text.alpha}`)
+      counts.swapped++
+      if (contrastRatio(pick, surface.color) < target) counts.unreadable++
+      continue
+    }
+
+    const moved = adjustForContrast(`#${text.rgb}${text.alpha}`, surface.color, target)
+    if (moved.met) {
+      if (moved.changed) {
+        paintTextColor(layer, moved.color)
+        counts.adjusted++
+      }
+      continue
+    }
+    const pick = readableOn(surface.color, [PAPER, ink])
+    const parsed = parseHex(pick)!
+    paintTextColor(layer, `#${parsed.rgb}${text.alpha}`)
+    counts.swapped++
+    if (contrastRatio(pick, surface.color) < target) counts.unreadable++
+  }
+
+  counts.marks = separateMarks(layers, page, brandRgbs)
+  return counts
+}
+
+/**
+ * The decorative case, kept deliberately small.
+ *
+ * A rule, a bullet or a badge in the school's second colour, drawn wholly
+ * inside a band in its first, vanishes when the two colours turn out to be
+ * neighbours. Only that shape of it is repaired — one brand-coloured shape
+ * entirely within another, and only when the two are near enough to be the
+ * same colour at a glance — because anything looser starts repainting artwork
+ * that was drawn tone-on-tone on purpose.
+ */
+function separateMarks(layers: TdWidgetData[], page: TPageState, brandRgbs: Set<string>): number {
+  const keys = stackKeys(layers)
+  let nudged = 0
+  layers.forEach((layer, index) => {
+    if (layer.hidden || !SURFACE_TYPES.has(layer.type)) return
+    const paint = parseHex(paintOf(layer))
+    if (!paint || !brandRgbs.has(paint.rgb)) return
+    const box = boundsOf(layer)
+
+    let host: TSurface | null = null
+    let hostKey: number[] | null = null
+    layers.forEach((other, at) => {
+      if (at === index || other.hidden || !SURFACE_TYPES.has(other.type)) return
+      if (!above(keys[index], keys[at]) || !holdsAll(boundsOf(other), box)) return
+      const under = parseHex(paintOf(other))
+      if (!under || !brandRgbs.has(under.rgb) || under.alpha === '00') return
+      if (hostKey && !above(keys[at], hostKey)) return
+      const backdrop = pageSurface(page)
+      host = backdrop ? { color: composite(`#${under.rgb}${under.alpha}`, backdrop.color), rgb: under.rgb } : null
+      hostKey = keys[at]
+    })
+    if (!host) return
+
+    const ground = (host as TSurface).color
+    const mark = composite(`#${paint.rgb}${paint.alpha}`, ground)
+    if (contrastRatio(mark, ground) >= 1.5) return
+    const moved = adjustForContrast(`#${paint.rgb}${paint.alpha}`, ground, DECORATIVE_TARGET)
+    if (!moved.changed) return
+    if (SHAPE_TYPES.has(layer.type)) (layer as any).color = moved.color
+    else (layer as any).colors = [moved.color, ...(((layer as any).colors as string[]) || []).slice(1)]
+    nudged++
+  })
+  return nudged
+}
+
 /**
  * Pushes the kit onto every page.
  *
@@ -371,7 +663,7 @@ export function countColorUsage(layouts: TdLayout[], color: string): { layers: n
  * wash that was the old navy at 7% comes out as the new blue at 7%.
  */
 export function applyBrandToDesign(kit: TBrandKit, options: TApplyBrandOptions): TApplyBrandOutcome {
-  const outcome: TApplyBrandOutcome = { filled: 0, fieldPages: 0, unresolved: 0, fonts: 0, recoloured: 0, backgrounds: 0 }
+  const outcome: TApplyBrandOutcome = { filled: 0, fieldPages: 0, unresolved: 0, fonts: 0, recoloured: 0, backgrounds: 0, readability: noReadabilityCounts() }
   const layouts = widgetState.dLayouts
 
   if (options.fields) {
@@ -421,6 +713,15 @@ export function applyBrandToDesign(kit: TBrandKit, options: TApplyBrandOptions):
         if (slot.kind === 'page') outcome.backgrounds++
         else outcome.recoloured++
       }
+      // Once the page is in the school's colours, and not before: what a line
+      // has to be read against is what is under it afterwards.
+      for (const layout of layouts) {
+        const counts = ensureReadable(layout.layers, layout.global, kit)
+        outcome.readability.adjusted += counts.adjusted
+        outcome.readability.swapped += counts.swapped
+        outcome.readability.unreadable += counts.unreadable
+        outcome.readability.marks += counts.marks
+      }
     }
   }
 
@@ -441,6 +742,10 @@ export function describeBrandOutcome(outcome: TApplyBrandOutcome): string {
     if (outcome.backgrounds) bits.push(plural(outcome.backgrounds, 'page background', 'page backgrounds'))
     parts.push(`recoloured ${bits.join(' and ')}`)
   }
+  // Said out loud because it is a change nobody asked for: the kit's colour is
+  // on the page, but not on the two lines it would have hidden.
+  const rescued = outcome.readability.adjusted + outcome.readability.swapped
+  if (rescued) parts.push(`${plural(rescued, 'line', 'lines')} adjusted to stay readable`)
   let text = parts.length ? parts.join(', ') + '.' : 'Nothing needed changing.'
   if (outcome.unresolved) {
     text += ` ${plural(outcome.unresolved, 'field is', 'fields are')} still waiting for a detail the kit does not have.`
@@ -457,6 +762,8 @@ export type TTemplateBrandResult = {
   recoloured: number
   /** Text boxes moved onto one of the kit's fonts. */
   fonts: number
+  /** What the readability guard had to do afterwards. See `ensureReadable`. */
+  readability: TReadabilityCounts
 }
 
 /**
@@ -476,7 +783,7 @@ export type TTemplateBrandResult = {
  * nothing to do the same objects come back, so a caller can tell by identity.
  */
 export function applyTemplateBrand(layers: TdWidgetData[], page: TPageState, brand: TTemplateBrand | undefined, kit: TBrandKit): TTemplateBrandResult {
-  const unchanged: TTemplateBrandResult = { layers, page, recoloured: 0, fonts: 0 }
+  const unchanged: TTemplateBrandResult = { layers, page, recoloured: 0, fonts: 0, readability: noReadabilityCounts() }
   // `keep` is the template whose palette and lettering are the point of it —
   // the fields still fill, which is what the caller does either side of here.
   if (!brand || brand.keep) return unchanged
@@ -529,5 +836,10 @@ export function applyTemplateBrand(layers: TdWidgetData[], page: TPageState, bra
     }
   }
 
-  return { layers: copy.layers, page: copy.global, recoloured, fonts }
+  // Only after a recolour: a template landing in its own colours is as its
+  // designer left it, and second-guessing that would be this guard's job
+  // creeping into the artwork.
+  const readability = mapping.size ? ensureReadable(copy.layers, copy.global, kit) : noReadabilityCounts()
+
+  return { layers: copy.layers, page: copy.global, recoloured, fonts, readability }
 }
