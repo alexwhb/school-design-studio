@@ -428,17 +428,30 @@ test('starting fresh throws the saved design away', async ({ page }) => {
 
 /* ------------------------------------------------------------- templates */
 
+/** Scrolls the Templates list to the end and answers with how many it holds. */
+async function countTemplates(page: Page) {
+  const body = page.locator('.temp-list-wrap .panel-wrap__body')
+  for (let i = 0; i < 12; i++) {
+    if (await page.locator('.temp-list-wrap .panel-wrap__status', { hasText: 'That is everything' }).count()) break
+    await body.evaluate((el) => el.scrollTo(0, el.scrollHeight))
+    await page.waitForTimeout(700)
+  }
+  return page.locator('.temp-list-wrap .panel-card').count()
+}
+
 test('the gallery is filed into categories', async ({ page }) => {
   const chips = page.locator('.cates__chip')
   await expect(chips.first()).toHaveText('All')
   await expect(chips.first()).toHaveClass(/cates__chip--on/)
   expect(await chips.count()).toBeGreaterThan(3)
 
-  const all = await page.locator('.temp-list-wrap .panel-card').count()
+  // Both lists are paged, so they have to be run to the end before the counts
+  // mean anything — a first page of twenty is a first page of twenty either way.
+  const all = await countTemplates(page)
   await chips.filter({ hasText: 'Slides' }).click()
   await page.waitForTimeout(1800)
   await expect(chips.filter({ hasText: 'Slides' })).toHaveClass(/cates__chip--on/)
-  const slides = await page.locator('.temp-list-wrap .panel-card').count()
+  const slides = await countTemplates(page)
   expect(slides).toBeGreaterThan(0)
   expect(slides).toBeLessThan(all)
 })
