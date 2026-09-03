@@ -198,7 +198,7 @@ test('undo takes a rotation back off and redo puts it on again', async ({ page }
 })
 
 test('undo takes a rotation off a QR code too', async ({ page }) => {
-  await page.getByText('Tools', { exact: true }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
   await page.waitForTimeout(300)
   await page.getByText('QR code', { exact: true }).click()
   await page.waitForTimeout(900)
@@ -230,7 +230,7 @@ test('dragging a widget moves it and the move survives the drop', async ({ page 
 })
 
 test('adds a QR code from the tools panel', async ({ page }) => {
-  await page.getByText('Tools', { exact: true }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
   await page.waitForTimeout(300)
   await page.getByText('QR code', { exact: true }).click()
   await page.waitForTimeout(900)
@@ -374,22 +374,22 @@ test('the theme toggle flips the editor between light and dark', async ({ page }
 })
 
 test('switching panels shows the matching content', async ({ page }) => {
-  await page.getByText('Elements', { exact: true }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
   await page.waitForTimeout(1200)
   await expect(page.getByText('Stickers', { exact: true })).toBeVisible()
 
-  await page.getByText('Tools', { exact: true }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
   await page.waitForTimeout(400)
   await expect(page.getByText('QR code', { exact: true })).toBeVisible()
 
-  await page.getByText('Uploads', { exact: true }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Uploads' }).click()
   await page.waitForTimeout(400)
   await expect(page.getByText('Upload image', { exact: true })).toBeVisible()
 })
 
 test('clicking the active panel tab collapses the panel', async ({ page }) => {
   await expect(page.locator('.widget-wrap')).toBeVisible()
-  await page.getByText('Templates', { exact: true }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Templates' }).click()
   await page.waitForTimeout(300)
   await expect(page.locator('.widget-wrap')).toBeHidden()
 })
