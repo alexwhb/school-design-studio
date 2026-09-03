@@ -116,6 +116,24 @@ html.dark {
   }
 }
 
+// The boxless input: a rule under the text and nothing else. Only for a field
+// already inside a card, where a second border would draw a box in a box.
+.el-input--underline .el-input__wrapper {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 0 -1px 0 0 @line-strong;
+  padding-left: 0;
+  padding-right: 0;
+
+  &:hover {
+    box-shadow: inset 0 -1px 0 0 @ink-4;
+  }
+  &.is-focus,
+  &:focus {
+    box-shadow: inset 0 -1px 0 0 @accent;
+  }
+}
+
 // ---- dialogs ------------------------------------------------------------
 .el-dialog {
   background: @popover;
