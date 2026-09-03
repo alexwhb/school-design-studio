@@ -431,9 +431,11 @@ test('the page settings panel says what the page is on paper', async ({ page }) 
   await page.getByRole('button', { name: 'Resize', exact: true }).click()
   await page.waitForTimeout(900)
 
-  const readout = page.locator('#page-style .page-size__value')
-  await expect(readout).toContainText('1754 × 1240 px')
-  await expect(page.locator('#page-style .page-size__paper')).toHaveText('A4 landscape · 297 × 210 mm')
+  const fields = page.locator('#page-style .page-size-fields input')
+  await expect(fields.nth(0)).toHaveValue('1754')
+  await expect(fields.nth(1)).toHaveValue('1240')
+  await expect(page.locator('#page-style .page-size-fields__name')).toHaveText('A4 landscape')
+  await expect(page.locator('#page-style .page-note')).toHaveText('150 dpi · 297 × 210 mm')
 })
 
 /* ---------------------------------------------------------- context menu */

@@ -178,7 +178,7 @@ test('an outline is drawn inside the polygon it outlines', async ({ page }) => {
 
   // An eighth of the way along a slider that runs to 40, so the outline is a
   // few pixels thick rather than a hairline.
-  const runway = page.locator('.ds-shape-style .ds-section', { hasText: 'Border' }).locator('.el-slider__runway').first()
+  const runway = page.locator('.ds-shape-style #number-slider', { hasText: 'Thickness' }).locator('.el-slider__runway')
   const bar = (await runway.boundingBox())!
   await page.mouse.click(bar.x + bar.width / 8, bar.y + bar.height / 2)
   await page.waitForTimeout(500)
