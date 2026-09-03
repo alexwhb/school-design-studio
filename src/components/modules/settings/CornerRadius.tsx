@@ -11,7 +11,7 @@
  */
 import { cx } from '@/utils/dom'
 import { CORNERS, type TCorners } from '../widgets/wRect/rectRadius'
-import { LinkedIcon, UnlinkedIcon } from '@/components/ui/icons'
+import { CornerRadiusIcon, LinkedIcon, UnlinkedIcon } from '@/components/ui/icons'
 import NumberInput from './NumberInput'
 import NumberSlider from './NumberSlider'
 import './cornerRadius.less'
@@ -42,10 +42,11 @@ export default function CornerRadius({ corners, unlinked, maxValue, onLinkChange
         </button>
       </div>
       {unlinked ? (
-        <div className="line-layout">
+        <div className="corner-radius__grid">
           {CORNERS.map((corner, index) => (
             <NumberInput
               key={corner.key}
+              variant="underline"
               label={corner.short}
               value={corners[index]}
               minValue={0}
@@ -55,7 +56,12 @@ export default function CornerRadius({ corners, unlinked, maxValue, onLinkChange
           ))}
         </div>
       ) : (
-        <NumberSlider label="Radius" value={corners[0]} maxValue={maxValue} onChange={(value) => onChange(-1, value)} />
+        <div className="corner-radius__one">
+          <span className="corner-radius__icon" aria-hidden="true">
+            <CornerRadiusIcon />
+          </span>
+          <NumberSlider label="Radius" value={corners[0]} maxValue={maxValue} onChange={(value) => onChange(-1, value)} />
+        </div>
       )}
     </div>
   )

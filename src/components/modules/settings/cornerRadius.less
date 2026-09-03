@@ -15,6 +15,33 @@
     user-select: none;
   }
 
+  // Four corners, two to a row, on the same grid the transform fields use.
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: @space-2 @space-3;
+  }
+
+  // One number for all four, with the glyph that says what it is.
+  &__one {
+    display: flex;
+    align-items: center;
+    gap: @space-3;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 17px;
+    color: @ink-3;
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
   &__link {
     .icon-button();
     flex: none;

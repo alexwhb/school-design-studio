@@ -20,6 +20,8 @@ type Props = {
 }
 
 export default function TransformGrid({ active, onChange, minSize, rotation }: Props) {
+  // The store keeps the angle the way CSS wants it — "45deg" — because that is
+  // what Moveable writes and what every widget reads back out.
   const angle = Math.round(parseFloat(String(active.rotate ?? 0)) || 0)
 
   return (
@@ -29,7 +31,7 @@ export default function TransformGrid({ active, onChange, minSize, rotation }: P
       <NumberInput variant="underline" label="W" value={Math.round(active.width)} minValue={minSize} onChange={(v) => onChange('width', Number(v))} />
       <NumberInput variant="underline" label="H" value={Math.round(active.height)} minValue={minSize} onChange={(v) => onChange('height', Number(v))} />
       {rotation ? (
-        <NumberInput variant="underline" label="R" suffix="°" value={angle} onChange={(v) => onChange('rotate', String(Number(v) || 0))} />
+        <NumberInput variant="underline" label="R" suffix="°" value={angle} onChange={(v) => onChange('rotate', `${Math.round(Number(v) || 0)}deg`)} />
       ) : null}
     </div>
   )
