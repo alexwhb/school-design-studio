@@ -214,7 +214,7 @@ listing pages) are replaced with sizes a school actually uses: slides, Letter,
 A4, flyers, name badges, display boards.
 
 **The tool dock.** New — the Tools panel is now a floating dock at the foot of
-the canvas. See below.
+the canvas, and its Text tool draws the box the words go in. See below.
 
 **Lines and arrows.** New. See below.
 
@@ -546,17 +546,17 @@ The row of tools that floats at the foot of the canvas: **Select**, **Text**,
 a left-hand Tools tab, which spent a whole panel on seven buttons and pushed the
 board over to do it.
 
-Select puts the pointer back, which is also what Escape does. Text drops a body
-text box in the middle of the page and selects it. Shapes opens a row of the
-five drawing tools above the dock — rectangle, ellipse, polygon, line, pen —
-and Pen has a slot of its own beside them as well, being the one that is a way
-of drawing rather than a shape. Image offers a file off this machine or the
-Photos panel. QR code and Table put theirs on the page outright.
+Select puts the pointer back, which is also what Escape does. Text arms a tool
+rather than dropping a box: see below. Shapes opens a row of the four shape
+tools above the dock — rectangle, ellipse, polygon, line — and Pen has a slot of
+its own beside them, being a way of drawing rather than a shape. Image offers a
+file off this machine or the Photos panel. QR code and Table put theirs on the
+page outright.
 
-Every tool keeps its keyboard shortcut: `R`, `E`, `Y`, `L`, `P` arm and disarm
-the matching tool wherever the pointer is. While one is armed the dock says what
-it is waiting for on a green line above itself, with an **Esc** chip on the end
-that puts the pointer back.
+Every tool keeps its keyboard shortcut: `T`, `R`, `E`, `Y`, `L`, `P` arm and
+disarm the matching tool wherever the pointer is. While one is armed the dock
+says what it is waiting for on a green line above itself, with an **Esc** chip
+on the end that puts the pointer back.
 
 The dock, the page chip and the zoom pill share the bottom of the well. Open the
 speaker notes and all three rise by the height of the drawer; open the page
@@ -566,6 +566,28 @@ The dock is `src/components/business/tool-dock/`; what each tool is called, what
 its shortcut is and what it says once armed is `drawTools.ts`, which the drawing
 components read as well, so the dock and the canvas cannot describe a tool
 differently.
+
+### Drawing a text box
+
+The **Text** tool, on the dock or the `T` key, is Adobe XD's: it arms, and the
+page answers it two ways. **Drag** and you pull out a box of exactly that width,
+which is what the words wrap at. **Click** and a box of a readable default width
+is placed at that point. Edges are pulled into line with the page and everything
+on it the same way a dragged shape's are, and Escape cancels a box mid-drag.
+
+The box arrives empty, selected, with the caret already in it, so the first
+thing you do after drawing one is type rather than double-click. A box you never
+typed anything into is taken back off the page when the caret leaves it, which
+is also what XD does — without it a mis-aimed click leaves an empty layer with
+no height, which nothing on the canvas can show you.
+
+The height follows the words, as it does for every text box in this editor: a
+`w-text` is fixed in width and laid out by the browser down the page, so the
+height you drag is the height it starts at rather than a floor it keeps.
+
+It is `src/components/business/draw-shape/DrawText.tsx`, beside the shape tools
+and built the same way — a capture-phase press on the document, a rubber band
+drawn inside the page, `recordHistory` round what it adds.
 
 ## Lines and arrows
 
