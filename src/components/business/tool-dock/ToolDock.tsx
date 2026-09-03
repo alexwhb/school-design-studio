@@ -107,6 +107,8 @@ export default function ToolDock() {
    */
   async function placeUpload(res: TUploadDoneData) {
     setOpen(null)
+    // The Photos panel's own uploads section listens for this and reloads.
+    eventBus.emit('refreshUserImages')
     const setting = JSON.parse(JSON.stringify(wImageSetting))
     const img = await setImageData({ width: res.width, height: res.height, url: res.url })
     setting.width = img.width
