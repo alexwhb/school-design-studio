@@ -7,6 +7,12 @@
  * arrives selected with the caret already in it, so the first thing you do
  * after drawing one is type, not double-click it.
  *
+ * The width is the whole of what a drag decides. A `w-text` is fixed in width
+ * and laid out down the page by the browser, which writes the height it came
+ * out at back to the widget — so the height you drag is where the box starts
+ * rather than a floor it keeps, and it closes up to one line while the box is
+ * still empty.
+ *
  * A box nobody typed into is taken back off the page when the caret leaves it,
  * which is what XD does and what stops a mis-aimed click leaving an empty
  * layer nothing on the canvas can show. That is `watchForAbandon` below.
@@ -38,7 +44,7 @@ type TBox = { left: number; top: number; width: number; height: number }
 /** Below this, a drag was a click that wobbled and a default box is meant. */
 const MIN_DRAG = 12
 
-/** What a click places, in design pixels — a line and a half of body text. */
+/** How wide a box a click places, in design pixels: a phrase, not the page. */
 const DEFAULT_WIDTH = 320
 
 export default function DrawText() {
