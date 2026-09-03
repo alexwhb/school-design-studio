@@ -16,7 +16,8 @@
     gap: @space-3;
     width: 100%;
     height: 34px;
-    padding: 0 @space-3 0 10px;
+    // The pencil's place is always kept, so nothing shifts when it appears.
+    padding: 0 34px 0 10px;
     border: 0;
     border-radius: @radius;
     background: @surface-2;
@@ -83,11 +84,6 @@
   &:hover &__edit,
   &__edit:focus-visible {
     opacity: 1;
-  }
-  // The hex would sit under the pencil, so it steps aside while the pointer
-  // is on the row rather than being covered by it.
-  &:hover &__hex {
-    visibility: hidden;
   }
 
   &--add {
