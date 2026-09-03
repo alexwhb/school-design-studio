@@ -273,9 +273,7 @@ function templateCates() {
   const used = new Set(templates.map((item) => item.cate).filter(Boolean))
   const named = readMock('templates/cates.json') || []
   const listed = named.filter((cate) => used.has(cate.id))
-  const unlisted = [...used]
-    .filter((id) => !named.some((cate) => cate.id === id))
-    .map((id) => ({ id, name: id.charAt(0).toUpperCase() + id.slice(1) }))
+  const unlisted = [...used].filter((id) => !named.some((cate) => cate.id === id)).map((id) => ({ id, name: id.charAt(0).toUpperCase() + id.slice(1) }))
   return [...listed, ...unlisted]
 }
 
