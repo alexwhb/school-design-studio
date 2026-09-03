@@ -1077,9 +1077,18 @@ Two repairs, and only two. Text that was a **neutral** — the white headline �
 swaps to whichever of white and the ink the design already uses can be read on
 the band, because a white headline made grey is neither one thing nor the other.
 Text in one of the **school's own colours** is darkened or lightened *in its own
-hue* until it passes, so a pale gold heading comes out a deeper gold rather than
-a brown or a black; only when that cannot reach the target inside a bounded
-shift does it fall back to ink or white.
+hue*, so a pale gold heading comes out a deeper gold rather than a brown or a
+black; only when that cannot reach the target inside a bounded shift does it
+fall back to ink or white.
+
+A repair does not stop at the first shade that passes. It aims a fifth past the
+target — 3.6:1 where 3 is asked, 5.4:1 where 4.5 is — because a line sitting
+exactly on the bar is the faintest thing on the page, satisfying the standard
+and still reading as an afterthought. The margin is an aim rather than a
+requirement: a colour that can reach 3.2 but not 3.6 has been repaired, and a
+line that is already over the plain target is not touched at all, which is what
+makes running the guard twice leave a design exactly where the first pass put
+it.
 
 The marks get the same two repairs, at the decorative 3:1. A **neutral** mark —
 the white trophy over the Field Day headline — swaps to the paper or the ink

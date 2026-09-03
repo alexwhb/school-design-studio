@@ -554,9 +554,10 @@ export function noReadabilityCounts(): TReadabilityCounts {
  * repairs are the two the situation allows. Text that was a neutral — white on
  * a band — swaps to whichever of the paper and the ink can be read, because a
  * white headline made grey is neither. Text in one of the school's own colours
- * is darkened or lightened in its own hue until it passes, because that keeps
- * the design in the school's colours; only if that cannot reach the target
- * does it fall back to ink or paper.
+ * is darkened or lightened in its own hue, because that keeps the design in the
+ * school's colours; only if that cannot reach the target does it fall back to
+ * ink or paper. Either way the aim is a margin past the target rather than the
+ * target itself — see AIM_MARGIN in contrast.ts.
  *
  * Nothing else is touched. Text over a photograph, over a gradient or over
  * anything this cannot see under is left as it was drawn, and the colours a

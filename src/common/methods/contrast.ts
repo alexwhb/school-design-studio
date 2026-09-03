@@ -25,8 +25,23 @@ export const INK = '#000000ff'
 /** How far `adjustForContrast` will move a colour's lightness before giving up. */
 const MAX_LIGHTNESS_SHIFT = 0.6
 
-/** The size of one of its steps. Small enough that the answer is the nearest shade that passes. */
+/** The size of one of its steps. Small enough that the answer is the nearest shade that will do. */
 const LIGHTNESS_STEP = 0.02
+
+/**
+ * How far past the target a repair aims: a fifth again, so 3:1 is chased to
+ * 3.6 and 4.5:1 to 5.4.
+ *
+ * Stopping at the first shade that passes leaves a line sitting exactly on the
+ * bar, and a line on the bar is the faintest thing on the page — it satisfies
+ * WCAG and still reads as an afterthought next to the headline beside it. The
+ * margin costs a few per cent of lightness and buys a line that looks meant.
+ * It is an aim rather than a requirement: the entry test and `met` are both
+ * against the plain target, so a colour that can reach 3.2 but not 3.6 is a
+ * repair that worked, and a second pass over a repaired design leaves it
+ * exactly where the first one put it.
+ */
+const AIM_MARGIN = 1.2
 
 /** Design pixels to the inch on a page that is not a sheet of paper — a slide, a banner. */
 const SCREEN_DPI = 96
@@ -178,7 +193,10 @@ export type TAdjustResult = {
   color: string
   /** What it reaches against the surface. */
   ratio: number
-  /** Whether it got to the target. False means the caller has to fall back to ink or paper. */
+  /**
+   * Whether it got to the target — the plain one, not the aim. False means the
+   * caller has to fall back to ink or paper.
+   */
   met: boolean
   /** Whether the colour was actually moved. */
   changed: boolean
@@ -191,8 +209,8 @@ export type TAdjustResult = {
  * colour has to still look like the school's colour: a pale yellow that has to
  * darken to be read on cream comes out as a deeper yellow, not as brown and
  * not as black. It moves away from the surface — darker on light paper,
- * lighter on a dark band — in small steps, and stops the moment it passes, so
- * the answer is the least change that works.
+ * lighter on a dark band — in small steps, until it is a margin clear of the
+ * target rather than sitting on it; see AIM_MARGIN.
  *
  * The shift is bounded. A colour that cannot reach the target inside that
  * bound says so rather than walking all the way to black, and the caller
@@ -201,10 +219,14 @@ export type TAdjustResult = {
  */
 export function adjustForContrast(color: string, surface: string, target: number): TAdjustResult {
   const start = contrastRatio(color, surface)
+  // The plain target, deliberately: a colour that is already good enough is
+  // left alone even though it sits below the aim, which is what makes running
+  // this over an already-repaired design a no-op.
   if (start >= target) return { color, ratio: start, met: true, changed: false }
   const rgb = parseColor(color)
   if (!rgb) return { color, ratio: start, met: false, changed: false }
 
+  const aim = target * AIM_MARGIN
   const hsl = toHsl(rgb)
   // Away from the surface: on anything lighter than the pivot the text has to
   // go darker, and on a darker band it has to go lighter. Deciding by the
@@ -220,9 +242,11 @@ export function adjustForContrast(color: string, surface: string, target: number
     const ratio = contrastRatio(candidate, surface)
     best = candidate
     bestRatio = ratio
-    if (ratio >= target) return { color: candidate, ratio, met: true, changed: true }
+    if (ratio >= aim) return { color: candidate, ratio, met: true, changed: true }
   }
-  return { color: best, ratio: bestRatio, met: false, changed: best !== color }
+  // Out of room. It still counts as met if it cleared the target on the way —
+  // the margin is what the walk was for, not what it owed.
+  return { color: best, ratio: bestRatio, met: bestRatio >= target, changed: best !== color }
 }
 
 // ---- HSL, for the one thing that needs it -----------------------------------

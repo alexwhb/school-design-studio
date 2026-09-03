@@ -396,6 +396,18 @@ test('the same colour is not added twice', async ({ page }) => {
  */
 const PALE = '#F2E38A'
 const DARK = '#123A6B'
+/** The kit that made the title slide's muted footer vanish: it and DUSK are the same luminance. */
+const ROSE = '#D08A8A'
+
+/** The title slide, whose subtitle and footer are set in the navy pack's muted greys. */
+const TITLE_SLIDE = 111
+
+/**
+ * A repair aims a fifth past what WCAG asks, so a rescued line is clear of the
+ * bar rather than sitting on it. Assertions use the aim, not the target, or
+ * they would pass on the stopping rule this replaced.
+ */
+const LARGE_AIM = 3.6
 
 test('the contrast maths gives WCAG’s own numbers', async ({ page }) => {
   expect(await contrastIn(page, '#ffffff', '#000000')).toBeCloseTo(21, 2)
@@ -429,7 +441,7 @@ test('a pale primary darkens a heading set in it rather than losing it on the pa
   // read on cream, and no darker.
   const heading = toHex(await faceColor(page, 'Friday'))
   expect(heading).not.toBe('#f2e38a')
-  expect(await contrastIn(page, heading, '#fbf7ef')).toBeGreaterThanOrEqual(3)
+  expect(await contrastIn(page, heading, '#fbf7ef')).toBeGreaterThanOrEqual(LARGE_AIM)
   // Still the same colour, though: a gold darkened, not a grey.
   const [r, g, b] = (heading.match(/[0-9a-f]{2}/g) || []).map((part) => parseInt(part, 16))
   expect(Math.min(r, g)).toBeGreaterThan(b + 40)
@@ -445,6 +457,20 @@ test('a pale primary does not leave a white trophy on a pale band either', async
   const paints = await svgPaints(page)
   expect(paints).toContain('#22252aff')
   expect(paints).not.toContain('#ffffffff')
+})
+
+test('muted type is rescued too, not only white and the kit’s own colours', async ({ page }) => {
+  await addBrandColor(page, ROSE)
+  await pickTemplate(page, TITLE_SLIDE)
+
+  // DUSK and this rose are the same luminance to two places — 1.02:1, which is
+  // a line you cannot see at all. It is neither a neutral nor a kit colour, and
+  // it is repaired because the ground under it was the thing that changed.
+  const footer = toHex(await faceColor(page, 'Ms. Alvarez'))
+  expect(footer).not.toBe('#8fa0b4')
+  expect(await contrastIn(page, footer, '#d08a8a')).toBeGreaterThanOrEqual(LARGE_AIM)
+  // Still slate rather than black: the walk keeps the hue it started in.
+  expect(footer).not.toBe('#000000')
 })
 
 test('a dark primary leaves the white headline white', async ({ page }) => {
@@ -475,7 +501,7 @@ test('apply brand repairs the same design, and says that it did', async ({ page 
 
   await expect(page.locator('.el-notification')).toContainText('adjusted to stay readable')
   expect(await faceColor(page, 'FIELD DAY')).toBe('rgb(34, 37, 42)')
-  expect(await contrastIn(page, toHex(await faceColor(page, 'Friday')), '#fbf7ef')).toBeGreaterThanOrEqual(3)
+  expect(await contrastIn(page, toHex(await faceColor(page, 'Friday')), '#fbf7ef')).toBeGreaterThanOrEqual(LARGE_AIM)
 
   // Still one entry: the repair is part of applying the brand, not a step of
   // its own to be peeled off first.
