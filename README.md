@@ -210,6 +210,9 @@ below.
 listing pages) are replaced with sizes a school actually uses: slides, Letter,
 A4, flyers, name badges, display boards.
 
+**The tool dock.** New — the Tools panel is now a floating dock at the foot of
+the canvas. See below.
+
 **Lines and arrows.** New. See below.
 
 **Image adjustments.** New. See below.
@@ -494,9 +497,37 @@ shadowed element is pre-rendered by the browser instead, with room left round it
 for the shadow to fall into. A .pptx gets a real PowerPoint shadow rather than a
 picture of one, so whoever opens the deck can still edit it.
 
+## The tool dock
+
+The row of tools that floats at the foot of the canvas: **Select**, **Text**,
+**Shapes**, **Pen**, **Image**, and then **QR code** and **Table**. It replaced
+a left-hand Tools tab, which spent a whole panel — and the width it pushed the
+board over by — on seven buttons.
+
+Select puts the pointer back, which is also what Escape does. Text drops a body
+text box in the middle of the page and selects it. Shapes opens a row of the
+five drawing tools above the dock — rectangle, ellipse, polygon, line, pen —
+and Pen has a slot of its own next to it, because it is the one that is used
+without a shape in mind. Image offers a file off this machine or the Photos
+panel. QR code and Table put theirs on the page outright.
+
+Every tool keeps its keyboard shortcut: `R`, `E`, `Y`, `L`, `P` arm and disarm
+the matching tool wherever the pointer is. While one is armed the dock says what
+it is waiting for on a green line above itself, with an **Esc** chip on the end
+that puts the pointer back.
+
+The dock, the page chip and the zoom pill share the bottom of the well and stand
+on each other: open the page strip or the speaker notes and all three rise by
+what the drawer beneath them takes.
+
+The dock is `src/components/business/tool-dock/`; what each tool is called, what
+its shortcut is and what it says once armed is `drawTools.ts`, which the drawing
+components read as well, so the dock and the canvas cannot describe a tool
+differently.
+
 ## Lines and arrows
 
-The **Line** tool in the Tools panel, or the `L` key. Drag from one point to
+The **Line** tool, behind Shapes on the dock, or the `L` key. Drag from one point to
 another; hold Shift to hold it to a right angle or a diagonal, Alt to draw it
 out from the middle, and a plain click drops a level line of a readable length.
 The Graphics panel has an **Arrows** row of ready-made ones to drag on instead.
@@ -938,8 +969,9 @@ and there is no special case for it.
 
 ## Tables
 
-A term calendar, a class list, a room timetable. **Tools → Table** puts a three
-by three grid on the page; double-click a cell to type into it.
+A term calendar, a class list, a room timetable. The **Table** button on the
+dock puts a three by three grid on the page; double-click a cell to type into
+it.
 
 Tab and Shift+Tab run along the cells, Enter drops a row, Escape stops, and Tab
 off the last cell adds a row rather than losing what you were about to type.
