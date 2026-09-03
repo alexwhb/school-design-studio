@@ -230,11 +230,11 @@ test('the school fonts head the text panel’s font list', async ({ page }) => {
   await page.locator('#style-panel .font-select .real-input').click()
   await page.waitForTimeout(700)
 
-  // First tab, so the school's own fonts are one click away rather than found
-  // by remembering which group the family belongs to.
-  const tabs = page.locator('.el-popper:visible .tabs-wrap .el-tabs__item')
-  await expect(tabs.first()).toHaveText('Brand')
-  await expect(page.locator('.el-popper:visible .list-ul li')).toHaveText(['Bebas Neue'])
+  // First group in the list, so the school's own fonts are one click away
+  // rather than found by remembering which category the family belongs to.
+  const groups = page.locator('.el-popper:visible .select-list__group')
+  await expect(groups.first().locator('.select-list__name')).toHaveText('Brand')
+  await expect(groups.first().locator('li')).toHaveText(['Bebas Neue'])
 })
 
 /* ---------------------------------------------------------------- the logo */

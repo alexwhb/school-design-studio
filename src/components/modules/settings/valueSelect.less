@@ -59,9 +59,29 @@
   }
 }
 
-.list-ul {
-  max-height: 300px;
+// The menu's scrolling body. It measures itself against the window rather than
+// against the panel it was opened from — the popper is drawn in a portal at the
+// top of the document, and Radix reports how much room the side it settled on
+// leaves, so a menu near the foot of the screen flips above its trigger and is
+// still whole.
+.select-list {
+  max-height: min(360px, calc(var(--radix-popper-available-height, 360px) - @space-4));
   overflow-y: auto;
+
+  &__name {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0;
+    padding: @space-2 @space-2 @space-1;
+    // The popper's own colour, or the list would read through the heading as it
+    // scrolls under it.
+    background: @popover;
+    .section-label();
+  }
+}
+
+.list-ul {
   li {
     display: flex;
     align-items: center;
@@ -87,25 +107,10 @@
   }
 }
 
-.tabs-wrap {
-  width: 300px;
-
-  .el-tabs__header {
-    margin-bottom: @space-1;
-  }
-  .el-tabs__item {
-    height: @control-h-lg;
-    padding: 0 @space-3;
-    font-size: @text-sm;
-    color: @ink-3;
-    &.is-active {
-      color: @accent;
-    }
-  }
-  .el-tabs__nav-wrap::after {
-    height: 1px;
-    background-color: @line;
-  }
+// A grouped menu is wide enough for a font's name set in its own face; a flat
+// one is as wide as whatever it holds.
+.select-list.is-grouped {
+  width: 260px;
 }
 
 // The bordered select the mockup uses for a font or a blend mode: taller than a
