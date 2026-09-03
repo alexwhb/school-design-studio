@@ -43,7 +43,7 @@ export default function WPathStyle() {
     <ShapeStyle
       shape={
         <>
-          <PanelSection name="3" title="Path">
+          <PanelSection title="Path">
             <div className="path-style__row">
               <span className="path-style__label">Closed</span>
               <Switch

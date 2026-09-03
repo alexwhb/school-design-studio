@@ -1,6 +1,15 @@
 .border-controls {
   display: flex;
   flex-direction: column;
-  gap: @field-gap;
-  padding-top: @space-2;
+  gap: @space-2;
+  width: 100%;
+
+  // The numbers behind the row: reachable, but set in from it so the row stays
+  // the thing you read first.
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: @field-gap;
+    padding-left: @space-6;
+  }
 }

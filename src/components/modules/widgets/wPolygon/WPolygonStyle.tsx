@@ -30,7 +30,7 @@ export default function WPolygonStyle() {
         // the slider to try shapes out, the box to type the one you already
         // know you want — a hundred corners is a long way along a panel-width
         // slider.
-        <PanelSection name="3" title="Corners">
+        <PanelSection title="Corners">
           <div className="polygon-sides">
             <span className="polygon-sides__hint">Drag the grip on the canvas, or set it here</span>
             <NumberInput value={sides} label="N" minValue={MIN_SIDES} maxValue={MAX_SIDES} onChange={sidesChange} />

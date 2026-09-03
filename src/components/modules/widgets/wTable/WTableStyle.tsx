@@ -7,23 +7,21 @@
  */
 import { useEffect, useState } from 'react'
 import { useSnapshot } from 'valtio'
-import alignIconList from '@/assets/data/AlignListData'
-import layerIconList from '@/assets/data/LayerIconList'
 import { FONT_GROUPS } from '@/assets/data/FontsData'
 import { useFontStore } from '@/common/methods/fonts'
 import { recordHistory } from '@/common/hooks/history'
 import Button from '@/components/ui/Button'
 import Checkbox from '@/components/ui/Checkbox'
-import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
+import { PanelSection } from '@/components/ui/PanelSection'
 import Segmented from '@/components/ui/Segmented'
 import { widgetState } from '@/store/state'
-import { updateAlign, updateLayerIndex, updateWidgetData } from '@/store/widget'
+import { updateWidgetData } from '@/store/widget'
 import { updateTable } from '@/store/widget/table'
+import ArrangeRow from '../../settings/ArrangeRow'
 import BorderControls from '../../settings/BorderControls'
 import ColorSelect from '../../settings/ColorSelect'
-import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
-import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
+import TransformGrid from '../../settings/TransformGrid'
 import ValueSelect from '../../settings/ValueSelect'
 import { MAX_COLS, MAX_ROWS, insertCol, insertRow, readTable, removeCol, removeRow } from './tableModel'
 import './wTableStyle.less'
@@ -48,7 +46,6 @@ function buildFontLists() {
 
 export default function WTableStyle() {
   const active = useSnapshot(widgetState).dActiveElement as any
-  const [activeNames, setActiveNames] = useState<string[]>(['1', '2', '3', '4', '5'])
   const [fontClassList, setFontClassList] = useState<Record<string, any>>({})
 
   useEffect(() => {
@@ -86,77 +83,61 @@ export default function WTableStyle() {
     recordHistory(() => updateTable(uuid, removeCol(cells, colWidths, cols - 1)))
   }
 
-  function layerAction(item: TIconItemSelectData) {
-    updateLayerIndex({ uuid, value: Number(item.value) })
-  }
-  function alignAction(item: TIconItemSelectData) {
-    updateAlign({ align: item.value as any, uuid })
-  }
-
   return (
     <div className="ds-table-style">
-      <PanelSections value={activeNames} onChange={setActiveNames}>
-        <PanelSection name="1" title="Size and position">
-          <div className="line-layout">
-            <NumberInput value={active.left} label="X" onChange={(v) => finish('left', Number(v))} />
-            <NumberInput value={active.top} label="Y" onChange={(v) => finish('top', Number(v))} />
-            <NumberInput value={active.width} label="W" minValue={120} onChange={(v) => finish('width', Number(v))} />
-          </div>
-        </PanelSection>
+      <PanelSection title="Transform">
+        <TransformGrid active={active} minSize={120} onChange={finish} />
+        <ArrangeRow uuid={uuid} className="arrange-row" label="" />
+      </PanelSection>
 
-        <PanelSection name="2" title="Rows and columns">
-          <div className="table-shape">
-            <span className="table-shape__count">
-              {table.rows} {table.rows === 1 ? 'row' : 'rows'} × {table.cols} {table.cols === 1 ? 'column' : 'columns'}
-            </span>
-            <div className="table-shape__buttons">
-              <Button plain size="small" disabled={table.rows >= MAX_ROWS} onClick={addRow}>
-                Add row
-              </Button>
-              <Button plain size="small" disabled={table.rows <= 1} onClick={dropRow}>
-                Remove row
-              </Button>
-              <Button plain size="small" disabled={table.cols >= MAX_COLS} onClick={addCol}>
-                Add column
-              </Button>
-              <Button plain size="small" disabled={table.cols <= 1} onClick={dropCol}>
-                Remove column
-              </Button>
-            </div>
-            <Checkbox value={table.headerRow} label="First row is a heading" onChange={(value) => updateTable(uuid, { headerRow: value })} />
+      <PanelSection title="Rows and columns">
+        <div className="table-shape">
+          <span className="table-shape__count">
+            {table.rows} {table.rows === 1 ? 'row' : 'rows'} × {table.cols} {table.cols === 1 ? 'column' : 'columns'}
+          </span>
+          <div className="table-shape__buttons">
+            <Button plain size="small" disabled={table.rows >= MAX_ROWS} onClick={addRow}>
+              Add row
+            </Button>
+            <Button plain size="small" disabled={table.rows <= 1} onClick={dropRow}>
+              Remove row
+            </Button>
+            <Button plain size="small" disabled={table.cols >= MAX_COLS} onClick={addCol}>
+              Add column
+            </Button>
+            <Button plain size="small" disabled={table.cols <= 1} onClick={dropCol}>
+              Remove column
+            </Button>
           </div>
-        </PanelSection>
+          <Checkbox value={table.headerRow} label="First row is a heading" onChange={(value) => updateTable(uuid, { headerRow: value })} />
+        </div>
+      </PanelSection>
 
-        <PanelSection name="3" title="Text">
-          <div className="line-layout style-item">
-            <ValueSelect value={active.fontClass} label="Font" data={fontClassList} inputWidth="152px" readonly onFinish={(font) => finish('fontClass', font as any)} />
-            <ValueSelect value={active.fontSize} label="Size" suffix="px" data={FONT_SIZE_LIST} onFinish={(value) => finish('fontSize', Number(value))} />
-          </div>
-          <div className="style-item">
-            <span className="table-label">Alignment</span>
-            <Segmented aria-label="Alignment" size="sm" value={active.textAlign || 'left'} options={ALIGNMENTS} onChange={(value) => finish('textAlign', value)} />
-          </div>
-          <ColorSelect className="style-item" label="Text colour" value={active.color} onValueChange={(value) => finish('color', value)} />
-          <div className="slide-wrap">
-            <NumberSlider value={Number(active.cellPadding) || 0} label="Cell padding" maxValue={60} onChange={(value) => finish('cellPadding', value)} />
-          </div>
-        </PanelSection>
+      <PanelSection title="Text">
+        <div className="line-layout style-item">
+          <ValueSelect value={active.fontClass} label="Font" data={fontClassList} inputWidth="152px" readonly onFinish={(font) => finish('fontClass', font as any)} />
+          <ValueSelect value={active.fontSize} label="Size" suffix="px" data={FONT_SIZE_LIST} onFinish={(value) => finish('fontSize', Number(value))} />
+        </div>
+        <div className="style-item">
+          <span className="table-label">Alignment</span>
+          <Segmented aria-label="Alignment" size="sm" value={active.textAlign || 'left'} options={ALIGNMENTS} onChange={(value) => finish('textAlign', value)} />
+        </div>
+        <ColorSelect className="style-item" label="Text colour" value={active.color} onValueChange={(value) => finish('color', value)} />
+        <div className="slide-wrap">
+          <NumberSlider value={Number(active.cellPadding) || 0} label="Cell padding" maxValue={60} onChange={(value) => finish('cellPadding', value)} />
+        </div>
+      </PanelSection>
 
-        <PanelSection name="4" title="Colours">
-          <ColorSelect className="style-item" label="Heading fill" value={active.headerFill} onValueChange={(value) => finish('headerFill', value)} />
-          <ColorSelect className="style-item" label="Heading text" value={active.headerColor} onValueChange={(value) => finish('headerColor', value)} />
-          <ColorSelect className="style-item" label="Body fill" value={active.bodyFill} onValueChange={(value) => finish('bodyFill', value)} />
-          <ColorSelect label="Every second row" value={active.altFill} onValueChange={(value) => finish('altFill', value)} />
-        </PanelSection>
+      <PanelSection title="Colours">
+        <ColorSelect className="style-item" label="Heading fill" value={active.headerFill} onValueChange={(value) => finish('headerFill', value)} />
+        <ColorSelect className="style-item" label="Heading text" value={active.headerColor} onValueChange={(value) => finish('headerColor', value)} />
+        <ColorSelect className="style-item" label="Body fill" value={active.bodyFill} onValueChange={(value) => finish('bodyFill', value)} />
+        <ColorSelect label="Every second row" value={active.altFill} onValueChange={(value) => finish('altFill', value)} />
+      </PanelSection>
 
-        <PanelSection name="5" title="Grid lines">
-          <BorderControls width={active.borderWidth} color={active.borderColor} style={active.borderStyle} maxWidth={12} onChange={finish} />
-        </PanelSection>
-        <br />
-        <IconItemSelect className="style-item" label="Arrange" data={layerIconList} onFinish={layerAction} />
-        <IconItemSelect data={alignIconList} onFinish={alignAction} />
-        <br />
-      </PanelSections>
+      <PanelSection title="Grid lines">
+        <BorderControls label="Lines" width={active.borderWidth} color={active.borderColor} style={active.borderStyle} maxWidth={12} onChange={finish} />
+      </PanelSection>
     </div>
   )
 }

@@ -41,7 +41,7 @@ export default function WRectStyle() {
   return (
     <ShapeStyle
       shape={
-        <PanelSection name="3" title="Corners">
+        <PanelSection title="Corners">
           <CornerRadius
             corners={readCorners(active)}
             unlinked={isUnlinked(active)}

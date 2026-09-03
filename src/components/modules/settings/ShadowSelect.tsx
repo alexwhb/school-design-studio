@@ -1,5 +1,4 @@
 import { useRef } from 'react'
-import Checkbox from '@/components/ui/Checkbox'
 import { cx } from '@/utils/dom'
 import { defaultWidgetShadow, type TWidgetShadow } from '@/common/methods/shadow'
 import ColorSelect from './ColorSelect'
@@ -40,12 +39,9 @@ export default function ShadowSelect({ value, onChange, className }: Props) {
 
   return (
     <div className={cx('shadow-select', className || '')}>
-      <div className="shadow-select__row">
-        <Checkbox value={on} label="Drop shadow" className="shadow-select__toggle" onChange={toggle} />
-        {/* Nothing to colour or measure until there is a shadow, so the switch
-            stands alone rather than over a row of controls that do nothing. */}
-        {on ? <ColorSelect value={shadow.color} width="32px" className="shadow-select__swatch" label="" onValueChange={(next) => patch({ color: next })} /> : null}
-      </div>
+      <ColorSelect variant="row" label="Drop shadow" value={shadow.color} enabled={on} onEnabledChange={toggle} onValueChange={(next) => patch({ color: next })} />
+      {/* Nothing to measure until there is a shadow, so the row stands alone
+          rather than over a set of fields that do nothing. */}
       {on ? (
         <div className="shadow-select__fields">
           <label className="field field--full">
