@@ -18,7 +18,7 @@
  * a layer over it, so the board's own listeners and the drag-select box never
  * see these clicks and the document still brackets them for undo.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ComponentType } from 'react'
 import { useSnapshot } from 'valtio'
 import { canvasState, controlState } from '@/store/state'
 import { setDrawTool, toggleDrawTool } from '@/store/control'
@@ -33,6 +33,7 @@ import Uploader, { type TModelData, type TUploadDoneData } from '@/components/co
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
 import { drawToolOrder, drawTools, toolHint } from '@/components/business/draw-shape/drawTools'
 import {
+  ArrowToolIcon,
   ChevronUpIcon,
   PictureIcon,
   QrCodeIcon,
@@ -44,6 +45,7 @@ import {
 import { cx } from '@/utils/dom'
 import type { TDrawTool } from '@/store/types'
 import { addQrcode, addTable } from './addFromDock'
+import { ARROW_SHORTCUT, isArrowArmed, toggleArrowTool } from './arrowTool'
 import './toolDock.less'
 
 /**
@@ -55,13 +57,60 @@ import './toolDock.less'
 const CHIP_ROW = 48
 const DOCK_GAP = 10
 
+/** One button in the Shapes menu: what it shows, what lights it, what it arms. */
+type TShapeItem = {
+  key: string
+  label: string
+  Icon: ComponentType<{ className?: string }>
+  shortcut: string
+  armed: boolean
+  pick: () => void
+}
+
 /**
- * What the Shapes menu offers. The pen has a slot of its own on the bar, so
- * listing it here as well would be the same tool twice a centimetre apart.
- * Filtered here rather than dropped from `drawToolOrder`, which is the list of
- * every tool that arms, in the order Adobe XD has them.
+ * What the Shapes menu offers, in order.
+ *
+ * The shape tools come out of `drawToolOrder`, which is every tool that arms in
+ * the order Adobe XD has them, minus the pen: the pen has a slot of its own on
+ * the bar, so listing it here as well would be the same tool twice a centimetre
+ * apart. Arrow then follows Line, and is the reason this is a list of entries
+ * rather than a list of `TDrawTool`s — it is not a tool, it is the line tool
+ * carrying a preset (see arrowTool.ts), so what lights it and what picking it
+ * does are its own and cannot be looked up in `drawTools`.
  */
-const shapesMenu = drawToolOrder.filter((tool) => tool !== 'pen')
+function shapesMenu(armed: TDrawTool | null, preset: string | null, close: () => void): TShapeItem[] {
+  return drawToolOrder.flatMap((tool) => {
+    if (tool === 'pen') return []
+    const { label, Icon, shortcut } = drawTools[tool]
+    const item: TShapeItem = {
+      key: tool,
+      label,
+      Icon,
+      shortcut,
+      // A line carrying a preset is the Arrow beside it rather than this one.
+      armed: tool === 'line' ? armed === 'line' && !preset : armed === tool,
+      pick: () => {
+        toggleDrawTool(tool)
+        close()
+      },
+    }
+    if (tool !== 'line') return [item]
+    return [
+      item,
+      {
+        key: 'arrow',
+        label: 'Arrow',
+        Icon: ArrowToolIcon,
+        shortcut: ARROW_SHORTCUT,
+        armed: isArrowArmed(armed, preset),
+        pick: () => {
+          toggleArrowTool()
+          close()
+        },
+      },
+    ]
+  })
+}
 
 export default function ToolDock() {
   const { dDrawTool: armed, dLinePreset } = useSnapshot(controlState)
@@ -129,6 +178,7 @@ export default function ToolDock() {
 
   const PenToolIcon = drawTools.pen.Icon
   const TextIcon = drawTools.text.Icon
+  const shapes = shapesMenu(armed, dLinePreset, () => setOpen(null))
   const hint = armed ? toolHint(armed, dLinePreset) : null
   const shapeArmed = !!armed && armed !== 'pen' && armed !== 'text'
 
@@ -165,22 +215,20 @@ export default function ToolDock() {
             popperClass="tool-dock__popper"
             content={
               <div className="tool-dock__shapes">
-                {shapesMenu.map((tool) => {
-                  const { Icon, label, shortcut } = drawTools[tool]
-                  return (
-                    <Tooltip key={tool} content={`${label} (${shortcut})`} placement="top" showAfter={400}>
-                      <button
-                        type="button"
-                        className={cx('tool-dock__shape', { 'is-armed': armed === tool })}
-                        data-tool={tool}
-                        aria-label={label}
-                        onClick={() => pick(tool)}
-                      >
-                        <Icon className="tool-dock__shape-icon" />
-                      </button>
-                    </Tooltip>
-                  )
-                })}
+                {shapes.map((shape) => (
+                  <Tooltip key={shape.key} content={`${shape.label} (${shape.shortcut})`} placement="top" showAfter={400}>
+                    <button
+                      type="button"
+                      className={cx('tool-dock__shape', { 'is-armed': shape.armed })}
+                      data-tool={shape.key}
+                      aria-label={shape.label}
+                      aria-pressed={shape.armed}
+                      onClick={shape.pick}
+                    >
+                      <shape.Icon className="tool-dock__shape-icon" />
+                    </button>
+                  </Tooltip>
+                ))}
               </div>
             }
           >
