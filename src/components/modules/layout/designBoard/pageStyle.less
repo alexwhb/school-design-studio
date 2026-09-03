@@ -1,6 +1,11 @@
 #page-style {
-  height: 100%;
   width: 100%;
+
+  // The background library takes the panel over and scrolls inside it, so it
+  // is the one view that still needs the panel's full height.
+  &.is-library {
+    height: 100%;
+  }
 
   // The two things a page can be behind its artwork, as one choice.
   .bg-modes {

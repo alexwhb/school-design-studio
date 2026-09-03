@@ -130,10 +130,10 @@ export default function StylePanel() {
           </div>
         ) : null}
         {StyleComp ? (
-          // `display: contents` rather than a plain box: every style panel is
-          // `height: 100%`, and a percentage height resolves against the nearest
-          // box — an ordinary wrapper here silently collapses all of them to
-          // their content height.
+          // `display: contents`, so the panel is a direct child of the scroll
+          // box and the animation slot below it follows in the same flow. The
+          // panels size to their content: a fixed height here would leave the
+          // slot drawn over whatever ran past it.
           <div style={{ display: showGroupCombined ? 'none' : 'contents' }}>
             <StyleComp />
           </div>

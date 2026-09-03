@@ -110,7 +110,7 @@ export default function PageStyle() {
   const backgroundImage = active.backgroundImage
 
   return (
-    <div id="page-style">
+    <div id="page-style" className={showBgLib ? 'is-library' : undefined}>
       {showBgLib ? (
         <div className="bg-library">
           <span className="header-back" onClick={() => setShowBgLib(false)}>
