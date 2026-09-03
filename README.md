@@ -1105,6 +1105,23 @@ does to a design is `src/store/widget/brand.ts`, which walks `dLayouts[].layers`
 the way find and replace does, so the page on screen updates along with the rest
 and there is no special case for it.
 
+### Brand roles in a template
+
+The bundled templates get their `brand` blocks from the two generators rather
+than by hand: `tools/make-school-templates.py` for the school pack and
+`tools/make-slide-themes.py` for the five slide themes. Each script carries a
+table saying which of its palette colours plays which part — the navy the pack
+is set in is the primary, the gold it highlights with the secondary, a third
+colour an accent — and which faces ask for the heading font, which for the body
+font, and which (the hand-lettered ones) ask to be left alone. Neutrals are
+never listed, and nothing in the bundled packs opts out. Writing them into the
+generators means a regenerated pack cannot drift from its roles.
+
+`tools/check-brand-roles.py` reads every template back and prints a table: each
+non-neutral colour painted anywhere either has a role or is on the script's
+list of deliberate exceptions with a reason, and every text box resolves to a
+role. Run it after regenerating a pack, or after adding a template by hand.
+
 ## Tables
 
 A term calendar, a class list, a room timetable. The **Table** button on the
