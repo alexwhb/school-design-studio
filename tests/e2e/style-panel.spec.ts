@@ -101,3 +101,31 @@ test('the border row switches an outline on at a readable thickness', async ({ p
   await page.waitForTimeout(400)
   expect(await outline()).toBe('0px')
 })
+
+/* ------------------------------------------------------------- font picker */
+
+test('the font menu reaches every category, not only the ones it has room for', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await page.locator('#style-panel .font-select .real-input').click()
+  await page.waitForTimeout(400)
+
+  const menu = page.locator('.el-popper:visible .select-list')
+  await expect(menu.locator('.select-list__name')).toHaveText(['Sans serif', 'Serif', 'Display', 'Monospace', 'Handwriting'])
+
+  // The menu measures itself against the window rather than against the panel,
+  // and scrolls inside that.
+  const box = (await menu.boundingBox())!
+  expect(box.y + box.height, 'the whole menu is on screen').toBeLessThanOrEqual(page.viewportSize()!.height)
+
+  // Handwriting is the last group, which the tab strip used to put past the
+  // right-hand edge of the menu with no way to reach it.
+  const pacifico = menu.locator('li', { hasText: 'Pacifico' })
+  await pacifico.scrollIntoViewIfNeeded()
+  await pacifico.click()
+  await page.waitForTimeout(600)
+
+  await expect(page.locator('#style-panel .font-select .real-input')).toHaveValue('Pacifico')
+  const family = await page.locator(WIDGET).first().evaluate((el) => (el as HTMLElement).style.fontFamily)
+  expect(family).toContain('Pacifico')
+})

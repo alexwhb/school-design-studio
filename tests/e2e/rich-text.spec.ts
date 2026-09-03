@@ -296,3 +296,84 @@ test('a curved heading keeps a bold word bold, one character at a time', async (
   expect(weights.slice(0, 6).every((w) => w !== 'bold'), 'Sports is regular').toBe(true)
   expect(weights.slice(6).every((w) => w === 'bold'), 'Day is bold').toBe(true)
 })
+
+/* ------------------------------------------------------------ curved text */
+
+/** The Curve row's typed field, in degrees. */
+const curveField = (page: Page) => page.locator('#w-text-style .curve-row .number-slider__field input')
+
+/** Switches Curve text on, which starts the line at 30°. */
+async function turnCurveOn(page: Page) {
+  const row = page.locator('#w-text-style .curve-row')
+  await row.scrollIntoViewIfNeeded()
+  await row.locator('.toggle-row__check').click()
+  await page.waitForTimeout(700)
+}
+
+/** The box the widget is drawn in, and what it says. */
+function textBox(page: Page) {
+  return page.locator(WIDGET).first().evaluate((el) => {
+    const style = (el as HTMLElement).style
+    return { width: style.width, height: style.height, left: style.left, text: (el as HTMLElement).innerText.trim() }
+  })
+}
+
+test('a curve can be typed, and typing zero gives the straight line back', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  const straight = await textBox(page)
+  expect(straight.text).toBe('Add a heading')
+
+  await turnCurveOn(page)
+  await expect(curveField(page)).toHaveValue('30')
+  await expect(page.locator(`${WIDGET} .curved-text__glyph`)).toHaveCount('Addaheading'.length)
+
+  await curveField(page).fill('45')
+  await curveField(page).press('Enter')
+  await page.waitForTimeout(700)
+  await expect(curveField(page)).toHaveValue('45')
+  await expect(page.locator(`${WIDGET} .curved-text__glyph`)).toHaveCount('Addaheading'.length)
+
+  // Back to nothing: the words come back, in the box the straight line stood in.
+  await curveField(page).fill('0')
+  await curveField(page).press('Enter')
+  await page.waitForTimeout(900)
+  await expect(page.locator(`${WIDGET} .curved-text`)).toHaveCount(0)
+  const back = await textBox(page)
+  expect({ ...back, left: '' }).toEqual({ ...straight, left: '' })
+  // Each change gives half the width it moved back to the left edge, and each
+  // one rounds, so a run of them can land a pixel off where it started.
+  expect(Math.abs(Number.parseFloat(back.left) - Number.parseFloat(straight.left))).toBeLessThanOrEqual(2)
+})
+
+test('dragging the curve back to zero leaves the heading visible, at its straight size', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  const straight = await textBox(page)
+
+  await turnCurveOn(page)
+  const curved = await textBox(page)
+  expect(Number.parseFloat(curved.width)).toBeLessThan(Number.parseFloat(straight.width))
+
+  // The middle of the run is straight.
+  const runway = page.locator('#w-text-style .curve-row .el-slider__runway')
+  const run = (await runway.boundingBox())!
+  await page.mouse.move(run.x + run.width / 2, run.y + run.height / 2)
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.waitForTimeout(900)
+
+  await expect(page.locator(`${WIDGET} .curved-text`)).toHaveCount(0)
+  expect(await textBox(page)).toEqual(straight)
+
+  // The slider takes the press for itself, so the row has to mark its own undo
+  // step — see WTextStyle. One press of it puts the arc back. Off the panel
+  // first: ticking the row left the caret in its checkbox, and the shortcuts
+  // hand every key to a field that has focus.
+  await page.locator('#page-design-canvas').click({ position: { x: 4, y: 4 } })
+  await page.waitForTimeout(300)
+  await page.keyboard.press('ControlOrMeta+z')
+  await page.waitForTimeout(900)
+  await expect(page.locator(`${WIDGET} .curved-text__glyph`)).toHaveCount('Addaheading'.length)
+  expect(await textBox(page)).toEqual(curved)
+})

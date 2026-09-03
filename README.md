@@ -183,7 +183,10 @@ from a CDN. That means they work offline and render identically in the editor
 and in every export. Google serves most of them as a single variable file, so
 each family ships once and `fonts.css` declares a 400–700 weight range, which
 makes bold interpolate properly instead of being faked by the browser. See
-`public/fonts/LICENSES.md`.
+`public/fonts/LICENSES.md`. The picker lists them as one scrolling menu with a
+heading over each category, which sticks while its own families go by; the menu
+opens on the family the box is already set in, and flips above the field when
+there is no room below it.
 
 **Look.** One accent colour, a small neutral ramp, hairline borders, no
 shadows or gradients. Every colour in the editor comes from the tokens named in
@@ -799,12 +802,14 @@ src/common/methods/export/textRuns.ts   the same markup as PowerPoint text runs
 ## Curved text
 
 What a badge, a crest or a Sports Day header is set on. Select a text box and
-drag **Curve**, on the *Curve text* row under Effects in the settings panel.
+drag **Curve**, on the *Curve text* row under Effects in the settings panel, or
+type the angle into the field beside it — −180 to 180, arrow keys stepping by
+one and Shift by ten.
 
-The slider is the sweep of the arc in degrees, not a radius: half a turn is half
+The number is the sweep of the arc in degrees, not a radius: half a turn is half
 a turn whether the line is one word or six, where a fixed radius would bend a
 long line round on itself and barely touch a short one. Positive arcs over,
-negative hangs under, and the middle of the slider is straight.
+negative hangs under, and zero is straight.
 
 - **The box is fitted to the arc**, so the selection, snapping and the exported
   crop all follow the shape rather than the line it was before. That is also why
@@ -814,6 +819,11 @@ negative hangs under, and the middle of the slider is straight.
 - **Deepening the curve keeps the text where it stands.** The ends of a line
   draw in as it bends, so the box loses width; half of what it loses is given
   back to the left edge instead of letting the text creep across the page.
+- **Straightening it gives the box back.** Going to zero puts the width the
+  line had before it bent back on the box, off the same edge, and measures the
+  height off the straight run again. A box that arrived from a saved design
+  already curved has no earlier width to return to, so it is given the width
+  the words need laid out flat.
 - **Text effects follow it.** Every layer of an outline, a fill or a shadow is
   drawn along the same arc, so a curved heading can carry the same presets a
   straight one can.
