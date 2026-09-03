@@ -121,7 +121,7 @@ test.describe('embedded in a host app', () => {
   })
 
   test('the editor still edits: add a heading and nudge it', async ({ page }) => {
-    await page.locator('.ds-root').getByText('Text', { exact: true }).click()
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Text' }).click()
     await page.waitForTimeout(400)
     await page.locator('.ds-root').getByText('Heading', { exact: true }).click()
     await page.waitForTimeout(600)
