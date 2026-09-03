@@ -29,9 +29,9 @@ ERROR: Failed to set up Chromium xxx! Set "PUPPETEER_SKIP_DOWNLOAD" env variable
 #### 打包部署步骤
 
 > 服务器环境需求：
-> 
+>
 > - Node.js 16.18.1（尽量保持生产版本相同，避免出现错误）
-> 
+>
 > - PM2（进程守护）
 
 1. 本地执行 `npm run build` 打包

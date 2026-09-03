@@ -28,7 +28,7 @@ In `npm run dev` the changes appear on reload.
 The commands below live in [`tools/`](tools) at the root of this repository, so
 they run straight out of a fresh clone. The JSON they write is committed too, so
 the content library works whether or not you ever run them — the scripts are the
-documented way to *regenerate* it, not a build step.
+documented way to _regenerate_ it, not a build step.
 
 The `.mjs` scripts need Node 20+; the `.py` scripts need Python 3.9+ and nothing
 else. Run both from the repository root.
@@ -163,7 +163,7 @@ goes through `setTemplate`, which calls `decodeURIComponent`, but opening one
 directly with `?tempid=` goes through `setDWidgets`, which does not. Raw text
 survives both, since decoding it is a no-op. The one thing raw text cannot
 contain is a literal `%` — that would make the panel's `decodeURIComponent`
-throw. (Saved *elements* under `components/` are the opposite: those are
+throw. (Saved _elements_ under `components/` are the opposite: those are
 URL-encoded, because every path that loads them decodes.)
 
 Write the school's own details as **merge fields** rather than as one made-up
@@ -358,13 +358,13 @@ A stack is a list of layers, painted in array order, so the array reads back to
 front: the face of the lettering is the last entry. The settings panel numbers
 them the other way up, nearest first. Each layer can carry:
 
-| part | what it does |
-| --- | --- |
+| part      | what it does                                                                |
+| --------- | --------------------------------------------------------------------------- |
 | `filling` | `type: 0` flat colour, `2` gradient (`gradient.angle` + `stops`), `1` image |
-| `stroke` | an outline, drawn outward from the glyph edge |
-| `shadow` | offset and blur; with no offset and no fill of its own, a glow |
-| `offset` | the whole layer moved — stack several for an extruded block |
-| `skew` | the whole layer leaned, pivoting on the bottom of the box |
+| `stroke`  | an outline, drawn outward from the glyph edge                               |
+| `shadow`  | offset and blur; with no offset and no fill of its own, a glow              |
+| `offset`  | the whole layer moved — stack several for an extruded block                 |
+| `skew`    | the whole layer leaned, pivoting on the bottom of the box                   |
 
 Only `filling`, `stroke`, `shadow` and `offset` came from upstream; `skew` is
 ours, and it is what makes a cast shadow possible. A preset stores only the
@@ -399,7 +399,7 @@ Beyond the stack, three things a single text widget can still carry:
   background repeats by default, so a one-cell SVG tile is enough — that is
   Dotted fill, Checker fill and Comic halftone. The settings panel only offers
   a colour swatch for flat and gradient fills, so a layer filled this way
-  cannot be recoloured there; it is used only where the pattern *is* the
+  cannot be recoloured there; it is used only where the pattern _is_ the
   preset.
 
 ### Where the line between the two sections falls
