@@ -1079,8 +1079,16 @@ the band, because a white headline made grey is neither one thing nor the other.
 Text in one of the **school's own colours** is darkened or lightened *in its own
 hue* until it passes, so a pale gold heading comes out a deeper gold rather than
 a brown or a black; only when that cannot reach the target inside a bounded
-shift does it fall back to ink or white. A decorative mark drawn wholly inside a
-band, both in kit colours and less than 1.5:1 apart, is nudged the same way.
+shift does it fall back to ink or white.
+
+The marks get the same two repairs, at the decorative 3:1. A **neutral** mark —
+the white trophy over the Field Day headline — swaps to the paper or the ink
+when the band beneath it becomes a kit colour it cannot be seen on; a mark in
+one of the **kit's own colours**, drawn wholly inside a band in another and less
+than 1.5:1 from it, is nudged in its hue. Only a mark painted in a single colour
+is touched, so a two-colour sticker is left as the drawing it is, and a shape
+with words on it, or one covering more than a quarter of what it sits on, counts
+as the paper of that part of the design rather than as a mark on it.
 
 Nothing else is touched. Text over a photograph, over a gradient, or over
 anything whose colour cannot be worked out is left exactly as it was drawn — the

@@ -429,12 +429,16 @@ function paintOf(layer: TdWidgetData): unknown {
   return undefined
 }
 
-/** What a text box turns out to be sitting on: the colour a reader sees, and the paint it came from. */
+/** What something turns out to be sitting on: the colour a reader sees, and where it came from. */
 type TSurface = {
   /** Opaque, with anything translucent already composited over what is behind it. */
   color: string
   /** The paint as it is stored, so the caller can tell whether the brand pass put it there. */
   rgb: string
+  /** The layer it is painted on, or an empty string for the page itself. */
+  uuid: string
+  /** How much of the design it covers, which is how a badge is told from a panel. */
+  bounds: TBounds
 }
 
 /**
@@ -476,7 +480,7 @@ function surfaceUnder(index: number, layers: TdWidgetData[], keys: number[][], b
   // but neither is it something to give up over — fall through to the page.
   if (parsed.alpha === '00') return backdrop
   if (!backdrop) return null
-  return { color: composite(`#${parsed.rgb}${parsed.alpha}`, backdrop.color), rgb: parsed.rgb }
+  return { color: composite(`#${parsed.rgb}${parsed.alpha}`, backdrop.color), rgb: parsed.rgb, uuid: covering.uuid, bounds: boundsOf(covering) }
 }
 
 /** The page itself as a surface, or null when a picture or a gradient is on it. */
@@ -484,7 +488,8 @@ function pageSurface(page: TPageState): TSurface | null {
   if (page.backgroundImage || page.backgroundGradient) return null
   const parsed = parseHex(page.backgroundColor)
   if (!parsed) return null
-  return { color: composite(`#${parsed.rgb}${parsed.alpha}`, PAPER), rgb: parsed.rgb }
+  const bounds = { left: 0, top: 0, right: Number(page.width) || 0, bottom: Number(page.height) || 0 }
+  return { color: composite(`#${parsed.rgb}${parsed.alpha}`, PAPER), rgb: parsed.rgb, uuid: '', bounds }
 }
 
 /**
@@ -523,12 +528,14 @@ export type TReadabilityCounts = {
   swapped: number
   /** Text boxes that could not be got to the target, and were left as legible as they could be. */
   unreadable: number
-  /** Decorative marks nudged off a band they had disappeared into. */
+  /** Decorative marks nudged, in their own hue, off a band they had disappeared into. */
   marks: number
+  /** Neutral marks — a white icon on what is now a pale band — swapped to the paper or the ink. */
+  marksSwapped: number
 }
 
 export function noReadabilityCounts(): TReadabilityCounts {
-  return { adjusted: 0, swapped: 0, unreadable: 0, marks: 0 }
+  return { adjusted: 0, swapped: 0, unreadable: 0, marks: 0, marksSwapped: 0 }
 }
 
 /**
@@ -570,12 +577,19 @@ export function ensureReadable(layers: TdWidgetData[], page: TPageState, kit: TB
   const keys = stackKeys(layers)
   const backdrop = pageSurface(page)
 
+  // Worked out once: the text loop reads it, and so does the mark pass, which
+  // uses it to tell a badge sitting on a panel from the panel itself. A thing
+  // somebody has put words on is a surface, not a mark.
+  const surfaces = layers.map((layer, index) => (layer.type === 'w-text' && !layer.hidden ? surfaceUnder(index, layers, keys, backdrop) : null))
+  const carrying = new Set<string>()
+  for (const surface of surfaces) if (surface?.uuid) carrying.add(surface.uuid)
+
   for (let index = 0; index < layers.length; index++) {
     const layer = layers[index]
     if (layer.type !== 'w-text' || layer.hidden) continue
     const text = parseHex((layer as any).color)
     if (!text) continue
-    const surface = surfaceUnder(index, layers, keys, backdrop)
+    const surface = surfaces[index]
     if (!surface) continue
     // Only what the pass reached: either the words are now one of the school's
     // colours, or the ground under them is. A line of black on cream that the
@@ -627,30 +641,85 @@ export function ensureReadable(layers: TdWidgetData[], page: TPageState, kit: TB
     if (contrastRatio(pick, surface.color) < target) counts.unreadable++
   }
 
-  counts.marks = separateMarks(layers, keys, backdrop, brandRgbs)
+  const marks = repairMarks(layers, keys, backdrop, brandRgbs, ink, carrying)
+  counts.marks = marks.nudged
+  counts.marksSwapped = marks.swapped
   return counts
 }
 
+/** A rectangle's area, for the one place that has to know how big something is. */
+function areaOf(box: TBounds): number {
+  return Math.max(0, box.right - box.left) * Math.max(0, box.bottom - box.top)
+}
+
 /**
- * The decorative case, kept deliberately small.
- *
- * A rule, a bullet or a badge in the school's second colour, drawn wholly
- * inside a band in its first, vanishes when the two colours turn out to be
- * neighbours. Only that shape of it is repaired — one brand-coloured shape
- * entirely within another, and only when the two are near enough to be the
- * same colour at a glance — because anything looser starts repainting artwork
- * that was drawn tone-on-tone on purpose.
+ * How much of its surface a thing may cover and still be a mark on it. A white
+ * card filling most of a page is the paper of that part of the design, and
+ * painting it black because the page behind it went pale would be the opposite
+ * of a repair.
  */
-function separateMarks(layers: TdWidgetData[], keys: number[][], backdrop: TSurface | null, brandRgbs: Set<string>): number {
-  if (!backdrop) return 0
-  let nudged = 0
+const MARK_SHARE = 0.25
+
+/**
+ * A trophy, a rule, a row of bullets — the marks, which have the same two
+ * troubles the words do and are repaired the same two ways.
+ *
+ * A **neutral** mark is the white trophy on the Field Day poster's navy band:
+ * recolour the band pale and the trophy is gone, exactly as the white headline
+ * beside it was, and the answer is the same — whichever of the paper and the
+ * design's own ink can be seen on the band. A **brand-coloured** mark is the
+ * other case: a rule in the school's second colour drawn inside a panel in its
+ * first, which vanishes when the two colours turn out to be neighbours, and is
+ * nudged in its own hue rather than swapped, so the palette survives.
+ *
+ * Only one colour, and only its own: a two-colour sticker is a drawing rather
+ * than a mark and following its first colour would recolour half of it, a
+ * photograph has no colour to follow, and a gradient fill drops out of
+ * `parseHex` before it gets here. Neither repair happens over a picture or on
+ * a page with one for a background, for the same reason no text repair does.
+ *
+ * Both targets are the decorative 3:1 — a mark is a shape, not a word.
+ */
+function repairMarks(
+  layers: TdWidgetData[],
+  keys: number[][],
+  backdrop: TSurface | null,
+  brandRgbs: Set<string>,
+  ink: string,
+  carrying: Set<string>,
+): { nudged: number; swapped: number } {
+  const counts = { nudged: 0, swapped: 0 }
+  if (!backdrop) return counts
+
   for (let index = 0; index < layers.length; index++) {
     const layer = layers[index]
-    if (layer.hidden || !SURFACE_TYPES.has(layer.type)) continue
+    if (layer.hidden || layer.isContainer || !SURFACE_TYPES.has(layer.type)) continue
+    // A piece of line art painted in more than one colour is a drawing, and
+    // repainting only the first of its colours would take it apart.
+    if (layer.type === 'w-svg' && (layer as any).colors?.length !== 1) continue
     const paint = parseHex(paintOf(layer))
-    if (!paint || !brandRgbs.has(paint.rgb)) continue
+    if (!paint || paint.alpha === '00') continue
+    const was = `#${paint.rgb}${paint.alpha}`
     const box = boundsOf(layer)
 
+    if (isNeutralColor(paint.rgb)) {
+      const surface = surfaceUnder(index, layers, keys, backdrop)
+      // Only where the brand pass put the colour, and only where this really
+      // is a mark on something rather than the something: a panel with words
+      // on it, or one covering most of what it sits on, is the paper here.
+      if (!surface || !brandRgbs.has(surface.rgb)) continue
+      if (carrying.has(layer.uuid) || areaOf(box) > MARK_SHARE * areaOf(surface.bounds)) continue
+      if (contrastRatio(composite(was, surface.color), surface.color) >= DECORATIVE_TARGET) continue
+      const pick = readableOn(surface.color, [was, PAPER, ink])
+      if (pick === was) continue
+      paintMark(layer, `#${parseHex(pick)!.rgb}${paint.alpha}`)
+      counts.swapped++
+      continue
+    }
+
+    if (!brandRgbs.has(paint.rgb)) continue
+    // The nudge asks for containment rather than a centre: a rule that reaches
+    // off its panel is read against two things and is nobody's to move.
     let ground = ''
     let hostKey: number[] | null = null
     for (let at = 0; at < layers.length; at++) {
@@ -664,16 +733,19 @@ function separateMarks(layers: TdWidgetData[], keys: number[][], backdrop: TSurf
       hostKey = keys[at]
     }
     if (!ground) continue
-
-    const mark = composite(`#${paint.rgb}${paint.alpha}`, ground)
-    if (contrastRatio(mark, ground) >= 1.5) continue
-    const moved = adjustForContrast(`#${paint.rgb}${paint.alpha}`, ground, DECORATIVE_TARGET)
+    if (contrastRatio(composite(was, ground), ground) >= 1.5) continue
+    const moved = adjustForContrast(was, ground, DECORATIVE_TARGET)
     if (!moved.changed) continue
-    if (SHAPE_TYPES.has(layer.type)) (layer as any).color = moved.color
-    else (layer as any).colors = [moved.color, ...(((layer as any).colors as string[]) || []).slice(1)]
-    nudged++
+    paintMark(layer, moved.color)
+    counts.nudged++
   }
-  return nudged
+  return counts
+}
+
+/** The one colour a mark is painted in, put back where it came from. */
+function paintMark(layer: TdWidgetData, color: string) {
+  if (SHAPE_TYPES.has(layer.type)) (layer as any).color = color
+  else (layer as any).colors = [color]
 }
 
 /**
@@ -743,6 +815,7 @@ export function applyBrandToDesign(kit: TBrandKit, options: TApplyBrandOptions):
         outcome.readability.swapped += counts.swapped
         outcome.readability.unreadable += counts.unreadable
         outcome.readability.marks += counts.marks
+        outcome.readability.marksSwapped += counts.marksSwapped
       }
     }
   }

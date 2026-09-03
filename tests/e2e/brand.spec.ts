@@ -435,12 +435,27 @@ test('a pale primary darkens a heading set in it rather than losing it on the pa
   expect(Math.min(r, g)).toBeGreaterThan(b + 40)
 })
 
+test('a pale primary does not leave a white trophy on a pale band either', async ({ page }) => {
+  await addBrandColor(page, PALE)
+  await pickTemplate(page, FIELD_DAY)
+
+  // The trophy over the headline is a one-colour white drawing sitting on the
+  // band, which is the headline's problem in a shape rather than in words, and
+  // gets the headline's answer.
+  const paints = await svgPaints(page)
+  expect(paints).toContain('#22252aff')
+  expect(paints).not.toContain('#ffffffff')
+})
+
 test('a dark primary leaves the white headline white', async ({ page }) => {
   await addBrandColor(page, DARK)
   await pickTemplate(page, FIELD_DAY)
 
-  expect(await svgPaints(page)).toContain('#123a6bff')
-  // Nothing to repair: white on a dark band is what the poster was drawn as.
+  const paints = await svgPaints(page)
+  expect(paints).toContain('#123a6bff')
+  // Nothing to repair: white on a dark band is what the poster was drawn as,
+  // and that goes for the trophy as much as for the words.
+  expect(paints).toContain('#ffffffff')
   expect(await faceColor(page, 'FIELD DAY')).toBe('rgb(255, 255, 255)')
   expect(await faceColor(page, 'SPRINGFIELD')).toBe('rgb(255, 255, 255)')
   expect(await faceColor(page, 'Friday')).toBe('rgb(18, 58, 107)')
