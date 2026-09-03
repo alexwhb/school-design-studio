@@ -8,6 +8,12 @@
 import { cx } from '@/utils/dom'
 import './filterChips.less'
 
+/**
+ * "None of them" — a panel showing search results rather than a category, where
+ * leaving the value alone would light up whichever chip happens to match.
+ */
+export const NO_CHIP = -1
+
 export type TFilterChip = {
   id: string | number
   name: string

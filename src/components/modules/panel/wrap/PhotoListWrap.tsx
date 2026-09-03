@@ -16,7 +16,7 @@ import { addWidget, setSelectItem } from '@/store/widget'
 import wImageSetting from '../../widgets/wImage/wImageSetting'
 import { PHOTO_NOTICES } from './components/photoNotices'
 import SearchHeader from './components/SearchHeader'
-import FilterChips from './components/FilterChips'
+import FilterChips, { NO_CHIP } from './components/FilterChips'
 import PanelEyebrow from './components/PanelEyebrow'
 import Card, { CardGrid } from './components/Card'
 import EditModel from './components/EditModel'
@@ -229,7 +229,7 @@ export default function PhotoListWrap() {
     <PanelWrap className="photo-list-wrap">
       <PanelHead>
         <SearchHeader value={keyword} placeholder="Search photos" onChange={setKeyword} onSearch={searchChange} />
-        <FilterChips items={BROWSE_CATEGORIES} value={keyword ? -1 : cate.id} onChange={cateChange} />
+        <FilterChips items={BROWSE_CATEGORIES} value={keyword ? NO_CHIP : cate.id} onChange={cateChange} />
       </PanelHead>
 
       <PanelBody ref={listRef}>

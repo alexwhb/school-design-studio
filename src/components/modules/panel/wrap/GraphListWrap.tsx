@@ -12,7 +12,7 @@ import wImageSetting from '../../widgets/wImage/wImageSetting'
 import { wSvgSetting } from '../../widgets/wSvg/wSvgSetting'
 import ArrowPresets from './components/ArrowPresets'
 import SearchHeader from './components/SearchHeader'
-import FilterChips from './components/FilterChips'
+import FilterChips, { NO_CHIP } from './components/FilterChips'
 import PanelEyebrow from './components/PanelEyebrow'
 import Card, { CardGrid, CardRows } from './components/Card'
 import useCompPresets from './components/compPresets'
@@ -220,7 +220,7 @@ export default function GraphListWrap() {
     <PanelWrap className="graph-list-wrap">
       <PanelHead>
         <SearchHeader value={searchKeyword} live placeholder="Search graphics" onChange={setSearchKeyword} onSearch={searchChange} />
-        <FilterChips items={CHIPS} value={searchKeyword ? '\u0000search' : cate} onChange={cateChange} />
+        <FilterChips items={CHIPS} value={searchKeyword ? NO_CHIP : cate} onChange={cateChange} />
       </PanelHead>
 
       <PanelBody ref={listRef}>
