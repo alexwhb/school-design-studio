@@ -155,9 +155,6 @@ export default function DrawLine() {
 
   return (
     <>
-      <div className="draw-hint" role="status">
-        <b>Drag to draw a line.</b> Shift holds it to 45°, Alt draws it from the centre, Esc cancels.
-      </div>
       {canvasEl && draft
         ? createPortal(
             <svg className="draw-line" width={page.width} height={page.height} viewBox={`0 0 ${page.width} ${page.height}`}>

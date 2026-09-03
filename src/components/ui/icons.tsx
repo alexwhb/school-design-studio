@@ -362,3 +362,72 @@ export function PhotosIcon({ className, width = '1em', height = '1em' }: IconPro
     </svg>
   )
 }
+
+/** The pointer, which is what "no tool is armed" looks like. */
+export function SelectToolIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 3.5 15 10l-4.4 1.1L8.7 16z" />
+    </svg>
+  )
+}
+
+/** A serif capital I under its bar: the text tool everywhere. */
+export function TextToolIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 6V4.5h12V6M10 4.5V16M7.5 16h5" />
+    </svg>
+  )
+}
+
+/** Two shapes overlapping, for the button that opens the shape tools. */
+export function ShapesIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <rect x="3" y="3" width="9" height="9" rx="1.6" />
+      <circle cx="13" cy="13" r="4" />
+    </svg>
+  )
+}
+
+/** A framed picture with a horizon in it. */
+export function PictureIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="14" height="12" rx="1.8" />
+      <circle cx="7.5" cy="8" r="1.4" />
+      <path d="M3.6 14 8 10.4l3 2.4 2.3-1.8L17 14" />
+    </svg>
+  )
+}
+
+/** Three finder squares and a scrap of data: a QR code at icon size. */
+export function QrCodeIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <rect x="3" y="3" width="5.5" height="5.5" rx="1" />
+      <rect x="11.5" y="3" width="5.5" height="5.5" rx="1" />
+      <rect x="3" y="11.5" width="5.5" height="5.5" rx="1" />
+      <path d="M11.5 11.5h2.5v2.5h-2.5zM15.5 15.5H17V17h-1.5z" />
+    </svg>
+  )
+}
+
+/** An arrow out of a tray: picking a file off this machine. */
+export function UploadArrowIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 11.5V3.5M5 6.5 8 3.5l3 3M2.5 11v1.5A1.5 1.5 0 0 0 4 14h8a1.5 1.5 0 0 0 1.5-1.5V11" />
+    </svg>
+  )
+}
+
+/** A chevron, pointing up: the caret on a dock button that opens a popover. */
+export function ChevronUpIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 7.5 6 4l3.5 3.5" />
+    </svg>
+  )
+}

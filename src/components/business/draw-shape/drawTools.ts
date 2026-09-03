@@ -2,19 +2,19 @@
  * The shape tools, and everything that differs between them.
  *
  * There is one entry per tool and one list, because a tool is described in
- * three places at once — the Tools panel names it, the line of instructions
- * under the canvas names what is being pulled out, and the drag itself has to
- * know what widget to make — and with three tools those had started to drift.
- * `DrawShape` and `ToolsListWrap` both read this and neither knows one shape
- * from another, so the next shape is an entry here plus its widget rather than
- * another branch through either of them.
+ * three places at once — the dock names it, the line of instructions above the
+ * dock names what is being pulled out, and the drag itself has to know what
+ * widget to make — and with three tools those had started to drift. `DrawShape`
+ * and `ToolDock` both read this and neither knows one shape from another, so
+ * the next shape is an entry here plus its widget rather than another branch
+ * through either of them.
  *
  * The tools split into two. A drag tool is pulled out of the page in one press
  * and comes out at whatever size it was pulled to; the pen is a point at a time
  * and is not finished until it is told it is, and it is drawn by its own
  * component. The line is a drag too, but it is pulled from one point to another
- * rather than out of a box, so it has a component of its own as well. Everything the Tools panel shows is common to both and lives in
- * `drawTools`; what a drag needs to make a shape out of a rectangle is in
+ * rather than out of a box, so it has a component of its own as well.
+ * Everything the dock shows is common to both and lives in `drawTools`; what a drag needs to make a shape out of a rectangle is in
  * `dragTools`, which is what `DrawShape` reads and what makes "is this drag
  * mine?" a lookup rather than a list of names.
  *
@@ -29,7 +29,7 @@ import { wRectSetting } from '@/components/modules/widgets/wRect/wRectSetting'
 import type { TDragTool, TDrawTool } from '@/store/types'
 
 export type TDrawToolSpec = {
-  /** What the Tools panel calls it, and what it says underneath. */
+  /** What the dock calls it, and what the old panel said underneath. */
   label: string
   desc: string
   Icon: ComponentType<{ className?: string }>
@@ -38,7 +38,7 @@ export type TDrawToolSpec = {
 }
 
 export type TDragToolSpec = TDrawToolSpec & {
-  /** Said under the canvas while the tool is armed: "Drag to draw ⟨noun⟩." */
+  /** Said above the dock while the tool is armed: "Drag to draw ⟨noun⟩." */
   noun: string
   /** And then: "Shift keeps it ⟨equal⟩." */
   equal: string
@@ -88,7 +88,7 @@ export const dragTools: Record<TDragTool, TDragToolSpec> = {
   },
 }
 
-/** Every tool the panel lists: the drag tools, the line and the pen. */
+/** Every tool the dock offers: the drag tools, the line and the pen. */
 export const drawTools: Record<TDrawTool, TDrawToolSpec> = {
   ...dragTools,
   line: {
@@ -103,4 +103,27 @@ export const drawTools: Record<TDrawTool, TDrawToolSpec> = {
     Icon: PenIcon,
     shortcut: 'P',
   },
+}
+
+/**
+ * The line said above the dock while a tool is armed, in two halves: the one
+ * sentence that matters, and the modifiers after it.
+ *
+ * A function rather than a field per tool, because the drag tools all say the
+ * same sentence about the shape they are pulling out of the page and only the
+ * noun changes; it was three copies of that sentence in three components
+ * before the dock drew all of them.
+ */
+export function toolHint(tool: TDrawTool): { lead: string; rest: string } {
+  if (tool === 'pen') {
+    return {
+      lead: 'Click to place a point, drag to curve it.',
+      rest: 'Click the first point to close the shape, Enter or Esc to leave it open.',
+    }
+  }
+  if (tool === 'line') {
+    return { lead: 'Drag to draw a line.', rest: 'Shift holds it to 45°, Alt draws it from the centre, Esc cancels.' }
+  }
+  const { noun, equal } = dragTools[tool]
+  return { lead: `Drag to draw ${noun}.`, rest: `Shift keeps it ${equal}, Alt draws it from the centre, Esc cancels.` }
 }

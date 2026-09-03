@@ -1,0 +1,235 @@
+// The dock floats over the board rather than in it: absolutely placed inside
+// #main, like the page strip and the notes drawer, and centred on the width of
+// the well that is actually on screen. Its `bottom` is written from the
+// component, which is the only thing that knows what the strip and the drawer
+// are taking between them.
+.tool-dock {
+  position: absolute;
+  width: 100%;
+  padding: 0 @space-4;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  // Above Moveable's selection box, which reaches down over the same corner.
+  z-index: 3100;
+  // Only the pill itself answers the mouse; the rest of the row is board.
+  pointer-events: none;
+}
+
+// The hint, the popovers and the dock are one column so they stack on each
+// other, which is what puts the hint above the dock rather than over it.
+.tool-dock__column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  pointer-events: auto;
+}
+
+.tool-dock__bar {
+  display: flex;
+  align-items: center;
+  gap: @space-1 - 1px;
+  max-width: 100%;
+  padding: 5px;
+  border-radius: @radius-lg;
+  background: @surface-glass;
+  border: 1px solid @line;
+  box-shadow: @shadow-pop;
+  backdrop-filter: blur(10px);
+  // A well too narrow for the whole row scrolls it rather than wrapping it:
+  // a dock on two lines stops reading as one strip of tools.
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tool-dock__item {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: @space-1;
+  width: 40px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: @radius;
+  background: transparent;
+  color: @ink;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+
+  &.is-wide {
+    width: 54px;
+  }
+  &:hover {
+    background: @surface-2;
+  }
+  // An armed tool is a held-down state, not a hover: it stays lit while the
+  // pointer is away on the page drawing the thing it was armed for.
+  &.is-armed {
+    background: @accent-soft;
+    color: @accent;
+  }
+  &:focus-visible {
+    .focus-ring();
+  }
+}
+
+.tool-dock__icon {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+.tool-dock__caret {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  color: @ink-3;
+}
+
+// The caret is a hint that there is more behind the button, and the first thing
+// worth dropping when the well is too narrow to hold the row comfortably.
+@media (max-width: 1180px) {
+  .tool-dock__caret {
+    display: none;
+  }
+  .tool-dock__item.is-wide {
+    width: 40px;
+  }
+}
+
+.tool-dock__divider {
+  flex: none;
+  width: 1px;
+  height: 22px;
+  margin: 0 3px;
+  background: @line;
+}
+
+// Element Plus dresses .el-popover itself, so both classes are named to win.
+.el-popover.el-popper.tool-dock__popper {
+  padding: 6px;
+  min-width: 0;
+  border-radius: @radius-lg;
+  background: @surface-glass;
+  border: 1px solid @line;
+  box-shadow: @shadow-pop;
+  backdrop-filter: blur(10px);
+  // Above Moveable, which the dock itself already has to clear.
+  z-index: 3200;
+
+  // The card sits directly above the dock, as one more row of it; an arrow
+  // pointing back down at the button it came from is noise at that distance.
+  // The diamond rather than the arrow itself: Radix writes `display` onto the
+  // arrow inline, which no rule here can outrank.
+  .el-popper__arrow::before {
+    display: none;
+  }
+}
+
+.tool-dock__shapes {
+  display: flex;
+  gap: @space-1;
+}
+
+.tool-dock__shape {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: @radius;
+  background: @surface-2;
+  color: @ink;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+
+  &:hover,
+  &.is-armed {
+    background: @accent-soft;
+    color: @accent;
+  }
+  &:focus-visible {
+    .focus-ring();
+  }
+}
+
+.tool-dock__shape-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.tool-dock__menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 226px;
+}
+
+.tool-dock__upload {
+  cursor: pointer;
+}
+
+.tool-dock__row {
+  display: flex;
+  align-items: center;
+  gap: @space-2;
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: @radius;
+  background: transparent;
+  color: @ink;
+  font-family: inherit;
+  font-size: @text-sm;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: @surface-2;
+  }
+  &:focus-visible {
+    .focus-ring();
+  }
+}
+
+.tool-dock__row-icon {
+  display: flex;
+  flex: none;
+  width: 16px;
+  color: @ink-3;
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.tool-dock__row-label {
+  flex: 1;
+  min-width: 0;
+}
+
+// What the row will do, said in the row rather than in a tooltip nobody opens.
+.tool-dock__row-meta {
+  flex: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: @text-xs - 1px;
+  color: @ink-3;
+}
+
+// The dock's own tooltips have to clear its popovers, which already stand above
+// Moveable; a tooltip on a shape in the Shapes card would otherwise open behind
+// the card it belongs to.
+.ds-popper.tool-dock__tip {
+  z-index: 3300;
+}

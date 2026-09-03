@@ -1,25 +1,52 @@
-// The line of instructions, pinned to the workspace rather than to the page, so
-// it stays the same size and in the same place at any zoom.
+// The line of instructions, drawn in the tool dock's own column so it sits
+// above the dock and moves with it. A green pill rather than a black one: it
+// belongs to the tool that is armed, and the Esc chip on the end is the way
+// back that the sentence keeps promising.
 .draw-hint {
-  position: fixed;
-  left: 50%;
-  bottom: 84px;
-  z-index: 3100;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: @space-2;
-  max-width: calc(100vw - @space-6 * 2);
-  padding: @space-2 @space-4;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 @space-2 0 13px;
   border-radius: @radius-pill;
-  background: @ink;
-  color: @surface;
+  background: @accent-soft;
+  border: 1px solid @accent-border;
+  backdrop-filter: blur(8px);
+  color: @accent;
   font-size: @text-sm;
+  user-select: none;
+}
+
+.draw-hint__text {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  pointer-events: none;
-  user-select: none;
+}
+
+// A key cap, not a button: it says which key does this as much as it does it.
+.draw-hint__esc {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: @radius-pill;
+  background: @surface;
+  color: @ink-2;
+  font: inherit;
+  font-size: @text-xs;
+  cursor: pointer;
+
+  &:hover {
+    background: @surface-2;
+    color: @ink;
+  }
+  &:focus-visible {
+    .focus-ring();
+  }
 }
 
 // Everything below is drawn inside the page, so its lengths are design pixels

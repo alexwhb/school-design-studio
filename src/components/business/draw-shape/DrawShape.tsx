@@ -19,8 +19,9 @@
  * from a native listener on `#page-design` and the drag-select box listens on
  * the same element: a React handler on an overlay is delegated to the app root
  * and would run after both had already decided the press was theirs. The
- * markup is only what you see — the rubber band and its size, drawn inside the
- * page so it scales with it, and a line of instructions that does not.
+ * markup is only what you see: the rubber band and its size, drawn inside the
+ * page so it scales with it. What the tool is waiting for is said above the
+ * dock, by the dock, from `toolHint`.
  */
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -175,9 +176,6 @@ export default function DrawShape() {
 
   return (
     <>
-      <div className="draw-hint" role="status">
-        <b>Drag to draw {dragTools[tool].noun}.</b> Shift keeps it {dragTools[tool].equal}, Alt draws it from the centre, Esc cancels.
-      </div>
       {canvasEl && band
         ? createPortal(
             <div className="draw-band__wrap">

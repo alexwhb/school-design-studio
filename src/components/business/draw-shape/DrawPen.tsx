@@ -299,9 +299,6 @@ export default function DrawPen() {
 
   return (
     <>
-      <div className="draw-hint" role="status">
-        <b>Click to place a point, drag to curve it.</b> Click the first point to close the shape, Enter or Esc to leave it open.
-      </div>
       {canvasEl
         ? createPortal(
             <svg className="draw-pen" width={page.width} height={page.height} viewBox={`0 0 ${page.width} ${page.height}`}>
