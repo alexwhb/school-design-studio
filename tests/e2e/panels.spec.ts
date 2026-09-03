@@ -64,6 +64,15 @@ test('the page is refitted to the wider workspace when both panels go', async ({
   await page.waitForTimeout(900)
 
   expect(await canvasScale(page)).toBeGreaterThan(before)
+
+  // And back down again when the panels return, which the board only gets
+  // right because the space is measured somewhere the enlarged page is not
+  // holding open.
+  await page.locator('.style-panel-strip').click()
+  await page.locator('#widget-panel .panel-strip').click()
+  await page.waitForTimeout(900)
+
+  expect(await canvasScale(page)).toBeCloseTo(before, 4)
 })
 
 test('a rail tab brings the hidden left panel back showing that tab', async ({ page }) => {

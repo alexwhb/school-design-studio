@@ -101,6 +101,14 @@
             height: 30px;
             padding: 0;
             justify-content: center;
+
+            // The press has to land on the button itself. Undo is built from
+            // document mousedowns, and the one class that tells that listener
+            // to keep its hands off this press is on the button — a press that
+            // stopped at the drawing inside it would be filed as an edit.
+            svg {
+              pointer-events: none;
+            }
           }
 
           .disable {

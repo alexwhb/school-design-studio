@@ -97,7 +97,11 @@ export default function Index() {
     const right = root?.querySelector('#style-panel, .style-panel-strip') as HTMLElement | null
     root?.style.setProperty('--ds-right-panel-w', `${right?.offsetWidth ?? 0}px`)
 
-    const board = document.getElementById('page-design')
+    // #main rather than #page-design, which is the board's scrolling layer and
+    // carries a min-width of the page at its current zoom: measuring that gives
+    // back the space the page is already taking, so the workspace could grow
+    // when a panel went but never shrink when it came back.
+    const board = document.getElementById('main')
     if (!board) return
     updateScreen({ width: board.offsetWidth, height: board.offsetHeight })
     // The selection box is positioned against the page, so it has to be asked
@@ -235,12 +239,12 @@ export default function Index() {
             <div className="operation">
               <Tooltip content="Undo" placement="bottom" showAfter={400}>
                 <div className={cx('operation-item', 'operation-item--icon', { disable: !undoable })} onClick={() => (undoable ? handleHistory('undo') : undefined)}>
-                  <UndoIcon width={16} height={16} />
+                  <UndoIcon className="icon-undo" width={16} height={16} />
                 </div>
               </Tooltip>
               <Tooltip content="Redo" placement="bottom" showAfter={400}>
                 <div className={cx('operation-item', 'operation-item--icon', { disable: !redoable })} onClick={() => (redoable ? handleHistory('redo') : undefined)}>
-                  <RedoIcon width={16} height={16} />
+                  <RedoIcon className="icon-redo" width={16} height={16} />
                 </div>
               </Tooltip>
             </div>
