@@ -26,7 +26,12 @@
     &:focus-visible {
       .focus-ring();
     }
+    // On the page the paint is an overlay pinned to its widget's box. Here it
+    // is the tile's only content, so it lays itself out and the flex centring
+    // above places it — pinned, it escaped the button entirely and the row
+    // looked empty.
     .path__paint {
+      position: static;
       display: block;
       overflow: visible;
     }
