@@ -1015,12 +1015,51 @@ was, so the author can see what is still waiting.
 set that way, and a school's name should be stored as it is written rather than
 as one template happens to set it.
 
+**A template arrives in the school's colours as well**, when it says which of
+its own colours play which part. A template file carries a small `brand` block
+beside its artwork:
+
+```json
+"brand": { "colors": { "1e3a5f": "primary", "e1a731": "secondary" } }
+```
+
+— the Field Day poster naming its navy as the primary and its gold as the
+secondary. On the way onto the page every place either colour is painted follows
+the kit: the kit's first colour goes wherever the primary was, its second
+wherever the secondary was, and so on down to Colour 8. Each place keeps its own
+transparency, so the 7% wash behind the poster's details comes out as the
+school's first colour at 7%; the page background, the outlines, the stops of a
+gradient and the colours inside a text effect are all part of the same pass.
+Whites, blacks and greys are never named in a block and never touched, because a
+kit says what the school's colours are, not what colour the paper is.
+
+Nothing is guessed here. A role the kit has no colour for — a three-colour
+template on a one-colour kit — leaves the template's own colour where it is, and
+a kit with no colours at all leaves the palette alone entirely. Adding the same
+template twice gives the same design both times.
+
+**And in the school's fonts.** With a heading font or a body font in the kit,
+each text box takes the one that suits it: bold text, or text at or above the
+heading threshold for that page size, takes the heading font and the rest take
+the body. A text box can say which it is for itself with `"brandRole":
+"heading"` or `"body"`, and `"keep"` for the one line whose face is the artwork
+— a hand-lettered word mark a school font would ruin. A kit that has only a body
+font sets the body boxes and leaves the headings as they were drawn, rather than
+putting one face on everything.
+
+A template whose palette and lettering are the point of it opts out with
+`"keep": true` in the same block, and lands exactly as drawn. The fields still
+fill: the school's name is the school's name whatever the artwork is.
+
 Fields are found in the **rendered text**, never in the markup, which is what
 lets one survive being half-bolded: contentEditable writes `{{<b>school</b>.name}}`
 and it still fills. That machinery is shared with find and replace and is
 described under it. The field code is `src/utils/mergeFields.ts`; the school's
 answers are `brandResolver()` in `src/common/methods/brandKit.ts`, which other
-features can compose with their own.
+features can compose with their own. The colour and font pass is
+`applyTemplateBrand` in `src/store/widget/brand.ts`, called from `setTemplate`
+and `fillTemplateLayouts`, so all three ways a template lands — the gallery,
+`?tempid=`, and the renderer behind exports and thumbnails — go through it.
 
 ### Apply brand to this design
 
@@ -1028,6 +1067,14 @@ The button in the school's card at the top of the panel, for the design that was
 made before the kit was, or brought in from somewhere else. One dialog, one
 confirmation, and the whole thing is **one undo step** however many pages it
 touches.
+
+This is the **retrofit**, not the normal way a design gets the kit. A template
+picked out of the gallery is already in the school's colours and fonts by the
+time it is on the page, because it said which of its colours play which part
+(above). Apply brand is for everything that never said: a design started before
+the kit existed, one brought in from another editor, one drawn from scratch on a
+blank page. It has to rank a design's colours to work out which is the main one,
+where a template could simply be read.
 
 It does three passes:
 
