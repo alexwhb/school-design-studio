@@ -488,13 +488,21 @@ function pageSurface(page: TPageState): TSurface | null {
 }
 
 /**
- * The darkest neutral a design already sets text in — its ink. Falling back to
- * the template's own near-black rather than to pure black is what keeps a
- * rescued headline looking like it belongs to the rest of the poster.
+ * How dark a neutral has to be before a design can be said to set text in it.
+ * A pale grey caption is a neutral, and it is not the ink.
+ */
+const INK_LUMINANCE = 0.5
+
+/**
+ * The darkest neutral a design already sets text in — its ink. Reaching for
+ * the template's own near-black rather than for pure black is what keeps a
+ * rescued headline looking like it belongs to the rest of the poster; a design
+ * whose only neutrals are pale, which is every slide set in white on a dark
+ * band, has no ink of its own and gets black.
  */
 function inkOf(layers: TdWidgetData[]): string {
   let ink: string | null = null
-  let darkest = 1
+  let darkest = INK_LUMINANCE
   for (const layer of layers) {
     if (layer.type !== 'w-text') continue
     const parsed = parseHex((layer as any).color)
@@ -580,16 +588,22 @@ export function ensureReadable(layers: TdWidgetData[], page: TPageState, kit: TB
     const shown = composite(`#${text.rgb}${text.alpha}`, surface.color)
     if (contrastRatio(shown, surface.color) >= target) continue
 
+    // The colour it is now is always in the running, and first, so a repair
+    // can only ever make a line easier to read than it was. `readableOn` gives
+    // ties to the earlier candidate.
+    const was = `#${text.rgb}${text.alpha}`
+
     if (isNeutralColor(text.rgb)) {
-      const pick = readableOn(surface.color, [PAPER, ink])
-      const parsed = parseHex(pick)!
-      paintTextColor(layer, `#${parsed.rgb}${text.alpha}`)
-      counts.swapped++
+      const pick = readableOn(surface.color, [was, PAPER, ink])
+      if (pick !== was) {
+        paintTextColor(layer, `#${parseHex(pick)!.rgb}${text.alpha}`)
+        counts.swapped++
+      }
       if (contrastRatio(pick, surface.color) < target) counts.unreadable++
       continue
     }
 
-    const moved = adjustForContrast(`#${text.rgb}${text.alpha}`, surface.color, target)
+    const moved = adjustForContrast(was, surface.color, target)
     if (moved.met) {
       if (moved.changed) {
         paintTextColor(layer, moved.color)
@@ -597,10 +611,19 @@ export function ensureReadable(layers: TdWidgetData[], page: TPageState, kit: TB
       }
       continue
     }
-    const pick = readableOn(surface.color, [PAPER, ink])
-    const parsed = parseHex(pick)!
-    paintTextColor(layer, `#${parsed.rgb}${text.alpha}`)
-    counts.swapped++
+    // The school's own colour could not be got there in its own hue. Fall back
+    // to whichever of the paper, the ink and the furthest it managed reads
+    // best — sometimes that is still the darkened school colour.
+    const pick = readableOn(surface.color, [moved.color, PAPER, ink])
+    if (pick === moved.color) {
+      if (moved.changed) {
+        paintTextColor(layer, moved.color)
+        counts.adjusted++
+      }
+    } else {
+      paintTextColor(layer, `#${parseHex(pick)!.rgb}${text.alpha}`)
+      counts.swapped++
+    }
     if (contrastRatio(pick, surface.color) < target) counts.unreadable++
   }
 
