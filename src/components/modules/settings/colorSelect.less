@@ -123,12 +123,16 @@
     font-style: normal;
   }
 
-  // An unchecked row is off, and reads as off.
+  // An unchecked row is off, and reads as off — including the hex, which is
+  // not worth reading when nothing is painted with it.
   &.is-off .color__label {
     color: @ink-3;
   }
   &.is-off .color__chip-fill {
     opacity: 0.35;
+  }
+  &.is-off .color__value {
+    display: none;
   }
 }
 

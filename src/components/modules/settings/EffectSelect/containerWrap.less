@@ -1,16 +1,25 @@
-.box-card {
-  margin-top: 24px;
+.mask-row {
+  display: flex;
+  align-items: center;
+  gap: @space-3;
   width: 100%;
+  height: @control-h;
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .title {
-    font-size: 14px;
-    font-weight: 600;
+  &__title {
+    flex: 1;
+    min-width: 0;
+    font-size: @text-base;
     color: @ink;
+  }
+  &__choose {
+    flex: none;
+    height: auto;
+    padding: 0;
+    font-size: @text-sm;
+    color: @ink-2;
+    &:hover {
+      color: @accent;
+    }
   }
 }
 

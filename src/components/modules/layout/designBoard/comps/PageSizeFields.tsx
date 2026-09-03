@@ -9,7 +9,7 @@
  */
 import { useEffect, useState } from 'react'
 import { DEFAULT_RESIZE_STRATEGY } from '@/common/methods/resize/strategies'
-import { paperName, realSize } from '@/common/methods/pageSize'
+import { paperName } from '@/common/methods/pageSize'
 import { ChevronDownIcon } from '@/components/ui/icons'
 import { resizePages } from '@/store/widget/resizePages'
 import NumberInput from '@/components/modules/settings/NumberInput'
@@ -39,7 +39,9 @@ export default function PageSizeFields({ width, height, onOpenResize }: Props) {
     resizePages({ width: next.width, height: next.height, strategy: DEFAULT_RESIZE_STRATEGY, scope: 'page' })
   }
 
-  const paper = [paperName(width, height), realSize(width, height)].filter(Boolean).join(' · ')
+  // Named where the page is a sheet of something; the millimetres are said
+  // once, in the note at the foot of the panel, rather than twice.
+  const paper = paperName(width, height)
 
   return (
     <div className="page-size-fields">
@@ -62,7 +64,7 @@ export default function PageSizeFields({ width, height, onOpenResize }: Props) {
         />
       </div>
       <button type="button" className="page-size-fields__preset" onClick={onOpenResize}>
-        <span className="page-size-fields__name">{paper || `${Math.round(width)} × ${Math.round(height)} px`}</span>
+        <span className="page-size-fields__name">{paper || 'Custom size'}</span>
         <ChevronDownIcon />
       </button>
     </div>

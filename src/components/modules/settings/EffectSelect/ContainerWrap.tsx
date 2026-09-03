@@ -35,39 +35,37 @@ export default function ContainerWrap({ value, onChange }: Props) {
   }
 
   return (
-    <div className="el-card is-hover-shadow box-card">
-      <div className="el-card__header">
-        <div className="card-header">
-          <span className="title">Image mask</span>
-          <Popover
-            placement="bottom-end"
-            popperClass="ds-mask-picker"
-            width={260}
-            open={visible}
-            onOpenChange={setVisible}
-            content={
-              <>
-                <div className="box__header">
-                  <span className="box__title">Shape</span>
-                </div>
-                <div className="select__box">
-                  <div className={`select__box__select-item${!value ? ' active' : ''}`} onClick={() => select()}>
-                    None
-                  </div>
-                  {list.map((item, i) => (
-                    <Image key={i + 'l'} className={`select__box__select-item${item.url === value ? ' active' : ''}`} src={item.thumb} fit="contain" onClick={() => select(item.url)} />
-                  ))}
-                </div>
-              </>
-            }
-          >
-            <Button className="button" link onClick={() => setVisible(!visible)}>
-              {visible ? 'Cancel' : value ? 'Change mask' : 'Choose'}
-            </Button>
-          </Popover>
-        </div>
-      </div>
-          <div className="el-card__body" style={{ padding: 0 }} />
+    // The same shape as every other switchable feature in the panel: what it is
+    // called, and the way in. It was a card with a header and an empty body,
+    // which is a lot of furniture for one button.
+    <div className="mask-row">
+      <span className="mask-row__title">Image mask</span>
+      <Popover
+        placement="bottom-end"
+        popperClass="ds-mask-picker"
+        width={260}
+        open={visible}
+        onOpenChange={setVisible}
+        content={
+          <>
+            <div className="box__header">
+              <span className="box__title">Shape</span>
+            </div>
+            <div className="select__box">
+              <div className={`select__box__select-item${!value ? ' active' : ''}`} onClick={() => select()}>
+                None
+              </div>
+              {list.map((item, i) => (
+                <Image key={i + 'l'} className={`select__box__select-item${item.url === value ? ' active' : ''}`} src={item.thumb} fit="contain" onClick={() => select(item.url)} />
+              ))}
+            </div>
+          </>
+        }
+      >
+        <Button className="mask-row__choose" link onClick={() => setVisible(!visible)}>
+          {visible ? 'Cancel' : value ? 'Change mask' : 'Choose'}
+        </Button>
+      </Popover>
     </div>
   )
 }
