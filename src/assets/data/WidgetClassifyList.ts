@@ -7,7 +7,7 @@
  */
 
 import type { ComponentType, CSSProperties } from 'react'
-import { BrandIcon } from '@/components/ui/icons'
+import { BrandIcon, GraphicsIcon, PhotosIcon, TemplatesIcon, TextIcon } from '@/components/ui/icons'
 
 export type TWidgetClassifyData = {
   name: string
@@ -23,26 +23,29 @@ export type TWidgetClassifyData = {
 export default [
   {
     name: 'Templates',
-    icon: 'icon-moban',
+    icon: '',
+    Icon: TemplatesIcon,
     show: false,
     component: 'temp-list-wrap',
   },
   {
     name: 'Graphics',
-    icon: 'icon-sucai',
+    icon: '',
+    Icon: GraphicsIcon,
     show: false,
     component: 'graph-list-wrap',
   },
   {
     name: 'Text',
-    icon: 'icon-wenzi',
+    icon: '',
+    Icon: TextIcon,
     show: false,
-    style: { fontWeight: 600 },
     component: 'text-list-wrap',
   },
   {
     name: 'Photos',
-    icon: 'icon-gallery',
+    icon: '',
+    Icon: PhotosIcon,
     show: false,
     component: 'photo-list-wrap',
   },

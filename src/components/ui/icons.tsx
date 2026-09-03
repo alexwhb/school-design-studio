@@ -321,3 +321,44 @@ export function SearchIcon({ className, width = '1em', height = '1em' }: IconPro
     </svg>
   )
 }
+
+/** Templates: a tall panel and two stacked ones — a page and its layouts. */
+export function TemplatesIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth={1.5} xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="3" width="7" height="16" rx="1.6" />
+      <rect x="12" y="3" width="7" height="7" rx="1.6" />
+      <rect x="12" y="12" width="7" height="7" rx="1.6" />
+    </svg>
+  )
+}
+
+/** Text: a serif capital T under its rule. */
+export function TextIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth={1.5} xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 6V4.5h14V6M11 4.5V18M8 18h6" />
+    </svg>
+  )
+}
+
+/** Graphics: a circle and a square, which is what the library holds. */
+export function GraphicsIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth={1.5} xmlns="http://www.w3.org/2000/svg">
+      <circle cx="7.5" cy="7.5" r="4" />
+      <rect x="11.5" y="11.5" width="7.5" height="7.5" rx="1.6" />
+    </svg>
+  )
+}
+
+/** Photos: the frame, the sun and the hills. */
+export function PhotosIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth={1.5} xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="4.5" width="16" height="13" rx="1.8" />
+      <circle cx="8" cy="9" r="1.6" />
+      <path d="M3.6 15 8.5 11l3.4 2.7 2.6-2 3.9 3.6" />
+    </svg>
+  )
+}
