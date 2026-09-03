@@ -13,11 +13,13 @@
   &__row {
     display: flex;
     align-items: center;
-    gap: @space-3;
+    // Tighter than the panel's usual step: the row carries four things now,
+    // and the role has to be able to say "Secondary · navy" without clipping.
+    gap: @space-2;
     width: 100%;
     height: 34px;
     // The pencil's place is always kept, so nothing shifts when it appears.
-    padding: 0 34px 0 10px;
+    padding: 0 30px 0 10px;
     border: 0;
     border-radius: @radius;
     background: @surface-2;
@@ -55,6 +57,28 @@
   // which blue this is without pretending to be what the colour is called.
   &__tone {
     color: @ink-3;
+  }
+
+  // Two samples of the colour being read: as words on paper, and as a band
+  // with the better of white and ink on it. They are painted in the poster's
+  // colours rather than the panel's, because that is the question they answer
+  // — what this will look like when it is printed, not in this theme.
+  &__reads {
+    flex: none;
+    display: flex;
+    gap: 2px;
+  }
+
+  &__mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: @radius-sm - 1px;
+    box-shadow: inset 0 0 0 1px @line-strong;
+    font-size: 9px;
+    line-height: 1;
   }
 
   &__hex {
@@ -181,6 +205,15 @@
     font-size: @text-xs;
     line-height: 1.45;
     color: @ink-3;
+  }
+
+  // Sits directly under the usage line and reads as its second sentence, so
+  // the two things worth knowing before saving a colour are one block.
+  &__reads {
+    margin: -5px 0 0;
+    font-size: @text-xs;
+    line-height: 1.45;
+    color: @ink-4;
   }
 
   &__actions {

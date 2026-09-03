@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import { recordHistory } from '@/common/hooks/history'
 import { MAX_BRAND_COLORS, brandColorRole, brandColorTone, brandState, normaliseBrandColor, updateBrandKit } from '@/common/methods/brandKit'
+import { INK, PAPER, composite, contrastRatio, readableOn } from '@/common/methods/contrast'
 import Button from '@/components/ui/Button'
 import { PencilIcon, PlusIcon } from '@/components/ui/icons'
 import Input from '@/components/ui/Input'
@@ -27,6 +28,28 @@ function shortHex(color: string): string {
 
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`
+}
+
+/** What text needs against paper to be read at an ordinary size. WCAG 2.x. */
+const TEXT_TARGET = 4.5
+
+/**
+ * The two things worth knowing about a colour before it goes in the kit: can
+ * it be *set in* — a heading on white paper — and what can be set *on* it when
+ * it is a band or a badge. Neither is a rule about the kit; a school's colour
+ * is its colour. It is what the editor will have to do when the colour lands
+ * on a poster, said before it does it rather than discovered afterwards.
+ */
+function readability(color: string) {
+  const flat = composite(color, PAPER)
+  const asText = contrastRatio(flat, PAPER)
+  const on = readableOn(flat, [PAPER, INK])
+  return { flat, asText, on, onRatio: contrastRatio(on, flat), onIsPaper: on === PAPER }
+}
+
+/** A ratio as it is written: one decimal, then the colon and the one. */
+function asRatio(value: number): string {
+  return `${Math.round(value * 10) / 10}:1`
 }
 
 /**
@@ -139,6 +162,19 @@ export default function BrandColors() {
     return `Used on ${plural(usage.layers, 'layer', 'layers')} across ${plural(usage.pages, 'page', 'pages')}.`
   }
 
+  /**
+   * What this colour will be like to read, said while it is still a draft. The
+   * failing case names the consequence rather than the rule, because "3.1:1"
+   * on its own is a number nobody in a school office has a target for.
+   */
+  function readsNote(): string {
+    const reads = readability(draft)
+    if (reads.asText < TEXT_TARGET) {
+      return `Reads on white at ${asRatio(reads.asText)} — lighter text will be darkened on posters.`
+    }
+    return `Reads on white at ${asRatio(reads.asText)}. ${reads.onIsPaper ? 'White' : 'Ink'} reads on it at ${asRatio(reads.onRatio)}.`
+  }
+
   const editor = (
     <div className="brand-editor" key="brand-editor">
       <div className="brand-editor__top">
@@ -161,6 +197,7 @@ export default function BrandColors() {
       </div>
       <ColorPicker value={draft} modes={['Solid']} onValueChange={setDraft} />
       <p className="brand-editor__note">{usageNote()}</p>
+      <p className="brand-editor__reads">{readsNote()}</p>
       <div className="brand-editor__actions">
         <Button type="primary" size="small" className="brand-editor__save" onClick={saveColor}>
           Save to kit
@@ -183,6 +220,7 @@ export default function BrandColors() {
         if (editing === index) return editor
         const hex = shortHex(color)
         const tone = brandColorTone(color)
+        const reads = readability(color)
         return (
           <div key={`${color}-${index}`} className="brand-swatch" role="listitem">
             <button type="button" className="brand-swatch__row" title={hex} aria-label={`Apply ${hex}`} onClick={() => applyColor(color)}>
@@ -190,6 +228,20 @@ export default function BrandColors() {
               <span className="brand-swatch__role">
                 {brandColorRole(index)}
                 {tone ? <span className="brand-swatch__tone"> · {tone}</span> : null}
+              </span>
+              {/* Two samples rather than two ticks: the pale colour that
+                  cannot be read on paper is shown being unreadable on paper,
+                  which needs no legend. */}
+              <span
+                className="brand-swatch__reads"
+                title={`As text on white: ${asRatio(reads.asText)}. As a surface: ${reads.onIsPaper ? 'white' : 'ink'} reads on it at ${asRatio(reads.onRatio)}.`}
+              >
+                <span className="brand-swatch__mark" style={{ background: PAPER, color: reads.flat }}>
+                  Aa
+                </span>
+                <span className="brand-swatch__mark" style={{ background: reads.flat, color: reads.on }}>
+                  Aa
+                </span>
               </span>
               <span className="brand-swatch__hex">{hex}</span>
             </button>
