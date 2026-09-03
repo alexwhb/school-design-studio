@@ -501,24 +501,24 @@ picture of one, so whoever opens the deck can still edit it.
 
 The row of tools that floats at the foot of the canvas: **Select**, **Text**,
 **Shapes**, **Pen**, **Image**, and then **QR code** and **Table**. It replaced
-a left-hand Tools tab, which spent a whole panel — and the width it pushed the
-board over by — on seven buttons.
+a left-hand Tools tab, which spent a whole panel on seven buttons and pushed the
+board over to do it.
 
 Select puts the pointer back, which is also what Escape does. Text drops a body
 text box in the middle of the page and selects it. Shapes opens a row of the
 five drawing tools above the dock — rectangle, ellipse, polygon, line, pen —
-and Pen has a slot of its own next to it, because it is the one that is used
-without a shape in mind. Image offers a file off this machine or the Photos
-panel. QR code and Table put theirs on the page outright.
+and Pen has a slot of its own beside them as well, being the one that is a way
+of drawing rather than a shape. Image offers a file off this machine or the
+Photos panel. QR code and Table put theirs on the page outright.
 
 Every tool keeps its keyboard shortcut: `R`, `E`, `Y`, `L`, `P` arm and disarm
 the matching tool wherever the pointer is. While one is armed the dock says what
 it is waiting for on a green line above itself, with an **Esc** chip on the end
 that puts the pointer back.
 
-The dock, the page chip and the zoom pill share the bottom of the well and stand
-on each other: open the page strip or the speaker notes and all three rise by
-what the drawer beneath them takes.
+The dock, the page chip and the zoom pill share the bottom of the well. Open the
+speaker notes and all three rise by the height of the drawer; open the page
+strip and the dock stands on that too.
 
 The dock is `src/components/business/tool-dock/`; what each tool is called, what
 its shortcut is and what it says once armed is `drawTools.ts`, which the drawing
