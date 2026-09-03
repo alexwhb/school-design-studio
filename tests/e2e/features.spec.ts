@@ -322,7 +322,7 @@ test('ending the show leaves the editor on the slide it finished on', async ({ p
   await page.keyboard.press('Escape')
   await page.waitForTimeout(900)
 
-  await expect(page.locator('.artboards .btn__label')).toHaveText('Page 2/2')
+  await expect(page.locator('.artboards .btn__label')).toHaveText('Page 2')
 })
 
 /* ------------------------------------------------------------------ menus */
