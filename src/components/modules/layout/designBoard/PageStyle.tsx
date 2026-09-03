@@ -5,19 +5,22 @@ import { widgetState } from '@/store/state'
 import { updatePageData } from '@/store/canvas'
 import { selectWidget } from '@/store/widget/select'
 import Button from '@/components/ui/Button'
-import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
+import { PanelSection } from '@/components/ui/PanelSection'
 import Tooltip from '@/components/ui/Tooltip'
-import { DeleteIcon, DownloadIcon } from '@/components/ui/icons'
+import { DeleteIcon, DownloadIcon, PhotoIcon } from '@/components/ui/icons'
 import Uploader, { type TUploadDoneData } from '@/components/common/Uploader/Uploader'
-import Segmented from '@/components/ui/Segmented'
 import ColorSelect, { type colorChangeData } from '@/components/modules/settings/ColorSelect'
+import ToggleRow from '@/components/modules/settings/ToggleRow'
 import ResizeDesign, { type ResizeDesignHandle } from '@/components/business/resize-design/ResizeDesign'
 import BgImgListWrap from '@/components/modules/panel/wrap/BgImgListWrap'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
-import { paperName, realSize } from '@/common/methods/pageSize'
+import { realSize } from '@/common/methods/pageSize'
+import { DESIGN_DPI } from '@/common/methods/export/exportPdf'
 import type { TBackgroundTransform } from '@/common/methods/pageBackground'
 import type { TPageState } from '@/store/types'
 import BackgroundCrop from './comps/BackgroundCrop'
+import CanvasSection from './comps/CanvasSection'
+import PageSizeFields from './comps/PageSizeFields'
 import TransitionSection from './comps/TransitionSection'
 import './pageStyle.less'
 
@@ -27,7 +30,6 @@ export default function PageStyle() {
   const snap = useSnapshot(widgetState)
   const active = snap.dActiveElement as TPageState | null
 
-  const [activeNames, setActiveNames] = useState<string[]>(['1', '2', '3', '4'])
   const [mode, setMode] = useState('Colour')
   const [showBgLib, setShowBgLib] = useState(false)
   const sizeEditRef = useRef<ResizeDesignHandle | null>(null)
@@ -117,35 +119,19 @@ export default function PageStyle() {
           <BgImgListWrap model="stylePanel" />
         </div>
       ) : (
-        <PanelSections value={activeNames} onChange={setActiveNames}>
-          <PanelSection name="1" title="Page size">
-            <div className="page-size">
-              <span className="page-size__value">
-                {Math.round(active.width)} × {Math.round(active.height)} px
-                {/* What it is on paper, at the 150 DPI the PDF is written at */}
-                <em className="page-size__paper">
-                  {[paperName(active.width, active.height), realSize(active.width, active.height)].filter(Boolean).join(' · ')}
-                </em>
-              </span>
-              <Button plain size="small" onClick={openSizeEdit}>
-                Resize…
-              </Button>
-            </div>
+        <>
+          <PanelSection title="Page">
+            <PageSizeFields width={active.width} height={active.height} onOpenResize={openSizeEdit} />
           </PanelSection>
-          <PanelSection name="2" title="Background">
+          <PanelSection title="Background">
+            <div className="bg-modes">
+              <ColorSelect variant="row" label="Colour" value={active.backgroundColor} enabled={mode === 'Colour'} onEnabledChange={() => onChangeMode('Colour')} modes={['Solid', 'Gradient']} onValueChange={(value) => finish('backgroundColor', value)} onChange={colorChange} />
+              <ToggleRow label="Image" checked={mode === 'Image'} onCheckedChange={() => onChangeMode('Image')} swatch={backgroundImage ? <img className="bg-thumb" src={backgroundImage} alt="" /> : <PhotoIcon />} checker={!backgroundImage} />
+            </div>
             <Button className="bg-library-open" plain onClick={() => setShowBgLib(true)}>
               <i className="iconfont icon-gallery" />
               Browse the background library
             </Button>
-            <Segmented aria-label="Background" value={mode} options={MODES} onChange={onChangeMode} />
-            <div style={{ display: mode === 'Colour' ? undefined : 'none' }}>
-              <ColorSelect
-                value={active.backgroundColor}
-                modes={['Solid', 'Gradient']}
-                onValueChange={(value) => finish('backgroundColor', value)}
-                onChange={colorChange}
-              />
-            </div>
             {mode === 'Image' && backgroundImage ? (
               <>
                 <div className="backgroud-wrap">
@@ -173,25 +159,22 @@ export default function PageStyle() {
                 </div>
               </>
             ) : null}
-            <Uploader
-              className="btn-wrap"
-              style={{ display: mode === 'Image' && !backgroundImage ? undefined : 'none' }}
-              onDone={uploadImgDone}
-            >
+            <Uploader className="btn-wrap" style={{ display: mode === 'Image' && !backgroundImage ? undefined : 'none' }} onDone={uploadImgDone}>
               <Button className="block-btn" plain>
                 Upload background
               </Button>
             </Uploader>
-            <Button
-              className="btn-wrap"
-              style={{ display: mode === 'Image' && backgroundImage ? undefined : 'none' }}
-              onClick={shiftOut}
-            >
+            <Button className="btn-wrap" style={{ display: mode === 'Image' && backgroundImage ? undefined : 'none' }} onClick={shiftOut}>
               Move background to a layer
             </Button>
           </PanelSection>
+          <CanvasSection />
           <TransitionSection page={active} />
-        </PanelSections>
+          {/* What the page is on paper, at the DPI the PDF is written at. */}
+          <p className="page-note">
+            {DESIGN_DPI} dpi · {realSize(active.width, active.height)}
+          </p>
+        </>
       )}
       <ResizeDesign ref={sizeEditRef} />
     </div>

@@ -1,25 +1,26 @@
-#page-style .page-size {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  &__value {
-    color: @ink-2;
-    font-size: @text-base;
-  }
-  // The same page in the units it will be printed in, under the pixels.
-  &__paper {
-    color: @ink-3;
-    display: block;
-    font-size: @text-xs;
-    font-style: normal;
-    margin-top: 2px;
-  }
-}
-
 #page-style {
   height: 100%;
   width: 100%;
+
+  // The two things a page can be behind its artwork, as one choice.
+  .bg-modes {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: @field-gap;
+  }
+  .bg-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // What the page is in the world, under everything that sets it.
+  .page-note {
+    margin: @space-4 0 0;
+    font-size: @text-sm;
+    line-height: 1.5;
+    color: @ink-3;
+  }
   .sd-edit {
     cursor: pointer;
     color: @ink-2;
@@ -60,7 +61,7 @@
 
   .bg-library-open {
     width: 100%;
-    margin: 0 0 @field-gap;
+    margin: 0;
     // The button puts its content in a span of its own, so that is what has to
     // space the icon away from the label.
     > span {

@@ -1,0 +1,53 @@
+.page-size-fields {
+  display: flex;
+  flex-direction: column;
+  gap: @field-gap;
+  width: 100%;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: @space-2 @space-3;
+  }
+
+  // A select in everything but what it opens: the resize dialog, because
+  // changing the sheet is also a decision about the artwork on it.
+  &__preset {
+    display: flex;
+    align-items: center;
+    gap: @space-2;
+    width: 100%;
+    height: @control-h-lg;
+    padding: 0 @space-2;
+    background: transparent;
+    border: 1px solid @line;
+    border-radius: @radius-sm;
+    color: @ink;
+    font-family: inherit;
+    font-size: @text-base;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.12s ease;
+
+    &:hover {
+      border-color: @line-strong;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+    svg {
+      flex: none;
+      width: 10px;
+      height: 10px;
+      color: @ink-3;
+    }
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
