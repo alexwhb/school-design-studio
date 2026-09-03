@@ -968,6 +968,15 @@ button is off, because there is nothing yet to apply.
   stored: a kit holds an order and a set of colours, and a name typed in once
   would be wrong the moment the order changed.
 
+  Two small samples sit on each row: the colour set as words on white paper, and
+  the colour as a band with whichever of white and ink reads on it. They are
+  samples rather than ticks, so the colour that cannot be read on paper is shown
+  being unreadable and needs no legend; hovering gives both ratios. The editing
+  card says the same thing in a sentence — *"Reads on white at 1.3:1 — lighter
+  text will be darkened on posters."* None of it stops a colour going in the
+  kit. A school's colour is its colour; the line only says what the editor will
+  have to do when it lands on a poster.
+
   The pencil on a row opens the **editing card** in place of it: the draft
   colour and its hex, a strip of the kit's own colours and the ones this design
   already uses most (`rankDesignColors`), the full picker, and a line saying
@@ -1051,6 +1060,36 @@ A template whose palette and lettering are the point of it opts out with
 `"keep": true` in the same block, and lands exactly as drawn. The fields still
 fill: the school's name is the school's name whatever the artwork is.
 
+**Readable whatever the colours are.** A recolour is a swap of hues, and hues
+carry lightness with them. The Field Day poster is a white headline on a navy
+band and a navy sub-heading on cream; a school whose primary is a pale yellow
+would get a white headline on pale yellow, which is nothing, and a pale yellow
+sub-heading on cream, which is nearly nothing. Neither the template nor the kit
+is wrong — it is what happens when two independent choices meet — so it is
+repaired as the template lands. Every text box the recolour either painted or
+moved the ground out from under is measured against
+[WCAG](https://www.w3.org/TR/WCAG21/#contrast-minimum)'s targets for its size:
+4.5:1 for ordinary text, 3:1 for large text, where "large" is 18pt or 14pt bold
+converted at the page's own DPI, so 44px counts as large on a Letter poster and
+not on a slide.
+
+Two repairs, and only two. Text that was a **neutral** — the white headline —
+swaps to whichever of white and the ink the design already uses can be read on
+the band, because a white headline made grey is neither one thing nor the other.
+Text in one of the **school's own colours** is darkened or lightened *in its own
+hue* until it passes, so a pale gold heading comes out a deeper gold rather than
+a brown or a black; only when that cannot reach the target inside a bounded
+shift does it fall back to ink or white. A decorative mark drawn wholly inside a
+band, both in kit colours and less than 1.5:1 apart, is nudged the same way.
+
+Nothing else is touched. Text over a photograph, over a gradient, or over
+anything whose colour cannot be worked out is left exactly as it was drawn — the
+surface under a text box is the topmost shape whose bounds hold its centre, and
+"no idea" is an answer this takes rather than repainting on a guess. The colours
+a text effect brought with it stay as they are. The maths is
+`src/common/methods/contrast.ts`, which is pure functions and no DOM; the guard
+that uses it is `ensureReadable` in `src/store/widget/brand.ts`.
+
 Fields are found in the **rendered text**, never in the markup, which is what
 lets one survive being half-bolded: contentEditable writes `{{<b>school</b>.name}}`
 and it still fills. That machinery is shared with find and replace and is
@@ -1096,6 +1135,11 @@ It does three passes:
    what the school's colours are, not what colour the paper is. Each place keeps
    its own transparency, so a wash that was the old navy at 7% comes out as the
    new blue at 7%.
+
+The same readability guard runs after the colour pass (above): a text box whose
+colour or whose background the recolour changed is checked, and repaired if the
+new colours would have hidden it. The notification says so — *"3 lines adjusted
+to stay readable"* — because it is a change nobody asked for.
 
 Afterwards a notification says what changed, including how many fields were left
 standing for want of a detail the kit does not have.
