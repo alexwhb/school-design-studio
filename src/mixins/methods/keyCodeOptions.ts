@@ -3,6 +3,7 @@ import { setDrawTool, setPathEditUuid, setSpaceDown, toggleDrawTool } from '@/st
 import { deleteWidget, lockWidgets, updateWidgetData } from '@/store/widget/widget'
 import { clearSelection } from '@/store/widget/select'
 import { refuseLocked, selectionWidgets } from '@/store/widget/lock'
+import { toggleArrowTool } from '@/components/business/tool-dock/arrowTool'
 import { escapeHitOverlay } from '../overlayEscape'
 import type { TdWidgetData } from '@/store/types'
 import { getAppRoot } from '@/common/hooks/appRoot'
@@ -48,6 +49,11 @@ export default function keyCodeOptions(e: any, params: any) {
       break
     case 84:
       if (!isTyping()) toggleDrawTool('text')
+      break
+    // A for the arrow, which XD has no key for. The letter is free: Ctrl+A is
+    // select-all and is answered before any of this, so the two never meet.
+    case 65:
+      if (!isTyping()) toggleArrowTool()
       break
     case 46:
     case 8:
