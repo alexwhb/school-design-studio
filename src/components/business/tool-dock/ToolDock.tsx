@@ -56,6 +56,14 @@ import './toolDock.less'
 const CHIP_ROW = 48
 const DOCK_GAP = 10
 
+/**
+ * What the Shapes menu offers. The pen has a slot of its own on the bar, so
+ * listing it here as well would be the same tool twice a centimetre apart.
+ * Filtered rather than shortened at the source: `drawToolOrder` is what the
+ * keyboard shortcuts are built from, and the pen still has one.
+ */
+const shapesMenu = drawToolOrder.filter((tool) => tool !== 'pen')
+
 export default function ToolDock() {
   const armed = useSnapshot(controlState).dDrawTool
   const bottomHeight = useSnapshot(canvasState).dBottomHeight
@@ -151,7 +159,7 @@ export default function ToolDock() {
             popperClass="tool-dock__popper"
             content={
               <div className="tool-dock__shapes">
-                {drawToolOrder.map((tool) => {
+                {shapesMenu.map((tool) => {
                   const { Icon, label, shortcut } = drawTools[tool]
                   return (
                     <Tooltip key={tool} content={`${label} (${shortcut})`} placement="top" showAfter={400}>
