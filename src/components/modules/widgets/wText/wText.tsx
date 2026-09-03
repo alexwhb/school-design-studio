@@ -169,17 +169,21 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
       wasCurved.current = false
       const was = straightWidth.current
       // Put the width back the way the arc took it: half the difference off the
-      // left edge, so the line straightens where it stands. The height is left
-      // to `writingText`, which measures it off the element as usual.
-      if (was === null || was === boxWidth) return
-      updateWidgetMultiple({
-        uuid: String(params.uuid),
-        data: [
-          { key: 'left', value: Math.round(Number(params.left) + (boxWidth - was) / 2) },
-          { key: 'width', value: was },
-        ],
-      })
-      requestAnimationFrame(() => setUpdateRect())
+      // left edge, so the line straightens where it stands.
+      if (was !== null && was !== boxWidth) {
+        updateWidgetMultiple({
+          uuid: String(params.uuid),
+          data: [
+            { key: 'left', value: Math.round(Number(params.left) + (boxWidth - was) / 2) },
+            { key: 'width', value: was },
+          ],
+        })
+      }
+      // The height is measured off the element, once the straight run is in it
+      // and standing at its own width again. Here rather than left to
+      // `updateRecord`, which only measures the widget that is selected — an
+      // undo can straighten one that is not.
+      requestAnimationFrame(writingText)
       return
     }
     wasCurved.current = true

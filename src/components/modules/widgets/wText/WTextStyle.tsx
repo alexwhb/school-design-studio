@@ -6,6 +6,7 @@ import { brandFontItems, brandState } from '@/common/methods/brandKit'
 import { useFontStore } from '@/common/methods/fonts'
 import { PanelSection } from '@/components/ui/PanelSection'
 import { LetterSpacingIcon, LineHeightIcon } from '@/components/ui/icons'
+import { beginHistory, endHistory, recordHistory } from '@/common/hooks/history'
 import { controlState, widgetState } from '@/store/state'
 import { setUpdateRect } from '@/store/force'
 import { setWidgetStyle, updateWidgetData } from '@/store/widget'
@@ -121,6 +122,10 @@ export default function WTextStyle() {
   // one drops it rather than leaving that widget's colours on show.
   useEffect(() => setHeld(null), [active?.uuid])
 
+  /** The undo step a run of curve changes is gathered into — see curveChange. */
+  const curveOpen = useRef(false)
+  const curveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
   if (!active) return null
 
   const uuid = active.uuid as string
@@ -207,6 +212,34 @@ export default function WTextStyle() {
     requestAnimationFrame(() => setUpdateRect())
   }
 
+  /**
+   * The curve, and one undo step for the whole drag.
+   *
+   * The slider takes the press with `preventDefault` on the pointer event,
+   * which is also what stops the browser sending the mousedown and mouseup the
+   * history is built from — so this marks the two ends itself. The end waits a
+   * frame, because the box is fitted to the arc in an effect and that fit
+   * belongs in the same step as the change that caused it. See wText.tsx.
+   */
+  function curveChange(value: number) {
+    if (!curveOpen.current) {
+      curveOpen.current = true
+      beginHistory()
+    }
+    finish('curve', value)
+    // A number typed into the field ends when the typing stops, since nothing
+    // else says it has. A drag ends on the release, below, well inside this.
+    clearTimeout(curveTimer.current)
+    curveTimer.current = setTimeout(curveDone, 600)
+  }
+
+  function curveDone() {
+    if (!curveOpen.current) return
+    clearTimeout(curveTimer.current)
+    curveOpen.current = false
+    requestAnimationFrame(endHistory)
+  }
+
   function relationChange() {
     setTimeout(() => {
       const target = widgetState.dActiveElement as any
@@ -290,9 +323,9 @@ export default function WTextStyle() {
           label="Curve text"
           checked={Boolean(active.curve)}
           checker
-          onCheckedChange={(on) => finish('curve', on ? 30 : 0)}
+          onCheckedChange={(on) => recordHistory(() => finish('curve', on ? 30 : 0))}
         >
-          <NumberSlider value={active.curve || 0} label="Curve" step={1} minValue={-180} maxValue={180} onChange={(value) => finish('curve', value)} />
+          <NumberSlider value={active.curve || 0} label="Curve" field suffix="°" step={1} minValue={-180} maxValue={180} onChange={curveChange} onFinish={curveDone} />
         </ToggleRow>
       </PanelSection>
     </div>
