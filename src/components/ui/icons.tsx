@@ -431,3 +431,132 @@ export function ChevronUpIcon({ className, width = '1em', height = '1em' }: Icon
     </svg>
   )
 }
+
+export function DuplicateIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <rect x="2.5" y="2.5" width="7" height="7" rx="1.2" />
+      <rect x="6.5" y="6.5" width="7" height="7" rx="1.2" />
+    </svg>
+  )
+}
+
+export function TrashIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 5.5h10M6 5.5V4h4v1.5M4.5 5.5l.6 7.2h5.8l.6-7.2" />
+    </svg>
+  )
+}
+
+export function EyeIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <path d="M1.8 8S4 4.5 8 4.5 14.2 8 14.2 8 12 11.5 8 11.5 1.8 8 1.8 8z" />
+      <circle cx="8" cy="8" r="1.5" />
+    </svg>
+  )
+}
+
+export function EyeOffIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <path d="M1.8 8S4 4.5 8 4.5 14.2 8 14.2 8 12 11.5 8 11.5 1.8 8 1.8 8z" />
+      <path d="M2.5 13.5 13.5 2.5" />
+    </svg>
+  )
+}
+
+export function LockIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+      <rect x="3.5" y="7" width="9" height="6.5" rx="1.4" />
+      <path d="M5.6 7V5.2a2.4 2.4 0 0 1 4.8 0V7" />
+    </svg>
+  )
+}
+
+export function UnlockIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+      <rect x="3.5" y="7" width="9" height="6.5" rx="1.4" />
+      <path d="M5.6 7V5.2a2.4 2.4 0 0 1 4.5-1.1" />
+    </svg>
+  )
+}
+
+export function ChevronDownIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 4.5 6 8l3.5-3.5" />
+    </svg>
+  )
+}
+
+export function PhotoIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <rect x="2.5" y="3.5" width="11" height="9" rx="1.4" />
+      <circle cx="6" cy="7" r="1" />
+      <path d="M3 11.5 6.5 8.5l2.5 2 1.8-1.4 2.7 2.4" />
+    </svg>
+  )
+}
+
+export function CornerRadiusIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <path d="M3 13V6.5A3.5 3.5 0 0 1 6.5 3H13" />
+    </svg>
+  )
+}
+
+export function RotateIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <path d="M8 3.2a4.8 4.8 0 1 1-4.6 3.4" />
+      <path d="M3.2 3.4v3.2h3.2" />
+    </svg>
+  )
+}
+
+export function LetterSpacingIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 18 16" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
+      <path d="M1 6.5 3.2 1.6 5.4 6.5M1.7 5h3M8.2 6.5l2.2-4.9 2.2 4.9M8.9 5h3M2 12.5h13M4 10.5l-2 2 2 2M13 10.5l2 2-2 2" />
+    </svg>
+  )
+}
+
+export function LineHeightIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <path d="M8 3.5h6M8 8h6M8 12.5h6M3.5 3v10M2 4.5 3.5 3 5 4.5M2 11.5 3.5 13 5 11.5" />
+    </svg>
+  )
+}
+
+export function CropIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <path d="M4.5 2v9.5H14M2 4.5h9.5V14" />
+    </svg>
+  )
+}
+
+export function ZoomIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <circle cx="8" cy="8" r="5" />
+      <path d="M8 5.5v5M5.5 8h5" />
+    </svg>
+  )
+}
+
+export function StraightenIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <path d="M2.5 12.5 13 5M2.5 12.5h11" />
+    </svg>
+  )
+}
