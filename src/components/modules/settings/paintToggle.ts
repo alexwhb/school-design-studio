@@ -18,8 +18,9 @@ export function isPainted(color?: string) {
 
 export function withPaint(color: string | undefined, on: boolean) {
   const value = (color || '').trim()
-  // A gradient or a picture has no alpha to put out; it goes and comes back as
-  // black, which is what the picker would have opened on anyway.
-  if (!HEX.test(value)) return on ? value || '#000000ff' : 'transparent'
+  // A gradient or a picture has no alpha to put out, so it goes as the word
+  // and comes back as black — which is what the picker would have opened on
+  // anyway, and is at least something to see.
+  if (!HEX.test(value)) return on ? (isPainted(value) ? value : '#000000ff') : 'transparent'
   return value.slice(0, 7) + (on ? 'ff' : '00')
 }

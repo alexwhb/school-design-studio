@@ -11,6 +11,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@/components/ui/icons'
 import { panelState, setRightOpen } from '@/store/panels'
 import { widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
+import { setUpdateRect } from '@/store/force'
 import { getCombined, realCombined } from '@/store/group'
 import { distributeGeometry, setDWidgets, updateAlign } from '@/store/widget'
 import type { TdWidgetData } from '@/store/types'
@@ -65,6 +66,9 @@ export default function StylePanel() {
   function alignOne(item: TIconItemSelectData) {
     if (!activeUuid) return
     updateAlign({ align: item.value as any, uuid: activeUuid })
+    // The layer has moved but the selection box has not; it is measured from the
+    // element, so it has to be told to look again.
+    requestAnimationFrame(() => setUpdateRect())
   }
 
   function layerChange(newLayer: TdWidgetData[]) {

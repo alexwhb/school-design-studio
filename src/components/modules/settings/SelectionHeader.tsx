@@ -17,16 +17,13 @@ import './selectionHeader.less'
 
 type Props = {
   element: TdWidgetData | Record<string, any>
-  /** Anything the element wants said about itself — a photo's pixel size. */
-  meta?: string
 }
 
-export default function SelectionHeader({ element, meta }: Props) {
+export default function SelectionHeader({ element }: Props) {
   return (
     <div className="selection-header">
       <LayerBadge type={element.type} className="selection-header__badge" />
       <span className="selection-header__name">{layerLabel(element as TdWidgetData)}</span>
-      {meta ? <span className="selection-header__meta">{meta}</span> : null}
       <div className="selection-header__actions">
         <Tooltip content="Duplicate" placement="top" showAfter={300}>
           <button type="button" className="selection-header__action" aria-label="Duplicate" onClick={() => recordHistory(duplicateOne)}>

@@ -42,10 +42,11 @@ async function dragNear(page: import('@playwright/test').Page, index: number, ta
   await dragWidget(page, index, (target - left) * zoom + slack)
 }
 
+/** The File menu's own row, not the page settings row of the same name. */
 async function toggleSnapping(page: import('@playwright/test').Page) {
   await page.getByText('File', { exact: true }).click()
   await page.waitForTimeout(400)
-  await page.getByText('Snap to objects', { exact: true }).click()
+  await page.locator('.ds-folder-menu .item--toggle', { hasText: 'Snap to objects' }).click()
   await page.waitForTimeout(500)
 }
 
