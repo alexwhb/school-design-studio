@@ -1,0 +1,114 @@
+.brand-fonts {
+  display: flex;
+  flex-direction: column;
+  gap: @space-2;
+
+  .brand-font {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: @space-2;
+    width: 100%;
+    padding: 11px @space-3;
+    background: @surface-2;
+    border: 1px solid @line;
+    border-radius: @radius-lg;
+    color: @ink;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.12s ease;
+    &:hover {
+      border-color: @accent-border;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+
+    &__name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__caption {
+      flex: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: @text-xs;
+      color: @ink-3;
+    }
+
+    // The two sizes the Apply brand pass will actually use them at, so the
+    // pair can be judged as a pair before it is put on a whole design.
+    &--heading &__name {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    &--body &__name {
+      font-size: 15px;
+    }
+
+    // Nothing chosen is a gap in the kit, not a card with a word in it.
+    &--empty {
+      background: transparent;
+      border-style: dashed;
+      border-color: @line-strong;
+      .brand-font__name {
+        color: @ink-3;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+    }
+  }
+}
+
+.brand-fonts__popper {
+  padding: @space-1;
+
+  .brand-fonts__list {
+    max-height: 264px;
+    overflow: auto;
+  }
+
+  .brand-fonts__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: @space-2;
+    width: 100%;
+    height: @control-h-lg;
+    padding: 0 @space-2;
+    border: 0;
+    border-radius: @radius-sm;
+    background: transparent;
+    color: @ink;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    &:hover {
+      background: @surface-2;
+    }
+    &:focus-visible {
+      .focus-ring();
+      outline-offset: -2px;
+    }
+    &.is-on {
+      color: @accent;
+    }
+
+    &-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: @text-md;
+    }
+    svg {
+      flex: none;
+      width: 13px;
+      height: 13px;
+    }
+  }
+}
