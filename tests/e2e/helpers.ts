@@ -158,8 +158,8 @@ export async function canvasBox(page: Page) {
 }
 
 /** Arms a drawing tool from the dock, which is how it is first found. */
-export async function armShapeTool(page: Page, label: 'Rectangle' | 'Ellipse' | 'Polygon' | 'Line' | 'Pen') {
-  const tool = { Rectangle: 'rect', Ellipse: 'ellipse', Polygon: 'polygon', Line: 'line', Pen: 'pen' }[label]
+export async function armShapeTool(page: Page, label: 'Rectangle' | 'Ellipse' | 'Polygon' | 'Line' | 'Arrow' | 'Pen') {
+  const tool = { Rectangle: 'rect', Ellipse: 'ellipse', Polygon: 'polygon', Line: 'line', Arrow: 'arrow', Pen: 'pen' }[label]
   // The pen has a slot of its own on the dock; the rest are behind Shapes.
   if (tool !== 'pen') {
     await page.locator('.tool-dock__item[data-tool="shapes"]').click()
@@ -361,6 +361,18 @@ export function pathPaint(page: Page) {
     if (!el) return null
     return { fill: el.getAttribute('fill'), stroke: el.getAttribute('stroke'), strokeWidth: el.getAttribute('stroke-width') }
   })
+}
+
+/** The heads drawn on the one path on the page, with what each is painted in. */
+export function lineEnds(page: Page) {
+  return page.evaluate(() =>
+    [...document.querySelectorAll('#page-design-canvas .path__paint .path__end')].map((el) => ({
+      kind: el.getAttribute('data-end'),
+      fill: el.getAttribute('fill'),
+      stroke: el.getAttribute('stroke'),
+      d: el.getAttribute('d'),
+    })),
+  )
 }
 
 /**

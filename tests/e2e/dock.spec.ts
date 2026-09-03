@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { WIDGET, canvasBox, dragOnPage, drawnShape, openEditor, widgetCount } from './helpers'
+import { WIDGET, armShapeTool, canvasBox, dragOnPage, drawnShape, lineEnds, openEditor, widgetCount } from './helpers'
 
 /*
  * The tool dock at the foot of the canvas. What is worth testing is that each
@@ -133,12 +133,42 @@ test('the Shapes popover arms a tool, and the tool draws', async ({ page }) => {
   await expect(page.locator(`${WIDGET}[data-type="w-ellipse"]`)).toHaveCount(1)
 })
 
-test('the Shapes menu offers the shapes and leaves the pen its own slot', async ({ page }) => {
+test('the Shapes menu offers the shapes and the arrow, and leaves the pen its own slot', async ({ page }) => {
   await page.locator(item('shapes')).click()
   await page.waitForTimeout(300)
-  await expect(page.locator('.tool-dock__shape')).toHaveCount(4)
+  const shapes = page.locator('.tool-dock__shape')
+  await expect(shapes).toHaveCount(5)
+  expect(await shapes.evaluateAll((els) => els.map((el) => el.getAttribute('data-tool')))).toEqual(['rect', 'ellipse', 'polygon', 'line', 'arrow'])
+  expect(await shapes.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')))).toEqual(['Rectangle', 'Ellipse', 'Polygon', 'Line', 'Arrow'])
   await expect(page.locator('.tool-dock__shape[data-tool="pen"]')).toHaveCount(0)
   await expect(page.locator(item('pen'))).toBeVisible()
+})
+
+test('the Arrow is clicked out between two points and lands with a head on it', async ({ page }) => {
+  await armShapeTool(page, 'Arrow')
+  // The popover gets out of the way, and the hint says an arrow is coming.
+  await expect(page.locator('.tool-dock__shapes')).toHaveCount(0)
+  await expect(page.locator('.draw-hint')).toContainText('Drag or click twice to draw an arrow')
+
+  const board = await canvasBox(page)
+  await page.mouse.click(board.x + 80, board.y + 140)
+  await page.waitForTimeout(200)
+  await page.mouse.click(board.x + 300, board.y + 140)
+  await page.waitForTimeout(600)
+
+  expect((await drawnShape(page))?.type).toBe('w-path')
+  expect((await lineEnds(page)).map((end) => end.kind)).toEqual(['triangle'])
+  // The tool is spent, the same as after any other one has drawn.
+  await expect(page.locator('.draw-hint')).toHaveCount(0)
+})
+
+test('the Line beside it still lands a bare line', async ({ page }) => {
+  await armShapeTool(page, 'Line')
+  await expect(page.locator('.draw-hint')).toContainText('Drag or click twice to draw a line')
+
+  await dragOnPage(page, { x: 80, y: 140 }, { x: 300, y: 140 })
+  expect((await drawnShape(page))?.type).toBe('w-path')
+  expect(await lineEnds(page)).toHaveLength(0)
 })
 
 test('the pen has a slot of its own', async ({ page }) => {

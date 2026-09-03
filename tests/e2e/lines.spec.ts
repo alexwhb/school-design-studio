@@ -1,22 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
-import { WIDGET, armShapeTool, canvasBox, dragOnPage, drawnShape, expandPageStrip, openEditor, pathPaint, pathShape } from './helpers'
+import { WIDGET, armShapeTool, canvasBox, dragOnPage, drawnShape, expandPageStrip, lineEnds, openEditor, pathPaint, pathShape } from './helpers'
 import { exportPng, pixelOf } from './pixels'
 
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
 })
-
-/** The heads drawn on the one line on the page, with what each is painted in. */
-function lineEnds(page: Page) {
-  return page.evaluate(() =>
-    [...document.querySelectorAll('#page-design-canvas .path__paint .path__end')].map((el) => ({
-      kind: el.getAttribute('data-end'),
-      fill: el.getAttribute('fill'),
-      stroke: el.getAttribute('stroke'),
-      d: el.getAttribute('d'),
-    })),
-  )
-}
 
 /** Arms one of the Arrows presets from the Graphics panel. */
 async function armPreset(page: Page, name: string) {
@@ -57,6 +45,24 @@ test('L arms the line tool, and a drag draws a straight two-point line', async (
   expect(d.match(/L/g)).toHaveLength(1)
   expect(d).not.toContain('Z')
   // And the tool has handed the pointer back.
+  await expect(page.locator('.draw-hint')).toHaveCount(0)
+})
+
+test('A arms the arrow, and it lands with a head on its far end', async ({ page }) => {
+  await page.keyboard.press('a')
+  await page.waitForTimeout(300)
+  await expect(page.locator('.draw-hint')).toContainText('Drag or click twice to draw an arrow')
+
+  await dragOnPage(page, { x: 80, y: 120 }, { x: 320, y: 120 })
+  expect((await drawnShape(page))?.type).toBe('w-path')
+  expect((await lineEnds(page)).map((end) => end.kind)).toEqual(['triangle'])
+})
+
+test('Ctrl+A is still select-all rather than the arrow', async ({ page }) => {
+  // The letter cases are only reached without a modifier, which is what leaves
+  // A free for the arrow at all.
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.waitForTimeout(300)
   await expect(page.locator('.draw-hint')).toHaveCount(0)
 })
 
@@ -157,6 +163,25 @@ test('a line drawn from the dock carries no preset', async ({ page }) => {
 
   await dragOnPage(page, { x: 80, y: 120 }, { x: 320, y: 120 })
   expect(await lineEnds(page)).toHaveLength(0)
+})
+
+test('the dock’s Arrow and the panel’s Arrow tile are one armed state', async ({ page }) => {
+  await armShapeTool(page, 'Arrow')
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
+  await page.waitForTimeout(500)
+  const tile = page.locator('.arrow-presets__item[title="Arrow"]')
+  await expect(tile).toHaveClass(/is-armed/)
+
+  // And the other way round: the tile lights the dock's Arrow, not its Line.
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+  await expect(tile).not.toHaveClass(/is-armed/)
+  await tile.click()
+  await page.waitForTimeout(300)
+  await page.locator('.tool-dock__item[data-tool="shapes"]').click()
+  await page.waitForTimeout(300)
+  await expect(page.locator('.tool-dock__shape[data-tool="arrow"]')).toHaveClass(/is-armed/)
+  await expect(page.locator('.tool-dock__shape[data-tool="line"]')).not.toHaveClass(/is-armed/)
 })
 
 test('the panel puts a head on either end, drawn in the stroke colour', async ({ page }) => {
