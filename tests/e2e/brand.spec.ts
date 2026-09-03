@@ -106,6 +106,40 @@ function pageText(page: Page) {
   return page.locator(`${WIDGET} .edit-text`).allInnerTexts()
 }
 
+/**
+ * The contrast module, run inside the page.
+ *
+ * There is no unit runner in this project, and the WCAG numbers below are the
+ * published ones — 21:1 for black on white, 4.54:1 for #767676 on white — so
+ * they are worth checking against the maths itself rather than only through
+ * what the maths went on to paint. The module is pulled in over the dev
+ * server's own module graph, which is what `APP_URL` points at.
+ */
+function contrastIn(page: Page, a: string, b: string) {
+  return page.evaluate(
+    async ([one, two]) => {
+      // Held in a variable so this stays a runtime import of a path on the dev
+      // server rather than something the test's own typecheck tries to resolve.
+      const url = '/src/common/methods/contrast.ts'
+      const mod = await import(/* @vite-ignore */ url)
+      return mod.contrastRatio(one, two) as number
+    },
+    [a, b],
+  )
+}
+
+/** The rendered colour of the text box whose words start with `starts`. */
+async function faceColor(page: Page, starts: string) {
+  const faces = await textFaces(page)
+  return faces.find((face) => face.text.startsWith(starts))?.color
+}
+
+/** `rgb(r, g, b)` back as `#rrggbb`, so it can go into the contrast maths. */
+function toHex(rgb: string | undefined): string {
+  const parts = (rgb || '').match(/\d+/g) || []
+  return '#' + parts.slice(0, 3).map((part) => Number(part).toString(16).padStart(2, '0')).join('')
+}
+
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
 })
@@ -351,6 +385,106 @@ test('the same colour is not added twice', async ({ page }) => {
   await addBrandColor(page, '#C8102E')
   expect(await kitHexes(page)).toEqual(['#C8102E'])
   await expect(page.locator('.el-message')).toContainText('already in the kit')
+})
+
+/* --------------------------------------------------- readable whatever the kit */
+
+/**
+ * The pale yellow below is the case the guard exists for: a perfectly ordinary
+ * school colour that happens to be lighter than the white the poster's headline
+ * is set in and darker than the cream it is printed on.
+ */
+const PALE = '#F2E38A'
+const DARK = '#123A6B'
+
+test('the contrast maths gives WCAG’s own numbers', async ({ page }) => {
+  expect(await contrastIn(page, '#ffffff', '#000000')).toBeCloseTo(21, 2)
+  expect(await contrastIn(page, '#767676', '#ffffff')).toBeCloseTo(4.54, 1)
+  expect(await contrastIn(page, '#1e3a5f', '#1e3a5f')).toBeCloseTo(1, 5)
+})
+
+test('a pale primary does not leave a white headline on a pale band', async ({ page }) => {
+  await addBrandColor(page, PALE)
+  await pickTemplate(page, FIELD_DAY)
+
+  // The band is the kit's colour, as it should be; the headline on it is no
+  // longer white, because white on that band is nothing at all.
+  expect(await svgPaints(page)).toContain('#f2e38aff')
+  const headline = await faceColor(page, 'FIELD DAY')
+  expect(headline).not.toBe('rgb(255, 255, 255)')
+  // It takes the ink the poster already sets its body copy in, not black.
+  expect(headline).toBe('rgb(34, 37, 42)')
+  expect(await contrastIn(page, toHex(headline), '#f2e38a')).toBeGreaterThan(4.5)
+
+  // And the footer band, which is the same shape of problem lower down.
+  expect(await faceColor(page, 'SPRINGFIELD')).toBe('rgb(34, 37, 42)')
+})
+
+test('a pale primary darkens a heading set in it rather than losing it on the paper', async ({ page }) => {
+  await addBrandColor(page, PALE)
+  await pickTemplate(page, FIELD_DAY)
+
+  // "Friday, May 15" is painted in the template's navy, which is the primary,
+  // so it becomes the kit's colour — then as much darker as it takes to be
+  // read on cream, and no darker.
+  const heading = toHex(await faceColor(page, 'Friday'))
+  expect(heading).not.toBe('#f2e38a')
+  expect(await contrastIn(page, heading, '#fbf7ef')).toBeGreaterThanOrEqual(3)
+  // Still the same colour, though: a gold darkened, not a grey.
+  const [r, g, b] = (heading.match(/[0-9a-f]{2}/g) || []).map((part) => parseInt(part, 16))
+  expect(Math.min(r, g)).toBeGreaterThan(b + 40)
+})
+
+test('a dark primary leaves the white headline white', async ({ page }) => {
+  await addBrandColor(page, DARK)
+  await pickTemplate(page, FIELD_DAY)
+
+  expect(await svgPaints(page)).toContain('#123a6bff')
+  // Nothing to repair: white on a dark band is what the poster was drawn as.
+  expect(await faceColor(page, 'FIELD DAY')).toBe('rgb(255, 255, 255)')
+  expect(await faceColor(page, 'SPRINGFIELD')).toBe('rgb(255, 255, 255)')
+  expect(await faceColor(page, 'Friday')).toBe('rgb(18, 58, 107)')
+})
+
+test('apply brand repairs the same design, and says that it did', async ({ page }) => {
+  // The retrofit route: the poster lands in its own navy, and the kit arrives
+  // afterwards, so Apply brand has to rank the colours and then repair.
+  await pickTemplate(page, FIELD_DAY)
+  expect(await faceColor(page, 'FIELD DAY')).toBe('rgb(255, 255, 255)')
+
+  await addBrandColor(page, PALE)
+  await page.locator('.brand-card__apply').click()
+  await page.waitForTimeout(600)
+  await page.locator('.ds-apply-brand .el-button--primary').click()
+  await page.waitForTimeout(1500)
+
+  await expect(page.locator('.el-notification')).toContainText('adjusted to stay readable')
+  expect(await faceColor(page, 'FIELD DAY')).toBe('rgb(34, 37, 42)')
+  expect(await contrastIn(page, toHex(await faceColor(page, 'Friday')), '#fbf7ef')).toBeGreaterThanOrEqual(3)
+
+  // Still one entry: the repair is part of applying the brand, not a step of
+  // its own to be peeled off first.
+  await page.keyboard.press('ControlOrMeta+z')
+  await page.waitForTimeout(1000)
+  expect(await faceColor(page, 'FIELD DAY')).toBe('rgb(255, 255, 255)')
+})
+
+test('the panel says a pale colour cannot be read on paper', async ({ page }) => {
+  await addBrandColor(page, PALE)
+
+  // Two marks on the row: the colour as words on paper, and the better of
+  // white and ink on the colour as a band.
+  await expect(page.locator('.brand-swatch__mark')).toHaveCount(2)
+  await expect(page.locator('.brand-swatch__reads')).toHaveAttribute('title', /As text on white: 1\.3:1/)
+
+  await page.locator('.brand-swatch__edit').first().click()
+  await page.waitForTimeout(400)
+  await expect(page.locator('.brand-editor__reads')).toHaveText('Reads on white at 1.3:1 — lighter text will be darkened on posters.')
+
+  // A colour that passes gets the plain version of the same line.
+  await page.locator('.brand-editor__hex input').fill(DARK)
+  await page.waitForTimeout(400)
+  await expect(page.locator('.brand-editor__reads')).toContainText('White reads on it at')
 })
 
 /* --------------------------------------------------------------- the fonts */
