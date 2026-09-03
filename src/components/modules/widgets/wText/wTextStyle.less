@@ -3,7 +3,7 @@
   width: 100%;
 
   // One swatch per colour the effect stack brought with it, sitting under the
-  // Colour row it supplements. The label is repeated here rather than handed to
+  // Fill row it supplements. The label is repeated here rather than handed to
   // ColorSelect because it names the row, not any one swatch.
   .effect-palette {
     width: 100%;
@@ -16,12 +16,55 @@
       gap: @space-2;
     }
   }
+
+  // The type settings, one control to a line, with the pairs that answer the
+  // same question sharing a line.
+  .text-fields {
+    display: flex;
+    flex-direction: column;
+    gap: @field-gap;
+    width: 100%;
+  }
+
+  .text-row {
+    display: flex;
+    align-items: center;
+    gap: @space-3;
+    width: 100%;
+
+    &__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      width: 17px;
+      color: @ink-3;
+      svg {
+        width: 15px;
+        height: 15px;
+      }
+    }
+
+    .number-input2 {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  // Bold, italic and the rest share the size's line, so the bar loses the space
+  // it would otherwise keep under itself.
+  .text-style-icons .btn__bar {
+    margin-bottom: 0;
+  }
+  .size-select {
+    flex: none;
+  }
 }
 
 // What the style buttons are about while the caret is in the box: the word
-// selected, or the whole box. Sits between the two rows of buttons.
+// selected, or the whole box.
 #w-text-style .inline-scope {
-  margin: -6px 0 @field-gap;
+  margin: 0;
   font-size: @text-xs;
   line-height: 1.4;
   color: @ink-3;

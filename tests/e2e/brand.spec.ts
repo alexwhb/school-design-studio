@@ -227,7 +227,7 @@ test('the school fonts head the text panel’s font list', async ({ page }) => {
 
   await addText(page, 'Heading')
   await selectFirstWidget(page)
-  await page.locator('#style-panel .value-select', { hasText: 'Text' }).locator('.real-input').click()
+  await page.locator('#style-panel .font-select .real-input').click()
   await page.waitForTimeout(700)
 
   // First tab, so the school's own fonts are one click away rather than found

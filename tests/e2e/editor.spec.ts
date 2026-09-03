@@ -443,7 +443,7 @@ test('the text style panel changes colour and size', async ({ page }) => {
   await selectFirstWidget(page)
   await expect(page.locator('#w-text-style')).toBeVisible()
 
-  await page.locator('#w-text-style .value-select').nth(1).locator('input').click()
+  await page.locator('#w-text-style .size-select input').click()
   await page.waitForTimeout(400)
   await page.locator('.list-ul li', { hasText: '48px' }).first().click()
   await page.waitForTimeout(500)
@@ -460,18 +460,15 @@ test('bold toggles the selected text', async ({ page }) => {
   await selectFirstWidget(page)
   const before = await page.evaluate((s) => (document.querySelector(s) as HTMLElement).style.fontWeight, WIDGET)
   expect(before).toBe('normal')
-  await page.locator('#w-text-style .list-item').first().click()
+  await page.locator('#w-text-style .list-item[aria-label="Bold"]').click()
   await page.waitForTimeout(400)
   const after = await page.evaluate((s) => (document.querySelector(s) as HTMLElement).style.fontWeight, WIDGET)
   expect(after).toBe('bold')
 })
 
-/*
- * The two list toggles are the only buttons in the text panel drawn as SVG
- * rather than as an icon-font glyph, which is what makes them findable without
- * leaning on their position in the row.
- */
-const LIST_TOGGLE = '#w-text-style .list-item:has(svg)'
+/* Every button in the panel carries the tip it shows as its label. */
+const LIST_TOGGLE = '#w-text-style .list-item[aria-label="Bulleted list"]'
+const NUMBER_TOGGLE = '#w-text-style .list-item[aria-label="Numbered list"]'
 
 test('the bullet toggle turns the text into a list and back', async ({ page }) => {
   await addText(page, 'Body text')
@@ -495,7 +492,7 @@ test('the numbered toggle replaces the bullets rather than nesting inside them',
   await selectFirstWidget(page)
   await page.locator(LIST_TOGGLE).first().click()
   await page.waitForTimeout(400)
-  await page.locator(LIST_TOGGLE).nth(1).click()
+  await page.locator(NUMBER_TOGGLE).click()
   await page.waitForTimeout(400)
 
   await expect(page.locator(`${WIDGET} .edit-text ul`)).toHaveCount(0)

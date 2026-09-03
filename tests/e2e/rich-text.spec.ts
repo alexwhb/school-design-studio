@@ -115,10 +115,9 @@ test('the panel buttons style the selection while there is one, and say so', asy
   await selectWord(page, 'Sports')
   await expect(page.locator('#w-text-style .inline-scope')).toContainText('selected text')
 
-  // Italic is the second style button.
-  await page.locator('#w-text-style .list-item').nth(1).click()
+  await page.locator('#w-text-style .list-item[aria-label="Italic"]').click()
   await page.waitForTimeout(300)
-  await expect(page.locator('#w-text-style .list-item').nth(1)).toHaveClass(/active/)
+  await expect(page.locator('#w-text-style .list-item[aria-label="Italic"]')).toHaveClass(/active/)
   await clickAway(page)
   expect(await markup(page)).toBe('<i>Sports</i> Day 14 June')
   const style = await page.evaluate((s) => (document.querySelector(s) as HTMLElement).style.fontStyle, WIDGET)

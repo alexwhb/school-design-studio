@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
-import { alignIconList, styleIconList1, styleIconList2 } from '@/assets/data/TextIconsData'
+import { styleIconList1, styleIconList2 } from '@/assets/data/TextIconsData'
 import { FONT_GROUPS, type TFontItem } from '@/assets/data/FontsData'
 import { brandFontItems, brandState } from '@/common/methods/brandKit'
 import { useFontStore } from '@/common/methods/fonts'
-import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
+import { PanelSection } from '@/components/ui/PanelSection'
+import { LetterSpacingIcon, LineHeightIcon } from '@/components/ui/icons'
 import { controlState, widgetState } from '@/store/state'
 import { setUpdateRect } from '@/store/force'
-import { setWidgetStyle, updateAlign, updateWidgetData } from '@/store/widget'
+import { setWidgetStyle, updateWidgetData } from '@/store/widget'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
 import ColorSelect from '../../settings/ColorSelect'
 import ArrangeRow from '../../settings/ArrangeRow'
 import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
+import OpacityRow from '../../settings/OpacityRow'
 import TextInputArea from '../../settings/TextInputArea'
+import ToggleRow from '../../settings/ToggleRow'
+import TransformGrid from '../../settings/TransformGrid'
 import ValueSelect from '../../settings/ValueSelect'
 import TextWrap from '../../settings/EffectSelect/TextWrap'
 import recolorEffects, { parseColor, replaceEffectColor, type TColorParts } from './recolorEffects'
@@ -49,7 +53,6 @@ export default function WTextStyle() {
   /** The caret is in this box: the style buttons may be about a selection. */
   const editing = !!active && inline.uuid === String(active.uuid)
   const onSelection = editing && inline.selected
-  const [activeNames, setActiveNames] = useState<string[]>([])
   const [fontClassList, setFontClassList] = useState<Record<string, any>>({})
 
   const brandFonts = useSnapshot(brandState).kit.fonts
@@ -215,11 +218,6 @@ export default function WTextStyle() {
     }, 10)
   }
 
-  function alignAction(item: TIconItemSelectData) {
-    updateAlign({ align: item.value as any, uuid })
-    requestAnimationFrame(() => setUpdateRect())
-  }
-
   /**
    * While the caret is in the box, a press on one of the panel's buttons must
    * not take focus, and the selection with it, out of the text. Fields still
@@ -236,116 +234,67 @@ export default function WTextStyle() {
 
   return (
     <div id="w-text-style" onMouseDown={keepCaret}>
-      <PanelSections value={activeNames} onChange={setActiveNames}>
-        <PanelSection name="1" title="Size and position">
-          <div className="line-layout">
-            <NumberInput value={active.left} label="X" onChange={(v) => finish('left', Number(v))} />
-            <NumberInput value={active.top} label="Y" onChange={(v) => finish('top', Number(v))} />
-            <NumberInput value={active.width} label="W" editable onChange={(v) => finish('width', Number(v))} />
-            <NumberInput value={active.height} label="H" editable onChange={(v) => finish('height', Number(v))} />
+      <PanelSection title="Transform">
+        <TransformGrid active={active} rotation onChange={(key, value) => finish(key, value)} />
+        <ArrangeRow uuid={uuid} className="arrange-row" label="" />
+      </PanelSection>
+
+      <PanelSection title="Text">
+        <div className="text-fields">
+          <ValueSelect className="font-select is-tall" value={active.fontClass} data={fontClassList} inputWidth="100%" readonly onFinish={(font) => finish('fontClass', font as any)} />
+          <div className="text-row">
+            <ValueSelect className="size-select" variant="underline" value={active.fontSize} suffix="px" data={FONT_SIZE_LIST} inputWidth="56px" onFinish={(value) => finish('fontSize', Math.max(1, Math.min(500, Number(value) || 1)))} />
+            <IconItemSelect className="text-style-icons" data={styleIcons1} onFinish={textStyleAction} />
           </div>
-        </PanelSection>
-      </PanelSections>
+          <div className="text-row">
+            <span className="text-row__icon" aria-hidden="true">
+              <LetterSpacingIcon />
+            </span>
+            <NumberInput variant="underline" value={active.letterSpacing} onChange={(value) => finish('letterSpacing', Number(value))} />
+            <span className="text-row__icon" aria-hidden="true">
+              <LineHeightIcon />
+            </span>
+            <NumberInput variant="underline" value={active.lineHeight} onChange={(value) => finish('lineHeight', Number(value))} />
+          </div>
+          <IconItemSelect data={styleIcons2} onFinish={textStyleAction} />
+          {editing ? <p className="inline-scope">{onSelection ? 'Bold, italic, underline, strikethrough and colour apply to the selected text.' : 'Select some of the text to style just that part; otherwise the whole box changes.'}</p> : null}
+          {/* Retyped rather than replaced, so a corrected word does not cost the
+              line its bold — see retypeText. */}
+          <TextInputArea value={textToLines(active.text).join('\n')} onChange={(value) => finish('text', retypeText(active.text, value, listStyle))} />
+        </div>
+      </PanelSection>
 
-      <div className="line-layout style-item">
-        <ValueSelect
-          value={active.fontClass}
-          label="Text"
-          data={fontClassList}
-          inputWidth="152px"
-          readonly
-          onFinish={(font) => finish('fontClass', font as any)}
-        />
-        <ValueSelect
-          value={active.fontSize}
-          label="Size"
-          suffix="px"
-          data={FONT_SIZE_LIST}
-          onFinish={(value) => finish('fontSize', Math.max(1, Math.min(500, Number(value) || 1)))}
-        />
-      </div>
+      <PanelSection title="Appearance">
+        <div className="slide-wrap">
+          <OpacityRow value={active.opacity ?? 1} onChange={(value) => finish('opacity', value)} />
+          <ColorSelect className="text-colour" variant="row" label="Fill" value={onSelection && inline.color ? inline.color : active.color} keepOpenOnFocusOutside onValueChange={changeColor} />
+          {swatches.length ? (
+            <div className="effect-palette">
+              <p className="input-label">Effect colours</p>
+              <div className="effect-palette__row">
+                {swatches.map((colour, index) => (
+                  <EffectSwatch key={index} colour={colour} onOpenChange={(open) => setHeld(open ? palette : null)} onChange={changeEffectColor} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </PanelSection>
 
-      <IconItemSelect className="style-item" data={styleIcons1} onFinish={textStyleAction} />
-      {editing ? (
-        <p className="inline-scope">{onSelection ? 'Bold, italic, underline, strikethrough and colour apply to the selected text.' : 'Select some of the text to style just that part; otherwise the whole box changes.'}</p>
-      ) : null}
-      <IconItemSelect className="style-item" data={styleIcons2} onFinish={textStyleAction} />
-
-      <div className="style-item slide-wrap">
-        <NumberSlider
-          value={active.opacity ?? 1}
-          style={{ fontSize: 14 }}
-          label="Opacity"
-          step={0.05}
-          maxValue={1}
-          onChange={(value) => finish('opacity', value)}
-        />
-        <NumberSlider
-          value={active.letterSpacing}
-          style={{ fontSize: 14 }}
-          label="Letter spacing"
-          step={0.05}
-          minValue={-active.fontSize}
-          maxValue={active.fontSize * 2}
-          onChange={(value) => finish('letterSpacing', value)}
-        />
-        <NumberSlider
-          value={active.lineHeight}
-          style={{ fontSize: 14 }}
-          label="Line height"
-          step={0.05}
-          minValue={0}
-          maxValue={2.5}
-          onChange={(value) => finish('lineHeight', value)}
-        />
+      <PanelSection title="Effects">
+        <TextWrap value={active.textEffects} data={active} degree={active.degree} onValueChange={(value) => finish('textEffects', value as any)} onSelect={selectTextEffect} />
         {/* How far the line sweeps, in degrees: half a turn each way is as far
             as a badge or a crest ever goes, and past it the text meets itself. */}
-        <NumberSlider
-          value={active.curve || 0}
-          style={{ fontSize: 14 }}
-          label="Curve"
-          step={1}
-          minValue={-180}
-          maxValue={180}
-          onChange={(value) => finish('curve', value)}
-        />
-      </div>
-
-      <div className="line-layout line-layout--tight style-item text-colour">
-        <ColorSelect value={onSelection && inline.color ? inline.color : active.color} label="Colour" keepOpenOnFocusOutside onValueChange={changeColor} />
-      </div>
-      {swatches.length ? (
-        <div className="style-item effect-palette">
-          <p className="input-label">Effect colours</p>
-          <div className="effect-palette__row">
-            {swatches.map((colour, index) => (
-              <EffectSwatch
-                key={index}
-                colour={colour}
-                onOpenChange={(open) => setHeld(open ? palette : null)}
-                onChange={changeEffectColor}
-              />
-            ))}
-          </div>
-        </div>
-      ) : null}
-      <div className="line-layout style-item">
-        <TextWrap
-          value={active.textEffects}
-          data={active}
-          degree={active.degree}
-          onValueChange={(value) => finish('textEffects', value as any)}
-          onSelect={selectTextEffect}
-        />
-      </div>
-      <ArrangeRow uuid={uuid} />
-      <IconItemSelect className="style-item" label="Align" data={alignIconList} onFinish={alignAction} />
-
-      <div className="line-layout style-item">
-        {/* Retyped rather than replaced, so a corrected word does not cost the
-            line its bold — see retypeText. */}
-        <TextInputArea value={textToLines(active.text).join('\n')} onChange={(value) => finish('text', retypeText(active.text, value, listStyle))} />
-      </div>
+        <ToggleRow
+          className="curve-row"
+          label="Curve text"
+          checked={Boolean(active.curve)}
+          checker
+          onCheckedChange={(on) => finish('curve', on ? 30 : 0)}
+        >
+          <NumberSlider value={active.curve || 0} label="Curve" step={1} minValue={-180} maxValue={180} onChange={(value) => finish('curve', value)} />
+        </ToggleRow>
+      </PanelSection>
     </div>
   )
 }

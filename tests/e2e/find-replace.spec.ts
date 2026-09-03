@@ -106,8 +106,7 @@ test('one press of undo takes a whole replace all back off every page', async ({
 test('replacing inside a bulleted list leaves the bullets standing', async ({ page }) => {
   await addText(page, 'Body text')
   await selectFirstWidget(page)
-  // The two list toggles are the only buttons in the text panel drawn as SVG.
-  await page.locator('#w-text-style .list-item:has(svg)').first().click()
+  await page.locator('#w-text-style .list-item[aria-label="Bulleted list"]').click()
   await page.waitForTimeout(500)
 
   await page.locator(WIDGET).first().dblclick()

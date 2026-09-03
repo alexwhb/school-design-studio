@@ -1,6 +1,21 @@
 .effects {
   width: 100%;
 
+  // The entry point, shaped like every other switchable feature in the panel:
+  // what it looks like, what it is called, and the way in.
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: @space-3;
+    height: @control-h;
+  }
+  &__name {
+    flex: 1;
+    min-width: 0;
+    font-size: @text-base;
+    color: @ink;
+  }
+
   .el-checkbox {
     height: auto;
   }
