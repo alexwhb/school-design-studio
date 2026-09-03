@@ -1,10 +1,14 @@
-import { useRef } from 'react'
-import Button from '@/components/ui/Button'
+import { useMemo, useRef, useState } from 'react'
+import Image from '@/components/ui/Image'
 import { canvasState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
 import { addWidget } from '@/store/widget'
 import { wTextSetting } from '../../widgets/wText/wTextSetting'
-import CompListWrap from './CompListWrap'
+import SearchHeader from './components/SearchHeader'
+import PanelEyebrow from './components/PanelEyebrow'
+import Card, { CardGrid, CardRows } from './components/Card'
+import useCompPresets from './components/compPresets'
+import { PanelBody, PanelHead, PanelSectionBlock, PanelWrap } from './components/PanelShell'
 import './textListWrap.less'
 
 type TBasicTextData = {
@@ -24,6 +28,17 @@ const previewSize = (fontSize: number) => Math.round(Math.min(Math.max(fontSize 
 
 export default function TextListWrap() {
   const insertedCount = useRef(0)
+  const [keyword, setKeyword] = useState('')
+  const { list: effects, itemProps } = useCompPresets('text')
+
+  // Nothing here is paged, so the search is a filter over what is already on
+  // screen rather than another trip to the library.
+  const query = keyword.trim().toLowerCase()
+  const styles = useMemo(() => basicTextList.filter((item) => !query || item.text.toLowerCase().includes(query)), [query])
+  const effectList = useMemo(
+    () => effects.filter((item) => !query || (item.title || '').toLowerCase().includes(query)),
+    [effects, query],
+  )
 
   const selectBasicText = (item: TBasicTextData) => {
     setShowMoveable(false)
@@ -52,26 +67,56 @@ export default function TextListWrap() {
   }
 
   return (
-    <div id="text-list-wrap" style={{ marginTop: '0.5rem' }}>
-      <ul className="basic-text-wrap">
-        {basicTextList.map((item, index) => (
-          <div
-            key={index}
-            className="basic-text-item"
-            style={{ fontSize: previewSize(item.fontSize) + 'px', fontWeight: item.fontWeight }}
-            draggable
-            onClick={() => selectBasicText(item)}
-          >
-            {item.text}
-          </div>
-        ))}
-      </ul>
-      <Button className="upload-psd" plain type="primary" onClick={openPSD}>
-        Import a PSD file
-      </Button>
-      <div className="other-text-wrap">
-        <CompListWrap />
-      </div>
-    </div>
+    <PanelWrap id="text-list-wrap">
+      <PanelHead>
+        <SearchHeader value={keyword} live placeholder="Search text styles" onChange={setKeyword} onSearch={setKeyword} />
+      </PanelHead>
+
+      <PanelBody>
+        {styles.length > 0 ? (
+          <PanelSectionBlock>
+            <PanelEyebrow label="Text styles" />
+            <CardRows className="basic-text-wrap">
+              {styles.map((item) => (
+                <div
+                  key={item.text}
+                  className="panel-card panel-card--row basic-text-item"
+                  draggable
+                  onClick={() => selectBasicText(item)}
+                >
+                  {/* Drawn at the weight and the relative size it will land on
+                      the page at, so the three rows are a picture of the choice
+                      rather than three labels. */}
+                  <span className="basic-text-item__label" style={{ fontSize: previewSize(item.fontSize) + 'px', fontWeight: item.fontWeight }}>
+                    {item.text}
+                  </span>
+                  <span className="basic-text-item__meta">
+                    {item.fontSize} / {wTextSetting.fontFamily}
+                  </span>
+                </div>
+              ))}
+            </CardRows>
+          </PanelSectionBlock>
+        ) : null}
+
+        {effectList.length > 0 ? (
+          <PanelSectionBlock>
+            {/* The PSD importer opens a page of its own rather than adding
+                anything here, so it rides on the heading instead of taking a
+                button's worth of the panel. */}
+            <PanelEyebrow label="Text with effects" onAction={openPSD} actionLabel="Import a PSD" />
+            <CardGrid columns={2}>
+              {effectList.map((item) => (
+                <Card key={item.id} ratio="16 / 9" thumbClassName="panel-card__thumb--art" {...itemProps(item)}>
+                  <Image className="list__img" src={item.cover} fit="contain" lazy />
+                </Card>
+              ))}
+            </CardGrid>
+          </PanelSectionBlock>
+        ) : null}
+
+        {styles.length === 0 && effectList.length === 0 ? <div className="panel-wrap__status">Nothing matches “{keyword.trim()}”</div> : null}
+      </PanelBody>
+    </PanelWrap>
   )
 }
