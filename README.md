@@ -92,11 +92,12 @@ Without a key, both panels fall back to the sample images bundled in
 The same goes for a rejected key or a spent rate limit — each gets its own
 message in the panel rather than an empty grid.
 
-The three browse rows are stored searches. Change what they cover by editing
-`BROWSE_CATEGORIES` in `server/content-library.mjs` (the queries) and the list
-of the same name in `src/components/modules/panel/wrap/PhotoListWrap.tsx` (the
-headings shown before any request goes out). The background library browses the
-second of them; `BACKGROUND_CATE` in
+The chips above the library are stored searches. Change what they cover by
+editing `BROWSE_CATEGORIES` in `server/content-library.mjs` (the queries) and
+the list of the same name in
+`src/components/modules/panel/wrap/PhotoListWrap.tsx` (the chip labels). The
+library has no "everything" shelf, so one chip is always in force. The
+background library browses the second of them; `BACKGROUND_CATE` in
 `src/components/modules/panel/wrap/BgImgListWrap.tsx` picks which.
 
 Unsplash's API terms ask that apps credit photographers and report when a photo
@@ -105,7 +106,13 @@ photo's `download_location` through the proxy.
 
 ### Uploads
 
-Pictures you add — the Upload button, a pasted screenshot, a background image —
+Uploads are the first section of the **Photos** panel, above the stock library:
+a dashed **Upload** tile and everything this browser has taken in, with a menu
+on hover to remove one. They used to have a rail tab of their own, which put a
+picture you had just added two clicks away from the pictures you were choosing
+between.
+
+Pictures you add — the Upload tile, a pasted screenshot, a background image —
 are stored in the browser, in IndexedDB. There is no account system and no
 upload endpoint in this fork, so there is nowhere else for them to go; upstream
 posted them to a Chinese CDN this project has no account for, which is why
@@ -127,7 +134,7 @@ when embedding the editor in an app that has its own file store: keep
 
 ### Content, and the optional backend
 
-`npm start` serves the bundled content library too, so Templates, Elements
+`npm start` serves the bundled content library too, so Templates, Graphics
 (stickers, shapes, masks) and Photos all have content with nothing else
 running. That content lives in `service/src/mock` as plain JSON. Upstream only
 serves it through the Express app in `service/`, which pulls in Puppeteer and a
@@ -184,9 +191,19 @@ shadows or gradients. Every colour in the editor comes from the tokens named in
 features were removed — the toolbar was regrouped, panels were flattened, and
 section headings were set in quiet uppercase.
 
+**The panels on the left.** Templates, Graphics, Text and Photos are each a
+search box and a row of category chips over a scrolling body of named sections.
+Everything you can put on the page is drawn as the same card — a thumbnail of
+its own shape, its name, and a line of metadata set in a mono face (a template's
+pixel size, a photographer's name, a sticker's title). Two tabs are gone:
+**Elements** is now **Graphics**, and **Uploads** is the first section of
+**Photos**. Templates additionally opens on **Your designs**, when the backend
+this fork talks to has any to give.
+
 **Dark mode.** New. See below.
 
-**Uploads.** New — they used to go to a server that does not exist here. See
+**Uploads.** New — they used to go to a server that does not exist here, and
+they now live inside the Photos panel rather than a tab of their own. See
 below.
 
 **Page sizes.** The Chinese e-commerce presets (WeChat article headers, product
@@ -437,7 +454,7 @@ the thickness up does not nudge anything else out of the way.
   two curve together. A photograph poured into a container shape is outlined in
   that shape rather than in a rectangle. The ring is cut from the mask itself,
   so it narrows a little where the silhouette comes to a point.
-- **Line drawings are left alone.** The stickers in the Elements panel are drawn
+- **Line drawings are left alone.** The stickers in the Graphics panel are drawn
   as strokes rather than as fills, and adding to that stroke would fatten the
   drawing and take its colour off rather than outline it. The setting does
   nothing to them.
@@ -482,7 +499,7 @@ picture of one, so whoever opens the deck can still edit it.
 The **Line** tool in the Tools panel, or the `L` key. Drag from one point to
 another; hold Shift to hold it to a right angle or a diagonal, Alt to draw it
 out from the middle, and a plain click drops a level line of a readable length.
-The Elements panel has an **Arrows** row of ready-made ones to drag on instead.
+The Graphics panel has an **Arrows** row of ready-made ones to drag on instead.
 
 A line is an open path, so it takes the same stroke colour, thickness and dash
 as any other path, and its points can still be moved. What is new is the ends:
@@ -1349,7 +1366,7 @@ need Puppeteer and a running server.
 | `fetch-fonts.mjs` + `font-list.json` | Downloads the 26 bundled font families from Google Fonts and regenerates `public/fonts/fonts.css` |
 | `fetch-iconfont.mjs` | Re-downloads the toolbar icon font into `public/iconfont/`, so no CDN sits in the critical path (`npm run fetch-iconfont`) |
 | `apply-i18n.py` + `i18n-map.json` | The translation pass — replaces Chinese source strings with English across the tree |
-| `add-content.mjs` | Imports a folder of your own SVGs or PNGs into Elements (shapes, stickers or masks) and rewrites the manifest |
+| `add-content.mjs` | Imports a folder of your own SVGs or PNGs into Graphics (shapes, stickers or masks) and rewrites the manifest |
 | `make-stickers.py` | Draws the bundled school sticker set as SVG and rewrites `png.json` |
 | `make-school-templates.py` | Generates the school template pack (`--remove` takes it back out) |
 | `make-slide-themes.py` | Generates the five themed slide decks (`--remove` takes them back out) |
