@@ -90,12 +90,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
       width: 100%;
       height: @control-h-lg;
       margin: 0;
       font-size: @text-sm;
       font-weight: 600;
+      // Button puts everything it is given inside one span, so the button's
+      // own gap has nothing to space out; the star and the words are spaced
+      // in there, which lines them up on the same centre as well.
+      > span {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
       svg {
         width: 13px;
         height: 13px;
