@@ -45,7 +45,9 @@
     width: 30px;
     height: 16px;
     border-radius: @radius-sm - 3px;
-    box-shadow: inset 0 0 0 1px @line-strong;
+    // Outside rather than inset, because what the row paints is drawn inside
+    // this box and an inset ring would go under it.
+    box-shadow: 0 0 0 1px @line-strong;
     overflow: hidden;
     background-size: 8px 8px;
     font-size: @text-xs;
