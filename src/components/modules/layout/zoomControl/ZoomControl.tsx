@@ -21,7 +21,6 @@ const local = proxy({
   hideControl: false,
   activezoomIndex: 0,
   show: false,
-  zoom: { value: 0, text: '' } as TZoomData,
   otherIndex: -1,
 })
 
@@ -49,7 +48,6 @@ function autoFixTop() {
 }
 
 function applyZoom(next: TZoomData) {
-  local.zoom = next
   let realValue = next.value
   if (realValue === -1) {
     realValue = calcZoom()
@@ -142,8 +140,6 @@ function mousewheelZoom(down: boolean) {
   if (down && value <= 1) return
   const next = down ? value - 2 : value + 2
   updateZoom(next)
-  local.zoom.text = next + '%'
-  local.zoom.value = next
   autoFixTop()
   const closest = findClosestNumber(
     value,
