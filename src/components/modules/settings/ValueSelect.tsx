@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Popover from '@/components/ui/Popover'
 import Tabs from '@/components/ui/Tabs'
+import { ChevronDownIcon } from '@/components/ui/icons'
 import { cx } from '@/utils/dom'
 import './valueSelect.less'
 
@@ -13,11 +14,14 @@ type Props = {
   inputWidth?: string
   readonly?: boolean
   step?: number
+  /** `underline` drops the box and the chevron, leaving a rule under the value. */
+  variant?: 'boxed' | 'underline'
+  className?: string
   onChange?: (value: Record<string, any> | string | number) => void
   onFinish?: (value: Record<string, any> | string | number) => void
 }
 
-export default function ValueSelect({ label = '', value = {}, suffix = '', data = {}, disable = true, inputWidth = '80px', readonly = false, step = 1, onChange, onFinish }: Props) {
+export default function ValueSelect({ label = '', value = {}, suffix = '', data = {}, disable = true, inputWidth = '80px', readonly = false, step = 1, variant = 'boxed', className, onChange, onFinish }: Props) {
   const isList = Array.isArray(data)
   const groupKeys = useMemo(() => (isList ? [] : Object.keys(data)), [data, isList])
   const [activeTab, setActiveTab] = useState('')
@@ -87,7 +91,7 @@ export default function ValueSelect({ label = '', value = {}, suffix = '', data 
   )
 
   return (
-    <div className="value-select" style={{ width: inputWidth }}>
+    <div className={cx('value-select', { 'is-underline': variant === 'underline' }, className || '')} style={{ width: inputWidth }}>
       {label ? <p className="input-label">{label}</p> : null}
       <Popover placement="bottom-end" width="auto" open={open} onOpenChange={setOpen} content={content}>
         <div className={cx('input-wrap', { active: inputBorder })} style={{ width: inputWidth }}>
@@ -108,9 +112,11 @@ export default function ValueSelect({ label = '', value = {}, suffix = '', data 
             }}
             onKeyDown={opNumber}
           />
-          <div className="op-btn">
-            <i className="iconfont icon-down1" />
-          </div>
+          {variant === 'underline' ? null : (
+            <div className="op-btn">
+              <ChevronDownIcon />
+            </div>
+          )}
         </div>
       </Popover>
     </div>

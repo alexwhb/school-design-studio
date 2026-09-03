@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSnapshot } from 'valtio'
-import alignIconList from '@/assets/data/AlignListData'
-import IconItemSelect, { type TIconItemSelectData } from '../settings/IconItemSelect'
+import AlignRow from '../settings/AlignRow'
+import SelectionHeader from '../settings/SelectionHeader'
+import { type TIconItemSelectData } from '../settings/IconItemSelect'
 import AnimateWrap from '../settings/AnimateSelect/AnimateWrap'
 import Button from '@/components/ui/Button'
 import Segmented from '@/components/ui/Segmented'
 import Tooltip from '@/components/ui/Tooltip'
-import { ChevronLeftIcon, ChevronRightIcon, DistributeHorizontalIcon, DistributeVerticalIcon } from '@/components/ui/icons'
+import { ChevronLeftIcon, ChevronRightIcon } from '@/components/ui/icons'
 import { panelState, setRightOpen } from '@/store/panels'
 import { widgetState } from '@/store/state'
 import { setShowMoveable } from '@/store/control'
@@ -20,18 +21,14 @@ import './stylePanel.less'
 /** Evening out the gaps needs a gap on either side of something, so three widgets. */
 const DISTRIBUTE_MINIMUM = 3
 
-const distributeIconList: TIconItemSelectData[] = [
-  { key: 'distribute', Icon: DistributeHorizontalIcon, tip: 'Distribute horizontally', value: 'horizontal' },
-  { key: 'distribute', Icon: DistributeVerticalIcon, tip: 'Distribute vertically', value: 'vertical' },
-]
-
 export default function StylePanel() {
   const [activeTab, setActiveTab] = useState(0)
   const [showGroupCombined, setShowGroupCombined] = useState(false)
   const snap = useSnapshot(widgetState)
   const { rightOpen } = useSnapshot(panelState)
-  const activeType = snap.dActiveElement?.type
-  const activeUuid = snap.dActiveElement?.uuid
+  const active = snap.dActiveElement
+  const activeType = active?.type
+  const activeUuid = active?.uuid
   const selectCount = snap.dSelectWidgets.length
   /** The page has no entrance of its own; everything drawn on it does. */
   const animatable = !!activeType && activeType !== 'page'
@@ -47,12 +44,11 @@ export default function StylePanel() {
     realCombined()
   }
 
-  const alignItems = useMemo(
-    () => [...alignIconList, ...distributeIconList.map((item) => ({ ...item, disabled: selectCount < DISTRIBUTE_MINIMUM }))],
-    [selectCount],
-  )
-
-  function alignAction(item: TIconItemSelectData) {
+  /**
+   * Lining up more than one thing measures them against the box the selection
+   * makes, so the group has to be worked out before anything moves.
+   */
+  function alignSelection(item: TIconItemSelectData) {
     if (item.key === 'distribute') {
       distributeGeometry({ distribute: item.value as any, uuids: widgetState.dSelectWidgets.map((widget) => widget.uuid) })
       return
@@ -63,6 +59,12 @@ export default function StylePanel() {
         updateAlign({ align: item.value as any, uuid: element.uuid, group })
       })
     })
+  }
+
+  /** One thing lines up against the page. */
+  function alignOne(item: TIconItemSelectData) {
+    if (!activeUuid) return
+    updateAlign({ align: item.value as any, uuid: activeUuid })
   }
 
   function layerChange(newLayer: TdWidgetData[]) {
@@ -104,15 +106,23 @@ export default function StylePanel() {
         </Tooltip>
       </div>
       <div className="style-wrap" style={{ display: activeTab === 0 ? undefined : 'none' }}>
-        <div className="multi-select" style={{ display: showGroupCombined ? undefined : 'none' }}>
-          <Button plain type="primary" className="gounp__btn" onClick={handleCombine}>
-            Group
-          </Button>
-          <IconItemSelect label="" data={alignItems} onFinish={alignAction} />
-        </div>
-        {animatable ? (
-          <div className="animate-slot" style={{ display: showGroupCombined ? 'none' : undefined }}>
-            <AnimateWrap key={activeUuid} widget={widgetState.dActiveElement as TdWidgetData} />
+        {showGroupCombined ? (
+          <div className="multi-select">
+            <Button plain type="primary" className="gounp__btn" onClick={handleCombine}>
+              Group
+            </Button>
+            <AlignRow distribute distributeDisabled={selectCount < DISTRIBUTE_MINIMUM} onFinish={alignSelection} />
+            <span className="panel-rule" />
+          </div>
+        ) : activeType === 'page' ? (
+          // The page is what the panel falls back to, so it says so rather than
+          // opening on a heading that looks like it belongs to something.
+          <p className="style-empty">Nothing selected</p>
+        ) : active ? (
+          <div className="selection-block">
+            <SelectionHeader element={active as TdWidgetData} />
+            <AlignRow onFinish={alignOne} />
+            <span className="panel-rule" />
           </div>
         ) : null}
         {StyleComp ? (
@@ -122,6 +132,12 @@ export default function StylePanel() {
           // their content height.
           <div style={{ display: showGroupCombined ? 'none' : 'contents' }}>
             <StyleComp />
+          </div>
+        ) : null}
+        {animatable && !showGroupCombined ? (
+          <div className="animate-slot">
+            <span className="panel-rule" />
+            <AnimateWrap key={activeUuid} widget={widgetState.dActiveElement as TdWidgetData} />
           </div>
         ) : null}
       </div>

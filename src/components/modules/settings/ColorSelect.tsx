@@ -3,7 +3,9 @@ import { useSnapshot } from 'valtio'
 import { brandState } from '@/common/methods/brandKit'
 import { cx } from '@/utils/dom'
 import ColorPicker, { type ColorChangeData } from '@/packages/color-picker/ColorPicker'
+import Checkbox from '@/components/ui/Checkbox'
 import Popover from '@/components/ui/Popover'
+import { PencilIcon } from '@/components/ui/icons'
 import { setShowMoveable } from '@/store/control'
 import './colorSelect.less'
 
@@ -15,6 +17,11 @@ type Props = {
   width?: string
   modes?: string[]
   className?: string
+  /** `row` is the settings-panel shape: a checkbox, a wide swatch, a name and a pencil. */
+  variant?: 'field' | 'row'
+  /** A row's checkbox, for the panels where the colour can be switched off entirely. */
+  enabled?: boolean
+  onEnabledChange?: (enabled: boolean) => void
   /** See Popover: for a swatch that colours a text selection. */
   keepOpenOnFocusOutside?: boolean
   onOpenChange?: (open: boolean) => void
@@ -23,7 +30,7 @@ type Props = {
   onChange?: (data: ColorChangeData) => void
 }
 
-export default function ColorSelect({ label = '', value = '', width = '100%', modes = ['Solid'], className, keepOpenOnFocusOutside, onOpenChange, onValueChange, onChange }: Props) {
+export default function ColorSelect({ label = '', value = '', width = '100%', modes = ['Solid'], className, variant = 'field', enabled, onEnabledChange, keepOpenOnFocusOutside, onOpenChange, onValueChange, onChange }: Props) {
   const [innerColor, setInnerColor] = useState('')
   const [open, setOpen] = useState(false)
   // Held here so it survives the popover closing; see ColorPicker.
@@ -47,6 +54,18 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
     return '#' + (hex.length === 8 && hex.endsWith('FF') ? hex.slice(0, 6) : hex)
   }, [innerColor])
 
+  /**
+   * Which of the school's colours this is, if it is one of them. Worth saying:
+   * a hex on its own tells you nothing about whether the design is on-brand,
+   * and the picker is the only other place that would have told you.
+   */
+  const brandName = useMemo(() => {
+    const hex = (innerColor || '').replace(/ff$/i, '').toLowerCase()
+    if (!hex) return ''
+    const index = brandColors.findIndex((colour) => String(colour).toLowerCase().replace(/ff$/i, '') === hex)
+    return index < 0 ? '' : `brand colour ${index + 1}`
+  }, [innerColor, brandColors])
+
   function handleValueChange(next: string) {
     setInnerColor(next)
     onValueChange?.(next)
@@ -59,11 +78,40 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
     onOpenChange?.(next)
   }
 
+  const picker = (
+    <ColorPicker value={innerColor} modes={modes} history={history} presets={presets} onHistoryChange={setHistory} onValueChange={handleValueChange} onChange={onChange} />
+  )
+
+  if (variant === 'row') {
+    return (
+      <div className={cx('color__select', 'is-row', { 'is-off': !!onEnabledChange && !enabled }, className || '')}>
+        <div className="color__row">
+          {onEnabledChange ? <Checkbox className="color__check" value={!!enabled} onChange={onEnabledChange} /> : null}
+          <Popover placement="left-end" width="auto" open={open} onOpenChange={handleOpenChange} keepOpenOnFocusOutside={keepOpenOnFocusOutside} content={picker}>
+            <div className="color__field" role="button" aria-label={label || 'Colour'}>
+              <span className="color__chip transparent-bg">
+                <span className="color__chip-fill" style={{ background: innerColor }} />
+              </span>
+              <span className="color__label">{label}</span>
+              <span className="color__pencil">
+                <PencilIcon />
+              </span>
+            </div>
+          </Popover>
+        </div>
+        <p className="color__value">
+          {readableColor}
+          {brandName ? <em> · {brandName}</em> : null}
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className={cx('color__select', className || '')} style={{ width }}>
       {label ? <p className="input-label">{label}</p> : null}
       <div className="content">
-        <Popover placement="left-end" width="auto" open={open} onOpenChange={handleOpenChange} keepOpenOnFocusOutside={keepOpenOnFocusOutside} content={<ColorPicker value={innerColor} modes={modes} history={history} presets={presets} onHistoryChange={setHistory} onValueChange={handleValueChange} onChange={onChange} />}>
+        <Popover placement="left-end" width="auto" open={open} onOpenChange={handleOpenChange} keepOpenOnFocusOutside={keepOpenOnFocusOutside} content={picker}>
           <div className="color__field">
             <span className="color__chip transparent-bg">
               <span className="color__chip-fill" style={{ background: innerColor }} />

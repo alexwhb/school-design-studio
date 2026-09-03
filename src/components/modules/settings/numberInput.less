@@ -94,3 +94,57 @@
   color: @ink-3;
   transform-origin: left;
 }
+
+// The underline shape. The box goes, the key comes out in front of it in mono,
+// and all that is left of the control is the rule the number sits on — which is
+// what lets four of them sit two to a row without the panel turning into a
+// grid of boxes.
+.number-input2.is-underline {
+  flex: 1 1 auto;
+  gap: @space-2;
+  height: @control-h;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+
+  &:hover,
+  &:focus-within {
+    border: 0;
+    box-shadow: none;
+  }
+
+  .input-key {
+    flex: none;
+    min-width: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: @text-xs;
+    color: @ink-3;
+    user-select: none;
+  }
+
+  .input-wrap {
+    align-items: center;
+    height: @control-h - 3px;
+    border-bottom: 1px solid @line-strong;
+    transition: border-color 0.12s ease;
+  }
+  &:hover .input-wrap {
+    border-bottom-color: @ink-4;
+  }
+  .input-wrap:focus-within {
+    border-bottom-color: @accent;
+  }
+
+  .real-input {
+    height: 100%;
+    font-size: @text-base;
+  }
+
+  .input-suffix {
+    flex: none;
+    font-size: @text-sm;
+    color: @ink-3;
+    user-select: none;
+  }
+}

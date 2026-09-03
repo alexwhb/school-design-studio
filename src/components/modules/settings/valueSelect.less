@@ -45,10 +45,11 @@
       align-items: center;
       flex: none;
       height: @control-h - 2px;
-      .icon-down1 {
-        margin-right: @space-1;
-        font-size: 16px;
-        color: @ink-4;
+      padding-right: @space-2;
+      color: @ink-3;
+      svg {
+        width: 10px;
+        height: 10px;
       }
     }
   }
@@ -104,5 +105,41 @@
   .el-tabs__nav-wrap::after {
     height: 1px;
     background-color: @line;
+  }
+}
+
+// The bordered select the mockup uses for a font or a blend mode: taller than a
+// field, and its own row.
+.value-select.is-tall .input-wrap {
+  height: @control-h-lg;
+  .real-input {
+    height: @control-h-lg - 2px;
+    font-size: @text-base;
+  }
+  .op-btn {
+    height: @control-h-lg - 2px;
+  }
+}
+
+// The underline shape, matching NumberInput's: no box, no chevron, a rule under
+// the value and nothing else.
+.value-select.is-underline .input-wrap {
+  height: @control-h;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid @line-strong;
+  border-radius: 0;
+
+  &:hover {
+    border-bottom-color: @ink-4;
+  }
+  &.active,
+  &:focus-within {
+    border-bottom-color: @accent;
+    box-shadow: none;
+  }
+  .real-input {
+    font-size: @text-base;
   }
 }

@@ -1,0 +1,36 @@
+.align-row {
+  display: flex;
+  align-items: center;
+  gap: @space-2;
+  width: 100%;
+
+  &__group {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__split {
+    flex: none;
+    width: 1px;
+    height: 18px;
+    background: @line;
+  }
+}
+
+// A flat run of icon buttons rather than the boxed bar: the row is already
+// grouped by its hairline, and a box round each half would be two boxes doing
+// the work of one line.
+.align-row .icon-item-select .btn__bar,
+.icon-item-select.arrange-row .btn__bar {
+  height: 26px;
+  padding: 0;
+  margin-bottom: 0;
+  background: transparent;
+  border: 0;
+  gap: 1px;
+
+  .list-item {
+    height: 26px;
+    border-radius: @radius-sm - 2px;
+  }
+}

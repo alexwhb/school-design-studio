@@ -40,3 +40,100 @@
     .field-label();
   }
 }
+
+// The row shape: a check to switch the colour off, a wide swatch, the name of
+// what it paints, and a pencil that opens the picker. The hex sits under it in
+// mono rather than in the row, because what you read the row for is "is there a
+// fill", and what you read the hex for is "is that our gold".
+.color__select.is-row {
+  width: 100%;
+
+  .color__row {
+    display: flex;
+    align-items: center;
+    gap: @space-2;
+    height: @control-h;
+  }
+
+  .color__check {
+    flex: none;
+    height: auto;
+    margin: 0;
+  }
+
+  .color__field {
+    flex: 1;
+    min-width: 0;
+    gap: @space-3;
+    height: @control-h;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+
+    &:hover,
+    &:focus-within {
+      border: 0;
+      box-shadow: none;
+    }
+    &:hover .color__pencil {
+      color: @ink;
+    }
+  }
+
+  .color__chip {
+    width: 30px;
+    height: 16px;
+    border-radius: @radius-sm - 3px;
+  }
+  .color__chip-fill {
+    border-radius: @radius-sm - 3px;
+  }
+
+  .color__label {
+    flex: 1;
+    min-width: 0;
+    font-size: @text-base;
+    color: @ink;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .color__pencil {
+    display: flex;
+    align-items: center;
+    flex: none;
+    color: @ink-3;
+    transition: color 0.12s ease;
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  // The hex, and which of the school's colours it is.
+  .color__value {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: @text-xs;
+    color: @ink-4;
+  }
+  .color__value em {
+    font-style: normal;
+  }
+
+  // An unchecked row is off, and reads as off.
+  &.is-off .color__label {
+    color: @ink-3;
+  }
+  &.is-off .color__chip-fill {
+    opacity: 0.35;
+  }
+}
+
+// The check itself, at the size the panel's rows are drawn to.
+.color__select.is-row .el-checkbox {
+  height: auto;
+  margin-right: 0;
+}

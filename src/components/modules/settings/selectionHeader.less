@@ -1,0 +1,81 @@
+.selection-header {
+  display: flex;
+  align-items: center;
+  gap: @space-2;
+  width: 100%;
+  min-height: @control-h;
+  padding-bottom: @field-gap;
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    font-size: @text-base;
+    font-weight: 600;
+    color: @ink;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    flex: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: @text-xs;
+    color: @ink-4;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 2px;
+    flex: none;
+  }
+
+  &__action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: @radius-sm - 1px;
+    background: transparent;
+    color: @ink-3;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+    &:hover {
+      background: @surface-2;
+      color: @ink;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+  }
+}
+
+// The kind of thing a layer is, as one character in a tinted square.
+.layer-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: @radius-sm - 2px;
+  background: @accent-soft;
+  color: @accent;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}

@@ -11,11 +11,16 @@ type Props = {
   minValue?: string | number
   type?: string
   prepend?: string
+  /** `underline` is the property-inspector shape: a mono key, then a rule under the number. */
+  variant?: 'boxed' | 'underline'
+  /** A unit shown after an underline field — px, °. */
+  suffix?: string
+  className?: string
   onChange: (value: number | string) => void
   onFinish?: (value: number | string) => void
 }
 
-export default function NumberInput({ label = '', value = '', editable = true, step = 1, maxValue, minValue, type, prepend, onChange, onFinish }: Props) {
+export default function NumberInput({ label = '', value = '', editable = true, step = 1, maxValue, minValue, type, prepend, variant = 'boxed', suffix, className, onChange, onFinish }: Props) {
   const [inputBorder, setInputBorder] = useState(false)
   const tagText = useRef<string | number>('')
   const valueRef = useRef(value)
@@ -113,11 +118,24 @@ export default function NumberInput({ label = '', value = '', editable = true, s
     )
   }
 
-  return (
-    <div className="number-input2">
-      <div className="input-wrap">
-        <input className={cx('real-input', { disable: !editable })} type="text" value={value} readOnly={!editable} onChange={(e) => updateValue(e.target.value)} onFocus={focusInput} onBlur={blurInput} onKeyUp={verifyNumber} onKeyDown={opNumber} />
+  const field = <input className={cx('real-input', { disable: !editable })} type="text" value={value} readOnly={!editable} onChange={(e) => updateValue(e.target.value)} onFocus={focusInput} onBlur={blurInput} onKeyUp={verifyNumber} onKeyDown={opNumber} />
+
+  // The key leads rather than trails, and is outside the field: a column of
+  // these reads as a table of properties, which is what the eye wants when four
+  // of them sit two by two.
+  if (variant === 'underline') {
+    return (
+      <div className={cx('number-input2', 'is-underline', className || '')}>
+        {label ? <span className="input-key">{label}</span> : null}
+        <div className="input-wrap">{field}</div>
+        {suffix ? <span className="input-suffix">{suffix}</span> : null}
       </div>
+    )
+  }
+
+  return (
+    <div className={cx('number-input2', className || '')}>
+      <div className="input-wrap">{field}</div>
       <span className="input-axis">{label}</span>
     </div>
   )

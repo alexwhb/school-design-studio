@@ -1,9 +1,12 @@
-// The panel already sets the gutter every section shares, so this only owns the
-// space and the rule that mark it off from the element's own settings below.
-#style-panel .animate-slot {
-  padding: @space-2 0 @field-gap;
-  border-bottom: 1px solid @line-soft;
-  margin-bottom: @space-2;
+// The band that separates one block of settings from the next. It runs the full
+// width of the panel rather than the content's, which is what makes a column of
+// settings read as a stack rather than a list — the same rule PanelSection puts
+// between two sections, for the blocks that are not sections.
+.panel-rule {
+  display: block;
+  height: 1px;
+  background: @line;
+  margin: @space-4 -@panel-gutter;
 }
 
 #style-panel {
@@ -60,20 +63,29 @@
   // What the panel shows when more than one thing is selected: group them, or
   // line them up.
   .multi-select {
-    padding: @section-gap 0;
+    padding-top: @space-1;
+  }
+
+  // Nothing is selected, so the page's own settings are what follows.
+  .style-empty {
+    margin: 0;
+    padding: @space-1 0 @field-gap;
+    font-size: @text-base;
+    color: @ink-3;
   }
 
   .style-wrap {
     flex: 1;
     overflow: auto;
     width: 100%;
-    padding: @space-1 @panel-gutter @space-6;
+    padding: 2px @panel-gutter @space-5;
   }
 
   .layer-wrap {
     flex: 1;
     overflow: auto;
     width: 100%;
+    padding: @space-1 @space-2 @space-5;
   }
 }
 
@@ -110,6 +122,6 @@
 .gounp {
   &__btn {
     width: 100%;
-    margin-bottom: @section-gap;
+    margin-bottom: @field-gap;
   }
 }
