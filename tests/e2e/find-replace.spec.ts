@@ -63,7 +63,7 @@ test('Next goes to the page the match is on and selects the box holding it', asy
   await page.getByRole('button', { name: 'Next', exact: true }).click()
   await page.waitForTimeout(900)
   await expect(page.locator(TALLY)).toHaveText('2 of 2, on 2 pages')
-  await expect(page.locator('.artboards .btn__label')).toHaveText('Page 2/2')
+  await expect(page.locator('.artboards .btn__label')).toHaveText('Page 2')
   expect(await drawnSelectionBoxes(page), 'the box holding the match is selected').toBe(1)
 })
 

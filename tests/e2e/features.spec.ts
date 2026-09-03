@@ -21,7 +21,8 @@ test.beforeEach(async ({ page }) => {
 /* ------------------------------------------------------------------ pages */
 
 test('the page pill names the page you are on', async ({ page }) => {
-  await expect(page.locator('.artboards .btn__label')).toHaveText('Page 1/1')
+  await expect(page.locator('.artboards .btn__label')).toHaveText('Page 1')
+  await expect(page.locator('.artboards .btn__count')).toHaveText('of 1')
   await expandPageStrip(page)
   await page.locator('.artboards .item-add').click()
   await page.waitForTimeout(800)
@@ -77,7 +78,9 @@ test('renaming a page shows the new name on the pill', async ({ page }) => {
 
   await page.locator('.artboards .icon-btn').click()
   await page.waitForTimeout(500)
-  await expect(page.locator('.artboards .btn__label')).toHaveText('Welcome · 1/1')
+  await expect(page.locator('.artboards .btn__label')).toHaveText('Welcome')
+  // A named page has no number left in it, so the count carries the position.
+  await expect(page.locator('.artboards .btn__count')).toHaveText('1 of 1')
 })
 
 test('moving a page left keeps you looking at the same page', async ({ page }) => {
