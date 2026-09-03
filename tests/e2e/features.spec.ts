@@ -641,6 +641,7 @@ test('an effect layer offers Skew, which older presets did not carry', async ({ 
 /** Puts the Curve slider a fraction of the way along its run: 1 is a half turn. */
 async function setCurve(page: import('@playwright/test').Page, fraction: number) {
   const runway = page.locator('#w-text-style #number-slider', { hasText: 'Curve' }).locator('.el-slider__runway')
+  await runway.scrollIntoViewIfNeeded()
   const box = (await runway.boundingBox())!
   await page.mouse.move(box.x + Math.min(box.width * fraction, box.width - 1), box.y + box.height / 2)
   await page.mouse.down()
@@ -1004,6 +1005,7 @@ async function addShape(page: Page, search: string) {
 async function dragSlider(page: Page, panel: string, label: string, fraction: number) {
   const slider = page.locator(`${panel} #number-slider`, { hasText: label })
   const runway = slider.locator('.el-slider__runway')
+  await runway.scrollIntoViewIfNeeded()
   const box = (await runway.boundingBox())!
   await page.mouse.move(box.x + Math.min(box.width * fraction, box.width - 1), box.y + box.height / 2)
   await page.mouse.down()

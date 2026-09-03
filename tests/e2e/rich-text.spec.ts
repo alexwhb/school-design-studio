@@ -281,6 +281,9 @@ test('a curved heading keeps a bold word bold, one character at a time', async (
   await selectFirstWidget(page)
 
   const runway = page.locator('#w-text-style #number-slider', { hasText: 'Curve' }).locator('.el-slider__runway')
+  // Curve sits with the effects at the foot of the panel, which is past the
+  // bottom of a 900px window.
+  await runway.scrollIntoViewIfNeeded()
   const box = (await runway.boundingBox())!
   await page.mouse.move(box.x + box.width - 1, box.y + box.height / 2)
   await page.mouse.down()
