@@ -75,8 +75,11 @@
     }
   }
 
-  // The state a layer is *not* in stays out of the way until the row is under
-  // the pointer; the state it is in is always on show.
+  // Both toggles are on every row, always. Which layers are hidden or locked is
+  // something you read off the whole list at a glance, and hiding the buttons
+  // until the pointer arrives means sweeping down the list to find out. So the
+  // state a layer is *not* in is drawn quietly and the state it *is* in is
+  // drawn bright, and neither ever moves.
   .widget-act {
     display: flex;
     align-items: center;
@@ -90,15 +93,13 @@
     background: transparent;
     color: @ink-4;
     cursor: pointer;
-    opacity: 0;
-    transition: background-color 0.12s ease, color 0.12s ease, opacity 0.12s ease;
+    transition: background-color 0.12s ease, color 0.12s ease;
 
     svg {
       width: 13px;
       height: 13px;
     }
     &.is-on {
-      opacity: 1;
       color: @ink;
     }
     &:hover {
@@ -107,12 +108,7 @@
     }
     &:focus-visible {
       .focus-ring();
-      opacity: 1;
     }
-  }
-
-  .widget:hover .widget-act {
-    opacity: 1;
   }
 
   // A hidden layer is still in the list and still selectable; it just stops

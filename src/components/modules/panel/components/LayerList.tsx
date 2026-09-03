@@ -177,7 +177,7 @@ export default function LayerList({ data, onChange }: Props) {
                 <Tooltip content={element.hidden ? 'Show this layer' : 'Hide this layer'} placement="top" showAfter={400}>
                   <button
                     type="button"
-                    className={cx('widget-act', element.hidden ? 'sd-eye-no' : 'sd-eye-see', { 'is-on': !!element.hidden })}
+                    className={cx('widget-act', { 'is-on': !!element.hidden })}
                     aria-label={element.hidden ? 'Show this layer' : 'Hide this layer'}
                     onDoubleClick={stopEvent}
                     onClick={(e) => {
@@ -191,7 +191,7 @@ export default function LayerList({ data, onChange }: Props) {
                 <Tooltip content={element.lock ? 'Unlock this layer' : 'Lock this layer'} placement="top" showAfter={400}>
                   <button
                     type="button"
-                    className={cx('widget-act', element.lock ? 'sd-suoding' : 'sd-jiesuo', { 'is-on': !!element.lock })}
+                    className={cx('widget-act', { 'is-on': !!element.lock })}
                     aria-label={element.lock ? 'Unlock this layer' : 'Lock this layer'}
                     onDoubleClick={stopEvent}
                     onClick={(e) => {

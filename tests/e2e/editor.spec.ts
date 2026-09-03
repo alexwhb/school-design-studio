@@ -302,7 +302,7 @@ test('hiding a layer takes it off the canvas, and showing it puts it back', asyn
   await page.waitForTimeout(400)
 
   const row = page.locator('.widget-list .widget').first()
-  await row.locator('.sd-eye-see').click()
+  await row.locator('[aria-label="Hide this layer"]').click()
   await page.waitForTimeout(400)
 
   await expect(page.locator(WIDGET)).toHaveCount(1)
@@ -310,7 +310,7 @@ test('hiding a layer takes it off the canvas, and showing it puts it back', asyn
   await expect(page.locator('.widget-list .widget')).toHaveCount(2)
   await expect(row).toHaveClass(/widget-hidden/)
 
-  await row.locator('.sd-eye-no').click()
+  await row.locator('[aria-label="Show this layer"]').click()
   await page.waitForTimeout(400)
   await expect(page.locator(WIDGET)).toHaveCount(2)
   await expect(row).not.toHaveClass(/widget-hidden/)
@@ -323,7 +323,7 @@ test('hiding the layer you had selected lets go of it', async ({ page }) => {
 
   await page.getByText('Layers', { exact: true }).click()
   await page.waitForTimeout(400)
-  await page.locator('.widget-list .widget').first().locator('.sd-eye-see').click()
+  await page.locator('.widget-list .widget').first().locator('[aria-label="Hide this layer"]').click()
   await page.waitForTimeout(500)
 
   await expect(page.locator(WIDGET)).toHaveCount(0)
@@ -629,8 +629,8 @@ test('ctrl+A leaves a hidden layer out of the selection', async ({ page }) => {
 
   await page.getByText('Layers', { exact: true }).click()
   await page.waitForTimeout(400)
-  await page.locator('.widget-list .widget').nth(0).locator('.sd-eye-see').click()
-  await page.locator('.widget-list .widget').nth(1).locator('.sd-eye-see').click()
+  await page.locator('.widget-list .widget').nth(0).locator('[aria-label="Hide this layer"]').click()
+  await page.locator('.widget-list .widget').nth(1).locator('[aria-label="Hide this layer"]').click()
   await page.waitForTimeout(400)
   await expect(page.locator(WIDGET)).toHaveCount(1)
 

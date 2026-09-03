@@ -365,9 +365,11 @@ sits in front of what.
 
 A row is the kind of thing it is — one character in a small tinted square, or a
 thumbnail for a photograph — then its name, then two toggles. Double-click a row
-to rename it; clearing the name hands it back to the element's own text. The
-state a layer is not in stays out of the way until you hover over the row; the
-state it is in is always on show.
+to rename it; clearing the name hands it back to the element's own text. Both
+toggles are on every row, always: the state a layer is not in is drawn quietly
+and the state it is in is drawn bright, so which layers are hidden or locked is
+something you read off the list rather than something you have to go looking
+for.
 
 - **Lock** holds an element where it is. It is still drawn and still exported,
   and it can still be selected — that is how you see it is locked — but it will
