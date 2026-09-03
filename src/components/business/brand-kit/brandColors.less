@@ -1,0 +1,239 @@
+// The school's colours: a column of rows, one of which can turn into the card
+// that edits it. Both live here so the two heights stay related — the card is
+// the row grown downwards, not a different control in the same place.
+.brand-colours {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brand-swatch {
+  position: relative;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: @space-3;
+    width: 100%;
+    height: 34px;
+    padding: 0 @space-3 0 10px;
+    border: 0;
+    border-radius: @radius;
+    background: @surface-2;
+    color: @ink;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+    &:hover {
+      background: @surface-3;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+  }
+
+  &__chip {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: @radius-sm - 1px;
+    box-shadow: inset 0 0 0 1px @line-strong;
+  }
+
+  &__role {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: @text-sm;
+  }
+
+  // The hue's common name, beside the role rather than instead of it: it says
+  // which blue this is without pretending to be what the colour is called.
+  &__tone {
+    color: @ink-3;
+  }
+
+  &__hex {
+    flex: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: @text-xs;
+    color: @ink-3;
+  }
+
+  // Editing is the deliberate act, so the pencil only appears under the
+  // pointer; the row itself is always ready to paint with the colour.
+  &__edit {
+    .icon-button();
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    color: @ink-3;
+    opacity: 0;
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+  &:hover &__edit,
+  &__edit:focus-visible {
+    opacity: 1;
+  }
+  // The hex would sit under the pencil, so it steps aside while the pointer
+  // is on the row rather than being covered by it.
+  &:hover &__hex {
+    visibility: hidden;
+  }
+
+  &--add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    height: @control-h-lg;
+    padding: 0;
+    background: transparent;
+    border: 1px dashed @line-strong;
+    border-radius: @radius;
+    color: @ink-3;
+    font-family: inherit;
+    font-size: @text-sm;
+    cursor: pointer;
+    transition: border-color 0.12s ease, color 0.12s ease;
+    &:hover {
+      border-color: @accent-border;
+      color: @accent;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
+}
+
+// ---- the row while it is being edited --------------------------------------
+.brand-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 10px;
+  background: @surface-2;
+  border: 1px solid @accent-border;
+  border-radius: @radius;
+
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  &__chip {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: @radius-sm;
+    box-shadow: inset 0 0 0 1px @line-strong;
+  }
+
+  &__hex {
+    flex: 1;
+    min-width: 0;
+    .el-input__wrapper {
+      height: 26px;
+    }
+    .el-input__inner {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: @text-sm;
+      text-transform: uppercase;
+    }
+  }
+
+  // The kit's own colours and the ones this design already uses, so most
+  // edits are a single click and never a hunt through the wheel.
+  &__strip {
+    display: flex;
+    gap: 5px;
+  }
+
+  &__pick {
+    flex: 1;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: @radius-sm - 1px;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px @line-strong;
+    &.is-on {
+      box-shadow: inset 0 0 0 2px @accent;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+  }
+
+  &__note {
+    margin: 0;
+    font-size: @text-xs;
+    line-height: 1.45;
+    color: @ink-3;
+  }
+
+  &__actions {
+    display: flex;
+    gap: @space-2;
+    .el-button {
+      margin: 0;
+      height: @control-h;
+      font-size: @text-sm;
+    }
+    .brand-editor__save {
+      flex: 1;
+    }
+    .brand-editor__cancel {
+      flex: none;
+      width: 74px;
+    }
+  }
+
+  // Quiet, and last: taking a colour out of the kit is not what this card is
+  // for, but it is the only place the colour is on its own.
+  &__remove {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: @ink-3;
+    font-family: inherit;
+    font-size: @text-xs;
+    cursor: pointer;
+    &:hover {
+      color: @danger;
+    }
+    &:focus-visible {
+      .focus-ring();
+    }
+  }
+
+  // The picker is built for a popover of its own; in a card it is one more
+  // block in the column and takes the width it is given.
+  .color-picker {
+    min-width: 0;
+    width: 100%;
+
+    // With Solid the only mode there is nothing to switch between, so the
+    // picker's heading is just the word "Solid" over a card that is already
+    // about one colour.
+    > .title {
+      display: none;
+    }
+  }
+}
