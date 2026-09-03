@@ -87,8 +87,10 @@ function shapesMenu(armed: TDrawTool | null, preset: string | null, close: () =>
       label,
       Icon,
       shortcut,
-      // A line carrying a preset is the Arrow beside it rather than this one.
-      armed: tool === 'line' ? armed === 'line' && !preset : armed === tool,
+      // A line carrying a preset is the Arrow beside it rather than this one —
+      // except the Graphics panel's own "Line" preset, which draws the bare line
+      // and so is this tool under another name.
+      armed: tool === 'line' ? armed === 'line' && (!preset || preset === 'Line') : armed === tool,
       pick: () => {
         toggleDrawTool(tool)
         close()

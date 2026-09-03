@@ -71,6 +71,18 @@ export default [
     info: `P`,
   },
   {
+    feat: `Draw a line`,
+    info: `L`,
+  },
+  {
+    feat: `Draw an arrow`,
+    info: `A`,
+  },
+  {
+    feat: `Draw a text box`,
+    info: `T`,
+  },
+  {
     feat: `Delete`,
     info: `Delete / Backspace`,
   },
