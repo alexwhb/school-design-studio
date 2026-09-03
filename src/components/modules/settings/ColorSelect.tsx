@@ -11,6 +11,21 @@ import './colorSelect.less'
 
 export type { ColorChangeData as colorChangeData }
 
+/**
+ * A solid colour as six lower-case hex digits, or nothing at all.
+ *
+ * Only solid and fully opaque colours are comparable: a gradient has no one
+ * hex, and half a colour is not the colour. The alpha has to be looked at
+ * rather than trimmed off the end, or #0000FF would have its blue taken for an
+ * alpha and come out as #0000.
+ */
+function opaqueHex(color: string) {
+  const value = (color || '').trim().toLowerCase()
+  if (!/^#[0-9a-f]{6}([0-9a-f]{2})?$/.test(value)) return ''
+  if (value.length === 9 && value.slice(7) !== 'ff') return ''
+  return value.slice(0, 7)
+}
+
 type Props = {
   label?: string
   value?: string
@@ -60,9 +75,9 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
    * and the picker is the only other place that would have told you.
    */
   const brandName = useMemo(() => {
-    const hex = (innerColor || '').replace(/ff$/i, '').toLowerCase()
+    const hex = opaqueHex(innerColor)
     if (!hex) return ''
-    const index = brandColors.findIndex((colour) => String(colour).toLowerCase().replace(/ff$/i, '') === hex)
+    const index = brandColors.findIndex((colour) => opaqueHex(String(colour)) === hex)
     return index < 0 ? '' : `brand colour ${index + 1}`
   }, [innerColor, brandColors])
 
