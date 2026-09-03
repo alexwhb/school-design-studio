@@ -19,6 +19,30 @@ The fonts are the bundled Google Fonts under the OFL (see
 public/fonts/LICENSES.md); the copy is placeholder text for a fictional school
 that whoever uses the template is meant to overwrite.
 
+Each slide declares its brand roles, so it arrives in the school's colours and
+fonts rather than the theme's. Four of the five themes are a neutral ground
+with one colour on it, and that colour is their primary, so a school with a
+single colour in its kit gets a whole deck in it:
+
+    Editorial  201-205   brick red   primary
+    Swiss      206-210   red         primary
+    Academic   211-215   navy        primary   gold and deep gold  secondary
+    Dark       216-220   teal        primary
+    Pastel     221-225   rust        primary
+
+Nothing is marked "keep": a theme here is a way of setting a page — paper,
+grid, rules, the pairing of faces — and none of them means anything by its
+colour. What is left alone is written down in LEAVE below: the Academic
+theme's navy inks, which the app's neutral test lets through on saturation
+alone, and the three contact lines that sit on a panel the brand does repaint.
+
+Text boxes carry a role too, "heading", "body" or "keep". Because four of the
+five themes head their pages in the same face they read in, the default comes
+from the face and the headings, the big figures and the tracked-caps labels
+say so explicitly. The two monospaces keep themselves: the Editorial theme's
+voice is Plex Mono against Baskerville and the Dark theme's is JetBrains
+against Space Grotesk. tools/check-brand-roles.py checks the lot.
+
     python3 make-slide-themes.py            # write the pack
     python3 make-slide-themes.py --remove   # take it back out again
 
@@ -63,6 +87,33 @@ JETBRAINS = font('JetBrains Mono', 'jetbrains-mono-400-700.woff2')
 KARLA = font('Karla', 'karla-400-700.woff2')
 DM_SERIF = font('DM Serif Display', 'dm-serif-display-400.woff2')
 
+# --------------------------------------------------------------- brand roles --
+# Which part of a school's kit each face is asking for. A kit carries a heading
+# font and a body font; every text box says which of the two it wants, so a
+# slide added from the gallery arrives in the school's fonts without anything
+# having to be guessed back out of the font size.
+#
+# Archivo is the Academic theme's label face — banner titles, tracked-caps
+# eyebrows, the numbers on the project cards — so it asks for the heading font.
+# The two monospaces do not ask for anything: the Editorial theme's voice is
+# Plex Mono against Baskerville and the Dark theme's is JetBrains against
+# Space Grotesk, and swapping either for a school's body font is the one change
+# that would stop the theme being that theme.
+DISPLAY_FACES = {'DM Serif Display', 'Archivo'}
+KEEP_FACES = {'IBM Plex Mono', 'JetBrains Mono'}
+
+
+def default_role(font_):
+    if font_['value'] in KEEP_FACES:
+        return 'keep'
+    return 'heading' if font_['value'] in DISPLAY_FACES else 'body'
+
+
+def key(colour):
+    """A colour as the brand block writes it: six hex digits, no hash, no alpha."""
+    return colour.lstrip('#')[:6].lower()
+
+
 # Average glyph advance as a fraction of the font size, measured off a line of
 # mixed-case English. Only used to guess how many lines a paragraph will take,
 # which is what sets the height of its box: nothing reflows around a text
@@ -96,11 +147,16 @@ def line_count(body, *, font_, size, width):
 # ------------------------------------------------------------------ widgets --
 
 def text(body, *, font_, size, colour, weight=400, align='left', left, top,
-         width, height=None, line_height=1.3, spacing=0, italic=False):
+         width, height=None, line_height=1.3, spacing=0, italic=False, role=None):
     """A text layer.
 
     `body` may contain <br/> for a hard break. Height is worked out from the
     wrap unless you pass one.
+
+    `role` is the brand role the box asks for — 'heading', 'body' or 'keep' —
+    and defaults to whatever the face implies. Four of the five themes set
+    their headings in a reading face, so the headings, the big figures and the
+    tracked-caps labels pass it explicitly.
 
     Two things about the string. It is stored raw rather than percent-encoded,
     because picking a template in the gallery runs it through setTemplate
@@ -122,6 +178,7 @@ def text(body, *, font_, size, colour, weight=400, align='left', left, top,
         'left': left, 'top': top, 'transform': '',
         'lineHeight': line_height, 'letterSpacing': spacing,
         'fontSize': size, 'fontClass': dict(font_), 'fontFamily': font_['value'],
+        'brandRole': role or default_role(font_),
         'fontWeight': weight, 'fontStyle': 'italic' if italic else 'normal',
         'writingMode': 'horizontal-tb', 'textDecoration': 'none', 'color': colour,
         'textAlign': align, 'text': body,
@@ -424,7 +481,8 @@ def editorial_cover():
     top = 187
 
     heading = text(TITLE, font_=BASKERVILLE, size=104, weight=700, colour=E_INK,
-                   line_height=0.98, spacing=-2, left=col, top=top, width=col_w)
+                   line_height=0.98, spacing=-2, left=col, top=top, width=col_w,
+                   role='heading')
     lede = text('A review of the 2025–26 school year, and what our families can '
                 'expect in the year ahead.', font_=BASKERVILLE, size=38, italic=True,
                 colour=E_SOFT, line_height=1.35, left=col,
@@ -453,7 +511,7 @@ def editorial_numbers():
     layers = e_eyebrow(SECTIONS[0], '02')
     heading = text('Enrollment grew for a third year while class sizes held steady',
                    font_=BASKERVILLE, size=70, weight=700, colour=E_INK,
-                   line_height=1.05, left=E_LEFT, top=178, width=1250)
+                   line_height=1.05, left=E_LEFT, top=178, width=1250, role='heading')
     layers.append(heading)
 
     grid = heading['top'] + heading['height'] + 40
@@ -465,7 +523,7 @@ def editorial_numbers():
         x = E_LEFT + index * cell + pad_left
         width = cell - pad_left - (0 if index == 3 else 34)
         figure = text(number, font_=BASKERVILLE, size=86, colour=E_ACCENT,
-                      line_height=1.0, left=x, top=grid + 37, width=width)
+                      line_height=1.0, left=x, top=grid + 37, width=width, role='heading')
         note = text(caption, font_=BASKERVILLE, size=29, colour=E_INK, line_height=1.4,
                     left=x, top=figure['top'] + figure['height'] + 14, width=width)
         layers += [figure, note]
@@ -487,7 +545,7 @@ def editorial_numbers():
 def editorial_results():
     layers = e_eyebrow(SECTIONS[1], '03')
     heading = text(RESULTS_HEAD, font_=BASKERVILLE, size=70, weight=700, colour=E_INK,
-                   line_height=1.05, left=E_LEFT, top=178, width=1500)
+                   line_height=1.05, left=E_LEFT, top=178, width=1500, role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 38
     (table, table_w), (aside, aside_w) = columns(E_BODY_W, [1.6, 1], 64, left=E_LEFT)
@@ -523,7 +581,8 @@ def editorial_results():
 
     focus_top = top
     body = [text('Where we are focusing', font_=BASKERVILLE, size=32, weight=700,
-                 colour=E_INK, left=aside + 34, top=focus_top, width=aside_w - 34)]
+                 colour=E_INK, left=aside + 34, top=focus_top, width=aside_w - 34,
+                 role='heading')]
     cursor = focus_top + body[0]['height'] + 20
     for paragraph in ['Sixth-grade math remains our weakest result. Beginning in October, '
                       'all grade 6 students receive a second daily math block on Tuesdays '
@@ -554,7 +613,7 @@ def editorial_facilities():
              line_height=1.5, left=col, top=top + 492, width=col_w),
     ]
     heading = text(PROJECTS_HEAD, font_=BASKERVILLE, size=62, weight=700, colour=E_INK,
-                   line_height=1.05, left=side, top=top, width=side_w)
+                   line_height=1.05, left=side, top=top, width=side_w, role='heading')
     layers.append(heading)
     cursor = heading['top'] + heading['height'] + 30
     for number, _name, detail, _image in PROJECTS:
@@ -575,7 +634,7 @@ def editorial_facilities():
 def editorial_year_ahead():
     layers = e_eyebrow(SECTIONS[3], '05')
     heading = text(DATES_HEAD, font_=BASKERVILLE, size=70, weight=700, colour=E_INK,
-                   line_height=1.05, left=E_LEFT, top=178, width=1500)
+                   line_height=1.05, left=E_LEFT, top=178, width=1500, role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 38
     (grid, grid_w), (panel, panel_w) = columns(E_BODY_W, [1.5, 1], 64, left=E_LEFT)
@@ -602,7 +661,7 @@ def editorial_year_ahead():
 
     inner = panel_w - 80
     block = [text(HELP_HEAD, font_=BASKERVILLE, size=34, weight=700, colour=E_PAPER,
-                  left=panel + 40, top=top + 40, width=inner)]
+                  left=panel + 40, top=top + 40, width=inner, role='heading')]
     cursor = block[0]['top'] + block[0]['height'] + 20
     for paragraph in HELP:
         item = text(paragraph, font_=BASKERVILLE, size=27, colour=E_PAPER,
@@ -647,24 +706,26 @@ S_BODY_W = S_RIGHT - S_LEFT
 def s_eyebrow(number, label, *, colour=S_INK, top=S_TOP):
     return [
         text(number, font_=INTER, size=26, colour=S_ACCENT, spacing=16,
-             left=S_LEFT, top=top, width=70, height=34),
+             left=S_LEFT, top=top, width=70, height=34, role='heading'),
         text(label.upper(), font_=INTER, size=26, weight=700, colour=colour,
-             spacing=16, left=S_LEFT + 98, top=top, width=1200, height=34),
+             spacing=16, left=S_LEFT + 98, top=top, width=1200, height=34,
+             role='heading'),
     ]
 
 
 def swiss_cover():
     layers = [
         text(SCHOOL_UPPER, font_=INTER, size=26, weight=700, colour=S_INK,
-             spacing=16, left=S_LEFT, top=43, width=1000, height=34),
+             spacing=16, left=S_LEFT, top=43, width=1000, height=34, role='heading'),
         text('2025 / 26', font_=INTER, size=26, colour=S_ACCENT, spacing=16,
-             align='right', left=S_RIGHT - 600, top=43, width=600, height=34),
+             align='right', left=S_RIGHT - 600, top=43, width=600, height=34,
+             role='heading'),
         hairline(S_INK, left=0, top=120, width=W, thickness=1),
         vline(S_RULE, left=1120, top=120, height=760, thickness=1),
     ]
     heading = text('Annual<br/>Report to<br/>Families', font_=INTER, size=118,
                    weight=700, colour=S_INK, line_height=0.92, spacing=-4,
-                   left=S_LEFT, top=200, width=970)
+                   left=S_LEFT, top=200, width=970, role='heading')
     lede = text('The year in review, the results, and the calendar for 2026–27.',
                 font_=INTER, size=36, colour=S_TEXT, line_height=1.3,
                 left=S_LEFT, top=726, width=780)
@@ -689,9 +750,9 @@ def swiss_cover():
         x = S_LEFT + index * cell
         layers += [
             text(label.upper(), font_=INTER, size=24, colour=S_MUTED, spacing=14,
-                 left=x, top=920, width=cell - 30, height=30),
+                 left=x, top=920, width=cell - 30, height=30, role='heading'),
             text(value, font_=INTER, size=54, weight=700, colour=S_INK, spacing=-2,
-                 left=x, top=956, width=cell - 30, height=70),
+                 left=x, top=956, width=cell - 30, height=70, role='heading'),
         ]
         if index:
             layers.append(vline(S_RULE, left=x - 30, top=920, height=110, thickness=1))
@@ -702,7 +763,7 @@ def swiss_numbers():
     layers = s_eyebrow('02', SECTIONS[0])
     heading = text('Enrollment grew 6% while the student–teacher ratio held at 17:1',
                    font_=INTER, size=76, weight=700, colour=S_INK, line_height=1.0,
-                   spacing=-3, left=S_LEFT, top=168, width=1400)
+                   spacing=-3, left=S_LEFT, top=168, width=1400, role='heading')
     layers.append(heading)
 
     grid = heading['top'] + heading['height'] + 44
@@ -714,7 +775,7 @@ def swiss_numbers():
         width = cell - (0 if index == 0 else 32) - (0 if index == 3 else 32)
         figure = text(number, font_=INTER, size=96, weight=700,
                       colour=S_ACCENT if index == 1 else S_INK, line_height=1.0,
-                      spacing=-4, left=x, top=grid + 35, width=width)
+                      spacing=-4, left=x, top=grid + 35, width=width, role='heading')
         note = text(caption, font_=INTER, size=27, colour=S_TEXT, line_height=1.4,
                     left=x, top=figure['top'] + figure['height'] + 12, width=width)
         layers += [figure, note]
@@ -750,7 +811,8 @@ def swiss_numbers():
 def swiss_results():
     layers = s_eyebrow('03', SECTIONS[1], colour=S_WHITE)
     heading = text(RESULTS_HEAD, font_=INTER, size=76, weight=700, colour=S_WHITE,
-                   line_height=1.0, spacing=-3, left=S_LEFT, top=168, width=1500)
+                   line_height=1.0, spacing=-3, left=S_LEFT, top=168, width=1500,
+                   role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 40
     (table, table_w), (aside, aside_w) = columns(S_BODY_W, [1.7, 1], 70, left=S_LEFT)
@@ -760,7 +822,8 @@ def swiss_results():
              (table + 720, 180, 'right'), (table + 930, table_w - 930, 'right')]
     for label, (hx, hw), (_x, _width, align) in zip(heads, head_boxes(edges), edges):
         layers.append(text(label.upper(), font_=INTER, size=24, weight=700, colour=S_WHITE,
-                           spacing=12, align=align, left=hx, top=top, width=hw, height=30))
+                           spacing=12, align=align, left=hx, top=top, width=hw, height=30,
+                           role='heading'))
     row = top + 46
     layers.append(hairline(S_WHITE, left=table, top=row, width=table_w, thickness=2))
     row += 2
@@ -788,7 +851,8 @@ def swiss_results():
         layers.append(hairline(S_ACCENT if index == 0 else S_RULE_MID, left=aside,
                                top=cursor, width=aside_w, thickness=3 if index == 0 else 1))
         head = text(label.upper(), font_=INTER, size=26, weight=700, colour=S_WHITE,
-                    spacing=12, left=aside, top=cursor + 20, width=aside_w, height=34)
+                    spacing=12, left=aside, top=cursor + 20, width=aside_w, height=34,
+                    role='heading')
         body = text(detail, font_=INTER, size=27, colour=S_PALE, line_height=1.5,
                     left=aside, top=head['top'] + head['height'] + 12, width=aside_w)
         layers += [head, body]
@@ -800,7 +864,7 @@ def swiss_facilities():
     layers = s_eyebrow('04', SECTIONS[2])
     heading = text('Four capital projects, all finished on schedule', font_=INTER,
                    size=76, weight=700, colour=S_INK, line_height=1.0, spacing=-3,
-                   left=S_LEFT, top=168, width=1600)
+                   left=S_LEFT, top=168, width=1600, role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 40
     cards = columns(S_BODY_W, [1, 1, 1, 1], 34, left=S_LEFT)
@@ -812,7 +876,8 @@ def swiss_facilities():
             text(image.upper(), font_=INTER, size=21, colour=S_MUTED, spacing=6,
                  left=x + 16, top=top + 285 - 44, width=width - 32, height=28),
             text(f'{number} {name}'.upper(), font_=INTER, size=26, weight=700,
-                 colour=S_ACCENT, spacing=12, left=x, top=top + 305, width=width, height=34),
+                 colour=S_ACCENT, spacing=12, left=x, top=top + 305, width=width,
+                 height=34, role='heading'),
             text(detail, font_=INTER, size=27, colour=S_BODY, line_height=1.45,
                  left=x, top=top + 359, width=width),
         ]
@@ -822,7 +887,8 @@ def swiss_facilities():
 def swiss_year_ahead():
     layers = s_eyebrow('05', SECTIONS[3])
     heading = text(DATES_HEAD, font_=INTER, size=76, weight=700, colour=S_INK,
-                   line_height=1.0, spacing=-3, left=S_LEFT, top=168, width=1500)
+                   line_height=1.0, spacing=-3, left=S_LEFT, top=168, width=1500,
+                   role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 40
     (grid, grid_w), (panel, panel_w) = columns(S_BODY_W, [1.6, 1], 70, left=S_LEFT)
@@ -848,7 +914,7 @@ def swiss_year_ahead():
 
     inner = panel_w - 88
     block = [text(HELP_HEAD, font_=INTER, size=36, weight=700, colour=S_WHITE,
-                  spacing=-2, left=panel + 44, top=top + 44, width=inner)]
+                  spacing=-2, left=panel + 44, top=top + 44, width=inner, role='heading')]
     cursor = block[0]['top'] + block[0]['height'] + 22
     for paragraph in ['Read the Thursday newsletter. Every deadline that matters is in it.',
                       'Volunteer for one event. The library and the spring track meet '
@@ -912,7 +978,8 @@ def academic_cover():
     eyebrow = text(SCHOOL_UPPER, font_=ARCHIVO, size=26, colour=A_GOLD, spacing=20,
                    left=col, top=139, width=col_w, height=34)
     heading = text(TITLE, font_=SPECTRAL, size=100, colour=A_CREAM, line_height=1.0,
-                   spacing=-2, left=col, top=eyebrow['top'] + 60, width=col_w)
+                   spacing=-2, left=col, top=eyebrow['top'] + 60, width=col_w,
+                   role='heading')
     rule_top = heading['top'] + heading['height'] + 34
     lede = text('A review of the 2025–26 school year, the results behind it, and '
                 'the calendar for the year ahead.', font_=SPECTRAL, size=36,
@@ -925,7 +992,7 @@ def academic_cover():
                      border=A_GOLD),
                text('IMAGE: SCHOOL CREST OR BUILDING', font_=ARCHIVO, size=22,
                     colour=A_SLATE, spacing=6, left=side + 22, top=600 - 52,
-                    width=side_w - 44, height=30)]
+                    width=side_w - 44, height=30, role='body')]
 
     facts = [('Presented by', f'{PRINCIPAL}<br/>Principal'),
              ('Meeting', f'{MEETING}<br/>{MEETING_TIME}'),
@@ -947,7 +1014,7 @@ def academic_numbers():
     layers = a_banner(SECTIONS[0], 'Section Two')
     heading = text('Enrollment grew for a third year while class sizes held steady',
                    font_=SPECTRAL, size=66, colour=A_INK, line_height=1.08, spacing=-1,
-                   left=A_LEFT, top=208, width=1400)
+                   left=A_LEFT, top=208, width=1400, role='heading')
     layers.append(heading)
 
     top = heading['top'] + heading['height'] + 40
@@ -962,7 +1029,7 @@ def academic_numbers():
             rect(A_WHITE, left=x, top=top, width=width, height=card_h),
             hairline(A_GOLD, left=x, top=top, width=width, thickness=5),
             text(number, font_=SPECTRAL, size=78, colour=A_NAVY, line_height=1.0,
-                 left=x + 32, top=top + 37, width=width - 64),
+                 left=x + 32, top=top + 37, width=width - 64, role='heading'),
             note,
         ]
 
@@ -989,7 +1056,8 @@ def academic_numbers():
 def academic_results():
     layers = a_banner(SECTIONS[1], 'Section Three')
     heading = text(RESULTS_HEAD, font_=SPECTRAL, size=66, colour=A_INK,
-                   line_height=1.08, spacing=-1, left=A_LEFT, top=208, width=1500)
+                   line_height=1.08, spacing=-1, left=A_LEFT, top=208, width=1500,
+                   role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 38
     (table, table_w), (aside, aside_w) = columns(A_BODY_W, [1.65, 1], 66, left=A_LEFT)
@@ -1025,7 +1093,7 @@ def academic_results():
                        left=table, top=top + table_h + 24, width=table_w))
 
     block = [text('Where we are focusing', font_=SPECTRAL, size=34, colour=A_INK,
-                  left=aside + 41, top=top + 36, width=aside_w - 77)]
+                  left=aside + 41, top=top + 36, width=aside_w - 77, role='heading')]
     cursor = block[0]['top'] + block[0]['height'] + 20
     for paragraph in ['Sixth-grade math is our weakest result. From October, every grade 6 '
                       'student has a second daily math block on Tuesdays and Thursdays.',
@@ -1050,12 +1118,13 @@ def academic_facilities():
     layers += [
         hatch(left=col, top=top, width=col_w, height=480, stripe=A_HATCH, border=A_RULE),
         text(PROJECTS[0][3].upper(), font_=ARCHIVO, size=22, colour=A_MUTED, spacing=6,
-             left=col + 22, top=top + 480 - 52, width=col_w - 44, height=30),
+             left=col + 22, top=top + 480 - 52, width=col_w - 44, height=30, role='body'),
         text(ENTRY_CAPTION, font_=SPECTRAL, size=26, colour=A_SOFT, line_height=1.5,
              left=col, top=top + 502, width=col_w),
     ]
     heading = text(PROJECTS_HEAD, font_=SPECTRAL, size=60, colour=A_INK,
-                   line_height=1.08, spacing=-1, left=side, top=top, width=side_w)
+                   line_height=1.08, spacing=-1, left=side, top=top, width=side_w,
+                   role='heading')
     layers.append(heading)
     cursor = heading['top'] + heading['height'] + 32
     for number, _name, detail, _image in PROJECTS:
@@ -1076,7 +1145,7 @@ def academic_facilities():
 def academic_year_ahead():
     layers = a_banner(SECTIONS[3], 'Section Five')
     heading = text(DATES_HEAD, font_=SPECTRAL, size=66, colour=A_INK, line_height=1.08,
-                   spacing=-1, left=A_LEFT, top=208, width=1500)
+                   spacing=-1, left=A_LEFT, top=208, width=1500, role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 38
     (grid, grid_w), (panel, panel_w) = columns(A_BODY_W, [1.55, 1], 66, left=A_LEFT)
@@ -1097,7 +1166,7 @@ def academic_year_ahead():
 
     inner = panel_w - 80
     block = [text(HELP_HEAD, font_=SPECTRAL, size=34, colour=A_GOLD, left=panel + 40,
-                  top=top + 40, width=inner)]
+                  top=top + 40, width=inner, role='heading')]
     cursor = block[0]['top'] + block[0]['height'] + 22
     for paragraph in HELP:
         item = text(paragraph, font_=SPECTRAL, size=27, colour=A_CREAM, line_height=1.55,
@@ -1154,7 +1223,8 @@ def dark_cover():
     ]
     (col, col_w), (side, side_w) = columns(D_BODY_W, [1.4, 1], 70, left=D_LEFT)
     heading = text(TITLE, font_=GROTESK, size=112, weight=700, colour=D_TEXT,
-                   line_height=0.95, spacing=-4, left=col, top=275, width=col_w)
+                   line_height=0.95, spacing=-4, left=col, top=275, width=col_w,
+                   role='heading')
     lede = text('A review of the 2025–26 school year, the results behind it, and '
                 'the calendar for the year ahead.', font_=GROTESK, size=36,
                 colour=D_MUTED, line_height=1.4, left=col,
@@ -1176,7 +1246,7 @@ def dark_cover():
             text(label.upper(), font_=JETBRAINS, size=23, colour=D_FAINT, spacing=8,
                  left=x + 28, top=853, width=width - 56, height=30),
             text(value, font_=GROTESK, size=52, weight=700, colour=D_TEXT, spacing=-2,
-                 left=x + 28, top=891, width=width - 56, height=70),
+                 left=x + 28, top=891, width=width - 56, height=70, role='heading'),
         ]
     speaker_x, speaker_w = cards[3]
     layers += [
@@ -1196,7 +1266,7 @@ def dark_numbers():
     layers = d_eyebrow('02', SECTIONS[0])
     heading = text('Enrollment grew 6% while the student–teacher ratio held at 17:1',
                    font_=GROTESK, size=72, weight=700, colour=D_TEXT, line_height=1.02,
-                   spacing=-3, left=D_LEFT, top=164, width=1400)
+                   spacing=-3, left=D_LEFT, top=164, width=1400, role='heading')
     layers.append(heading)
 
     top = heading['top'] + heading['height'] + 42
@@ -1210,7 +1280,8 @@ def dark_numbers():
             rect(D_CARD, left=x, top=top, width=width, height=card_h),
             rect(D_ACCENT, left=x, top=top, width=3, height=card_h),
             text(number, font_=GROTESK, size=82, weight=700, colour=D_TEXT,
-                 line_height=1.0, spacing=-4, left=x + 32, top=top + 32, width=width - 64),
+                 line_height=1.0, spacing=-4, left=x + 32, top=top + 32, width=width - 64,
+                 role='heading'),
             note,
         ]
 
@@ -1236,7 +1307,8 @@ def dark_numbers():
 def dark_results():
     layers = d_eyebrow('03', SECTIONS[1])
     heading = text(RESULTS_HEAD, font_=GROTESK, size=72, weight=700, colour=D_TEXT,
-                   line_height=1.02, spacing=-3, left=D_LEFT, top=164, width=1500)
+                   line_height=1.02, spacing=-3, left=D_LEFT, top=164, width=1500,
+                   role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 40
     (table, table_w), (aside, aside_w) = columns(D_BODY_W, [1.7, 1], 66, left=D_LEFT)
@@ -1286,7 +1358,7 @@ def dark_facilities():
     layers = d_eyebrow('04', SECTIONS[2])
     heading = text('Four capital projects, all finished on schedule', font_=GROTESK,
                    size=72, weight=700, colour=D_TEXT, line_height=1.02, spacing=-3,
-                   left=D_LEFT, top=164, width=1600)
+                   left=D_LEFT, top=164, width=1600, role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 40
     cards = columns(D_BODY_W, [1, 1, 1, 1], 28, left=D_LEFT)
@@ -1311,7 +1383,8 @@ def dark_facilities():
 def dark_year_ahead():
     layers = d_eyebrow('05', SECTIONS[3])
     heading = text(DATES_HEAD, font_=GROTESK, size=72, weight=700, colour=D_TEXT,
-                   line_height=1.02, spacing=-3, left=D_LEFT, top=164, width=1500)
+                   line_height=1.02, spacing=-3, left=D_LEFT, top=164, width=1500,
+                   role='heading')
     layers.append(heading)
     top = heading['top'] + heading['height'] + 40
     (grid, grid_w), (panel, panel_w) = columns(D_BODY_W, [1.6, 1], 66, left=D_LEFT)
@@ -1337,7 +1410,7 @@ def dark_year_ahead():
 
     inner = panel_w - 80
     block = [text(HELP_HEAD, font_=GROTESK, size=36, weight=700, colour=D_ON_ACCENT,
-                  spacing=-2, left=panel + 40, top=top + 40, width=inner)]
+                  spacing=-2, left=panel + 40, top=top + 40, width=inner, role='heading')]
     cursor = block[0]['top'] + block[0]['height'] + 22
     for paragraph in ['Read the Thursday newsletter. Every deadline that matters is in it.',
                       'Volunteer for one event. The library and the spring track meet '
@@ -1387,16 +1460,17 @@ def p_eyebrow(label):
     return [
         circle(P_RUST, left=P_LEFT, top=100, size=14),
         text(label.upper(), font_=KARLA, size=26, colour=P_MUTED, spacing=10,
-             left=P_LEFT + 34, top=90, width=1200, height=34),
+             left=P_LEFT + 34, top=90, width=1200, height=34, role='heading'),
     ]
 
 
 def pastel_cover():
     layers = [
         text(SCHOOL_UPPER, font_=KARLA, size=26, colour=P_MUTED, spacing=10,
-             left=P_LEFT, top=90, width=1000, height=34),
+             left=P_LEFT, top=90, width=1000, height=34, role='heading'),
         text('2025 / 26', font_=KARLA, size=26, colour=P_RUST, spacing=10,
-             align='right', left=P_RIGHT - 500, top=90, width=500, height=34),
+             align='right', left=P_RIGHT - 500, top=90, width=500, height=34,
+             role='heading'),
     ]
     (col, col_w), (side, side_w) = columns(P_BODY_W, [1.35, 1], 66, left=P_LEFT)
     heading = text(TITLE, font_=DM_SERIF, size=108, colour=P_DEEP, line_height=1.0,
@@ -1425,7 +1499,7 @@ def pastel_cover():
         layers += [
             rect(P_CARD, left=x, top=835, width=width, height=165, radius=22),
             text(label.upper(), font_=KARLA, size=24, colour=P_MUTED, spacing=10,
-                 left=x + 32, top=865, width=width - 64, height=30),
+                 left=x + 32, top=865, width=width - 64, height=30, role='heading'),
             text(value, font_=DM_SERIF, size=54, colour=P_GREEN, left=x + 32, top=903,
                  width=width - 64, height=70),
         ]
@@ -1489,7 +1563,7 @@ def pastel_results():
     for label, (hx, hw), (_x, _width, align) in zip(heads, head_boxes(edges), edges):
         layers.append(text(label.upper(), font_=KARLA, size=24, weight=700, colour=P_MUTED,
                            spacing=8, align=align, left=hx, top=top + pad, width=hw,
-                           height=32))
+                           height=32, role='heading'))
     row = top + pad + 48
     layers.append(hairline(P_RULE, left=inner, top=row, width=table_w - 80, thickness=2))
     row += 2
@@ -1522,7 +1596,8 @@ def pastel_results():
     for index, (label, detail) in enumerate(FOCUS):
         head = text(label.upper(), font_=KARLA, size=25,
                     colour=P_GREEN if index == 0 else P_RUST, spacing=8,
-                    left=aside + 30, top=cursor + 30, width=aside_w - 60, height=32)
+                    left=aside + 30, top=cursor + 30, width=aside_w - 60, height=32,
+                    role='heading')
         body = text(detail, font_=KARLA, size=27, colour=P_SOFT if index == 0 else P_BODY,
                     line_height=1.5, left=aside + 30, top=head['top'] + 44,
                     width=aside_w - 60)
@@ -1579,7 +1654,7 @@ def pastel_year_ahead():
         layers += [
             rect(P_CARD, left=x, top=y, width=cell_w, height=card_h, radius=22),
             text(long.upper(), font_=KARLA, size=25, colour=P_RUST, spacing=8,
-                 left=x + 28, top=y + 26, width=cell_w - 56, height=32),
+                 left=x + 28, top=y + 26, width=cell_w - 56, height=32, role='heading'),
             text(label, font_=KARLA, size=28, colour=P_INK, line_height=1.45,
                  left=x + 28, top=y + 68, width=cell_w - 56, height=84),
         ]
@@ -1603,6 +1678,46 @@ def pastel_year_ahead():
     return 'Pastel slide — the year ahead', P_BG, layers
 
 
+# ------------------------------------------------------------ brand colours --
+# Which of a theme's colours plays which role, so that a slide added from the
+# gallery arrives in the school's colours rather than the theme's. primary is
+# kit colour one, secondary two, accent three; a role the kit has no colour for
+# leaves the theme's own colour standing. Neutrals — the papers, the inks and
+# the greys — are never listed and never touched.
+#
+# Four of the five themes are a neutral ground with exactly one colour on it,
+# so that colour is their primary: a school with a single colour in its kit
+# gets a whole deck in it. Academic is the one theme built on two, its navy and
+# its gold, and the deep gold that makes the same gold legible on white asks
+# for the same slot as the gold it is a shade of.
+#
+# No theme is marked "keep". A theme here is a way of setting a page — paper,
+# grid, rules, the pairing of faces — and none of them means anything by its
+# colour that a school's own colour would contradict.
+E_ROLES = {E_ACCENT: 'primary'}
+S_ROLES = {S_ACCENT: 'primary'}
+A_ROLES = {A_NAVY: 'primary', A_GOLD: 'secondary', A_GOLD_DEEP: 'secondary'}
+D_ROLES = {D_ACCENT: 'primary'}
+P_ROLES = {P_RUST: 'primary'}
+
+# Colours that are painted, are not neutral by the app's test, and are still
+# not the school's to change. Two kinds: the Academic theme's inks, which are
+# navy-blacks rather than the grey-blacks the other four read in — the app's
+# neutral test lets them through on saturation alone — and the three lines of
+# type that sit on a panel the brand *does* repaint, which would sink into
+# their own background if they moved with it. The check script reads this
+# table, so a new colour has to be either given a role or written down here.
+LEAVE = {
+    A_INK: 'the Academic reading ink, a navy black',
+    A_BODY: 'Academic paragraph ink, a greyed navy',
+    A_SOFT: 'Academic caption ink, a greyed navy',
+    A_SLATE: 'Academic ink for type on the navy hero',
+    E_DIM: 'the contact line on the Editorial ink panel',
+    S_BLUSH: 'the contact line on the Swiss red panel',
+    D_ON_ACCENT_DIM: 'the contact line on the Dark teal panel',
+}
+
+
 # Order is what the gallery shows, and the id is FIRST_ID plus the position, so
 # a new slide goes on the end of its theme only if you are willing to renumber
 # everything after it — the covers already shot are keyed to the id.
@@ -1616,6 +1731,11 @@ BUILDERS = [
     pastel_cover, pastel_numbers, pastel_results, pastel_facilities,
     pastel_year_ahead,
 ]
+
+ROLES = {build: roles for roles, builds in [
+    (E_ROLES, BUILDERS[0:5]), (S_ROLES, BUILDERS[5:10]), (A_ROLES, BUILDERS[10:15]),
+    (D_ROLES, BUILDERS[15:20]), (P_ROLES, BUILDERS[20:25]),
+] for build in builds}
 
 # The category the Templates panel files this pack under. These sit under the
 # same Slides chip as the school pack's slides: a themed slide and a plain one
@@ -1632,6 +1752,30 @@ def page(title, background):
         'width': W, 'height': H, 'backgroundColor': background,
         'backgroundImage': '', 'opacity': 1, 'tag': 0, 'setting': [], 'record': {},
     }
+
+
+def painted(data):
+    """Every flat colour the design paints, as the brand block writes them.
+
+    The same walk the app makes when it recolours: a page background, a text
+    layer's colour, and each entry in a shape's colour list.
+    """
+    found = set()
+    for layout in data:
+        found.add(key(layout['global']['backgroundColor']))
+        for layer in layout['layers']:
+            if layer['type'] == 'w-text':
+                found.add(key(layer['color']))
+            for colour in layer.get('colors', []):
+                found.add(key(colour))
+    return found
+
+
+def brand_block(roles, data):
+    """The template's brand block, listing only colours it actually paints."""
+    here = painted(data)
+    return {'colors': {key(colour): role for colour, role in roles.items()
+                       if key(colour) in here}}
 
 
 LIST = os.path.join(TEMPLATES, 'list.json')
@@ -1658,9 +1802,10 @@ def apply():
         template_id = FIRST_ID + offset
         title, background, layers = build()
         data = [{'global': page(title, background), 'layers': layers}]
+        brand = brand_block(ROLES[build], data)
         record = {
             'id': str(template_id), 'title': title, 'width': W, 'height': H,
-            'pack': PACK, 'data': json.dumps(data, ensure_ascii=False),
+            'pack': PACK, 'brand': brand, 'data': json.dumps(data, ensure_ascii=False),
         }
         with open(os.path.join(TEMPLATES, f'{template_id}.json'), 'w', encoding='utf-8') as handle:
             json.dump(record, handle, ensure_ascii=False)
@@ -1671,8 +1816,9 @@ def apply():
         })
         overflow = max((layer['top'] + layer['height'] for layer in layers), default=0)
         flag = '  <- runs past the page' if overflow > H else ''
+        roles = ' '.join(f'{colour}={role[:4]}' for colour, role in brand['colors'].items())
         print(f'  {template_id}.json  {title:<38} {len(layers):>3} layers  '
-              f'bottom {overflow}{flag}')
+              f'bottom {overflow}  {roles}{flag}')
 
     keep = [item for item in read_list() if item.get('pack') != PACK]
     write_list(keep + entries)
