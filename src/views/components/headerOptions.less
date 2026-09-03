@@ -1,9 +1,25 @@
 .top-title {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: @space-2;
   padding-left: 10px;
 
+  // Quiet on purpose: an outline and small type, so it reads as a note beside
+  // the name rather than a control you are meant to press.
+  &__saved {
+    flex: none;
+    padding: 2px 8px;
+    border: 1px solid @line;
+    border-radius: @radius-pill;
+    font-size: @text-xs;
+    color: @ink-3;
+    white-space: nowrap;
+  }
+
   .input-wrap {
+    flex: 0 1 auto;
     width: 100%;
     max-width: 320px;
 

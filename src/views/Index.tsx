@@ -26,6 +26,7 @@ import Folder from './components/Folder'
 import Helper from './components/Helper'
 import Tooltip from '@/components/ui/Tooltip'
 import Button from '@/components/ui/Button'
+import { RedoIcon, UndoIcon } from '@/components/ui/icons'
 import useHistory from '@/common/hooks/history'
 import useAutosave from '@/common/hooks/autosave'
 import { handleKeydowm, handleKeyup } from '@/mixins/shortcuts'
@@ -231,13 +232,13 @@ export default function Index() {
             <div className="top-nav-divider" />
             <div className="operation">
               <Tooltip content="Undo" placement="bottom" showAfter={400}>
-                <div className={cx('operation-item', { disable: !undoable })} onClick={() => (undoable ? handleHistory('undo') : undefined)}>
-                  <i className="iconfont icon-undo" />
+                <div className={cx('operation-item', 'operation-item--icon', { disable: !undoable })} onClick={() => (undoable ? handleHistory('undo') : undefined)}>
+                  <UndoIcon width={16} height={16} />
                 </div>
               </Tooltip>
               <Tooltip content="Redo" placement="bottom" showAfter={400}>
-                <div className={cx('operation-item', { disable: !redoable })} onClick={() => (redoable ? handleHistory('redo') : undefined)}>
-                  <i className="iconfont icon-redo" />
+                <div className={cx('operation-item', 'operation-item--icon', { disable: !redoable })} onClick={() => (redoable ? handleHistory('redo') : undefined)}>
+                  <RedoIcon width={16} height={16} />
                 </div>
               </Tooltip>
             </div>

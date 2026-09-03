@@ -11,6 +11,7 @@ import { readQuery, replaceQuery } from '@/common/hooks/useRouteQuery'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import { autosaveState } from '@/common/hooks/autosave'
 import { canvasState, userState, widgetState } from '@/store/state'
 import type { TdWidgetData } from '@/store/types'
 import { setShowMoveable } from '@/store/control'
@@ -34,6 +35,12 @@ export type HeaderOptionsHandle = {
   load: (cb: () => void) => Promise<void>
 }
 
+const SAVE_LABEL: Record<'saved' | 'unsaved' | 'saving', string> = {
+  saved: 'Saved',
+  unsaved: 'Unsaved changes',
+  saving: 'Saving\u2026',
+}
+
 type Props = {
   isContinue: boolean
   onContinueChange: (value: boolean) => void
@@ -49,6 +56,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
 ) {
   const mode = useEditorMode()
   const { tempEditing } = useSnapshot(userState)
+  const saveStatus = useSnapshot(autosaveState).status
   const [title, setTitle] = useState('')
   const titleRef = useRef('')
   titleRef.current = title
@@ -257,6 +265,12 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
             onTitleChange?.()
           }}
         />
+        {/*
+          Autosaving is quiet by design, so this is the only thing that says
+          the work is safe. It reads nothing at all until autosave is watching,
+          because before that neither answer would be true.
+        */}
+        {saveStatus !== 'idle' ? <span className="top-title__saved">{SAVE_LABEL[saveStatus]}</span> : null}
       </div>
       <div className="top-icon-wrap">
         {tempEditing ? (

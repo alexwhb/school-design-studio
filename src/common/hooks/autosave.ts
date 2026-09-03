@@ -17,7 +17,7 @@
  * bytes then go is localDesigns.ts's business, not this file's.
  */
 import { useEffect, useMemo, useRef } from 'react'
-import { subscribe } from 'valtio'
+import { proxy, subscribe } from 'valtio'
 import { widgetState } from '@/store/state'
 import { setDPage, getDPage } from '@/store/canvas'
 import { getWidgets, setDLayouts, setDWidgets } from '@/store/widget/widget'
@@ -29,6 +29,16 @@ import type { TdLayout } from '@/store/types'
 
 /** Quiet time before a save, in ms. */
 const DEBOUNCE = 2000
+
+/**
+ * Where the design stands with the store, for the pill in the toolbar. Saving
+ * is quiet and debounced, so without this the only way to know whether your
+ * work is safe is to close the tab and see whether the browser objects.
+ *
+ * `idle` is before any of it is running — the design is still being loaded, and
+ * saying either "Saved" or "Unsaved" then would be a guess.
+ */
+export const autosaveState = proxy<{ status: 'idle' | 'saved' | 'unsaved' | 'saving' }>({ status: 'idle' })
 
 type TOptions = {
   /** Reads the design's name, which lives in the toolbar's own state. */
@@ -80,6 +90,7 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
       const title = options.current.getTitle()
       const pages = pageJson()
       if (!pages.length) return false
+      autosaveState.status = 'saving'
       // Only the pages that actually moved are handed over. JSON.parse gives a
       // plain deep copy of each, which is exactly what IndexedDB needs — the
       // valtio proxies underneath dLayouts are not structured-cloneable.
@@ -87,14 +98,19 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
         .map((json, index) => ({ json, index }))
         .filter(({ json, index }) => !stored || stored[index] !== json)
         .map(({ json, index }) => ({ index, layout: JSON.parse(json) as TdLayout }))
-      if (!(await saveDraft(title, changed, pages.length))) return false
+      if (!(await saveDraft(title, changed, pages.length))) {
+        autosaveState.status = 'unsaved'
+        return false
+      }
       baseline = snapshot(pages)
       stored = pages
+      autosaveState.status = 'saved'
       return true
     }
 
     function schedule() {
       if (!watching) return
+      if (isDirty()) autosaveState.status = 'unsaved'
       clearTimeout(timer)
       timer = setTimeout(() => {
         // The store reports a change of selection as readily as a change of
@@ -117,6 +133,7 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
     function start() {
       baseline = snapshot(pageJson())
       watching = true
+      autosaveState.status = 'saved'
       unsubscribe = subscribe(widgetState, schedule)
     }
 

@@ -94,6 +94,15 @@
             }
           }
 
+          // Undo and redo carry nothing but a glyph, so they are square rather
+          // than a label's width.
+          .operation-item--icon {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            justify-content: center;
+          }
+
           .disable {
             cursor: not-allowed;
             color: @ink-4;
