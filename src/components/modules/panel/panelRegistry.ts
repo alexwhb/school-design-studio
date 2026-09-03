@@ -4,7 +4,6 @@ import GraphListWrap from './wrap/GraphListWrap'
 import TextListWrap from './wrap/TextListWrap'
 import PhotoListWrap from './wrap/PhotoListWrap'
 import ToolsListWrap from './wrap/ToolsListWrap'
-import UserWrap from './wrap/UserWrap'
 import BrandWrap from './wrap/BrandWrap'
 
 export const panelComponents: Record<string, ComponentType<any>> = {
@@ -13,6 +12,5 @@ export const panelComponents: Record<string, ComponentType<any>> = {
   'text-list-wrap': TextListWrap,
   'photo-list-wrap': PhotoListWrap,
   'tools-list-wrap': ToolsListWrap,
-  'user-wrap': UserWrap,
   'brand-wrap': BrandWrap,
 }

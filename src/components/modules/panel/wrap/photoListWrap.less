@@ -1,16 +1,45 @@
 .photo-list-wrap {
-  width: 100%;
-  height: 100%;
-
-  .notice {
+  // The tile that starts an upload. Dashed, because it is an invitation rather
+  // than a thing you can already put on the page.
+  .upload-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: @space-1;
+    aspect-ratio: 1;
+    border: 1px dashed @line-strong;
+    border-radius: @radius-lg;
     color: @ink-3;
-    font-size: @text-base;
-    line-height: 1.5;
-    padding: @space-6 @space-1;
-    margin: 0;
+    font-size: @text-xs;
+    transition:
+      border-color 0.12s ease,
+      color 0.12s ease;
 
-    &--inset {
-      padding: @space-3 14px;
+    &:hover {
+      border-color: @accent-border;
+      color: @accent;
     }
+  }
+
+  // An upload can be a cut-out, so the tile shows what is behind it rather than
+  // painting a transparent PNG onto a dark square.
+  &__uploads .panel-card {
+    background: @surface;
+  }
+
+  .image-color {
+    width: 100%;
+    height: 100%;
+    animation: photo-breathe 600ms ease-out infinite alternate;
+  }
+}
+
+@keyframes photo-breathe {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
   }
 }

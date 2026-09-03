@@ -28,7 +28,7 @@ export default [
     component: 'temp-list-wrap',
   },
   {
-    name: 'Elements',
+    name: 'Graphics',
     icon: 'icon-sucai',
     show: false,
     component: 'graph-list-wrap',
@@ -57,12 +57,6 @@ export default [
     icon: 'icon-zujian01',
     show: false,
     component: 'tools-list-wrap',
-  },
-  {
-    name: 'Uploads',
-    icon: 'icon-shangchuan',
-    show: false,
-    component: 'user-wrap',
   },
   {
     name: 'Brand',
