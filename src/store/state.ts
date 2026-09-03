@@ -104,6 +104,7 @@ export const controlState = proxy<TControlState>({
   dShowGrid: readStoredGrid(),
   dGridSize: readStoredGridSize(),
   dDrawTool: null,
+  dLinePreset: null,
 })
 
 export const forceState = proxy<TForceState>({

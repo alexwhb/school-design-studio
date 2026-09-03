@@ -64,7 +64,7 @@ const DOCK_GAP = 10
 const shapesMenu = drawToolOrder.filter((tool) => tool !== 'pen')
 
 export default function ToolDock() {
-  const armed = useSnapshot(controlState).dDrawTool
+  const { dDrawTool: armed, dLinePreset } = useSnapshot(controlState)
   const bottomHeight = useSnapshot(canvasState).dBottomHeight
   const notesOpen = useSnapshot(notesState).open
   const [open, setOpen] = useState<'shapes' | 'image' | null>(null)
@@ -129,7 +129,7 @@ export default function ToolDock() {
 
   const PenToolIcon = drawTools.pen.Icon
   const TextIcon = drawTools.text.Icon
-  const hint = armed ? toolHint(armed) : null
+  const hint = armed ? toolHint(armed, dLinePreset) : null
   const shapeArmed = !!armed && armed !== 'pen' && armed !== 'text'
 
   return (

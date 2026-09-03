@@ -120,8 +120,12 @@ export const drawTools: Record<TDrawTool, TDrawToolSpec> = {
  * same sentence about the shape they are pulling out of the page and only the
  * noun changes; it was three copies of that sentence in three components
  * before the dock drew all of them.
+ *
+ * The line tool takes a second argument because it is the one tool that can be
+ * armed carrying something — an Arrows preset, by name — and what it is about
+ * to draw is an arrow rather than a line. See linePresets.ts.
  */
-export function toolHint(tool: TDrawTool): { lead: string; rest: string } {
+export function toolHint(tool: TDrawTool, preset?: string | null): { lead: string; rest: string } {
   if (tool === 'pen') {
     return {
       lead: 'Click to place a point, drag to curve it.',
@@ -129,7 +133,11 @@ export function toolHint(tool: TDrawTool): { lead: string; rest: string } {
     }
   }
   if (tool === 'line') {
-    return { lead: 'Drag to draw a line.', rest: 'Shift holds it to 45°, Alt draws it from the centre, Esc cancels.' }
+    const noun = preset ? preset.toLowerCase() : 'line'
+    return {
+      lead: `Drag or click twice to draw ${/^[aeiou]/.test(noun) ? 'an' : 'a'} ${noun}.`,
+      rest: 'Shift holds it to 45°, Alt draws it from the centre, Esc cancels.',
+    }
   }
   if (tool === 'text') {
     return { lead: 'Drag to draw a text box, or click to place one.', rest: 'The words wrap inside the box you pull out. Esc cancels.' }

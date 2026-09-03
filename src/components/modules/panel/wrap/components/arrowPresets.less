@@ -23,6 +23,13 @@
     &:hover {
       border-color: @accent-border;
     }
+    // An armed preset is a held-down state, not a hover: it stays lit while the
+    // pointer is away on the page drawing the arrow it was armed for.
+    &.is-armed {
+      border-color: @accent-border;
+      background: @accent-soft;
+      color: @accent;
+    }
     &:focus-visible {
       .focus-ring();
     }

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { WIDGET, armShapeTool, dragOnPage, drawnShape, expandPageStrip, openEditor, pathPaint, pathShape } from './helpers'
+import { WIDGET, armShapeTool, canvasBox, dragOnPage, drawnShape, expandPageStrip, openEditor, pathPaint, pathShape } from './helpers'
 import { exportPng, pixelOf } from './pixels'
 
 test.beforeEach(async ({ page }) => {
@@ -18,6 +18,20 @@ function lineEnds(page: Page) {
   )
 }
 
+/** Arms one of the Arrows presets from the Graphics panel. */
+async function armPreset(page: Page, name: string) {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
+  await page.waitForTimeout(500)
+  await page.locator(`.arrow-presets__item[title="${name}"]`).click()
+  await page.waitForTimeout(300)
+}
+
+/** Arms a preset and draws it across the page, which is the only way one lands now. */
+async function drawPreset(page: Page, name: string) {
+  await armPreset(page, name)
+  await dragOnPage(page, { x: 80, y: 120 }, { x: 320, y: 120 })
+}
+
 /** Picks an end from one of the two pickers in the Line ends section. */
 async function pickEnd(page: Page, which: 'Start' | 'End', name: string) {
   const index = which === 'Start' ? 0 : 1
@@ -30,7 +44,7 @@ async function pickEnd(page: Page, which: 'Start' | 'End', name: string) {
 test('L arms the line tool, and a drag draws a straight two-point line', async ({ page }) => {
   await page.keyboard.press('l')
   await page.waitForTimeout(300)
-  await expect(page.locator('.draw-hint')).toContainText('Drag to draw a line')
+  await expect(page.locator('.draw-hint')).toContainText('Drag or click twice to draw a line')
 
   const board = await dragOnPage(page, { x: 80, y: 120 }, { x: 320, y: 120 })
   const shape = await drawnShape(page)
@@ -55,13 +69,94 @@ test('Shift holds the line to a right angle or a diagonal', async ({ page }) => 
   expect(y1).toBeCloseTo(y2, 1)
 })
 
-test('a click with no drag drops a level line of a readable length', async ({ page }) => {
+test('a click puts the start down and a second click finishes the line', async ({ page }) => {
   await armShapeTool(page, 'Line')
-  const board = await dragOnPage(page, { x: 200, y: 150 }, { x: 200, y: 150 })
+  const board = await canvasBox(page)
+  await page.mouse.move(board.x + 80, board.y + 120)
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.waitForTimeout(200)
+
+  // Nothing on the page yet, and the tool is still armed: the line is between
+  // this click and the next one, and follows the pointer until then.
+  await expect(page.locator(WIDGET)).toHaveCount(0)
+  await expect(page.locator('.draw-hint')).toBeVisible()
+  await page.mouse.move(board.x + 320, board.y + 120)
+  await page.waitForTimeout(200)
+  await expect(page.locator('.draw-line__line')).toHaveCount(1)
+
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.waitForTimeout(500)
+
   const shape = (await drawnShape(page))!
   expect(shape.type).toBe('w-path')
-  expect(shape.width).toBeGreaterThan(100)
-  expect(board.scale).toBeGreaterThan(0)
+  expect(shape.width).toBeCloseTo(240 / board.scale + 2, -0.6)
+  const d = (await pathShape(page))!
+  expect(d.match(/L/g)).toHaveLength(1)
+  // And the tool has handed the pointer back, the same as after a drag.
+  await expect(page.locator('.draw-hint')).toHaveCount(0)
+})
+
+test('Escape takes back a line that has only one end down', async ({ page }) => {
+  await armShapeTool(page, 'Line')
+  const board = await canvasBox(page)
+  await page.mouse.move(board.x + 80, board.y + 120)
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.mouse.move(board.x + 300, board.y + 200)
+  await page.waitForTimeout(200)
+  await expect(page.locator('.draw-line__line')).toHaveCount(1)
+
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+  await expect(page.locator('.draw-line__line')).toHaveCount(0)
+  await expect(page.locator('.draw-hint')).toHaveCount(0)
+
+  // Nothing was drawn on the way in or out, and a click on the page now is an
+  // ordinary click rather than the second half of the abandoned line.
+  await page.mouse.click(board.x + 300, board.y + 200)
+  await page.waitForTimeout(300)
+  await expect(page.locator(WIDGET)).toHaveCount(0)
+})
+
+test('an Arrows preset arms the line tool rather than dropping a line', async ({ page }) => {
+  await armPreset(page, 'Arrow')
+
+  // Nothing on the page, the tile lit, and the hint saying what is coming.
+  await expect(page.locator(WIDGET)).toHaveCount(0)
+  await expect(page.locator('.arrow-presets__item[title="Arrow"]')).toHaveClass(/is-armed/)
+  await expect(page.locator('.draw-hint')).toContainText('Drag or click twice to draw an arrow')
+
+  // Drawn where it was dragged, with the preset's head on the far end.
+  const board = await dragOnPage(page, { x: 80, y: 140 }, { x: 300, y: 140 })
+  const shape = (await drawnShape(page))!
+  expect(shape.type).toBe('w-path')
+  // As long as the drag, plus the room the frame has to leave round the head.
+  const drag = 220 / board.scale
+  expect(shape.width).toBeGreaterThan(drag)
+  expect(shape.width).toBeLessThan(drag + 30)
+  expect((await lineEnds(page)).map((end) => end.kind)).toEqual(['triangle'])
+  await expect(page.locator('.arrow-presets__item[title="Arrow"]')).not.toHaveClass(/is-armed/)
+})
+
+test('clicking the armed preset again puts the pointer back', async ({ page }) => {
+  await armPreset(page, 'Arrow')
+  await page.locator('.arrow-presets__item[title="Arrow"]').click()
+  await page.waitForTimeout(300)
+
+  await expect(page.locator('.draw-hint')).toHaveCount(0)
+  await expect(page.locator('.arrow-presets__item[title="Arrow"]')).not.toHaveClass(/is-armed/)
+  await expect(page.locator(WIDGET)).toHaveCount(0)
+})
+
+test('a line drawn from the dock carries no preset', async ({ page }) => {
+  await armPreset(page, 'Arrow')
+  await armShapeTool(page, 'Line')
+  await expect(page.locator('.draw-hint')).toContainText('Drag or click twice to draw a line')
+
+  await dragOnPage(page, { x: 80, y: 120 }, { x: 320, y: 120 })
+  expect(await lineEnds(page)).toHaveLength(0)
 })
 
 test('the panel puts a head on either end, drawn in the stroke colour', async ({ page }) => {
@@ -120,11 +215,8 @@ test('Swap ends turns an arrow round', async ({ page }) => {
   expect(tipX(after.d!)).toBeLessThan(tipX(before.d!) - 100)
 })
 
-test('a Graphics arrow preset inserts an open path with ends on', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
-  await page.waitForTimeout(500)
-  await page.locator('.arrow-presets__item[title="Double arrow"]').click()
-  await page.waitForTimeout(600)
+test('a Graphics arrow preset draws an open path with ends on', async ({ page }) => {
+  await drawPreset(page, 'Double arrow')
 
   const shape = await drawnShape(page)
   expect(shape?.type).toBe('w-path')
@@ -136,10 +228,7 @@ test('a Graphics arrow preset inserts an open path with ends on', async ({ page 
 })
 
 test('the dotted preset arrives dotted, with round ends', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
-  await page.waitForTimeout(500)
-  await page.locator('.arrow-presets__item[title="Dotted line"]').click()
-  await page.waitForTimeout(600)
+  await drawPreset(page, 'Dotted line')
 
   const dashes = await page.evaluate(() => document.querySelector('#page-design-canvas .path__paint path')?.getAttribute('stroke-dasharray'))
   expect(dashes).toMatch(/^0 /)
@@ -147,10 +236,7 @@ test('the dotted preset arrives dotted, with round ends', async ({ page }) => {
 })
 
 test('a two-point line cannot be closed, so it keeps its heads and its panel section', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
-  await page.waitForTimeout(500)
-  await page.locator('.arrow-presets__item[title="Arrow"]').click()
-  await page.waitForTimeout(600)
+  await drawPreset(page, 'Arrow')
   // The way back from the second point lies on top of the way out.
   await expect(page.locator('.path-style__closed')).toHaveClass(/is-disabled/)
   await expect(page.locator('.line-ends')).toBeVisible()
@@ -158,10 +244,7 @@ test('a two-point line cannot be closed, so it keeps its heads and its panel sec
 })
 
 test('a line with arrowheads is in the page thumbnail too', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
-  await page.waitForTimeout(500)
-  await page.locator('.arrow-presets__item[title="Arrow"]').click()
-  await page.waitForTimeout(600)
+  await drawPreset(page, 'Arrow')
   await expandPageStrip(page)
   await expect(page.locator('.artboards .path__end')).toHaveCount(1)
 })
@@ -186,10 +269,7 @@ test('typing an l into a text layer is an l, not the line tool', async ({ page }
 test('the arrowhead survives the PNG export', async ({ page }) => {
   // The heads are plain geometry inside the path's own <svg>, so they go out
   // of the same door the path does: the whole <svg> serialised into an <img>.
-  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
-  await page.waitForTimeout(500)
-  await page.locator('.arrow-presets__item[title="Arrow"]').click()
-  await page.waitForTimeout(600)
+  await drawPreset(page, 'Arrow')
   const box = (await drawnShape(page))!
 
   const png = await exportPng(page)
@@ -198,7 +278,7 @@ test('the arrowhead survives the PNG export', async ({ page }) => {
   // own dark grey; the same distance in from the left is the bare line, which
   // is two pixels thick and also grey; and above the middle of the line the
   // page shows through.
-  const head = await pixelOf(page, png, Math.round(box.left + box.width - 6), y)
+  const head = await pixelOf(page, png, Math.round(box.left + box.width - 9), y)
   expect(head.r).toBeLessThan(120)
   expect(head.a).toBe(255)
   const above = await pixelOf(page, png, Math.round(box.left + box.width / 2), y - 12)

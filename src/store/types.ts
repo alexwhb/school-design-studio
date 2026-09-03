@@ -242,6 +242,13 @@ export type TControlState = {
    * one armed tool disarms the other for free.
    */
   dDrawTool: TDrawTool | null
+  /**
+   * The Arrows preset the armed line tool is carrying, by name, or null when
+   * the line was armed from the dock and comes out bare. Held here rather than
+   * on the tool because it is the same tool either way — the preset only says
+   * what the line arrives wearing. See linePresets.ts.
+   */
+  dLinePreset: string | null
 }
 
 export type TForceState = {

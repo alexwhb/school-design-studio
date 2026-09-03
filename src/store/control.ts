@@ -115,11 +115,29 @@ export function setGridSize(size: number) {
 /**
  * Arms a shape tool, or puts the pointer back. Nothing else is allowed to be
  * mid-flight while a tool is armed: what the tool draws becomes the selection.
+ *
+ * The preset is the line tool's alone, and it is passed here rather than set on
+ * its own so that it cannot outlive the arming — a tool armed from the dock,
+ * which knows nothing of presets, says nothing about one and gets a bare line.
  */
-export function setDrawTool(tool: TControlState['dDrawTool']) {
+export function setDrawTool(tool: TControlState['dDrawTool'], preset: string | null = null) {
   controlState.dDrawTool = tool
+  controlState.dLinePreset = tool === 'line' ? preset : null
 }
 
 export function toggleDrawTool(tool: NonNullable<TControlState['dDrawTool']>) {
-  setDrawTool(controlState.dDrawTool === tool ? null : tool)
+  // A line armed carrying a preset is not the same tool as the dock's own bare
+  // line, so asking for that one arms it rather than putting the pointer back.
+  const already = controlState.dDrawTool === tool && !controlState.dLinePreset
+  setDrawTool(already ? null : tool)
+}
+
+/**
+ * Arms the line tool carrying one of the Arrows presets, or puts the pointer
+ * back when that preset is already armed — the same press-again-to-put-it-down
+ * the dock's own tools have.
+ */
+export function toggleLinePreset(name: string) {
+  const armed = controlState.dDrawTool === 'line' && controlState.dLinePreset === name
+  setDrawTool(armed ? null : 'line', name)
 }

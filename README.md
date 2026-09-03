@@ -556,7 +556,10 @@ page outright.
 Every tool keeps its keyboard shortcut: `T`, `R`, `E`, `Y`, `L`, `P` arm and
 disarm the matching tool wherever the pointer is. While one is armed the dock
 says what it is waiting for on a green line above itself, with an **Esc** chip
-on the end that puts the pointer back.
+on the end that puts the pointer back. The rubber band while a shape is being
+pulled out is the shape that is coming rather than the box it came from: a circle
+for the ellipse tool, and for the polygon tool the polygon itself, drawn from the
+same geometry the widget is painted with.
 
 The dock, the page chip and the zoom pill share the bottom of the well. Open the
 speaker notes and all three rise by the height of the drawer; open the page
@@ -591,10 +594,19 @@ drawn inside the page, `recordHistory` round what it adds.
 
 ## Lines and arrows
 
-The **Line** tool, behind Shapes on the dock, or the `L` key. Drag from one point to
-another; hold Shift to hold it to a right angle or a diagonal, Alt to draw it
-out from the middle, and a plain click drops a level line of a readable length.
-The Graphics panel has an **Arrows** row of ready-made ones to drag on instead.
+The **Line** tool, behind Shapes on the dock, or the `L` key. Two gestures, the
+same two Adobe XD has: drag from one point to the other, or click once to put
+the start down and click again to finish, with a rubber line following the
+pointer in between. Shift holds it to a right angle or a diagonal, Alt draws it
+out from the middle, and Escape takes back a line that has only one end down.
+
+The Graphics panel's **Arrows** row is the same tool wearing a preset. Clicking
+one arms the line tool carrying that preset's heads and dash — the tile stays
+lit and the dock says what is coming — and the arrow is then drawn between two
+points like any other line, rather than landing ready-made in the middle of the
+page where it has to be moved and resized before it points at anything. Clicking
+the lit tile puts the pointer back; arming the plain Line tool afterwards draws
+a bare line.
 
 A line is an open path, so it takes the same stroke colour, thickness and dash
 as any other path, and its points can still be moved. What is new is the ends:
