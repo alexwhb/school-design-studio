@@ -1085,8 +1085,14 @@ test('a photograph can be given a keyline, and it follows the corners', async ({
   // size it was set to.
   expect(await widgetBox(page)).toEqual(before)
 
-  const radius = await dragSlider(page, '.ds-image-style', 'Corner radius', 0.2)
-  await expect(keyline).toHaveCSS('border-top-left-radius', `${radius}px`)
+  // The corners are a typed number now rather than a slider; the grips on the
+  // canvas are the other way at them.
+  const radius = page.locator('.ds-image-style .image-corners input')
+  await radius.scrollIntoViewIfNeeded()
+  await radius.fill('24')
+  await radius.blur()
+  await page.waitForTimeout(400)
+  await expect(keyline).toHaveCSS('border-top-left-radius', '24px')
 })
 
 test('the outline is drawn in the page thumbnails too', async ({ page }) => {
