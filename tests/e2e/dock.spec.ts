@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { WIDGET, canvasBox, openEditor, widgetCount } from './helpers'
+import { WIDGET, canvasBox, dragOnPage, drawnShape, openEditor, widgetCount } from './helpers'
 
 /*
  * The tool dock at the foot of the canvas. What is worth testing is that each
@@ -22,12 +22,74 @@ test('the dock is on the canvas and the Tools tab is gone', async ({ page }) => 
   await expect(page.locator(item('select'))).toHaveAttribute('aria-pressed', 'true')
 })
 
-test('the Text tool drops a text box in the middle and selects it', async ({ page }) => {
+test('the Text tool pulls a box out of the page and the words wrap in it', async ({ page }) => {
   await page.locator(item('text')).click()
+  await page.waitForTimeout(300)
+  await expect(page.locator(item('text'))).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.draw-hint')).toContainText('Drag to draw a text box, or click to place one.')
+
+  const board = await dragOnPage(page, { x: 60, y: 50 }, { x: 260, y: 150 })
+  await page.waitForTimeout(500)
+  const box = await drawnShape(page)
+  expect(box?.type).toBe('w-text')
+  // The width is the one that was pulled out, which is what the words wrap at.
+  expect(box!.width).toBeCloseTo(200 / board.scale, -0.5)
+  expect(box!.left).toBeCloseTo(60 / board.scale, -0.5)
+
+  // The caret is in it already, so typing is the next thing you do.
+  await expect(page.locator('.w-text.editing')).toHaveCount(1)
+  await page.keyboard.type('A run of words long enough to need a second line inside the box it was given.')
+  await page.waitForTimeout(400)
+
+  const typed = await drawnShape(page)
+  expect(typed!.width).toBe(box!.width)
+  // Wrapped rather than run on: more than one line's worth of height.
+  expect(typed!.height).toBeGreaterThan(box!.height)
+})
+
+test('a click with the text tool places a box where it was clicked', async ({ page }) => {
+  await page.locator(item('text')).click()
+  await page.waitForTimeout(300)
+  const board = await canvasBox(page)
+  await page.mouse.click(board.x + 80, board.y + 80)
   await page.waitForTimeout(600)
-  await expect(page.locator(WIDGET)).toHaveCount(1)
-  await expect(page.locator(WIDGET).first()).toHaveAttribute('data-type', 'w-text')
-  await expect(page.locator('.moveable-control-box').first()).toBeVisible()
+
+  const box = await drawnShape(page)
+  expect(box?.type).toBe('w-text')
+  expect(box!.left).toBeCloseTo(80 / board.scale, -0.5)
+  await expect(page.locator('.w-text.editing')).toHaveCount(1)
+  // The tool is spent, the way every other one is after it has drawn.
+  await expect(page.locator('.draw-hint')).toHaveCount(0)
+})
+
+test('Escape mid-drag leaves the page as it was', async ({ page }) => {
+  await page.locator(item('text')).click()
+  await page.waitForTimeout(300)
+  const board = await canvasBox(page)
+  await page.mouse.move(board.x + 60, board.y + 50)
+  await page.mouse.down()
+  await page.mouse.move(board.x + 240, board.y + 150, { steps: 8 })
+  await expect(page.locator('.draw-text-band')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+  await page.mouse.up()
+  await page.waitForTimeout(500)
+
+  expect(await widgetCount(page)).toBe(0)
+  await expect(page.locator('.draw-hint')).toHaveCount(0)
+})
+
+test('a text box nobody typed into is taken back off the page', async ({ page }) => {
+  await page.locator(item('text')).click()
+  await page.waitForTimeout(300)
+  const board = await dragOnPage(page, { x: 60, y: 50 }, { x: 260, y: 150 })
+  await page.waitForTimeout(500)
+  expect(await widgetCount(page)).toBe(1)
+
+  // Clicked away from without a word typed into it, so there is nothing to keep.
+  await page.mouse.click(board.x + board.width - 30, board.y + board.height - 30)
+  await page.waitForTimeout(800)
+  expect(await widgetCount(page)).toBe(0)
 })
 
 test('the QR and Table buttons put one of theirs on the page', async ({ page }) => {
@@ -69,6 +131,14 @@ test('the Shapes popover arms a tool, and the tool draws', async ({ page }) => {
   await page.mouse.up()
   await page.waitForTimeout(600)
   await expect(page.locator(`${WIDGET}[data-type="w-ellipse"]`)).toHaveCount(1)
+})
+
+test('the Shapes menu offers the shapes and leaves the pen its own slot', async ({ page }) => {
+  await page.locator(item('shapes')).click()
+  await page.waitForTimeout(300)
+  await expect(page.locator('.tool-dock__shape')).toHaveCount(4)
+  await expect(page.locator('.tool-dock__shape[data-tool="pen"]')).toHaveCount(0)
+  await expect(page.locator(item('pen'))).toBeVisible()
 })
 
 test('the pen has a slot of its own', async ({ page }) => {

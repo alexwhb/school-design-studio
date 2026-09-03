@@ -1,0 +1,28 @@
+// The band the text tool pulls out, drawn inside the page so its lengths are
+// design pixels and the canvas's own scale carries them onto the screen. It
+// borrows the wrapper and the snap guides from drawShape.less, which every
+// drawing tool shares; only the box is its own.
+//
+// Hollow, and outlined rather than filled: a shape band shows the shape that is
+// coming, and what is coming here is a box for words to sit in. A wash of
+// colour over it would be the one thing a text box never has.
+.draw-text-band {
+  position: absolute;
+  border-style: dashed;
+  border-color: @accent;
+  background: transparent;
+}
+
+.draw-text-band__size {
+  position: absolute;
+  left: 0;
+  margin: 4px 0;
+  padding: 1px 5px;
+  border-radius: @radius-sm;
+  background: @accent;
+  color: @accent-on;
+  font-size: @text-xs;
+  line-height: 1.5;
+  white-space: nowrap;
+  transform-origin: left top;
+}

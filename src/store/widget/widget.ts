@@ -183,6 +183,27 @@ export function deleteWidget() {
   }
 }
 
+/**
+ * Takes one named layer off the page, whatever is selected at the time.
+ *
+ * `deleteWidget` above deletes what you have chosen, which is the question the
+ * Delete key and the menu are asking. This one is for a layer the editor is
+ * withdrawing on its own account — a text box drawn and then left empty — where
+ * the selection has usually moved on to whatever was clicked instead and
+ * stealing it back to delete something would be the wrong answer.
+ */
+export function removeWidget(uuid: string) {
+  const widgets = widgetState.dWidgets
+  const index = widgets.findIndex((item) => item.uuid === uuid)
+  if (index === -1) return
+  widgets.splice(index, 1)
+  const chosen = widgetState.dSelectWidgets.findIndex((item) => item.uuid === uuid)
+  if (chosen !== -1) widgetState.dSelectWidgets.splice(chosen, 1)
+  if (widgetState.dActiveElement?.uuid === uuid) {
+    widgetState.dActiveElement = canvasState.dPage
+  }
+}
+
 export type TsetWidgetStyleData = {
   uuid: string
   key: keyof TdWidgetData

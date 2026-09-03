@@ -213,7 +213,7 @@ export type TWidgetState = {
  */
 export type TDragTool = 'rect' | 'ellipse' | 'polygon'
 
-export type TDrawTool = TDragTool | 'pen' | 'line'
+export type TDrawTool = TDragTool | 'pen' | 'line' | 'text'
 
 export type TControlState = {
   dMoving: boolean

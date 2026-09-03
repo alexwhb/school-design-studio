@@ -5,6 +5,7 @@ import Moveable from '@/components/business/moveable/Moveable'
 import RcMenu from '@/components/business/right-click-menu/RcMenu'
 import DrawShape from '@/components/business/draw-shape/DrawShape'
 import DrawLine from '@/components/business/draw-shape/DrawLine'
+import DrawText from '@/components/business/draw-shape/DrawText'
 import DrawPen from '@/components/business/draw-shape/DrawPen'
 import DesignBoard from '@/components/modules/layout/designBoard/DesignBoard'
 import ZoomControl, { type ZoomControlHandle } from '@/components/modules/layout/zoomControl/ZoomControl'
@@ -298,6 +299,7 @@ export default function Index() {
       <DrawShape />
       <DrawPen />
       <DrawLine />
+      <DrawText />
       <DownloadProgress
         percent={downloadPercent}
         text={downloadText}

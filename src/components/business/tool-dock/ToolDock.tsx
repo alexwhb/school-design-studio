@@ -39,12 +39,11 @@ import {
   SelectToolIcon,
   ShapesIcon,
   TableIcon,
-  TextToolIcon,
   UploadArrowIcon,
 } from '@/components/ui/icons'
 import { cx } from '@/utils/dom'
 import type { TDrawTool } from '@/store/types'
-import { addQrcode, addTable, addTextBox } from './addFromDock'
+import { addQrcode, addTable } from './addFromDock'
 import './toolDock.less'
 
 /**
@@ -59,8 +58,8 @@ const DOCK_GAP = 10
 /**
  * What the Shapes menu offers. The pen has a slot of its own on the bar, so
  * listing it here as well would be the same tool twice a centimetre apart.
- * Filtered rather than shortened at the source: `drawToolOrder` is what the
- * keyboard shortcuts are built from, and the pen still has one.
+ * Filtered here rather than dropped from `drawToolOrder`, which is the list of
+ * every tool that arms, in the order Adobe XD has them.
  */
 const shapesMenu = drawToolOrder.filter((tool) => tool !== 'pen')
 
@@ -129,8 +128,9 @@ export default function ToolDock() {
   }
 
   const PenToolIcon = drawTools.pen.Icon
+  const TextIcon = drawTools.text.Icon
   const hint = armed ? toolHint(armed) : null
-  const shapeArmed = !!armed && armed !== 'pen'
+  const shapeArmed = !!armed && armed !== 'pen' && armed !== 'text'
 
   return (
     <div className="tool-dock" style={{ bottom: bottom + 'px', left: sl + 'px' }}>
@@ -149,8 +149,14 @@ export default function ToolDock() {
           <DockButton label="Select" tool="select" quiet={!!armed} active={!armed} onClick={() => setDrawTool(null)}>
             <SelectToolIcon className="tool-dock__icon" />
           </DockButton>
-          <DockButton label="Text" tool="text" quiet={!!armed} onClick={addTextBox}>
-            <TextToolIcon className="tool-dock__icon" />
+          <DockButton
+            label={`${drawTools.text.label} (${drawTools.text.shortcut})`}
+            tool="text"
+            quiet={!!armed}
+            active={armed === 'text'}
+            onClick={() => pick('text')}
+          >
+            <TextIcon className="tool-dock__icon" />
           </DockButton>
           <Popover
             placement="top"

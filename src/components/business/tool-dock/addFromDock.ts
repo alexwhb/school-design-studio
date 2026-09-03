@@ -1,6 +1,6 @@
 /**
- * The three things the dock puts on the page outright, rather than by arming a
- * tool and waiting for a drag.
+ * The two things the dock puts on the page outright, rather than by arming a
+ * tool and waiting for a gesture.
  *
  * They were the bottom half of the Tools panel before the dock replaced it.
  * Each one is bracketed by hand: the dock floats over the board, and a control
@@ -15,28 +15,6 @@ import { setShowMoveable } from '@/store/control'
 import { addWidget } from '@/store/widget'
 import { wQrcodeSetting } from '@/components/modules/widgets/wQrcode/wQrcodeSetting'
 import { wTableSetting } from '@/components/modules/widgets/wTable/wTableSetting'
-import { wTextSetting } from '@/components/modules/widgets/wText/wTextSetting'
-
-/**
- * A text box in the middle of the page, ready to be typed into. The same box
- * the Text panel's "Body text" preset drops, because the dock's Text tool and
- * that preset are the same request asked in two places.
- */
-export function addTextBox() {
-  setShowMoveable(false)
-  const setting = JSON.parse(JSON.stringify(wTextSetting))
-  setting.text = 'Add a little bit of body text'
-  setting.fontSize = 24
-  setting.fontWeight = 'normal'
-
-  const { width: pW, height: pH } = canvasState.dPage
-  const estimated = setting.fontSize * 0.55 * setting.text.length
-  setting.width = Math.round(Math.min(estimated, pW * 0.8))
-  setting.left = Math.round((pW - setting.width) / 2)
-  setting.top = Math.round((pH - setting.fontSize * setting.lineHeight) / 2)
-
-  recordHistory(() => addWidget(setting))
-}
 
 export function addQrcode() {
   setShowMoveable(false)

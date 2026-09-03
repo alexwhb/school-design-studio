@@ -13,17 +13,18 @@
  * and comes out at whatever size it was pulled to; the pen is a point at a time
  * and is not finished until it is told it is, and it is drawn by its own
  * component. The line is a drag too, but it is pulled from one point to another
- * rather than out of a box, so it has a component of its own as well.
- * Everything the dock shows is common to both and lives in `drawTools`; what a
- * drag needs to make a shape out of a rectangle is in `dragTools`, which is
- * what `DrawShape` reads and what makes "is this drag mine?" a lookup rather
- * than a list of names.
+ * rather than out of a box, so it has a component of its own as well, and so
+ * does the text tool, which is pulled out of a box like a shape but leaves a
+ * box of words behind rather than a shape. Everything the dock shows is common
+ * to all of them and lives in `drawTools`; what a drag needs to make a shape
+ * out of a rectangle is in `dragTools`, which is what `DrawShape` reads and
+ * what makes "is this drag mine?" a lookup rather than a list of names.
  *
  * The keys are `TControlState['dDrawTool']`, which is where the armed tool is
  * held, so the two cannot drift apart without the compiler noticing.
  */
 import type { ComponentType } from 'react'
-import { EllipseIcon, LineIcon, PenIcon, PolygonIcon, RectangleIcon } from '@/components/ui/icons'
+import { EllipseIcon, LineIcon, PenIcon, PolygonIcon, RectangleIcon, TextToolIcon } from '@/components/ui/icons'
 import { wEllipseSetting } from '@/components/modules/widgets/wEllipse/wEllipseSetting'
 import { wPolygonSetting } from '@/components/modules/widgets/wPolygon/wPolygonSetting'
 import { wRectSetting } from '@/components/modules/widgets/wRect/wRectSetting'
@@ -85,7 +86,7 @@ export const dragTools: Record<TDragTool, TDragToolSpec> = {
   },
 }
 
-/** Every tool the dock offers: the drag tools, the line and the pen. */
+/** Every tool the dock offers: the drag tools, the line, the pen and text. */
 export const drawTools: Record<TDrawTool, TDrawToolSpec> = {
   ...dragTools,
   line: {
@@ -97,6 +98,11 @@ export const drawTools: Record<TDrawTool, TDrawToolSpec> = {
     label: 'Pen',
     Icon: PenIcon,
     shortcut: 'P',
+  },
+  text: {
+    label: 'Text',
+    Icon: TextToolIcon,
+    shortcut: 'T',
   },
 }
 
@@ -118,6 +124,9 @@ export function toolHint(tool: TDrawTool): { lead: string; rest: string } {
   }
   if (tool === 'line') {
     return { lead: 'Drag to draw a line.', rest: 'Shift holds it to 45°, Alt draws it from the centre, Esc cancels.' }
+  }
+  if (tool === 'text') {
+    return { lead: 'Drag to draw a text box, or click to place one.', rest: 'The words wrap inside the box you pull out. Esc cancels.' }
   }
   const { noun, equal } = dragTools[tool]
   return { lead: `Drag to draw ${noun}.`, rest: `Shift keeps it ${equal}, Alt draws it from the centre, Esc cancels.` }
