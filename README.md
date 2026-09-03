@@ -216,7 +216,7 @@ A4, flyers, name badges, display boards.
 **The tool dock.** New — the Tools panel is now a floating dock at the foot of
 the canvas, and its Text tool draws the box the words go in. See below.
 
-**Lines and arrows.** New. See below.
+**Lines and arrows.** New — a Line tool and an Arrow tool. See below.
 
 **Image adjustments.** New. See below.
 
@@ -547,14 +547,14 @@ a left-hand Tools tab, which spent a whole panel on seven buttons and pushed the
 board over to do it.
 
 Select puts the pointer back, which is also what Escape does. Text arms a tool
-rather than dropping a box: see below. Shapes opens a row of the four shape
-tools above the dock — rectangle, ellipse, polygon, line — and Pen has a slot of
-its own beside them, being a way of drawing rather than a shape. Image offers a
-file off this machine or the Photos panel. QR code and Table put theirs on the
-page outright.
+rather than dropping a box: see below. Shapes opens a row of five above the dock
+— rectangle, ellipse, polygon, line and arrow — and Pen has a slot of its own
+beside them, being a way of drawing rather than a shape. Image offers a file off
+this machine or the Photos panel. QR code and Table put theirs on the page
+outright.
 
-Every tool keeps its keyboard shortcut: `T`, `R`, `E`, `Y`, `L`, `P` arm and
-disarm the matching tool wherever the pointer is. While one is armed the dock
+Every tool keeps its keyboard shortcut: `T`, `R`, `E`, `Y`, `L`, `A`, `P` arm
+and disarm the matching tool wherever the pointer is. While one is armed the dock
 says what it is waiting for on a green line above itself, with an **Esc** chip
 on the end that puts the pointer back. The rubber band while a shape is being
 pulled out is the shape that is coming rather than the box it came from: a circle
@@ -600,13 +600,21 @@ the start down and click again to finish, with a rubber line following the
 pointer in between. Shift holds it to a right angle or a diagonal, Alt draws it
 out from the middle, and Escape takes back a line that has only one end down.
 
-The Graphics panel's **Arrows** row is the same tool wearing a preset. Clicking
-one arms the line tool carrying that preset's heads and dash — the tile stays
-lit and the dock says what is coming — and the arrow is then drawn between two
-points like any other line, rather than landing ready-made in the middle of the
-page where it has to be moved and resized before it points at anything. Clicking
-the lit tile puts the pointer back; arming the plain Line tool afterwards draws
-a bare line.
+**Arrow** sits beside it in the same menu, on the `A` key, and is the same two
+gestures again — what it leaves behind is a line with a triangle on its far end.
+It is not a tool of its own: it arms the line tool carrying the `Arrow` preset,
+which is what puts the head on. An arrow being the line most people are actually
+after, it is worth a button rather than a trip to the panel.
+
+The Graphics panel's **Arrows** row is that same trick with the other presets —
+a double arrow, a dashed one, a dotted rule. Clicking one arms the line tool
+carrying that preset's heads and dash — the tile stays lit and the dock says
+what is coming — and the arrow is then drawn between two points like any other
+line, rather than landing ready-made in the middle of the page where it has to
+be moved and resized before it points at anything. Clicking the lit tile puts
+the pointer back; arming the plain Line tool afterwards draws a bare line. The
+panel's Arrow tile and the dock's Arrow item are one armed state, so either
+lights both.
 
 A line is an open path, so it takes the same stroke colour, thickness and dash
 as any other path, and its points can still be moved. What is new is the ends:
