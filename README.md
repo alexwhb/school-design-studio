@@ -235,8 +235,10 @@ project's marketing site.
 ## Resizing a design
 
 The reuse people actually ask for: the flyer that worked becomes a slide, or a
-display board, without rebuilding it. **File → Resize design…**, or the Resize
-button under Page size in the settings panel.
+display board, without rebuilding it. **File → Resize design…**, or the sheet
+name under Page in the settings panel. The width and height beside it can also
+be typed straight in, which runs the same resize with the artwork fitted to the
+new shape.
 
 Three decisions, in the order you make them. How big — by preset or by typing a
 size. What happens to the artwork:
@@ -327,14 +329,45 @@ and, at "Fit to screen", grows into the room it has just been given. Which
 panels you had hidden is remembered between sessions: it belongs to you rather
 than to the design, so it is kept in the browser and never saved into a file.
 
+## The Design tab
+
+The panel on the right has two tabs. **Design** is what you have selected;
+**Layers** is everything on the page.
+
+The Design tab opens with the thing itself: a badge for the kind of element it
+is, the name it goes by in the Layers tab, and buttons to duplicate or delete
+it. Under that is the align row — three ways across the page, three ways down —
+and then the element's own settings, in the same order whatever is selected:
+
+- **Transform** — X, Y, width, height and the angle, two to a row, over the
+  arrange buttons that move it through the stack.
+- Whatever only this kind of element has: a box's corners, a polygon's sides, a
+  path's points, a photograph's crop, a text box's type.
+- **Appearance** — how solid it is, what it is filled with, and its border. A
+  fill and a border are each one row: a check that switches it on, the colour
+  it paints, its name, and a pencil that opens the picker. The hex sits under
+  the row, and says which of the school's colours it is when it is one of them.
+- **Effects** — the drop shadow, and for text the effect presets and the curve.
+
+With nothing selected the tab says so and shows the page instead: its size, the
+sheet it would print on, its background, and the two things the editor draws
+over it while you work — snapping and the grid.
+
+Every section is an uppercase eyebrow over its content with a hairline running
+the full width of the panel between one and the next, so the tab reads as a
+stack of settings rather than a list of boxes.
+
 ## Layers
 
 The Layers tab in the panel on the right lists everything on the page, topmost
 first, with a group's members under the group itself. Drag a row to change what
 sits in front of what.
 
-Each row carries two toggles at its end. The state a layer is not in stays out
-of the way until you hover over the row; the state it is in is always on show.
+A row is the kind of thing it is — one character in a small tinted square, or a
+thumbnail for a photograph — then its name, then two toggles. Double-click a row
+to rename it; clearing the name hands it back to the element's own text. The
+state a layer is not in stays out of the way until you hover over the row; the
+state it is in is always on show.
 
 - **Lock** holds an element where it is. It is still drawn and still exported,
   and it can still be selected — that is how you see it is locked — but it will
@@ -352,7 +385,7 @@ puts them back.
 
 ## Arrange and lock
 
-What sits in front of what. Every element's settings panel carries an Arrange
+What sits in front of what. Every element's Transform section carries an arrange
 row, and the same four moves are in the right-click menu and on the keyboard:
 
 | Move | Shortcut |
@@ -419,7 +452,9 @@ was in the middle of changing.
 **File → Show grid** rules the page into squares, and **Grid spacing** on the
 row underneath sets how big they are: 25, 50 or 100 design pixels. Choosing a
 spacing turns the grid on, because asking for 25px squares and being handed none
-would be a strange answer. The setting belongs to you rather than to the design
+would be a strange answer. The same pair sit under **Canvas** in the page
+settings, where the size can be any number of pixels rather than one of the
+three. The setting belongs to you rather than to the design
 — it is remembered between sessions, like the snapping toggle and the theme, and
 it never travels to whoever opens the file next.
 
@@ -438,10 +473,12 @@ away.
 
 ## Outlines and keylines
 
-Shapes and photographs both take a **Border** in the settings panel: a
-thickness, a colour, and a choice of solid, dashed or dotted. Nothing is drawn
-until the thickness leaves zero, and the colour and the style only appear once
-there is a line for them to apply to.
+Shapes and photographs both take a **Border** in the Appearance section: a row
+with a check, the colour it is drawn in and a pencil that opens the picker, over
+a thickness and a choice of solid, dashed or dotted. The check is the thickness:
+switching it off puts the thickness to zero and switching it on brings back what
+was last set. Nothing is drawn until the thickness leaves zero, and the style
+only appears once there is a line for it to apply to.
 
 The line is always drawn inside the element's own edge, so outlining something
 never makes it bigger. The selection box still fits what you can see, a shape on
@@ -471,9 +508,9 @@ set.
 ## Shadows
 
 Text has carried shadows all along, as one feature of a stacked text effect.
-Photographs and shapes had nothing. Both now have a **Shadow** section in the
-settings panel: switch on *Drop shadow* and set a colour, a blur and an x/y
-offset. There is no shadow until it is switched on.
+Photographs and shapes had nothing. Both now have a *Drop shadow* row under
+**Effects**: check it on, open the picker from the swatch beside it, and set a
+blur and an x/y offset underneath. There is no shadow until it is switched on.
 
 The shadow traces what the artwork paints rather than the box it sits in, so a
 cut-out PNG casts the shape of what is in it, a shape casts its own outline, and
@@ -760,7 +797,7 @@ src/common/methods/export/textRuns.ts   the same markup as PowerPoint text runs
 ## Curved text
 
 What a badge, a crest or a Sports Day header is set on. Select a text box and
-drag **Curve**, under Line height in the settings panel.
+drag **Curve**, on the *Curve text* row under Effects in the settings panel.
 
 The slider is the sweep of the arc in degrees, not a radius: half a turn is half
 a turn whether the line is one word or six, where a fixed radius would bend a
