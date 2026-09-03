@@ -1,3 +1,11 @@
+// How wide the name box may grow, and the side padding its wrapper carries.
+// Both are named because a content-sized field has to cap itself: a percentage
+// max-width resolved against a box that this same field is sizing counts as
+// none, so the input overflows its wrapper instead of stopping at it. It
+// therefore takes the cap less the padding, and the wrapper takes the cap.
+@title-width-max: 320px;
+@title-pad-x: 8px;
+
 .top-title {
   flex: 1;
   min-width: 0;
@@ -21,13 +29,13 @@
   .input-wrap {
     flex: 0 1 auto;
     width: 100%;
-    max-width: 320px;
+    max-width: @title-width-max;
 
     .el-input__wrapper {
       background: transparent;
       box-shadow: none;
-      padding-left: 8px;
-      padding-right: 8px;
+      padding-left: @title-pad-x;
+      padding-right: @title-pad-x;
     }
     input {
       color: @ink;
@@ -44,6 +52,28 @@
     .el-input__wrapper.is-focus {
       background: @surface;
       box-shadow: 0 0 0 1px @accent inset;
+    }
+  }
+}
+
+// The name box is only as wide as the name, so the Saved pill sits beside the
+// words rather than at the far end of an empty stretch of field. Element Plus
+// gives both the box and the field inside it a width of 100%, and both have to
+// be let go of before either can size itself. Guarded, because a browser
+// without field-sizing would fall back to an input's default twenty-character
+// width rather than to anything sensible; there it keeps the fixed width this
+// always had.
+@supports (field-sizing: content) {
+  .top-title .input-wrap {
+    width: auto;
+
+    input {
+      field-sizing: content;
+      width: auto;
+      // Enough to hold "Untitled design", so a name being cleared does not
+      // leave a box too small to aim at.
+      min-width: 120px;
+      max-width: @title-width-max - @title-pad-x * 2;
     }
   }
 }
