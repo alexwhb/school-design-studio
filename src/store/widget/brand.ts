@@ -270,6 +270,29 @@ export function rankDesignColors(layouts: TdLayout[]): string[] {
 }
 
 /**
+ * Where one colour is already painted, so the Brand panel can say what
+ * changing it would touch before it is changed. Transparency is ignored: a
+ * wash of the school's navy at 7% is still the school's navy.
+ */
+export function countColorUsage(layouts: TdLayout[], color: string): { layers: number; pages: number } {
+  const target = parseHex(color)
+  if (!target) return { layers: 0, pages: 0 }
+  let layers = 0
+  let pages = 0
+  for (const layout of layouts) {
+    let here = 0
+    for (const slot of colorSlots([layout])) {
+      const parsed = parseHex(slot.read())
+      if (!parsed || parsed.rgb !== target.rgb) continue
+      here++
+      if (slot.kind === 'layer') layers++
+    }
+    if (here) pages++
+  }
+  return { layers, pages }
+}
+
+/**
  * Pushes the kit onto every page.
  *
  * Fields first, then fonts, then colours, each only if asked. The colour pass
