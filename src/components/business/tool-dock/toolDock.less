@@ -10,8 +10,10 @@
   box-sizing: border-box;
   display: flex;
   justify-content: center;
-  // Above Moveable's selection box, which reaches down over the same corner.
-  z-index: 3100;
+  // The same layer as the zoom pill: chrome over the board, and under every
+  // menu and popover — the page strip's own page menu opens upwards into this
+  // corner, and a dock above it would take the clicks meant for it.
+  z-index: 1000;
   // Only the pill itself answers the mouse; the rest of the row is board.
   pointer-events: none;
 }
@@ -122,8 +124,6 @@
   border: 1px solid @line;
   box-shadow: @shadow-pop;
   backdrop-filter: blur(10px);
-  // Above Moveable, which the dock itself already has to clear.
-  z-index: 3200;
 
   // The card sits directly above the dock, as one more row of it; an arrow
   // pointing back down at the button it came from is noise at that distance.
@@ -226,11 +226,4 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: @text-xs - 1px;
   color: @ink-3;
-}
-
-// The dock's own tooltips have to clear its popovers, which already stand above
-// Moveable; a tooltip on a shape in the Shapes card would otherwise open behind
-// the card it belongs to.
-.ds-popper.tool-dock__tip {
-  z-index: 3300;
 }

@@ -152,7 +152,7 @@ export default function ToolDock() {
                 {drawToolOrder.map((tool) => {
                   const { Icon, label, shortcut } = drawTools[tool]
                   return (
-                    <Tooltip key={tool} content={`${label} (${shortcut})`} placement="top" showAfter={400} popperClass="tool-dock__tip">
+                    <Tooltip key={tool} content={`${label} (${shortcut})`} placement="top" showAfter={400}>
                       <button
                         type="button"
                         className={cx('tool-dock__shape', { 'is-armed': armed === tool })}
@@ -248,7 +248,7 @@ type DockButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
  */
 function DockButton({ label, tool, active, wide, quiet, children, ...rest }: DockButtonProps) {
   return (
-    <Tooltip content={label} placement="top" showAfter={400} disabled={quiet} popperClass="tool-dock__tip">
+    <Tooltip content={label} placement="top" showAfter={400} disabled={quiet}>
       <button
         {...rest}
         type="button"
