@@ -294,6 +294,19 @@ What a page operation *means* lives in `src/store/design/widget/actions/pages.ts
 rather than in the strip, so that keeping the current page index, the widget
 list and the canvas in step is written once instead of once per button.
 
+## Hiding the panels
+
+The editor is three columns: the rail of tabs on the far left, the panel that
+tab opens beside it, and the design panel on the right. Either panel can be put
+away — the chevron in its own top corner, or clicking the rail tab that is
+already open — leaving a 26px strip in its place that brings it back. The rail
+itself never goes, so every panel is still one click away.
+
+The workspace is re-measured when a panel comes or goes, so the page recentres
+and, at "Fit to screen", grows into the room it has just been given. Which
+panels you had hidden is remembered between sessions: it belongs to you rather
+than to the design, so it is kept in the browser and never saved into a file.
+
 ## Layers
 
 The Layers tab in the panel on the right lists everything on the page, topmost
