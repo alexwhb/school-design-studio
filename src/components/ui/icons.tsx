@@ -246,3 +246,41 @@ export function TableIcon({ className, width = '1em', height = '1em' }: IconProp
     </svg>
   )
 }
+
+/** Points back towards the panel it belongs to: hides a left panel, reopens a right one. */
+export function ChevronLeftIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10 4.5 6.5 8 10 11.5" />
+    </svg>
+  )
+}
+
+/** The mirror of it: hides a right panel, reopens a left one. */
+export function ChevronRightIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 4.5 9.5 8 6 11.5" />
+    </svg>
+  )
+}
+
+/** An arrow curling back on itself, anticlockwise. */
+export function UndoIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 7h6.2a3.3 3.3 0 1 1 0 6.6H7" />
+      <path d="M5.6 4.4 3 7l2.6 2.6" />
+    </svg>
+  )
+}
+
+/** The same arrow the other way round. */
+export function RedoIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M13 7H6.8a3.3 3.3 0 1 0 0 6.6H9" />
+      <path d="M10.4 4.4 13 7l-2.6 2.6" />
+    </svg>
+  )
+}
