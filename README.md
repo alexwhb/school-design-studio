@@ -803,25 +803,51 @@ as the uploads and the draft, so it is there the next morning; when the editor
 is embedded, the host app hands the kit in and is told about every change
 instead — see [EMBEDDING.md](EMBEDDING.md).
 
-The panel is five blocks, top to bottom.
+The panel opens on **the school itself**: a card carrying the crest, the name
+and the tagline, and under them **Apply brand to this design** with a sentence
+saying what pressing it would do and how many pages it would reach. It is first
+because it answers the question anyone opening this tab has — is my kit set up,
+and what will it do to this design. The five blocks below it are the pieces that
+card is made of. An empty kit shows a checkerboard and *Your school*, and the
+button is off, because there is nothing yet to apply.
 
-- **Logo.** Upload a PNG or an SVG. Neither is ever re-encoded as JPEG, so a
-  crest with a transparent background keeps it rather than picking up a white
-  box (the same rule the Uploads panel follows — see **Uploads** above).
-  **Add to page** puts it down at a fifth of the page's width, and never larger
-  than the file itself, so a small crest is not blown up soft.
-- **Colours.** Up to eight, main colour first. Clicking one puts it on whatever
-  is selected: the words of a text box, the fill of a shape, the first colour of
-  a piece of line art, or — with nothing selected — the page itself. That is one
-  undo step. They also appear as a **Brand** row at the top of every colour
-  picker in the editor, above the recent colours, so the school's navy is one
-  click away from any swatch.
-- **Fonts.** A heading font and a body font. Both appear as a **Brand** group at
-  the top of the text panel's font list. The families stay in their own groups
-  further down too; the group at the top is a shortcut, not a filter.
+- **Logo.** One logo, shown as a tile you click to put it on the page — at a
+  fifth of the page's width, and never larger than the file itself, so a small
+  crest is not blown up soft. The × on the tile takes it out; the dashed tile
+  beside it uploads or replaces. A PNG or an SVG is never re-encoded as JPEG,
+  so a crest with a transparent background keeps it rather than picking up a
+  white box (the same rule the Uploads panel follows — see **Uploads** above).
+- **Colours.** Up to eight, main colour first, one row each. Clicking a row puts
+  that colour on whatever is selected: the words of a text box, the fill of a
+  shape, the first colour of a piece of line art, or — with nothing selected —
+  the page itself. That is one undo step. They also appear as a **Brand** row at
+  the top of every colour picker in the editor, above the recent colours, so the
+  school's navy is one click away from any swatch.
+
+  Each row is labelled by where it sits — Primary, Secondary, Colour 3 — beside
+  the nearest common name for the hue, *navy*, *gold*, *paper*. Neither is
+  stored: a kit holds an order and a set of colours, and a name typed in once
+  would be wrong the moment the order changed.
+
+  The pencil on a row opens the **editing card** in place of it: the draft
+  colour and its hex, a strip of the kit's own colours and the ones this design
+  already uses most (`rankDesignColors`), the full picker, and a line saying
+  where the colour being edited is painted today. Nothing changes until **Save
+  to kit**; **Cancel** leaves the row as it was, and a quiet **Remove from kit**
+  takes the colour out. Editing happens in the row rather than in a popover
+  because the strip and that line are the reasons to change a colour at all, and
+  neither survives being read through a hole. **Add a colour** opens the same
+  card on a fresh colour.
+- **Fonts.** A heading font and a body font, each card showing the chosen
+  family's name set in that family, at about the size the Apply brand pass uses
+  it at — so the pair can be judged as a pair before it is put on a design.
+  Both appear as a **Brand** group at the top of the text panel's font list. The
+  families stay in their own groups further down too; the group at the top is a
+  shortcut, not a filter.
 - **Details.** Name, short name, tagline, address, phone, email, website. Each
   box shows the sample school's answer as its placeholder, so an empty kit still
-  reads as an example rather than as a form.
+  reads as an example rather than as a form. The card at the top of the panel
+  takes its name and its second line from here.
 - **Fields.** `{{school.name}}`, `{{school.tagline}}`, `{{school.email}}` and
   the rest, each shown next to what it currently reads as. Clicking one adds it
   to the end of the selected text box, or drops a new text box carrying it in
@@ -859,9 +885,10 @@ features can compose with their own.
 
 ### Apply brand to this design
 
-The button pinned under the panel, for the design that was made before the kit
-was, or brought in from somewhere else. One dialog, one confirmation, and the
-whole thing is **one undo step** however many pages it touches.
+The button in the school's card at the top of the panel, for the design that was
+made before the kit was, or brought in from somewhere else. One dialog, one
+confirmation, and the whole thing is **one undo step** however many pages it
+touches.
 
 It does three passes:
 
