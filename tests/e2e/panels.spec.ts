@@ -97,34 +97,17 @@ test('clicking the tab already showing puts the panel away', async ({ page }) =>
   await expect(page.locator('#widget-panel .widget-wrap')).toBeHidden()
 })
 
-test('an open-panel event opens that tab, panel hidden or not', async ({ page }) => {
-  // The editor loads more than the default 250 resource entries, and the one
-  // wanted below is among the first. Asking for a bigger buffer has to happen
-  // before anything is fetched, so the page is opened again with it in place.
-  await page.addInitScript(() => performance.setResourceTimingBufferSize(3000))
-  await page.goto(APP_URL + '/home')
-  await page.waitForSelector('#widget-panel')
-  await page.waitForTimeout(800)
-
+test('the dock asks for the Photos tab, panel hidden or not', async ({ page }) => {
   await page.locator('#widget-panel [aria-label="Hide panel"]').click()
   await page.waitForTimeout(400)
+  await expect(page.locator('#widget-panel .widget-wrap')).toBeHidden()
 
-  // Nothing emits this yet — the canvas dock's "Browse photos" will — so the
-  // bus is reached as a module, which is how the dev server hands out the
-  // editor's own source. The URL comes from what the page actually fetched
-  // rather than from the path: after an edit Vite serves the file with a
-  // version on it, and importing the bare path would hand back a second copy
-  // of the bus with nobody listening to it. The import goes through
-  // new Function so that TypeScript does not try to resolve it either.
-  await page.evaluate(async () => {
-    const loaded = performance
-      .getEntriesByType('resource')
-      .map((entry) => entry.name)
-      .find((name) => name.includes('/src/utils/plugins/eventBus.ts'))
-    const load = new Function('path', 'return import(path)') as (path: string) => Promise<any>
-    const bus = await load(loaded || '/src/utils/plugins/eventBus.ts')
-    bus.default.emit('open-panel', 'photo-list-wrap')
-  })
+  // "Browse photos" on the dock's image menu is what emits open-panel; going
+  // through it exercises the bus the way a person does, rather than importing
+  // the module by URL, which the dev server does not always hand back the same
+  // copy of.
+  await page.locator('.tool-dock__item[data-tool="image"]').click()
+  await page.locator('.tool-dock__menu').getByText('Browse photos').click()
   await page.waitForTimeout(600)
 
   await expect(page.locator('#widget-panel .widget-wrap')).toBeVisible()
