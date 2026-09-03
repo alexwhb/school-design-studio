@@ -1,21 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
-import alignIconList from '@/assets/data/AlignListData'
 import { getImage } from '@/common/methods/getImgDetail'
 import Button from '@/components/ui/Button'
-import PanelSections, { PanelSection } from '@/components/ui/PanelSection'
+import { PanelSection } from '@/components/ui/PanelSection'
+import { CornerRadiusIcon, CropIcon, ZoomIcon } from '@/components/ui/icons'
 import PictureSelector, { type PictureSelectorHandle } from '@/components/business/picture-selector/PictureSelector'
 import { canvasState, controlState, widgetState } from '@/store/state'
 import { setCropUuid, setShowRotatable } from '@/store/control'
-import { setUpdateRect } from '@/store/force'
-import { updateAlign, updateWidgetData, updateWidgetMultiple } from '@/store/widget'
+import { updateWidgetData, updateWidgetMultiple } from '@/store/widget'
 import type { TGetImageListResult } from '@/api/material'
 import BorderControls from '../../settings/BorderControls'
 import ArrangeRow from '../../settings/ArrangeRow'
-import IconItemSelect, { type TIconItemSelectData } from '../../settings/IconItemSelect'
+import { type TIconItemSelectData } from '../../settings/IconItemSelect'
 import NumberInput from '../../settings/NumberInput'
 import NumberSlider from '../../settings/NumberSlider'
+import OpacityRow from '../../settings/OpacityRow'
 import ShadowSelect from '../../settings/ShadowSelect'
+import TransformGrid from '../../settings/TransformGrid'
 import ContainerWrap from '../../settings/EffectSelect/ContainerWrap'
 import ImageAdjust from './components/ImageAdjust'
 import ImageBackground from './components/ImageBackground'
@@ -36,7 +37,6 @@ export default function WImageStyle() {
   // the Done button and the Scale slider with no crop editor behind them.
   const cropping = useSnapshot(controlState).dCropUuid === active?.uuid
   const canvasZoom = useSnapshot(canvasState).dZoom
-  const [activeNames, setActiveNames] = useState<string[]>(['2', '3', '4', '5', '6'])
   const [toolBarStyle, setToolBarStyle] = useState<Record<string, any>>({})
   const picBoxRef = useRef<PictureSelectorHandle | null>(null)
   const lastUuid = useRef<string | undefined>(undefined)
@@ -86,11 +86,6 @@ export default function WImageStyle() {
     finish(item.key || '', item.value === widgetState.dActiveElement?.flip ? null : item.value)
   }
 
-  function alignAction(item: TIconItemSelectData) {
-    updateAlign({ align: item.value as any, uuid })
-    requestAnimationFrame(() => setUpdateRect())
-  }
-
   function changeContainer(setting: any) {
     finish('mask', setting.svgUrl)
   }
@@ -135,90 +130,80 @@ export default function WImageStyle() {
 
   return (
     <div className="ds-image-style">
-      <PanelSections value={activeNames} onChange={setActiveNames}>
-        <PanelSection name="1" title="Size and position">
-          <div className="line-layout">
-            <NumberInput value={active.left} label="X" onChange={(v) => finish('left', Number(v))} />
-            <NumberInput value={active.top} label="Y" onChange={(v) => finish('top', Number(v))} />
-            <NumberInput value={active.width} label="W" onChange={(v) => finish('width', Number(v))} />
-            <NumberInput value={active.height} label="H" onChange={(v) => finish('height', Number(v))} />
-          </div>
-        </PanelSection>
-        <PanelSection name="2" title="Settings">
-          <Button style={{ width: '100%', marginBottom: 12 }} plain onClick={openPicBox}>
+      <PanelSection title="Crop &amp; fit">
+        <div className="image-actions">
+          <Button plain onClick={openPicBox}>
             Replace image
           </Button>
-          <div className="options">
-            {cropping ? (
-              <Button plain type="primary" onClick={() => imgCrop(false)}>
-                Done
-              </Button>
-            ) : (
-              <Button plain type="primary" onClick={() => imgCrop(true)}>
-                <i className="icon sd-caijian" />
-                Crop
-              </Button>
-            )}
-            <Button size="small" disabled plain>
-              Enhance
+          {cropping ? (
+            <Button plain type="primary" onClick={() => imgCrop(false)}>
+              Done
             </Button>
-          </div>
-          <ContainerWrap value={active.mask} onChange={changeContainer} />
-          <div className="slide-wrap">
+          ) : (
+            <Button plain type="primary" onClick={() => imgCrop(true)}>
+              <CropIcon />
+              Crop
+            </Button>
+          )}
+        </div>
+        {/* The picture inside its frame, which is only a thing while there is a
+            frame to move it in. */}
+        {cropping ? (
+          <div className="image-zoom">
+            <span className="image-zoom__icon" aria-hidden="true">
+              <ZoomIcon />
+            </span>
             <NumberSlider
-              value={active.opacity}
-              style={{ fontSize: 14 }}
-              label="Opacity"
-              step={0.05}
-              maxValue={1}
-              onChange={(value) => finish('opacity', value)}
-            />
-            <NumberSlider
-              value={active.radius}
-              style={{ fontSize: 14 }}
-              label="Corner radius"
-              maxValue={radiusMax}
-              onChange={(value) => finish('radius', value)}
-            />
-          </div>
-        </PanelSection>
-        <PanelSection name="5" title="Border">
-          <BorderControls
-            width={active.borderWidth}
-            color={active.borderColor}
-            style={active.borderStyle}
-            onChange={finish}
-          />
-        </PanelSection>
-        {active.isNinePatch ? (
-          <PanelSection name="3" title="Nine-patch settings">
-            <NumberSlider
-              value={active.sliceData?.ratio}
+              className="image-zoom__slider"
+              value={Math.min(Number(active.zoom) || 1, Number(active.zoomY ?? active.zoom) || 1)}
+              label="Zoom"
               step={0.01}
-              label="Ratio"
-              maxValue={10}
-              onChange={(value) => finishSliceData('ratio', value)}
+              minValue={1}
+              maxValue={3}
+              onChange={changeScale}
             />
-            <NumberSlider
-              value={active.sliceData?.left}
-              step={0.5}
-              label="Size"
-              onChange={(value) => finishSliceData('left', value)}
-            />
-          </PanelSection>
+          </div>
         ) : null}
-        <PanelSection name="6" title="Shadow">
+        <ContainerWrap value={active.mask} onChange={changeContainer} />
+      </PanelSection>
+
+      <PanelSection title="Corners">
+        <div className="image-corners">
+          <span className="image-corners__icon" aria-hidden="true">
+            <CornerRadiusIcon />
+          </span>
+          <NumberInput variant="underline" value={Math.round(Number(active.radius) || 0)} suffix="px" minValue={0} maxValue={Math.round(radiusMax)} onChange={(value) => finish('radius', Number(value))} />
+        </div>
+        <p className="image-corners__hint">Drag the round handle inside the photo&rsquo;s corner. All the way in gives you a pill — or a circle when the photo is square.</p>
+      </PanelSection>
+
+      <PanelSection title="Transform">
+        <TransformGrid active={active} rotation onChange={finish} />
+        <ArrangeRow uuid={uuid} className="arrange-row" label="" extra={FLIP_ICONS} onExtra={flipAction} />
+      </PanelSection>
+
+      <PanelSection title="Appearance">
+        <div className="slide-wrap">
+          <OpacityRow value={active.opacity} onChange={(value) => finish('opacity', value)} />
+          <BorderControls label="Keyline" width={active.borderWidth} color={active.borderColor} style={active.borderStyle} onChange={finish} />
+        </div>
+      </PanelSection>
+
+      <PanelSection title="Effects">
+        <ShadowSelect value={active.shadow} onChange={(value) => finish('shadow', value)} />
+      </PanelSection>
+
+      {active.isNinePatch ? (
+        <PanelSection title="Nine-patch settings">
           <div className="slide-wrap">
-            <ShadowSelect value={active.shadow} onChange={(value) => finish('shadow', value)} />
+            <NumberSlider value={active.sliceData?.ratio} step={0.01} label="Ratio" maxValue={10} onChange={(value) => finishSliceData('ratio', value)} />
+            <NumberSlider value={active.sliceData?.left} step={0.5} label="Size" onChange={(value) => finishSliceData('left', value)} />
           </div>
         </PanelSection>
-        <ImageAdjust uuid={uuid} filters={active.filters} />
-        <ImageBackground key={uuid} uuid={uuid} imgUrl={active.imgUrl} originalImgUrl={active.originalImgUrl} />
-        <br />
-        <ArrangeRow uuid={uuid} extra={FLIP_ICONS} onExtra={flipAction} />
-        <IconItemSelect data={alignIconList} onFinish={alignAction} />
-        <br />
-      </PanelSections>
+      ) : null}
+
+      <ImageAdjust uuid={uuid} filters={active.filters} />
+      <ImageBackground key={uuid} uuid={uuid} imgUrl={active.imgUrl} originalImgUrl={active.originalImgUrl} />
       {cropping ? (
         <InnerToolBar style={toolBarStyle}>
           <NumberSlider

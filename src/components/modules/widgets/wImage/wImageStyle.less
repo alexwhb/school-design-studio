@@ -2,18 +2,66 @@
   height: 100%;
   width: 100%;
 
-  .options {
+  // Replace and Crop share a line: they are the two things you do to a
+  // photograph, and neither is worth a row of its own.
+  .image-actions {
+    display: flex;
+    gap: @space-2;
     margin-bottom: @field-gap;
-    &__upload {
-      width: auto;
-      margin-left: @space-2;
-      display: inline-block;
+
+    .el-button {
+      flex: 1;
+      min-width: 0;
     }
-    .icon {
-      margin-right: 0.3em;
+    .el-button > span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: @space-2;
+    }
+    svg {
+      width: 15px;
+      height: 15px;
     }
   }
 
+  // A leading glyph, then the control it names — the shape the panel uses
+  // wherever a setting is better shown than spelled out.
+  .image-zoom,
+  .image-corners {
+    display: flex;
+    align-items: center;
+    gap: @space-3;
+    width: 100%;
+
+    &__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      width: 17px;
+      color: @ink-3;
+      svg {
+        width: 15px;
+        height: 15px;
+      }
+    }
+  }
+
+  .image-zoom {
+    margin-bottom: @field-gap;
+    &__slider {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .image-corners__hint {
+    margin: @space-2 0 0;
+    font-size: @text-xs;
+    line-height: 1.45;
+    color: @ink-3;
+  }
 
   // Shares the row with the buttons either side of it rather than claiming a
   // fixed width the 288px panel cannot always give it.
