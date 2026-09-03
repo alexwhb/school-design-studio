@@ -31,6 +31,15 @@ const LIGHTNESS_STEP = 0.02
 /** Design pixels to the inch on a page that is not a sheet of paper — a slide, a banner. */
 const SCREEN_DPI = 96
 
+/**
+ * The luminance at which black and white read equally well on a surface:
+ * solve (1.05)/(L+0.05) = (L+0.05)/0.05 and you get 0.179. Below it, going
+ * lighter buys more contrast than going darker; above it, the other way. It is
+ * the only non-arbitrary place to turn round, and turning round in the wrong
+ * place means a colour walks the long way and gives up short of the target.
+ */
+const PIVOT_LUMINANCE = 0.179
+
 export type TRgba = { r: number; g: number; b: number; a: number }
 
 /**
@@ -197,10 +206,10 @@ export function adjustForContrast(color: string, surface: string, target: number
   if (!rgb) return { color, ratio: start, met: false, changed: false }
 
   const hsl = toHsl(rgb)
-  // Away from the paper: on anything lighter than the middle the text has to
-  // go darker, and on a dark band it has to go lighter. Deciding by the
+  // Away from the surface: on anything lighter than the pivot the text has to
+  // go darker, and on a darker band it has to go lighter. Deciding by the
   // surface rather than by the text is what stops a mid-grey oscillating.
-  const direction = relativeLuminance(surface) > 0.36 ? -1 : 1
+  const direction = relativeLuminance(surface) > PIVOT_LUMINANCE ? -1 : 1
 
   let best = color
   let bestRatio = start
