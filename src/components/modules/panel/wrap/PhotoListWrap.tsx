@@ -258,7 +258,7 @@ export default function PhotoListWrap() {
         <PanelSectionBlock>
           <PanelEyebrow label={libraryLabel} note={keyword ? undefined : cate.name} />
           {notice ? <p className="panel-wrap__note">{notice}</p> : null}
-          <CardGrid columns={2}>
+          <CardGrid columns={2} className="photo-list-wrap__library">
             {photos.map((item, i) => (
               <Card
                 key={String(item.id) + i}
