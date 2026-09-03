@@ -16,8 +16,9 @@
   pointer-events: none;
 }
 
-// The hint, the popovers and the dock are one column so they stack on each
-// other, which is what puts the hint above the dock rather than over it.
+// The hint and the dock are one column, which is what puts the hint above the
+// dock rather than over it. The popovers are portalled and are placed against
+// the button they belong to instead.
 .tool-dock__column {
   display: flex;
   flex-direction: column;
