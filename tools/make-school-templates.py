@@ -19,6 +19,32 @@ meant to overwrite. The school's own name and contact line are merge fields,
 {{school.name}} and the like, filled in from the brand kit when the template
 is added; see the "fields" block below.
 
+Each template also declares its brand roles, so it arrives in the school's
+colours and fonts rather than the pack's navy and gold. A colour is primary
+if the template is *set* in it, secondary if the template highlights with it,
+and accent if it is a third colour that only labels or ticks; every poster
+therefore comes out in the school's first colour, which is what makes a wall
+of them look like one school. Neutrals — the creams, whites, inks and mists —
+are never listed and never touched, and nothing here is marked "keep".
+
+    101 109 110 111 112 113 115 118 119 120 124   navy primary   gold secondary
+    114 117 123                                   navy primary
+    106 116                                       deep navy primary  gold secondary
+    102                                           navy primary   gold secondary   red accent
+    104 126                                       red primary    gold secondary   navy accent
+    108                                           red primary    gold secondary
+    105                                           plum primary   gold secondary
+    103 125                                       teal primary
+    107 127                                       forest primary
+    121                                           navy primary   teal secondary
+    122                                           navy primary   teal secondary   plum accent
+
+Text boxes carry a role too, "heading", "body" or "keep", taken from the face
+they are set in: the display faces ask for the school's heading font, Inter
+and Merriweather for its body font, and Caveat asks to be left alone. The
+ROLES and LEAVE tables further down hold the whole of it; tools/check-brand-
+roles.py checks that nothing has been left out.
+
     python3 make-school-templates.py            # write the pack
     python3 make-school-templates.py --remove   # take it back out again
 
@@ -107,6 +133,29 @@ MERRIWEATHER = font('Merriweather', 'merriweather-400-700.woff2')
 PLAYFAIR = font('Playfair Display', 'playfair-display-400-700.woff2')
 CAVEAT = font('Caveat', 'caveat-400-700.woff2')
 
+# --------------------------------------------------------------- brand roles --
+# Which part of a school's kit each face is asking for. A kit carries a heading
+# font and a body font, and every text box says which of the two it wants, so
+# nothing has to be guessed back out of the font size when a template is added
+# to a design. Archivo is in the display set because this pack uses it as its
+# second display face — the dates and the slide headings — not as reading text.
+DISPLAY_FACES = {'Anton', 'Bebas Neue', 'Oswald', 'Fredoka', 'Playfair Display', 'Archivo'}
+# Faces whose look is the point of the layer they are on. The 5th grade trip is
+# handwritten because it is handwritten; a school's body font would flatten it.
+KEEP_FACES = {'Caveat'}
+
+
+def default_role(font_):
+    if font_['value'] in KEEP_FACES:
+        return 'keep'
+    return 'heading' if font_['value'] in DISPLAY_FACES else 'body'
+
+
+def key(colour):
+    """A colour as the brand block writes it: six hex digits, no hash, no alpha."""
+    return colour.lstrip('#')[:6].lower()
+
+
 sid = lambda: uuidlib.uuid4().hex[:12]
 
 _shapes = None
@@ -126,8 +175,13 @@ def load_shape(title):
 # ------------------------------------------------------------------ widgets --
 
 def text(body, *, font_, size, colour=INK, weight=400, align='center',
-         left, top, width, height=None, line_height=1.2, spacing=0):
+         left, top, width, height=None, line_height=1.2, spacing=0, role=None):
     """A text layer. `body` may contain <br/> for a line break.
+
+    `role` is the brand role the box asks for — 'heading', 'body' or 'keep'.
+    It defaults to whatever the face implies, which is right nearly everywhere
+    in this pack; pass it only where the box is doing a different job from the
+    one its face usually does.
 
     Text is stored raw, the way the upstream templates store it, rather than
     percent-encoded the way the sample *elements* do. The two are loaded by
@@ -144,6 +198,7 @@ def text(body, *, font_, size, colour=INK, weight=400, align='center',
         'left': left, 'top': top, 'transform': '',
         'lineHeight': line_height, 'letterSpacing': spacing,
         'fontSize': size, 'fontClass': dict(font_), 'fontFamily': font_['value'],
+        'brandRole': role or default_role(font_),
         'fontWeight': weight, 'fontStyle': 'normal', 'writingMode': 'horizontal-tb',
         'textDecoration': 'none', 'color': colour,
         'textAlign': align, 'text': body,
@@ -924,6 +979,66 @@ def field_trip():
     ]
 
 
+# ------------------------------------------------------------ brand colours --
+# Which of a template's colours plays which role, so that a template added
+# from the gallery arrives in the school's colours instead of the pack's.
+# primary is kit colour one, secondary two, accent three; a role the kit has no
+# colour for leaves the pack's own colour standing. Neutrals — the creams, the
+# whites, the inks and the mists — are never listed and never touched.
+#
+# The rule used here is what the template is *set in*, not what it uses most:
+# the poster's ground and its bands are primary, the colour it highlights with
+# is secondary, and a third colour that only labels or ticks is accent. Read
+# down the pack and every poster comes out in the school's first colour, which
+# is what makes a wall of them look like one school rather than nine.
+#
+# Nothing in this pack is marked "keep": every one of these is placeholder
+# collateral meant to be worn by the school that prints it. There is no poster
+# here whose colour is its meaning.
+ROLES = {
+    field_day: {NAVY: 'primary', GOLD: 'secondary'},
+    open_house: {NAVY: 'primary', GOLD: 'secondary', RED: 'accent'},
+    conferences: {TEAL: 'primary'},
+    book_fair: {RED: 'primary', GOLD: 'secondary', NAVY: 'accent'},
+    picture_day: {PLUM: 'primary', GOLD: 'secondary'},
+    spring_concert: {NAVY_DEEP: 'primary', GOLD: 'secondary'},
+    science_fair: {FOREST: 'primary'},
+    bake_sale: {RED: 'primary', GOLD: 'secondary'},
+    certificate: {NAVY: 'primary', GOLD: 'secondary'},
+    welcome_sign: {NAVY: 'primary', GOLD: 'secondary'},
+    slide_title: {NAVY: 'primary', GOLD: 'secondary'},
+    slide_content: {NAVY: 'primary', GOLD: 'secondary'},
+    slide_section: {NAVY: 'primary', GOLD: 'secondary'},
+    slide_agenda: {NAVY: 'primary'},
+    slide_number: {NAVY: 'primary', GOLD: 'secondary'},
+    slide_quote: {NAVY_DEEP: 'primary', GOLD: 'secondary'},
+    slide_two_columns: {NAVY: 'primary'},
+    slide_timeline: {NAVY: 'primary', GOLD: 'secondary'},
+    slide_photo: {NAVY: 'primary', GOLD: 'secondary'},
+    slide_three_numbers: {NAVY: 'primary', GOLD: 'secondary'},
+    # The ticks are the only second colour on the slide, so they take the
+    # second slot the gold takes everywhere else.
+    slide_next_steps: {NAVY: 'primary', TEAL: 'secondary'},
+    # Three faces, three colours: the roster is the one place in the pack
+    # where a school with a full kit gets all three of them on one page.
+    slide_team: {NAVY: 'primary', TEAL: 'secondary', PLUM: 'accent'},
+    slide_dates: {NAVY: 'primary'},
+    slide_closing: {NAVY: 'primary', GOLD: 'secondary'},
+    volunteer_signup: {TEAL: 'primary'},
+    spirit_week: {RED: 'primary', GOLD: 'secondary', NAVY: 'accent'},
+    field_trip: {FOREST: 'primary'},
+}
+
+# Colours that are painted, are not neutral by the app's test, and are still
+# not the school's to change. Each one is type set on top of a colour that the
+# brand does move, so lending it a kit colour would sink it into its own
+# background. The check script reads this table, so a new colour in the pack
+# has to be either given a role or written down here with its reason.
+LEAVE = {
+    DUSK: 'muted type on the navy slides — a pale navy grey, read as ink',
+}
+
+
 # Order is what the gallery shows, and the id is FIRST_ID plus the position, so
 # new entries go on the end: reordering this list would renumber every template
 # after the change and orphan the covers already shot for them.
@@ -972,6 +1087,30 @@ def page(title, width, height, background):
     }
 
 
+def painted(data):
+    """Every flat colour the design paints, as the brand block writes them.
+
+    The same walk the app makes when it recolours: a page background, a text
+    layer's colour, and each entry in a shape's colour list.
+    """
+    found = set()
+    for layout in data:
+        found.add(key(layout['global']['backgroundColor']))
+        for layer in layout['layers']:
+            if layer['type'] == 'w-text':
+                found.add(key(layer['color']))
+            for colour in layer.get('colors', []):
+                found.add(key(colour))
+    return found
+
+
+def brand_block(roles, data):
+    """The template's brand block, listing only colours it actually paints."""
+    here = painted(data)
+    return {'colors': {key(colour): role for colour, role in roles.items()
+                       if key(colour) in here}}
+
+
 LIST = os.path.join(TEMPLATES, 'list.json')
 # Removal restores this byte for byte, so undoing the pack leaves no diff at
 # all rather than a reformatted file.
@@ -998,9 +1137,10 @@ def apply():
         template_id = FIRST_ID + offset
         title, (width, height), background, layers = build()
         data = [{'global': page(title, width, height, background), 'layers': layers}]
+        brand = brand_block(ROLES[build], data)
         record = {
             'id': str(template_id), 'title': title, 'width': width, 'height': height,
-            'pack': PACK, 'data': json.dumps(data, ensure_ascii=False),
+            'pack': PACK, 'brand': brand, 'data': json.dumps(data, ensure_ascii=False),
         }
         with open(os.path.join(TEMPLATES, f'{template_id}.json'), 'w', encoding='utf-8') as handle:
             json.dump(record, handle, ensure_ascii=False)
@@ -1009,7 +1149,9 @@ def apply():
             'title': title, 'width': width, 'height': height, 'state': 1,
             'cate': cate, 'pack': PACK,
         })
-        print(f'  {template_id}.json  {title:<30} {width}x{height}  {len(layers)} layers')
+        roles = ' '.join(f'{colour}={role[:4]}' for colour, role in brand['colors'].items())
+        print(f'  {template_id}.json  {title:<30} {width}x{height}  '
+              f'{len(layers)} layers  {roles}')
 
     # The pack goes first; the two upstream placeholders keep their place after it.
     write_list(entries + [item for item in read_list() if item.get('pack') != PACK])
