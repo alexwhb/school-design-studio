@@ -284,3 +284,30 @@ export function RedoIcon({ className, width = '1em', height = '1em' }: IconProps
     </svg>
   )
 }
+
+/** A five-pointed star, outlined: apply the whole kit at once. */
+export function StarIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 2.2 9.7 6l3.8.5-2.8 2.7.7 3.8L8 11.2l-3.4 1.8.7-3.8L2.5 6.5 6.3 6z" />
+    </svg>
+  )
+}
+
+/** A pencil lying on its side: edit this one row in place. */
+export function PencilIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10.5 2.8 13.2 5.5 6 12.7l-3.2.5.5-3.2z" />
+    </svg>
+  )
+}
+
+/** A plus, for the row or tile that adds one more of whatever is above it. */
+export function PlusIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+      <path d="M8 3.5v9M3.5 8h9" />
+    </svg>
+  )
+}
