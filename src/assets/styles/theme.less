@@ -49,6 +49,10 @@
   --ds-surface-2: #f3f8fa;
   --ds-surface-3: #e6eef2; // pressed states, inset wells
   --ds-popover: #ffffff;
+  // The surface again, thinned, for the chrome that floats over the board —
+  // the tool dock, the page chip, the zoom pill. Blurred rather than opaque so
+  // the artwork underneath is still legible as something being covered.
+  --ds-surface-glass: rgba(255, 255, 255, 0.94);
   --ds-canvas-bg: #e2ebf0;
   --ds-app-bg: #eff6f9;
   --ds-overlay: rgba(13, 24, 30, 0.4);
@@ -124,6 +128,7 @@ html.dark {
   --ds-surface-2: hsl(0 0% 12%);
   --ds-surface-3: hsl(0 0% 16%);
   --ds-popover: hsl(0 0% 9%);
+  --ds-surface-glass: hsl(0 0% 7% / 0.94);
   // The well the page sits in. Darker than the panels, so the artwork — which
   // is usually white — is the brightest thing on screen, as it should be.
   --ds-canvas-bg: hsl(0 0% 4%);
