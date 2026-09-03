@@ -14,9 +14,10 @@
  * and is not finished until it is told it is, and it is drawn by its own
  * component. The line is a drag too, but it is pulled from one point to another
  * rather than out of a box, so it has a component of its own as well.
- * Everything the dock shows is common to both and lives in `drawTools`; what a drag needs to make a shape out of a rectangle is in
- * `dragTools`, which is what `DrawShape` reads and what makes "is this drag
- * mine?" a lookup rather than a list of names.
+ * Everything the dock shows is common to both and lives in `drawTools`; what a
+ * drag needs to make a shape out of a rectangle is in `dragTools`, which is
+ * what `DrawShape` reads and what makes "is this drag mine?" a lookup rather
+ * than a list of names.
  *
  * The keys are `TControlState['dDrawTool']`, which is where the armed tool is
  * held, so the two cannot drift apart without the compiler noticing.
@@ -29,9 +30,8 @@ import { wRectSetting } from '@/components/modules/widgets/wRect/wRectSetting'
 import type { TDragTool, TDrawTool } from '@/store/types'
 
 export type TDrawToolSpec = {
-  /** What the dock calls it, and what the old panel said underneath. */
+  /** What the dock calls it, on its button and in its tooltip. */
   label: string
-  desc: string
   Icon: ComponentType<{ className?: string }>
   /** The shortcut, named as it is on the key. It arms and disarms the tool. */
   shortcut: string
@@ -58,7 +58,6 @@ export const drawToolOrder: TDrawTool[] = ['rect', 'ellipse', 'polygon', 'line',
 export const dragTools: Record<TDragTool, TDragToolSpec> = {
   rect: {
     label: 'Rectangle',
-    desc: 'Drag out a box at any size, then round its corners',
     Icon: RectangleIcon,
     shortcut: 'R',
     noun: 'a box',
@@ -68,7 +67,6 @@ export const dragTools: Record<TDragTool, TDragToolSpec> = {
   },
   ellipse: {
     label: 'Ellipse',
-    desc: 'Drag out an oval at any size, or hold Shift for a circle',
     Icon: EllipseIcon,
     shortcut: 'E',
     noun: 'an ellipse',
@@ -78,7 +76,6 @@ export const dragTools: Record<TDragTool, TDragToolSpec> = {
   },
   polygon: {
     label: 'Polygon',
-    desc: 'Drag out a triangle, then add corners up to a hundred',
     Icon: PolygonIcon,
     shortcut: 'Y',
     noun: 'a polygon',
@@ -93,13 +90,11 @@ export const drawTools: Record<TDrawTool, TDrawToolSpec> = {
   ...dragTools,
   line: {
     label: 'Line',
-    desc: 'Drag a straight line, then put an arrowhead on either end',
     Icon: LineIcon,
     shortcut: 'L',
   },
   pen: {
     label: 'Pen',
-    desc: 'Click a point at a time to draw a line, or close it into a shape',
     Icon: PenIcon,
     shortcut: 'P',
   },
