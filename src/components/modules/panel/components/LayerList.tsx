@@ -5,8 +5,10 @@ import { widgetState } from '@/store/state'
 import { renameWidget, selectWidget, setLayerHidden, toggleLayerLock, updateHoverUuid } from '@/store/widget'
 import { recordHistory } from '@/common/hooks/history'
 import Input from '@/components/ui/Input'
+import Tooltip from '@/components/ui/Tooltip'
+import { EyeIcon, EyeOffIcon, LockIcon, UnlockIcon } from '@/components/ui/icons'
 import { cx } from '@/utils/dom'
-import { layerLabel } from './layerMeta'
+import { LayerBadge, layerLabel } from './layerMeta'
 import type { TdWidgetData } from '@/store/types'
 import './layerList.less'
 
@@ -149,11 +151,7 @@ export default function LayerList({ data, onChange }: Props) {
           onMouseOut={() => updateHoverUuid('-1')}
         >
           {Number(element.parent) !== -1 ? <span className="second-layer" /> : null}
-          {layerThumb(element) ? (
-            <img className="widget-type widget-type__img" src={layerThumb(element)} />
-          ) : (
-            <span className={cx('widget-type', 'icon', `sd-${element.type}`, element.type)} />
-          )}
+          {layerThumb(element) ? <img className="widget-type widget-type__img" src={layerThumb(element)} alt="" /> : <LayerBadge type={element.type} className="widget-type" />}
           {renamingUuid === element.uuid ? (
             <Input
               wrapperClassName="widget-rename"
@@ -176,33 +174,34 @@ export default function LayerList({ data, onChange }: Props) {
                 {layerLabel(element)} {element.mask ? '(container)' : ''}
               </span>
               <div className="widget-out" data-type={element.type} data-uuid={element.uuid}>
-                <i
-                  className="icon sd-edit"
-                  title="Rename"
-                  onDoubleClick={stopEvent}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    startRename(element)
-                  }}
-                />
-                <i
-                  className={cx('icon', element.hidden ? 'sd-eye-no' : 'sd-eye-see')}
-                  title={element.hidden ? 'Show this layer' : 'Hide this layer'}
-                  onDoubleClick={stopEvent}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    hideLayer(element)
-                  }}
-                />
-                <i
-                  className={cx('icon', element.lock ? 'sd-suoding' : 'sd-jiesuo')}
-                  title={element.lock ? 'Unlock this layer' : 'Lock this layer'}
-                  onDoubleClick={stopEvent}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    lockLayer(element)
-                  }}
-                />
+                <Tooltip content={element.hidden ? 'Show this layer' : 'Hide this layer'} placement="top" showAfter={400}>
+                  <button
+                    type="button"
+                    className={cx('widget-act', element.hidden ? 'sd-eye-no' : 'sd-eye-see', { 'is-on': !!element.hidden })}
+                    aria-label={element.hidden ? 'Show this layer' : 'Hide this layer'}
+                    onDoubleClick={stopEvent}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      hideLayer(element)
+                    }}
+                  >
+                    {element.hidden ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                </Tooltip>
+                <Tooltip content={element.lock ? 'Unlock this layer' : 'Lock this layer'} placement="top" showAfter={400}>
+                  <button
+                    type="button"
+                    className={cx('widget-act', element.lock ? 'sd-suoding' : 'sd-jiesuo', { 'is-on': !!element.lock })}
+                    aria-label={element.lock ? 'Unlock this layer' : 'Lock this layer'}
+                    onDoubleClick={stopEvent}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      lockLayer(element)
+                    }}
+                  >
+                    {element.lock ? <LockIcon /> : <UnlockIcon />}
+                  </button>
+                </Tooltip>
               </div>
             </>
           )}

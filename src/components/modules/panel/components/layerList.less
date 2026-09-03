@@ -1,141 +1,156 @@
-@color0: @surface;
-@color1: @ink-3;
-@color2: @surface-2;
-
+// The layer list: one 32px row per thing on the page, with what it is, what it
+// is called, and the two states you switch from here.
+//
+// The rows used to be separated by a hairline apiece and lit up by repainting
+// their whole background, which made a list of six read as six cards. A row is
+// a row: the selected one is tinted, a hidden one is faded, and the rest is
+// space.
 .widget-list {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
   .widget {
-    align-items: center;
-    background-color: @surface;
-    border-bottom: 1px solid @color2;
-    color: @color1;
-    cursor: grab;
     display: flex;
-    padding: 8px;
-    position: relative;
+    align-items: center;
+    gap: 7px;
     width: 100%;
+    height: 32px;
+    padding: 0 5px 0 8px;
+    border-radius: @radius-sm;
+    color: @ink-2;
+    cursor: grab;
+    position: relative;
+
+    &:hover {
+      background-color: @surface-2;
+    }
+
     .widget-type {
-      align-items: center;
-      color: @color1;
-      display: flex;
-      height: 30px;
-      width: 30px;
-      justify-content: center;
-      margin-right: 10px;
+      flex: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 3px;
+      background: @surface-3;
+      color: @ink-3;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 9px;
+      font-weight: 400;
+
       &__img {
         object-fit: contain;
-        background-color: @color0;
+        background-color: @surface;
         background-image: linear-gradient(45deg, var(--ds-checker-a) 25%, transparent 25%, transparent 75%, var(--ds-checker-a) 75%, var(--ds-checker-a)), linear-gradient(45deg, var(--ds-checker-a) 25%, transparent 25%, transparent 75%, var(--ds-checker-a) 75%, var(--ds-checker-a));
-        background-position:
-          0 0,
-          10px 10px;
-        background-size: 21px 21px;
+        background-position: 0 0, 4px 4px;
+        background-size: 8px 8px;
         outline: 1px solid @line;
       }
+      svg {
+        width: 11px;
+        height: 11px;
+      }
     }
+
     .widget-name {
       flex: 1;
-      font-size: 14px;
-      // Clear of all three of the icons at the end of the row.
-      padding-right: 78px;
+      min-width: 0;
+      font-size: @text-base;
+      color: @ink;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+
     .widget-rename {
       flex: 1;
-      margin-right: 4px;
+      min-width: 0;
     }
+
     .widget-out {
-      height: 100%;
-      margin-left: -12px;
-      position: absolute;
-      width: 100%;
       display: flex;
       align-items: center;
+      gap: 1px;
+      flex: none;
     }
-    .widget-out:hover > .sd-jiesuo,
-    .widget-out:hover > .sd-eye-see,
-    .widget-out:hover > .sd-edit {
+  }
+
+  // The state a layer is *not* in stays out of the way until the row is under
+  // the pointer; the state it is in is always on show.
+  .widget-act {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: @radius-sm - 1px;
+    background: transparent;
+    color: @ink-4;
+    cursor: pointer;
+    opacity: 0;
+    transition: background-color 0.12s ease, color 0.12s ease, opacity 0.12s ease;
+
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+    &.is-on {
+      opacity: 1;
+      color: @ink;
+    }
+    &:hover {
+      background: @surface-3;
+      color: @ink;
+    }
+    &:focus-visible {
+      .focus-ring();
       opacity: 1;
     }
   }
-  .widget.widget-hidden {
-    .widget-type,
-    .widget-name {
-      opacity: 0.4;
-    }
+
+  .widget:hover .widget-act {
+    opacity: 1;
   }
+
+  // A hidden layer is still in the list and still selectable; it just stops
+  // shouting.
+  .widget.widget-hidden .widget-type,
+  .widget.widget-hidden .widget-name {
+    opacity: 0.45;
+  }
+
   .widget.active {
     background-color: @accent-soft;
-    color: @accent;
+    .widget-name,
     .widget-type {
       color: @accent;
     }
+    .widget-act.is-on {
+      color: @accent;
+    }
   }
-  .item-one {
-    padding-left: 12px;
-  }
-}
 
-.widget-list {
-  .w-group {
-    font-weight: bold;
+  .w-group .widget-name {
+    font-weight: 600;
   }
-  .sd-jiesuo,
-  .sd-suoding {
-    position: absolute;
-    right: 12px;
-    font-size: 18px;
-    cursor: default;
-    color: @ink-2;
-  }
-  .sd-eye-see,
-  .sd-eye-no {
-    position: absolute;
-    right: 38px;
-    font-size: 18px;
-    cursor: default;
-    color: @ink-2;
-  }
-  // The state a layer is *not* in stays out of the way until the row is under
-  // the pointer; the state it is in is always on show.
-  .sd-jiesuo,
-  .sd-eye-see {
-    opacity: 0;
-  }
-  .sd-edit {
-    position: absolute;
-    right: 64px;
-    font-size: 16px;
-    opacity: 0;
-    cursor: pointer;
-    color: @ink-2;
-  }
-  .sd-edit:hover {
-    color: @accent;
-  }
-  .sd-xiaji {
-    margin: 0 -4px 0 32px !important;
-  }
+
+  // A layer inside a group is stepped in, so the nesting reads without a line.
   .second-layer {
-    margin-right: 40px;
+    flex: none;
+    width: 14px;
   }
 
   .choose {
-    border: 1px dashed @accent-border !important;
-  }
-
-  .flip-list-move {
-    transition: transform 0.5s;
-  }
-
-  .no-move {
-    transition: transform 0s;
+    outline: 1px dashed @accent-border;
   }
   .disable {
     opacity: 0.3;
   }
   .ghost {
     opacity: 0.3;
-    background: @main-color;
+    background: @accent-soft;
   }
-
 }
