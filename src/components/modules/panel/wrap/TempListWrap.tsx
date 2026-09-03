@@ -197,20 +197,25 @@ export default function TempListWrap() {
     setTempId(item.id)
 
     let result = null
+    // Which of the template's colours is the school's primary, if it says. It
+    // travels beside the data on both ways a template arrives here.
+    let brand
     if (!item.data) {
       const res = await api.home.getTempDetail({ id: item.id })
       result = JSON.parse(res.data)
+      brand = res.brand
     } else {
       result = JSON.parse(item.data)
+      brand = item.brand
     }
     if (Array.isArray(result)) {
       const { global, layers } = result[0]
       setDPage(global)
-      setTemplate(layers)
+      setTemplate(layers, brand)
     } else {
       const { page, widgets } = result
       setDPage(page)
-      setTemplate(widgets)
+      setTemplate(widgets, brand)
     }
     setTimeout(() => {
       setZoomScreenChange()

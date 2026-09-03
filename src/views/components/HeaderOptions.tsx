@@ -230,12 +230,13 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
     } else {
       if (Array.isArray(data)) {
         // A template of several pages arrives whole. A saved design does not
-        // get the fill: what it says was settled when it was saved.
-        widgetState.dLayouts = id ? data : fillTemplateLayouts(data)
+        // get the fill, nor the kit's colours: what it says was settled when
+        // it was saved.
+        widgetState.dLayouts = id ? data : fillTemplateLayouts(data, response.brand)
         setDWidgets(getWidgets())
       } else {
         widgetState.dLayouts = [{ global: data.page, layers: data.widgets }]
-        id ? setDWidgets(getWidgets()) : setTemplate(getWidgets())
+        id ? setDWidgets(getWidgets()) : setTemplate(getWidgets(), response.brand)
       }
       setDPage(getDPage())
     }

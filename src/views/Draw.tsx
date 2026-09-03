@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import FontFaceObserver from 'fontfaceobserver'
 import api from '@/api'
+import type { TTempDetail } from '@/api/home'
 import Preload from '@/utils/plugins/preload'
 import { font2style, fontMinWithDraw } from '@/utils/widgets/loadFontRule'
 import { readQuery } from '@/common/hooks/useRouteQuery'
@@ -26,7 +27,8 @@ export default function Draw() {
     const { id, tempid, tempType: type = '0', index = '0' } = readQuery()
     if (id || tempid) {
       const postData = { id: (id || tempid) as any, type: Number(type) }
-      const { data, width, height } = await api.home[id ? 'getWorks' : 'getTempDetail'](postData)
+      const response = await api.home[id ? 'getWorks' : 'getTempDetail'](postData)
+      const { data, width, height } = response
       if (!data) return
       let content: any
       try {
@@ -56,7 +58,9 @@ export default function Draw() {
         if (id) {
           setDWidgets(widgets)
         } else {
-          setTemplate(widgets)
+          // The same recolour the editor does when the template is picked, so
+          // a thumbnail rendered here is the design someone would get.
+          setTemplate(widgets, (response as TTempDetail).brand)
         }
       }
 
