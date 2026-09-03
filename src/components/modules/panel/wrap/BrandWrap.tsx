@@ -1,32 +1,19 @@
 import { useState } from 'react'
 import { useSnapshot } from 'valtio'
-import fonts from '@/assets/data/FontsData'
 import { recordHistory } from '@/common/hooks/history'
-import {
-  BRAND_FIELDS,
-  MAX_BRAND_COLORS,
-  SAMPLE_BRAND,
-  brandResolver,
-  brandState,
-  hasBrandContent,
-  normaliseBrandColor,
-  updateBrandKit,
-  type TBrandDetailKey,
-  type TBrandKit,
-} from '@/common/methods/brandKit'
+import { BRAND_FIELDS, SAMPLE_BRAND, brandResolver, brandState, hasBrandContent, updateBrandKit, type TBrandDetailKey, type TBrandKit } from '@/common/methods/brandKit'
 import ApplyBrand from '@/components/business/brand-kit/ApplyBrand'
+import BrandColors from '@/components/business/brand-kit/BrandColors'
+import BrandFonts from '@/components/business/brand-kit/BrandFonts'
 import Uploader, { type TUploadDoneData } from '@/components/common/Uploader/Uploader'
 import Button from '@/components/ui/Button'
-import { CloseIcon } from '@/components/ui/icons'
+import { CloseIcon, PlusIcon, StarIcon } from '@/components/ui/icons'
 import Input from '@/components/ui/Input'
 import message from '@/components/ui/message'
 import { PanelSection } from '@/components/ui/PanelSection'
-import Popover from '@/components/ui/Popover'
-import Select from '@/components/ui/Select'
-import ColorPicker from '@/packages/color-picker/ColorPicker'
 import { setShowMoveable } from '@/store/control'
 import { widgetState } from '@/store/state'
-import { applyBrandColorToSelection, insertBrandField, insertBrandLogo } from '@/store/widget/brand'
+import { insertBrandField, insertBrandLogo } from '@/store/widget/brand'
 import './brandWrap.less'
 
 const DETAILS: { key: TBrandDetailKey; label: string; id: string; type?: string }[] = [
@@ -39,23 +26,22 @@ const DETAILS: { key: TBrandDetailKey; label: string; id: string; type?: string 
   { key: 'website', label: 'Website', id: 'brand-website' },
 ]
 
-const FONT_OPTIONS = [{ label: 'Not chosen', value: 0 }, ...fonts.map((font) => ({ label: font.alias, value: font.id }))]
-
-/** What a fresh swatch starts on: the navy the bundled templates are set in. */
-const FIRST_COLOR = '#1e3a5fff'
-
 /**
  * The Brand panel: the school's identity, kept in one place.
  *
- * Top to bottom it is the crest, the colours, the fonts, the written details
- * and the fields those details fill — and, pinned underneath, the button that
- * pushes all of it onto a design that was made without it. Everything typed
- * here is saved as it is typed (see brandKit.ts); nothing here needs a Save.
+ * It opens on a card of the school itself — crest, name, and the button that
+ * pushes the whole kit onto a design made without it — and then the pieces
+ * that card is made of: the logo, the colours, the fonts, the written details
+ * and the fields those details fill. Apply brand sits in the card rather than
+ * pinned under the panel because it is the school's row, not a sixth section,
+ * and because the sentence saying what it will do belongs next to it.
+ *
+ * Everything typed here is saved as it is typed (see brandKit.ts); nothing
+ * here needs a Save.
  */
 export default function BrandWrap() {
   const { kit } = useSnapshot(brandState)
-  const [adding, setAdding] = useState(false)
-  const [draft, setDraft] = useState(FIRST_COLOR)
+  const pages = useSnapshot(widgetState).dLayouts.length || 1
   const [applying, setApplying] = useState(false)
   const resolve = brandResolver(kit as TBrandKit)
 
@@ -75,48 +61,6 @@ export default function BrandWrap() {
   function removeLogo() {
     updateBrandKit((next) => {
       delete next.logo
-    })
-  }
-
-  function openAdd(open: boolean) {
-    setAdding(open)
-    // The picker's drags would otherwise fight the selection box, the same
-    // way they would from a swatch in the settings panel.
-    setShowMoveable(!open)
-  }
-
-  function addColor() {
-    const color = normaliseBrandColor(draft)
-    if (!color) return
-    if (brandState.kit.colors.includes(color)) {
-      message({ message: 'That colour is already in the kit.', type: 'info' })
-    } else {
-      updateBrandKit((next) => {
-        next.colors.push(color)
-      })
-    }
-    openAdd(false)
-  }
-
-  function removeColor(index: number) {
-    updateBrandKit((next) => {
-      next.colors.splice(index, 1)
-    })
-  }
-
-  function applyColor(color: string) {
-    let changed = 0
-    recordHistory(() => {
-      changed = applyBrandColorToSelection(color)
-    })
-    if (!changed) message({ message: 'Select some text, a shape or nothing at all — the page — to colour it.', type: 'info' })
-  }
-
-  function chooseFont(slot: 'heading' | 'body', value: string | number) {
-    const id = Number(value)
-    updateBrandKit((next) => {
-      if (id) next.fonts[slot] = id
-      else delete next.fonts[slot]
     })
   }
 
@@ -144,88 +88,58 @@ export default function BrandWrap() {
   return (
     <div className="wrap brand-wrap">
       <div className="brand-wrap__scroll">
-        <PanelSection title="Logo">
-          {kit.logo ? (
-            <div className="brand-logo">
-              <div className="brand-logo__thumb transparent-bg">
-                <img src={kit.logo.url} alt="School logo" />
-              </div>
-              <div className="brand-logo__actions">
-                <Button size="small" plain onClick={addLogoToPage}>
-                  Add to page
-                </Button>
-                <Button size="small" text onClick={removeLogo}>
-                  Remove
-                </Button>
-              </div>
+        <div className="brand-card">
+          <div className="brand-card__head">
+            <div className="brand-card__crest transparent-bg">{kit.logo ? <img src={kit.logo.url} alt="" /> : null}</div>
+            <div className="brand-card__names">
+              <span className={kit.name ? 'brand-card__name' : 'brand-card__name brand-card__name--unset'}>{kit.name || 'Your school'}</span>
+              <span className="brand-card__note">{kit.tagline || 'Kept in this browser'}</span>
             </div>
-          ) : null}
-          <Uploader className="brand-upload" onDone={logoUploaded}>
-            <Button plain>
-              <i className="iconfont icon-upload" /> {kit.logo ? 'Replace logo' : 'Upload a logo'}
-            </Button>
-          </Uploader>
-          <p className="brand-hint">A PNG or SVG with a transparent background sits best on a coloured page.</p>
-        </PanelSection>
+          </div>
+          <Button type="primary" className="brand-card__apply" disabled={!canApply} onClick={() => setApplying(true)}>
+            <StarIcon />
+            Apply brand to this design
+          </Button>
+          <p className="brand-card__impact">
+            {pages === 1 ? 'Swaps fonts and colours across this page.' : `Swaps fonts and colours across all ${pages} pages.`} Photos and uploads are left
+            alone.
+          </p>
+        </div>
 
-        <PanelSection title="Colours">
-          <div className="brand-colours" role="list" aria-label="Brand colours">
-            {kit.colors.map((color, index) => (
-              <div key={`${color}-${index}`} className="brand-swatch" role="listitem">
-                <button
-                  type="button"
-                  className="brand-swatch__chip"
-                  style={{ background: color }}
-                  title={color.slice(0, 7).toUpperCase()}
-                  aria-label={`Apply ${color.slice(0, 7).toUpperCase()}`}
-                  onClick={() => applyColor(color)}
-                />
-                <button type="button" className="brand-swatch__remove" aria-label="Remove colour" onClick={() => removeColor(index)}>
+        <PanelSection title="Logo">
+          <div className="brand-logos">
+            {kit.logo ? (
+              <div className="brand-logo">
+                <button type="button" className="brand-logo__thumb transparent-bg" title="Add the logo to this page" onClick={addLogoToPage}>
+                  <img src={kit.logo.url} alt="School logo" />
+                </button>
+                <span className="brand-logo__caption">primary</span>
+                <button type="button" className="brand-logo__remove" aria-label="Remove the logo" title="Remove the logo" onClick={removeLogo}>
                   <CloseIcon />
                 </button>
               </div>
-            ))}
-            {kit.colors.length < MAX_BRAND_COLORS ? (
-              <Popover
-                placement="bottom-start"
-                width="auto"
-                open={adding}
-                onOpenChange={openAdd}
-                content={
-                  <div className="brand-add">
-                    <ColorPicker value={draft} modes={['Solid']} onValueChange={setDraft} />
-                    <Button type="primary" size="small" onClick={addColor}>
-                      Add colour
-                    </Button>
-                  </div>
-                }
-              >
-                <button type="button" className="brand-swatch brand-swatch--add" aria-label="Add a colour" title="Add a colour">
-                  +
-                </button>
-              </Popover>
             ) : null}
+            <Uploader className="brand-upload" onDone={logoUploaded}>
+              <PlusIcon />
+              <span>{kit.logo ? 'Replace' : 'Upload'}</span>
+            </Uploader>
           </div>
           <p className="brand-hint">
+            A PNG or SVG with a transparent background sits best on a coloured page. {kit.logo ? 'Click it to put it on this page.' : ''}
+          </p>
+        </PanelSection>
+
+        <PanelSection title="Colours">
+          <BrandColors />
+          <p className="brand-hint">
             {kit.colors.length
-              ? 'Click a colour to put it on whatever is selected, or on the page when nothing is. The first is the main colour.'
+              ? 'Click a colour to put it on whatever is selected, or on the page when nothing is.'
               : 'Add the school’s colours, main colour first. They appear in every colour picker.'}
           </p>
         </PanelSection>
 
         <PanelSection title="Fonts">
-          <div className="brand-font">
-            <label className="brand-font__label" id="brand-font-heading">
-              Headings
-            </label>
-            <Select value={kit.fonts.heading ?? 0} options={FONT_OPTIONS} className="brand-font__select" onChange={(value) => chooseFont('heading', value)} />
-          </div>
-          <div className="brand-font">
-            <label className="brand-font__label" id="brand-font-body">
-              Body
-            </label>
-            <Select value={kit.fonts.body ?? 0} options={FONT_OPTIONS} className="brand-font__select" onChange={(value) => chooseFont('body', value)} />
-          </div>
+          <BrandFonts />
           <p className="brand-hint">Chosen fonts appear first in the text panel’s font list.</p>
         </PanelSection>
 
@@ -255,11 +169,6 @@ export default function BrandWrap() {
             standing.
           </p>
         </PanelSection>
-      </div>
-      <div className="brand-wrap__footer">
-        <Button type="primary" disabled={!canApply} onClick={() => setApplying(true)}>
-          Apply brand to this design
-        </Button>
       </div>
       <ApplyBrand open={applying} onOpenChange={setApplying} />
     </div>

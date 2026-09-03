@@ -4,118 +4,180 @@
   height: 100%;
   width: 100%;
 
+  // No fixed header and no pinned footer: the school's card is the first thing
+  // in the scroller, so Apply brand travels with the kit it applies rather than
+  // sitting over it as a bar of its own.
   &__scroll {
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding: @space-2 @panel-gutter @space-6;
-  }
-  // Pinned under the list, so it is reachable without scrolling past the
-  // details it applies.
-  &__footer {
-    flex: none;
-    padding: @space-3 @panel-gutter;
-    border-top: 1px solid @line;
-    background: @surface;
-    .el-button {
-      width: 100%;
-      margin: 0;
-    }
-  }
-
-  .ds-section + .ds-section {
-    margin-top: @space-3;
+    padding: @space-1 @panel-gutter @space-5;
   }
 
   .brand-hint {
     margin: @space-2 0 0;
-    font-size: @text-sm;
+    font-size: @text-xs;
     line-height: 1.45;
     color: @ink-3;
   }
 
-  .brand-logo {
+  // ---- the school ---------------------------------------------------------
+  .brand-card {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: @space-3;
-    margin-bottom: @space-2;
-    &__thumb {
+    margin-bottom: @section-gap;
+    padding: @space-3;
+    background: @surface-2;
+    border: 1px solid @line;
+    border-radius: @radius-lg;
+
+    &__head {
+      display: flex;
+      align-items: center;
+      gap: @space-3;
+      min-width: 0;
+    }
+
+    &__crest {
       flex: none;
-      width: 72px;
-      height: 72px;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
-      .control-surface();
+      width: 42px;
+      height: 42px;
+      border: 1px solid @line;
+      border-radius: @radius;
       background-size: 8px 8px;
       img {
-        display: block;
-        max-width: 100%;
-        max-height: 100%;
+        max-width: 84%;
+        max-height: 84%;
+        object-fit: contain;
       }
     }
-    &__actions {
-      flex: 1;
-      min-width: 0;
+
+    &__names {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: @space-1;
-      .el-button {
-        margin: 0;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    &__name {
+      font-size: @text-base;
+      font-weight: 600;
+      color: @ink;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      // Nothing typed in yet, so the card names the thing it is waiting for
+      // rather than pretending to be a school called "Your school".
+      &--unset {
+        color: @ink-3;
+        font-weight: 500;
       }
     }
-  }
-  .brand-upload {
-    display: block;
-    width: 100%;
-    .el-button {
+
+    &__note {
+      font-size: @text-xs;
+      color: @ink-3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__apply {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
       width: 100%;
+      height: @control-h-lg;
       margin: 0;
-      .iconfont {
-        margin-right: 6px;
+      font-size: @text-sm;
+      font-weight: 600;
+      svg {
+        width: 13px;
+        height: 13px;
       }
+      // An empty kit has nothing to apply. A disabled primary button otherwise
+      // only changes its cursor, which on a button this prominent reads as the
+      // panel's main action being ready when it is not. Both class names are
+      // named because the accent fill is set through a chain of :not()s that
+      // a plainer selector loses to.
+      &.el-button.el-button--primary:disabled,
+      &.el-button.el-button--primary:disabled:hover {
+        background-color: @surface-3;
+        border-color: transparent;
+        color: @ink-4;
+      }
+    }
+
+    &__impact {
+      margin: 0;
+      font-size: @text-xs;
+      line-height: 1.45;
+      color: @ink-3;
     }
   }
 
-  .brand-colours {
-    display: flex;
-    flex-wrap: wrap;
+  // ---- the logo -----------------------------------------------------------
+  .brand-logos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: @space-2;
-    padding-top: 2px;
   }
-  .brand-swatch {
+
+  .brand-logo {
     position: relative;
-    width: 28px;
-    height: 28px;
-    &__chip {
+    overflow: hidden;
+    background: @surface-2;
+    border: 1px solid @line;
+    border-radius: @radius-lg;
+    transition: border-color 0.12s ease;
+    &:hover {
+      border-color: @accent-border;
+    }
+
+    &__thumb {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 100%;
-      height: 100%;
-      padding: 0;
+      aspect-ratio: 1;
+      padding: 6px;
       border: 0;
-      border-radius: @radius-sm;
       cursor: pointer;
-      box-shadow: inset 0 0 0 1px @line-strong;
-      transition: transform 0.12s ease;
-      &:hover {
-        transform: scale(1.06);
+      background-size: 8px 8px;
+      img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
       }
       &:focus-visible {
         .focus-ring();
+        outline-offset: -2px;
       }
     }
+
+    &__caption {
+      display: block;
+      padding: 5px 7px 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: @text-xs;
+      line-height: 1;
+      color: @ink-3;
+    }
+
     // Shown on hover, the way the layer list shows the state a row is not in.
     &__remove {
       .icon-button();
       position: absolute;
-      top: -6px;
-      right: -6px;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      box-shadow: 0 0 0 1px @line;
-      font-size: 10px;
+      top: 4px;
+      right: 4px;
+      width: 18px;
+      height: 18px;
+      background: @surface-3;
       opacity: 0;
       svg {
         width: 10px;
@@ -126,58 +188,50 @@
     &__remove:focus-visible {
       opacity: 1;
     }
-    &--add {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      .control-surface();
-      border-style: dashed;
-      border-radius: @radius-sm;
-      color: @ink-3;
-      font-size: 16px;
-      line-height: 1;
-      cursor: pointer;
-      &:hover {
-        border-color: @accent;
-        color: @accent;
-      }
-      &:focus-visible {
-        .focus-ring();
-      }
-    }
-  }
-  .brand-add {
-    .el-button {
-      width: 100%;
-      margin: @space-3 0 0;
-    }
   }
 
-  .brand-font {
+  .brand-upload {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: @space-2;
-    margin-bottom: @space-2;
-    &__label {
-      flex: none;
-      width: 64px;
-      font-size: @text-sm;
-      color: @ink-2;
+    justify-content: center;
+    gap: @space-1;
+    aspect-ratio: 1;
+    border: 1px dashed @line-strong;
+    border-radius: @radius-lg;
+    color: @ink-3;
+    font-size: @text-xs;
+    cursor: pointer;
+    transition: border-color 0.12s ease, color 0.12s ease;
+    &:hover {
+      border-color: @accent-border;
+      color: @accent;
     }
-    &__select {
-      flex: 1;
-      min-width: 0;
+    svg {
+      width: 16px;
+      height: 16px;
     }
   }
 
+  // ---- the written details ------------------------------------------------
   .brand-field {
     margin-bottom: @space-2;
     &:last-child {
       margin-bottom: 0;
     }
     &__label {
-      .field-label();
+      display: block;
+      margin-bottom: @space-1;
+      font-size: @text-xs;
+      color: @ink-3;
+      user-select: none;
+    }
+    .el-input__wrapper {
+      height: @control-h;
+      border-radius: @radius-sm;
+    }
+    .el-input__inner {
+      font-size: @text-sm;
     }
   }
 
@@ -186,9 +240,11 @@
     align-items: center;
     gap: @space-2;
     width: 100%;
-    padding: 6px @space-2;
+    height: @control-h;
+    padding: 0 @space-2;
     margin-bottom: @space-1;
-    .control-surface();
+    background: @surface-2;
+    border: 1px solid transparent;
     border-radius: @radius-sm;
     color: @ink;
     font-family: inherit;
@@ -214,7 +270,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       text-align: right;
-      font-size: @text-sm;
+      font-size: @text-xs;
       color: @ink-3;
     }
   }
