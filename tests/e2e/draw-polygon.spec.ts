@@ -71,6 +71,56 @@ test('what is drawn fills the frame it was pulled out of', async ({ page }) => {
   expect(Math.min(...corners.map((corner) => corner[0]))).toBeCloseTo(0, 0)
 })
 
+test('the band is a triangle while it is being pulled, not a box', async ({ page }) => {
+  await armShapeTool(page, 'Polygon')
+  const board = await canvasBox(page)
+  await page.mouse.move(board.x + 60, board.y + 50)
+  await page.mouse.down()
+  for (let step = 1; step <= 6; step++) {
+    await page.mouse.move(board.x + 60 + 30 * step, board.y + 50 + 20 * step)
+  }
+
+  const band = page.locator('.draw-band')
+  await expect(band).toHaveClass(/draw-band--outline/)
+  // Three corners, closed, and the apex at the top middle of the box being
+  // pulled out — the same shape the widget will land as.
+  const d = (await page.locator('.draw-band__outline path').getAttribute('d'))!
+  const corners = d.replace(/ Z$/, '').split(/(?=[ML])/).map((step) => step.slice(1).split(',').map(Number))
+  expect(d).toMatch(/ Z$/)
+  expect(corners).toHaveLength(3)
+  const width = Math.max(...corners.map((corner) => corner[0]))
+  const height = Math.max(...corners.map((corner) => corner[1]))
+  expect(corners[0][0]).toBeCloseTo(width / 2, 0)
+  expect(corners[0][1]).toBeCloseTo(0, 0)
+  // Filling the box rather than sitting inside it: both ends of the base are on
+  // its bottom edge, one in each corner.
+  expect(corners[1][1]).toBeCloseTo(height, 0)
+  expect(corners[2][1]).toBeCloseTo(height, 0)
+  expect(Math.min(...corners.map((corner) => corner[0]))).toBeCloseTo(0, 0)
+
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+  // And what landed has the same three corners the band drew.
+  expect(await cornersOf(page)).toHaveLength(3)
+})
+
+test('a drag with no height in it draws a band rather than throwing', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(String(error)))
+  await armShapeTool(page, 'Polygon')
+  const board = await canvasBox(page)
+  await page.mouse.move(board.x + 60, board.y + 120)
+  await page.mouse.down()
+  for (let step = 1; step <= 6; step++) {
+    await page.mouse.move(board.x + 60 + 30 * step, board.y + 120)
+  }
+
+  await expect(page.locator('.draw-band__outline path')).toHaveCount(1)
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+  expect(errors).toEqual([])
+})
+
 test('a click with no drag behind it drops a polygon you can see', async ({ page }) => {
   await armShapeTool(page, 'Polygon')
   const board = await canvasBox(page)

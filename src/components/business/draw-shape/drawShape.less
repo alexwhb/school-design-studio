@@ -64,10 +64,29 @@
   background: @accent-a25;
 }
 
-// The ellipse tool pulls its shape out of the same box the rectangle tool does,
-// so the band has to be the shape that is coming, not the box it came from.
+// The ellipse and the polygon are both pulled out of the box the rectangle is,
+// so the band has to be the shape that is coming rather than the box it came
+// from: a circle needs only a radius, and anything else brings a path.
 .draw-band--round {
   border-radius: 50%;
+}
+
+.draw-band--outline {
+  background: none;
+}
+
+// Sized in the page's own pixels, like everything else in here, so the path
+// coordinates the widget would use land where the band is. The stroke sits
+// astride the outline and the corners of a thin drag reach the very edge, so
+// nothing is clipped to the box.
+.draw-band__outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: @accent-a25;
+  stroke: @accent;
 }
 
 .draw-band__size {

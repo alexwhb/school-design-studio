@@ -170,6 +170,10 @@ export default function DrawShape() {
 
   if (!tool) return null
 
+  const spec = dragTools[tool]
+  // A shape whose band is neither the box nor an ellipse hands back its own
+  // outline; see `band` in drawTools.
+  const outline = typeof spec.band === 'function' ? spec.band : null
   const scale = 100 / (canvas.dZoom || 100)
   const page = canvas.dPage
   const below = band ? band.top + band.height + 24 * scale <= page.height : true
@@ -182,15 +186,22 @@ export default function DrawShape() {
               {guides.x !== null ? <i className="draw-guide draw-guide--v" style={{ left: `${guides.x}px`, width: `${scale}px` }} /> : null}
               {guides.y !== null ? <i className="draw-guide draw-guide--h" style={{ top: `${guides.y}px`, height: `${scale}px` }} /> : null}
               <div
-                className={cx('draw-band', { 'draw-band--round': dragTools[tool].round })}
+                className={cx('draw-band', { 'draw-band--round': spec.band === 'round', 'draw-band--outline': !!outline })}
                 style={{
                   left: `${band.left}px`,
                   top: `${band.top}px`,
                   width: `${band.width}px`,
                   height: `${band.height}px`,
-                  borderWidth: `${scale}px`,
+                  // An outline carries the hairline itself, and a border here
+                  // would both inset it and draw a square round the shape.
+                  borderWidth: outline ? 0 : `${scale}px`,
                 }}
               >
+                {outline ? (
+                  <svg className="draw-band__outline">
+                    <path d={outline(band.width, band.height)} strokeWidth={scale} />
+                  </svg>
+                ) : null}
                 <span
                   className="draw-band__size"
                   style={{

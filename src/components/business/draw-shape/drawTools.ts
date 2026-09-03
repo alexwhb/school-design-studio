@@ -26,6 +26,7 @@
 import type { ComponentType } from 'react'
 import { EllipseIcon, LineIcon, PenIcon, PolygonIcon, RectangleIcon, TextToolIcon } from '@/components/ui/icons'
 import { wEllipseSetting } from '@/components/modules/widgets/wEllipse/wEllipseSetting'
+import { polygonPath, readSides } from '@/components/modules/widgets/wPolygon/polygonShape'
 import { wPolygonSetting } from '@/components/modules/widgets/wPolygon/wPolygonSetting'
 import { wRectSetting } from '@/components/modules/widgets/wRect/wRectSetting'
 import type { TDragTool, TDrawTool } from '@/store/types'
@@ -44,10 +45,15 @@ export type TDragToolSpec = TDrawToolSpec & {
   /** And then: "Shift keeps it ⟨equal⟩." */
   equal: string
   /**
-   * Whether the rubber band is drawn round. An ellipse is pulled out of the
-   * same box a rectangle is, and showing that box would show the wrong shape.
+   * What the rubber band draws while the shape is being pulled out. A box for
+   * the rectangle, which is the box; `round` for the ellipse, which fills it;
+   * and for a shape that is neither, the outline itself, handed back by the
+   * same function the widget is painted with. Watching a square come out of a
+   * drag that is going to land as a triangle is the confusion this settles, and
+   * borrowing the widget's own geometry is what stops the band and the shape
+   * from drifting into two different triangles.
    */
-  round: boolean
+  band: 'box' | 'round' | ((width: number, height: number) => string)
   /** The widget a drag turns into, copied rather than used. */
   setting: Record<string, any>
 }
@@ -63,7 +69,7 @@ export const dragTools: Record<TDragTool, TDragToolSpec> = {
     shortcut: 'R',
     noun: 'a box',
     equal: 'square',
-    round: false,
+    band: 'box',
     setting: wRectSetting,
   },
   ellipse: {
@@ -72,7 +78,7 @@ export const dragTools: Record<TDragTool, TDragToolSpec> = {
     shortcut: 'E',
     noun: 'an ellipse',
     equal: 'circular',
-    round: true,
+    band: 'round',
     setting: wEllipseSetting,
   },
   polygon: {
@@ -81,7 +87,7 @@ export const dragTools: Record<TDragTool, TDragToolSpec> = {
     shortcut: 'Y',
     noun: 'a polygon',
     equal: 'regular',
-    round: false,
+    band: (width, height) => polygonPath(width, height, readSides(wPolygonSetting)),
     setting: wPolygonSetting,
   },
 }
