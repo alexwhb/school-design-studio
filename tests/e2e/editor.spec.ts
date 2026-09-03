@@ -644,7 +644,7 @@ test('ctrl+A leaves a hidden layer out of the selection', async ({ page }) => {
   await page.waitForTimeout(400)
   await expect(page.locator(WIDGET)).toHaveCount(1)
 
-  await page.getByText('Settings', { exact: true }).click()
+  await page.getByText('Design', { exact: true }).click()
   await page.locator('#page-design-canvas').click({ position: { x: 4, y: 4 } })
   await page.waitForTimeout(300)
   await page.keyboard.press('ControlOrMeta+a')
