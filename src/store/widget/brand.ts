@@ -451,28 +451,24 @@ type TSurface = {
  * against — and the guard leaves anything it cannot see under alone rather
  * than repainting on a guess.
  */
-function surfaceUnder(layer: TdWidgetData, layers: TdWidgetData[], page: TPageState): TSurface | null {
-  const keys = stackKeys(layers)
-  const index = layers.indexOf(layer)
-  if (index < 0) return null
-  const box = boundsOf(layer)
+function surfaceUnder(index: number, layers: TdWidgetData[], keys: number[][], backdrop: TSurface | null): TSurface | null {
+  const box = boundsOf(layers[index])
   const x = (box.left + box.right) / 2
   const y = (box.top + box.bottom) / 2
 
-  let found: TdWidgetData | null = null
-  let foundKey: number[] | null = null
-  layers.forEach((other, at) => {
-    if (at === index || other.hidden || other.isContainer) return
-    if (!above(keys[index], keys[at])) return
-    if (!holds(boundsOf(other), x, y)) return
-    if (foundKey && !above(keys[at], foundKey)) return
-    found = other
-    foundKey = keys[at]
-  })
+  let covering: TdWidgetData | null = null
+  let coveringKey: number[] | null = null
+  for (let at = 0; at < layers.length; at++) {
+    const other = layers[at]
+    if (at === index || other.hidden || other.isContainer) continue
+    if (!above(keys[index], keys[at])) continue
+    if (coveringKey && !above(keys[at], coveringKey)) continue
+    if (!holds(boundsOf(other), x, y)) continue
+    covering = other
+    coveringKey = keys[at]
+  }
 
-  const backdrop = pageSurface(page)
-  if (!found) return backdrop
-  const covering = found as TdWidgetData
+  if (!covering) return backdrop
   if (!SURFACE_TYPES.has(covering.type)) return null
   const parsed = parseHex(paintOf(covering))
   if (!parsed) return null
@@ -563,12 +559,15 @@ export function ensureReadable(layers: TdWidgetData[], page: TPageState, kit: TB
   if (!brandRgbs.size) return counts
 
   const ink = inkOf(layers)
+  const keys = stackKeys(layers)
+  const backdrop = pageSurface(page)
 
-  for (const layer of layers) {
+  for (let index = 0; index < layers.length; index++) {
+    const layer = layers[index]
     if (layer.type !== 'w-text' || layer.hidden) continue
     const text = parseHex((layer as any).color)
     if (!text) continue
-    const surface = surfaceUnder(layer, layers, page)
+    const surface = surfaceUnder(index, layers, keys, backdrop)
     if (!surface) continue
     // Only what the pass reached: either the words are now one of the school's
     // colours, or the ground under them is. A line of black on cream that the
@@ -605,7 +604,7 @@ export function ensureReadable(layers: TdWidgetData[], page: TPageState, kit: TB
     if (contrastRatio(pick, surface.color) < target) counts.unreadable++
   }
 
-  counts.marks = separateMarks(layers, page, brandRgbs)
+  counts.marks = separateMarks(layers, keys, backdrop, brandRgbs)
   return counts
 }
 
@@ -619,38 +618,38 @@ export function ensureReadable(layers: TdWidgetData[], page: TPageState, kit: TB
  * same colour at a glance — because anything looser starts repainting artwork
  * that was drawn tone-on-tone on purpose.
  */
-function separateMarks(layers: TdWidgetData[], page: TPageState, brandRgbs: Set<string>): number {
-  const keys = stackKeys(layers)
+function separateMarks(layers: TdWidgetData[], keys: number[][], backdrop: TSurface | null, brandRgbs: Set<string>): number {
+  if (!backdrop) return 0
   let nudged = 0
-  layers.forEach((layer, index) => {
-    if (layer.hidden || !SURFACE_TYPES.has(layer.type)) return
+  for (let index = 0; index < layers.length; index++) {
+    const layer = layers[index]
+    if (layer.hidden || !SURFACE_TYPES.has(layer.type)) continue
     const paint = parseHex(paintOf(layer))
-    if (!paint || !brandRgbs.has(paint.rgb)) return
+    if (!paint || !brandRgbs.has(paint.rgb)) continue
     const box = boundsOf(layer)
 
-    let host: TSurface | null = null
+    let ground = ''
     let hostKey: number[] | null = null
-    layers.forEach((other, at) => {
-      if (at === index || other.hidden || !SURFACE_TYPES.has(other.type)) return
-      if (!above(keys[index], keys[at]) || !holdsAll(boundsOf(other), box)) return
+    for (let at = 0; at < layers.length; at++) {
+      const other = layers[at]
+      if (at === index || other.hidden || !SURFACE_TYPES.has(other.type)) continue
+      if (!above(keys[index], keys[at]) || (hostKey && !above(keys[at], hostKey))) continue
+      if (!holdsAll(boundsOf(other), box)) continue
       const under = parseHex(paintOf(other))
-      if (!under || !brandRgbs.has(under.rgb) || under.alpha === '00') return
-      if (hostKey && !above(keys[at], hostKey)) return
-      const backdrop = pageSurface(page)
-      host = backdrop ? { color: composite(`#${under.rgb}${under.alpha}`, backdrop.color), rgb: under.rgb } : null
+      if (!under || !brandRgbs.has(under.rgb) || under.alpha === '00') continue
+      ground = composite(`#${under.rgb}${under.alpha}`, backdrop.color)
       hostKey = keys[at]
-    })
-    if (!host) return
+    }
+    if (!ground) continue
 
-    const ground = (host as TSurface).color
     const mark = composite(`#${paint.rgb}${paint.alpha}`, ground)
-    if (contrastRatio(mark, ground) >= 1.5) return
+    if (contrastRatio(mark, ground) >= 1.5) continue
     const moved = adjustForContrast(`#${paint.rgb}${paint.alpha}`, ground, DECORATIVE_TARGET)
-    if (!moved.changed) return
+    if (!moved.changed) continue
     if (SHAPE_TYPES.has(layer.type)) (layer as any).color = moved.color
     else (layer as any).colors = [moved.color, ...(((layer as any).colors as string[]) || []).slice(1)]
     nudged++
-  })
+  }
   return nudged
 }
 
