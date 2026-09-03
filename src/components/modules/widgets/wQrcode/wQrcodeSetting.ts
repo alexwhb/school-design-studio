@@ -1,4 +1,4 @@
-import { DotType } from "qr-code-styling"
+import { DotType } from 'qr-code-styling'
 
 export type TWQrcodeSetting = {
   name: string

@@ -37,7 +37,7 @@ export default class PreLoad {
     return new Promise<void>((resolve) => {
       const work = () => {
         if (this.i < this.arr.length) {
-          (this.arr[this.i] as HTMLImageElement).complete && this.i++
+          ;(this.arr[this.i] as HTMLImageElement).complete && this.i++
           setTimeout(() => {
             work()
           }, 100)
@@ -52,7 +52,7 @@ export default class PreLoad {
     return new Promise<void>((resolve) => {
       const work = () => {
         if (this.i < this.arr.length) {
-          (this.arr[this.i] as ChildNode[]).length > 0 && this.i++
+          ;(this.arr[this.i] as ChildNode[]).length > 0 && this.i++
           setTimeout(() => {
             work()
           }, 100)

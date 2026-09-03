@@ -56,9 +56,7 @@ const STYLE_KEYS = ['opacity', 'filter', 'clipPath'] as const
 function tracks(preset: AnimationPreset): { transform: Keyframe[]; style: Keyframe[] } {
   const stops = resolveOffsets(preset.stops)
 
-  const transform: Keyframe[] = stops
-    .filter((stop) => stop.transform !== undefined)
-    .map((stop) => ({ offset: stop.offset, transform: stop.transform as string }))
+  const transform: Keyframe[] = stops.filter((stop) => stop.transform !== undefined).map((stop) => ({ offset: stop.offset, transform: stop.transform as string }))
 
   const style: Keyframe[] = stops
     .filter((stop) => STYLE_KEYS.some((key) => stop[key] !== undefined))

@@ -11,7 +11,7 @@ import { wTextSetting } from '@/components/modules/widgets/wText/wTextSetting'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
 import { wSvgSetting } from '@/components/modules/widgets/wSvg/wSvgSetting'
 
-export default async function(type: string, item: TCommonItemData, data: Record<string, any>) {
+export default async function (type: string, item: TCommonItemData, data: Record<string, any>) {
   let setting = data
   if (type === 'text') {
     !item.fontFamily && !item.color ? (setting = JSON.parse(JSON.stringify(wTextSetting))) : (setting = item)

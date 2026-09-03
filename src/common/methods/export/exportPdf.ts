@@ -190,10 +190,7 @@ function buildPdf(pages: RasterPage[], title: string): Blob {
 
   pages.forEach((page, index) => {
     open(pageId(index))
-    put(
-      `<< /Type /Page /Parent ${PAGE_TREE} 0 R /MediaBox [0 0 ${num(page.widthPt)} ${num(page.heightPt)}]` +
-        ` /Resources << /XObject << /Im0 ${imageId(index)} 0 R >> >> /Contents ${contentId(index)} 0 R >>\n`,
-    )
+    put(`<< /Type /Page /Parent ${PAGE_TREE} 0 R /MediaBox [0 0 ${num(page.widthPt)} ${num(page.heightPt)}]` + ` /Resources << /XObject << /Im0 ${imageId(index)} 0 R >> >> /Contents ${contentId(index)} 0 R >>\n`)
     close()
 
     // Scale the unit image up to the media box and draw it: the whole page is
@@ -206,10 +203,7 @@ function buildPdf(pages: RasterPage[], title: string): Blob {
     close()
 
     open(imageId(index))
-    put(
-      `<< /Type /XObject /Subtype /Image /Width ${page.pixelWidth} /Height ${page.pixelHeight}` +
-        ` /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${page.jpeg.length} >>\nstream\n`,
-    )
+    put(`<< /Type /XObject /Subtype /Image /Width ${page.pixelWidth} /Height ${page.pixelHeight}` + ` /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${page.jpeg.length} >>\nstream\n`)
     put(page.jpeg)
     put('\nendstream\n')
     close()

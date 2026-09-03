@@ -1,5 +1,3 @@
-
-
 export const wGroupSetting = {
   name: 'Group',
   type: 'w-group',
@@ -20,4 +18,3 @@ export const wGroupSetting = {
     dir: 'none',
   },
 }
-

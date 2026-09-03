@@ -1,4 +1,3 @@
-
 export type TZoomData = {
   text: string
   value: number
@@ -39,7 +38,6 @@ export const ZoomList: TZoomData[] = [
     // icon: 'icon-best-size',
   },
 ]
-
 
 export const OtherList: TZoomData[] = [
   {

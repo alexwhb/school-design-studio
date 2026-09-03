@@ -49,12 +49,22 @@ export function toPptxColor(input?: string, fallback = '000000'): PptxColor {
     const parts = rgb[1].split(',').map((p) => parseFloat(p.trim()))
     const [r, g, b, a = 1] = parts
     if ([r, g, b].some((n) => Number.isNaN(n))) return { color: fallback }
-    const hex = [r, g, b].map((n) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0')).join('')
+    const hex = [r, g, b]
+      .map((n) =>
+        Math.max(0, Math.min(255, Math.round(n)))
+          .toString(16)
+          .padStart(2, '0'),
+      )
+      .join('')
     return { color: hex.toUpperCase(), transparency: alphaToTransparency(a) }
   }
 
   let hex = value.replace(/^#/, '')
-  if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('')
+  if (hex.length === 3)
+    hex = hex
+      .split('')
+      .map((c) => c + c)
+      .join('')
   if (hex.length === 8) {
     const alpha = parseInt(hex.slice(6, 8), 16) / 255
     return { color: hex.slice(0, 6).toUpperCase(), transparency: alphaToTransparency(alpha) }
@@ -85,7 +95,10 @@ export function htmlToText(html?: string): string {
     .replace(/<\/(p|div|h[1-6]|li)>/gi, '\n')
   const el = document.createElement('div')
   el.innerHTML = normalised
-  return (el.textContent || '').replace(/ /g, ' ').replace(/\n{3,}/g, '\n\n').replace(/\n+$/, '')
+  return (el.textContent || '')
+    .replace(/ /g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\n+$/, '')
 }
 
 /** Reads the rotation, in degrees, out of a widget's transform string. */
@@ -180,6 +193,10 @@ function drawImageToDataUrl(url: string): Promise<string> {
 
 /** Makes a filename safe to save on Windows and macOS. */
 export function safeFileName(name: string, extension: string): string {
-  const base = (name || 'Untitled design').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Untitled design'
+  const base =
+    (name || 'Untitled design')
+      .replace(/[\\/:*?"<>|]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim() || 'Untitled design'
   return `${base}.${extension}`
 }

@@ -16,7 +16,7 @@ let cloneData = ''
 
 export default class {
   private notifi: any
-  constructor() { }
+  constructor() {}
   /**
    * onmessage
    */

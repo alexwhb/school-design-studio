@@ -84,7 +84,6 @@ export type TGetCategoriesData = {
 
 export const getCategories = (params: TGetCategoriesParams = {}) => fetch<TGetCategoriesData[]>('design/cate', params, 'get')
 
-
 // Save template
 export const saveTemp = (params: Type.Object = {}) => fetch('design/edit', params, 'post')
 // export const delTemp = (params: Type.Object = {}) => fetch('/api/template/temp_del', params)
@@ -130,8 +129,8 @@ type TSaveWorksParams = {
 }
 
 export type TSaveWorksResult = {
-  id: number | string,
-  stat?: number,
+  id: number | string
+  stat?: number
   msg: string
 }
 

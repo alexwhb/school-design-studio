@@ -182,10 +182,7 @@ export const ANIMATION_PRESETS: AnimationPreset[] = [
     group: 'Reveal',
     duration: 700,
     easing: EASE_OUT,
-    stops: [
-      { clipPath: 'inset(0 100% 0 0)' },
-      { clipPath: 'inset(0 0 0 0)' },
-    ],
+    stops: [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }],
   },
   {
     id: 'wipe-up',
@@ -194,10 +191,7 @@ export const ANIMATION_PRESETS: AnimationPreset[] = [
     group: 'Reveal',
     duration: 700,
     easing: EASE_OUT,
-    stops: [
-      { clipPath: 'inset(100% 0 0 0)' },
-      { clipPath: 'inset(0 0 0 0)' },
-    ],
+    stops: [{ clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0 0 0 0)' }],
   },
   {
     id: 'unfold',

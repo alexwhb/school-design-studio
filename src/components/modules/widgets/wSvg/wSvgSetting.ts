@@ -1,11 +1,10 @@
-
 export type TWSvgSetting = {
-  name: string,
-  type: string,
+  name: string
+  type: string
   uuid: string
   width: number
   height: number
-  colors: [],
+  colors: []
   left: number
   top: number
   // zoom: 1.5,
@@ -17,13 +16,13 @@ export type TWSvgSetting = {
   borderStyle: string
   parent: string
   svgUrl: string
-  setting: [],
+  setting: []
   record: {
     width: number
     height: number
     minWidth: number
     minHeight: number
-  },
+  }
   zoom?: number
   cropEdit?: boolean
   imgUrl?: string
@@ -34,7 +33,7 @@ export type TWSvgSetting = {
 
 export const wSvgSetting = {
   name: 'Shape',
-  type: "w-svg",
+  type: 'w-svg',
   uuid: `-1`,
   width: 100,
   height: 100,

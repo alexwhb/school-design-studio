@@ -29,12 +29,7 @@ export default function effectStyle(effect: TTextEffect, scale = 1): CSSProperti
   const solidFill = Boolean(filling?.enable) && Number(filling?.type) === 0
   const clippedFill = Boolean(filling?.enable) && !solidFill
 
-  const transform = [
-    offset?.enable ? `translate(${offset.x * scale}px, ${offset.y * scale}px)` : '',
-    skew?.enable ? `skew(${skew.x}deg, ${skew.y}deg)` : '',
-  ]
-    .filter(Boolean)
-    .join(' ')
+  const transform = [offset?.enable ? `translate(${offset.x * scale}px, ${offset.y * scale}px)` : '', skew?.enable ? `skew(${skew.x}deg, ${skew.y}deg)` : ''].filter(Boolean).join(' ')
 
   return {
     color: solidFill ? filling?.color : 'transparent',

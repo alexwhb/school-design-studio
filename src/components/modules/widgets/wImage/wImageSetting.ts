@@ -18,7 +18,7 @@ export type TImageSetting = {
   parent: string
   imgUrl: string
   mask: string
-  setting: [],
+  setting: []
   rotate: number
   record: {
     width: number
@@ -26,9 +26,9 @@ export type TImageSetting = {
     minWidth: number
     minHeight: number
     dir: string
-  },
-  lock: false,
-  isNinePatch: false,
+  }
+  lock: false
+  isNinePatch: false
   flip: string | null
   sliceData: {
     ratio: number
@@ -70,7 +70,7 @@ const setting: TImageSetting = {
   sliceData: {
     ratio: 0,
     left: 0,
-  }
+  },
 }
 
 export default setting

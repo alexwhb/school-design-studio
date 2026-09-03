@@ -127,7 +127,6 @@ export const trackImageUse = (downloadLocation?: string) => {
 }
 
 type TMyPhotoParams = {
-  
   page: number
   pageSize?: number
 }

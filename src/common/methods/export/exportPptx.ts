@@ -127,7 +127,7 @@ function addTextWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: numb
     // otherwise every text box shifts down and right in PowerPoint.
     margin: 0,
     lineSpacingMultiple: Math.min(Math.max(lineHeight, 0.5), 4),
-    charSpacing: pxToPoints(((widget as any).fontSize || 16) * (Number((widget as any).letterSpacing) || 0) / 100) * scale,
+    charSpacing: pxToPoints((((widget as any).fontSize || 16) * (Number((widget as any).letterSpacing) || 0)) / 100) * scale,
     rotate: readRotation(widget) || undefined,
     fill: fill && !isInvisible(fill) ? { color: toPptxColor(fill).color } : undefined,
     shrinkText: false,
@@ -231,20 +231,18 @@ async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scal
     data,
     ...frame(widget, scale),
     rotate: readRotation(widget) || undefined,
-    transparency: toPptxColor(`#000000${Math.round((Number((widget as any).opacity ?? 1)) * 255).toString(16).padStart(2, '0')}`).transparency,
+    transparency: toPptxColor(
+      `#000000${Math.round(Number((widget as any).opacity ?? 1) * 255)
+        .toString(16)
+        .padStart(2, '0')}`,
+    ).transparency,
     rounding: false,
     shadow: pptxShadow(widget, scale),
   })
   return true
 }
 
-async function addRasterWidget(
-  slide: PptxGenJS.Slide,
-  widget: TdWidgetData,
-  pageIndex: number,
-  scale: number,
-  render?: PptxOptions['renderWidget'],
-) {
+async function addRasterWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, pageIndex: number, scale: number, render?: PptxOptions['renderWidget']) {
   if (!render) return
   const data = await render(pageIndex, widget)
   if (!data) return
