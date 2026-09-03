@@ -434,11 +434,11 @@ test('the gallery is filed into categories', async ({ page }) => {
   await expect(chips.first()).toHaveClass(/cates__chip--on/)
   expect(await chips.count()).toBeGreaterThan(3)
 
-  const all = await page.locator('.img-water-fall .img-box').count()
+  const all = await page.locator('.temp-list-wrap .panel-card').count()
   await chips.filter({ hasText: 'Slides' }).click()
   await page.waitForTimeout(1800)
   await expect(chips.filter({ hasText: 'Slides' })).toHaveClass(/cates__chip--on/)
-  const slides = await page.locator('.img-water-fall .img-box').count()
+  const slides = await page.locator('.temp-list-wrap .panel-card').count()
   expect(slides).toBeGreaterThan(0)
   expect(slides).toBeLessThan(all)
 })
@@ -449,11 +449,11 @@ test('a search that matches nothing says so, and names the category', async ({ p
   await page.getByPlaceholder('Search templates').fill('zzzznothing')
   await page.keyboard.press('Enter')
   await page.waitForTimeout(1800)
-  await expect(page.locator('.temp-list-wrap .loading')).toHaveText('No posters match “zzzznothing”')
+  await expect(page.locator('.temp-list-wrap .panel-wrap__status')).toHaveText('No posters match “zzzznothing”')
 
   // Clearing empties the box. It deliberately does not re-run the search,
   // which would only repeat the one that just came back empty.
-  await page.locator('.temp-list-wrap .el-input__clear').click()
+  await page.locator('.temp-list-wrap .search-well__clear').click()
   await page.waitForTimeout(1500)
   await expect(page.getByPlaceholder('Search templates')).toHaveValue('')
 })
@@ -721,7 +721,7 @@ test('the Photos panel shows the photographs, not just their placeholders', asyn
 async function addPhoto(page: Page) {
   await page.locator('#widget-panel .classify-item', { hasText: 'Photos' }).click()
   await page.waitForTimeout(1200)
-  await page.locator('.photo-list-wrap .list__img').first().click()
+  await page.locator('.photo-list-wrap__library .panel-card').first().click()
   await page.waitForTimeout(1500)
   await expect(page.locator(WIDGET)).toHaveCount(1)
 }
@@ -820,10 +820,12 @@ test('cropping gives a flipped image its flip back', async ({ page }) => {
   await expect(box).toHaveCSS('transform', /matrix/)
 })
 
-test('clicking a shape in the Elements panel places it', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+test('clicking a shape in the Graphics panel places it', async ({ page }) => {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(2000)
-  await page.locator('.list-wrap').nth(1).locator('.el-image').first().click()
+  await page.locator('.graph-list-wrap .cates__chip', { hasText: 'Shapes' }).click()
+  await page.waitForTimeout(1500)
+  await page.locator('.graph-list-wrap .panel-card.art--svg').first().click()
   await page.waitForTimeout(1800)
   await expect(page.locator(WIDGET)).toHaveCount(1)
 })
@@ -967,14 +969,14 @@ test('there is nothing to distribute below three widgets', async ({ page }) => {
 /* -------------------------------------------------------------- outlines */
 
 /**
- * Places the first shape the Elements panel finds under `search`.
+ * Places the first shape the Graphics panel finds under `search`.
  *
  * Only the SVG results: the library answers "apple" with a photographic sticker
  * as well as the line drawing, and a picture would land on the canvas as an
  * image widget with no outline settings on it at all.
  */
 async function addShape(page: Page, search: string) {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(1500)
   await page.locator('.graph-list-wrap input').first().fill(search)
   await page.waitForTimeout(1800)

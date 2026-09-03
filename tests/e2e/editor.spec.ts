@@ -134,7 +134,7 @@ test('deleting a whole template takes its selection boxes with it', async ({ pag
   // a group of elements rather than one selector. The boxes used to outlive the
   // layers they were drawn round: nothing hands Moveable a new target, because
   // the page was already the active element before the marquee began.
-  await page.locator('.img-water-fall .img-box').first().click()
+  await page.locator('.temp-list-wrap .panel-card').first().click()
   await page.waitForTimeout(2500)
   expect(await widgetCount(page)).toBeGreaterThan(2)
 
@@ -374,17 +374,18 @@ test('the theme toggle flips the editor between light and dark', async ({ page }
 })
 
 test('switching panels shows the matching content', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(1200)
-  await expect(page.getByText('Stickers', { exact: true })).toBeVisible()
+  await expect(page.getByText('Stickers', { exact: true }).first()).toBeVisible()
 
   await page.locator('#widget-panel .classify-item', { hasText: 'Tools' }).click()
   await page.waitForTimeout(400)
   await expect(page.getByText('QR code', { exact: true })).toBeVisible()
 
-  await page.locator('#widget-panel .classify-item', { hasText: 'Uploads' }).click()
+  // Uploads are a section of Photos now, not a tab of their own.
+  await page.locator('#widget-panel .classify-item', { hasText: 'Photos' }).click()
   await page.waitForTimeout(400)
-  await expect(page.getByText('Upload image', { exact: true })).toBeVisible()
+  await expect(page.getByText('My uploads', { exact: true })).toBeVisible()
 })
 
 test('clicking the active panel tab collapses the panel', async ({ page }) => {
@@ -585,10 +586,10 @@ test('a rubber band selects into the store, not just onto the canvas', async ({ 
 })
 
 test('an element you place stays clickable on the canvas', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(2000)
   // Section 0 places a w-image, which is the one that used to lock the canvas.
-  await page.locator('.list-wrap').first().locator('.el-image').first().click()
+  await page.locator('.graph-list-wrap .card-grid .panel-card').first().click()
   await page.waitForTimeout(1800)
   await expect(page.locator(WIDGET)).toHaveCount(1)
 

@@ -120,8 +120,8 @@ test('Swap ends turns an arrow round', async ({ page }) => {
   expect(tipX(after.d!)).toBeLessThan(tipX(before.d!) - 100)
 })
 
-test('an Elements arrow preset inserts an open path with ends on', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+test('a Graphics arrow preset inserts an open path with ends on', async ({ page }) => {
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(500)
   await page.locator('.arrow-presets__item[title="Double arrow"]').click()
   await page.waitForTimeout(600)
@@ -136,7 +136,7 @@ test('an Elements arrow preset inserts an open path with ends on', async ({ page
 })
 
 test('the dotted preset arrives dotted, with round ends', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(500)
   await page.locator('.arrow-presets__item[title="Dotted line"]').click()
   await page.waitForTimeout(600)
@@ -147,7 +147,7 @@ test('the dotted preset arrives dotted, with round ends', async ({ page }) => {
 })
 
 test('a two-point line cannot be closed, so it keeps its heads and its panel section', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(500)
   await page.locator('.arrow-presets__item[title="Arrow"]').click()
   await page.waitForTimeout(600)
@@ -158,7 +158,7 @@ test('a two-point line cannot be closed, so it keeps its heads and its panel sec
 })
 
 test('a line with arrowheads is in the page thumbnail too', async ({ page }) => {
-  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(500)
   await page.locator('.arrow-presets__item[title="Arrow"]').click()
   await page.waitForTimeout(600)
@@ -186,7 +186,7 @@ test('typing an l into a text layer is an l, not the line tool', async ({ page }
 test('the arrowhead survives the PNG export', async ({ page }) => {
   // The heads are plain geometry inside the path's own <svg>, so they go out
   // of the same door the path does: the whole <svg> serialised into an <img>.
-  await page.locator('#widget-panel .classify-item', { hasText: 'Elements' }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Graphics' }).click()
   await page.waitForTimeout(500)
   await page.locator('.arrow-presets__item[title="Arrow"]').click()
   await page.waitForTimeout(600)

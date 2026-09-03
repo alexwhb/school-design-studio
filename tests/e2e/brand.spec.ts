@@ -27,7 +27,7 @@ async function openPanel(page: Page, name: 'Templates' | 'Brand' | 'Tools' | 'Te
 
 async function pickTemplate(page: Page, id: number) {
   await openPanel(page, 'Templates')
-  await page.locator(`.img-box:has(img[src="/covers/template-${id}.png"])`).click()
+  await page.locator(`.panel-card:has(img[src="/covers/template-${id}.png"])`).click()
   await page.waitForTimeout(2000)
 }
 

@@ -178,7 +178,7 @@ test.describe('embedded in a host app', () => {
     // A template picks the host's school up as it lands.
     await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Templates' }).click()
     await page.waitForTimeout(600)
-    await page.locator('.ds-root .img-box:has(img[src="/covers/template-101.png"])').click()
+    await page.locator('.ds-root .panel-card:has(img[src="/covers/template-101.png"])').click()
     await page.waitForTimeout(2500)
     const lines = await page.locator('.ds-root #page-design-canvas [data-uuid] .edit-text').allInnerTexts()
     expect(lines).toContain('RIVERBEND ACADEMY')

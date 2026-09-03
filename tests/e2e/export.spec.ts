@@ -35,7 +35,7 @@ test('Export writes a PNG of the page', async ({ page }) => {
 test('a drop shadow on a photo survives the PNG export', async ({ page }) => {
   await page.locator('#widget-panel .classify-item', { hasText: 'Photos' }).click()
   await page.waitForTimeout(1200)
-  await page.locator('.photo-list-wrap .list__img').first().click()
+  await page.locator('.photo-list-wrap__library .panel-card').first().click()
   await page.waitForTimeout(1500)
   const widget = page.locator('#page-design-canvas [data-uuid]:not([data-uuid="-1"])').first()
   await widget.click({ position: { x: 20, y: 10 } })

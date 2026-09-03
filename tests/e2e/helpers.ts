@@ -404,7 +404,7 @@ export async function downloadBytes(page: Page, act: () => Promise<void>, timeou
 
 /**
  * Puts a photo on the page without the network: a flat colour drawn in the
- * browser, uploaded through the Uploads panel and placed from its list. Flat,
+ * browser, uploaded through the Photos panel and placed from its list. Flat,
  * so a test can sample one pixel and know what it should be.
  */
 export async function addFlatImage(page: Page, color = '#808080', size = { width: 400, height: 300 }) {
@@ -420,14 +420,14 @@ export async function addFlatImage(page: Page, color = '#808080', size = { width
     },
     [color, size.width, size.height] as const,
   )
-  await page.locator('#widget-panel .classify-item', { hasText: 'Uploads' }).click()
+  await page.locator('#widget-panel .classify-item', { hasText: 'Photos' }).click()
   await page.waitForTimeout(400)
-  await page.locator('.user-wrap input[type="file"]').setInputFiles({
+  await page.locator('.photo-list-wrap input[type="file"]').setInputFiles({
     name: 'flat.png',
     mimeType: 'image/png',
     buffer: Buffer.from(dataUrl.split(',')[1], 'base64'),
   })
-  const thumb = page.locator('.user-wrap .list__img').first()
+  const thumb = page.locator('.photo-list-wrap__uploads .panel-card').first()
   await thumb.waitFor()
   await page.waitForTimeout(400)
   await thumb.click()
