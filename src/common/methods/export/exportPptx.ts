@@ -16,6 +16,7 @@
  *    editable, but it is guaranteed to look exactly like the editor.
  */
 import PptxGenJS from 'pptxgenjs'
+import downloadBlob from '@/common/methods/download/downloadBlob'
 import { imageFilterCss } from '../imageFilters'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 import { readTable } from '@/components/modules/widgets/wTable/tableModel'
@@ -153,10 +154,7 @@ function addTableWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: num
   const textColor = toPptxColor(w.color, '000000').color
   const headerColor = toPptxColor(w.headerColor || w.color, 'FFFFFF').color
   const borderWidth = Number(w.borderWidth) || 0
-  const border: PptxGenJS.BorderProps =
-    borderWidth > 0 && !isInvisible(w.borderColor)
-      ? { type: w.borderStyle === 'dashed' || w.borderStyle === 'dotted' ? 'dash' : 'solid', pt: Math.max(0.25, pxToPoints(borderWidth) * scale), color: toPptxColor(w.borderColor, '000000').color }
-      : { type: 'none' }
+  const border: PptxGenJS.BorderProps = borderWidth > 0 && !isInvisible(w.borderColor) ? { type: w.borderStyle === 'dashed' || w.borderStyle === 'dotted' ? 'dash' : 'solid', pt: Math.max(0.25, pxToPoints(borderWidth) * scale), color: toPptxColor(w.borderColor, '000000').color } : { type: 'none' }
   const align = (['left', 'center', 'right'].includes(w.textAlign) ? w.textAlign : 'left') as 'left' | 'center' | 'right'
   const margin = pxToInches(Number(w.cellPadding) || 0) * scale
 
@@ -273,7 +271,15 @@ async function applyBackground(slide: PptxGenJS.Slide, page: Record<string, any>
   slide.background = { color: 'FFFFFF' }
 }
 
-export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Promise<void> {
+/**
+ * The deck itself, as a Blob.
+ *
+ * Split from the download for the same reason the PDF is: a host that embeds
+ * the editor wants the bytes to POST somewhere, not a file in the user's
+ * Downloads folder. pptxgenjs will hand back either, so the two paths differ
+ * only in what they ask it for.
+ */
+export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Promise<Blob> {
   const { title, mode, onProgress, renderPage, renderWidget } = options
   const pages = layouts.filter(Boolean)
   if (pages.length === 0) throw new Error('There is nothing to export.')
@@ -344,8 +350,18 @@ export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Pro
   }
 
   onProgress?.(95, 'Writing the file')
-  await pptx.writeFile({ fileName: safeFileName(title, 'pptx') })
-  onProgress?.(100, 'Your PowerPoint file has been downloaded')
+  const blob = (await pptx.write({ outputType: 'blob' })) as Blob
+  // pptxgenjs writes its own type, which some readers use to decide what the
+  // file is. Say it outright rather than leaving it to whatever came back.
+  return blob.type ? blob : new Blob([blob], { type: PPTX_TYPE })
+}
+
+const PPTX_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+
+export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Promise<void> {
+  const blob = await buildPptx(layouts, options)
+  downloadBlob(blob, safeFileName(options.title, 'pptx'))
+  options.onProgress?.(100, 'Your PowerPoint file has been downloaded')
 }
 
 export default exportPptx

@@ -145,7 +145,7 @@ function pdfDate(date: Date): string {
  * the cross-reference table at the end is a list of where each object starts,
  * and a reader that finds one wrong reports the file as damaged.
  */
-function buildPdf(pages: RasterPage[], title: string): Blob {
+function assemblePdf(pages: RasterPage[], title: string): Blob {
   const encoder = new TextEncoder()
   const parts: Uint8Array[] = []
   let length = 0
@@ -223,7 +223,16 @@ function buildPdf(pages: RasterPage[], title: string): Blob {
   return new Blob(parts as BlobPart[], { type: 'application/pdf' })
 }
 
-export default async function exportPdf(pages: TdLayout[], options: PdfOptions): Promise<void> {
+/**
+ * The file itself, as a Blob.
+ *
+ * Split from the download so that a host embedding the editor can take the
+ * bytes and do something else with them — attach the PDF to a task, put it in
+ * its own object store — without a file landing in the user's Downloads folder
+ * on the way past. The download below is this plus one line, so there is no
+ * second way of building a PDF to keep in step.
+ */
+export async function buildPdf(pages: TdLayout[], options: PdfOptions): Promise<Blob> {
   const { title, scale, renderPage, onProgress } = options
   if (!pages.length) throw new Error('There is nothing to export yet.')
 
@@ -250,5 +259,9 @@ export default async function exportPdf(pages: TdLayout[], options: PdfOptions):
   }
 
   onProgress?.(92, 'Building the PDF')
-  downloadBlob(buildPdf(rendered, title || 'Untitled design'), safeFileName(title, 'pdf'))
+  return assemblePdf(rendered, title || 'Untitled design')
+}
+
+export default async function exportPdf(pages: TdLayout[], options: PdfOptions): Promise<void> {
+  downloadBlob(await buildPdf(pages, options), safeFileName(options.title, 'pdf'))
 }
