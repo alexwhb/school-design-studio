@@ -14,6 +14,8 @@
     "fetch-fonts": "node tools/fetch-fonts.mjs",
     "fetch-iconfont": "node tools/fetch-iconfont.mjs",
     "dev:servers": "node tools/dev/servers.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test --project=e2e",
     "bench": "node tools/bench/bench.mjs",
     "bench:prod": "node tools/bench/start-prod.mjs && cross-env APP_URL=http://127.0.0.1:4873 node tools/bench/bench.mjs",
@@ -72,7 +74,8 @@
     "less": "^4.1.1",
     "terser": "^5.28.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.4"
+    "vite": "^5.1.4",
+    "vitest": "^3.2.7"
   },
   "browserslist": [
     "Chrome >= 90"

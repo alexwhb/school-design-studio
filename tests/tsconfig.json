@@ -11,8 +11,12 @@
     "noEmit": true,
     "lib": ["esnext", "dom", "dom.iterable"],
     "types": ["node"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "../src/types/*.d.ts"],
   "exclude": ["node_modules"]
 }
