@@ -33,16 +33,18 @@ perfectly well on its own, which is why it lives in its own repository.
 
 ## What is in here
 
-| Path | What it is |
-| --- | --- |
-| `src/` | The editor — React 19, valtio, TypeScript, built with Vite |
-| `public/` | Bundled fonts, stickers, masks and template thumbnails |
-| `service/src/mock/` | The content library: templates, elements and photos, as plain JSON |
-| `server/`, `serve.mjs` | A small Node server that answers the read-only content lookups so no backend is needed |
-| `service/` | Upstream's full Express backend, kept for saving designs (optional, not required to run) |
-| `tools/` | Scripts that generated the fonts, stickers and templates in this fork ([details](#developer-tooling)) |
-| `tests/` | Playwright end-to-end tests for the editor and the embed |
-| `embed-demo/` | A host page that mounts the editor as a component, for checking [embedding](EMBEDDING.md) |
+| Path                | What it is                                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------------------------- |
+| `src/`              | The editor — React 19, valtio, TypeScript, built with Vite                                            |
+| `public/`           | Bundled fonts, stickers, masks and template thumbnails                                                |
+| `service/src/mock/` | The content library: templates, elements and photos, as plain JSON                                    |
+| `server/`           | The content library — `library.mjs` is the implementation, and `design-studio/server` in the package  |
+| `serve.mjs`         | A small Node server that serves `dist/` and the content lookups, so no backend is needed              |
+| `service/`          | Upstream's full Express backend, kept for saving designs (optional, not required to run)              |
+| `tools/`            | Scripts that generated the fonts, stickers and templates in this fork ([details](#developer-tooling)) |
+| `tests/e2e/`        | Playwright end-to-end tests for the editor and the embed                                              |
+| `tests/unit/`       | Vitest tests for the compose entry, which runs with no browser behind it                              |
+| `embed-demo/`       | A host page that mounts the editor as a component, for checking [embedding](EMBEDDING.md)             |
 
 ## Run it
 
@@ -59,14 +61,16 @@ npm run dev        # http://127.0.0.1:5273
 
 Other scripts:
 
-| Script | What it does |
-| --- | --- |
-| `npm run build` | Production build into `dist/` |
-| `npm run serve` | Serves an existing `dist/` (no rebuild) |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run test:e2e` | Playwright end-to-end tests (needs `npm run dev:servers`) |
-| `npm run build:embed` | Builds the embeddable component into `dist-embed/` (see [EMBEDDING.md](EMBEDDING.md)) |
-| `npm run fetch-fonts` | Re-downloads the bundled fonts (see below) |
+| Script                  | What it does                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run build`         | Production build into `dist/`                                                                                                               |
+| `npm run serve`         | Serves an existing `dist/` (no rebuild)                                                                                                     |
+| `npm run typecheck`     | `tsc --noEmit`                                                                                                                              |
+| `npm run test:e2e`      | Playwright end-to-end tests (needs `npm run dev:servers`)                                                                                   |
+| `npm run test`          | Unit tests (Vitest) for the compose entry                                                                                                   |
+| `npm run build:embed`   | Builds the embeddable component, the compose entry, the types and the bundled content into `dist-embed/` (see [EMBEDDING.md](EMBEDDING.md)) |
+| `npm run release:embed` | Cuts a tagged release of that build for a host app to install                                                                               |
+| `npm run fetch-fonts`   | Re-downloads the bundled fonts (see below)                                                                                                  |
 
 ### Stock photos
 
@@ -145,7 +149,7 @@ JSON — so `serve.mjs` answers the read-only lookups directly.
 (`server/content-library.mjs`, mounted as Vite middleware), so the panels
 behave identically either way.
 
-You still need the real `service/` backend to *save* designs or templates, and
+You still need the real `service/` backend to _save_ designs or templates, and
 for server-side rendering of the trickier exports. Set `DESIGN_API_URL` to
 point the editor at it — or at your own backend, to supply your own content.
 
@@ -246,11 +250,11 @@ new shape.
 Three decisions, in the order you make them. How big — by preset or by typing a
 size. What happens to the artwork:
 
-| Choice | What it does |
-| --- | --- |
-| Scale to fit | Everything grows or shrinks together and stays on the page |
+| Choice        | What it does                                                     |
+| ------------- | ---------------------------------------------------------------- |
+| Scale to fit  | Everything grows or shrinks together and stays on the page       |
 | Fill the page | Fills the new shape; the edges of the design may fall outside it |
-| Keep sizes | Nothing is resized, the design is recentred |
+| Keep sizes    | Nothing is resized, the design is recentred                      |
 
 And, once a design has more than one page, whether it applies to the page you
 are on or to all of them.
@@ -315,7 +319,7 @@ presentation-shaped. It is a ceiling rather than a target: every page is held in
 memory and written into the autosave, and the expanded strip renders each
 thumbnail in full.
 
-What a page operation *means* lives in `src/store/design/widget/actions/pages.ts`
+What a page operation _means_ lives in `src/store/design/widget/actions/pages.ts`
 rather than in the strip, so that keeping the current page index, the widget
 list and the canvas in step is written once instead of once per button.
 
@@ -393,12 +397,12 @@ puts them back.
 What sits in front of what. Every element's Transform section carries an arrange
 row, and the same four moves are in the right-click menu and on the keyboard:
 
-| Move | Shortcut |
-| --- | --- |
-| Bring forward | Ctrl/⌘ + ] |
+| Move           | Shortcut           |
+| -------------- | ------------------ |
+| Bring forward  | Ctrl/⌘ + ]         |
 | Bring to front | Ctrl/⌘ + Shift + ] |
-| Send backward | Ctrl/⌘ + [ |
-| Send to back | Ctrl/⌘ + Shift + [ |
+| Send backward  | Ctrl/⌘ + [         |
+| Send to back   | Ctrl/⌘ + Shift + [ |
 
 Forward and backward move one place at a time, which is what you want for a
 caption that has to sit just above one photo. Front and back go the whole way,
@@ -513,7 +517,7 @@ set.
 ## Shadows
 
 Text has carried shadows all along, as one feature of a stacked text effect.
-Photographs and shapes had nothing. Both now have a *Drop shadow* row under
+Photographs and shapes had nothing. Both now have a _Drop shadow_ row under
 **Effects**: check it on, open the picker from the swatch beside it, and set a
 blur and an x/y offset underneath. There is no shadow until it is switched on.
 
@@ -643,7 +647,7 @@ until you want it. Inside are six looks to start from — Original, Warm, Cool,
 Black and white, Vivid, Faded — and a slider for each adjustment underneath:
 brightness, contrast, saturation, warmth, blur, black and white, and sepia.
 **Reset** puts the photograph back to how it arrived. The section heading says
-which look is on, or *Edited* once the sliders have been moved off one.
+which look is on, or _Edited_ once the sliders have been moved off one.
 
 Warmth runs both ways from the middle: warmer is a sepia wash, and cooler is the
 same wash with the hues turned half way round and back again, which lands it on
@@ -714,11 +718,11 @@ but both of which Transformers.js declares.
 `src/common/methods/backgroundRemoval.ts` is the seam, and it tries three things
 in order:
 
-| Who does the work | How to say so |
-| --- | --- |
-| A host app's own | `setBackgroundRemover(async (blob) => blob)`, exported from the package |
-| A server | `configure({ BACKGROUND_REMOVAL_URL: '/api/cutout' })` — the picture is POSTed as the request body, and a transparent PNG is expected back |
-| The browser | the default above; `BACKGROUND_REMOVAL_MODEL` swaps the model, including for a folder of the same shape served from your own origin |
+| Who does the work | How to say so                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| A host app's own  | `setBackgroundRemover(async (blob) => blob)`, exported from the package                                                                    |
+| A server          | `configure({ BACKGROUND_REMOVAL_URL: '/api/cutout' })` — the picture is POSTed as the request body, and a transparent PNG is expected back |
+| The browser       | the default above; `BACKGROUND_REMOVAL_MODEL` swaps the model, including for a folder of the same shape served from your own origin        |
 
 `configure({ BACKGROUND_REMOVAL: false })` takes the button away entirely, for a
 deployment that would rather not offer it.
@@ -792,12 +796,12 @@ that actually changed lose their styling.
 
 ### What survives where
 
-| | Bold, italic, underline, strike | A colour on part of the text | A link |
-| --- | --- | --- | --- |
-| Canvas, thumbnails, presenter | yes | yes | followed in the presenter, in a new tab |
-| Curved text | yes | yes | not marked, and not followed |
-| PowerPoint | yes, as run properties | yes | yes, a real hyperlink |
-| PDF and PNG | yes | yes | no, the page is a picture |
+|                               | Bold, italic, underline, strike | A colour on part of the text | A link                                  |
+| ----------------------------- | ------------------------------- | ---------------------------- | --------------------------------------- |
+| Canvas, thumbnails, presenter | yes                             | yes                          | followed in the presenter, in a new tab |
+| Curved text                   | yes                             | yes                          | not marked, and not followed            |
+| PowerPoint                    | yes, as run properties          | yes                          | yes, a real hyperlink                   |
+| PDF and PNG                   | yes                             | yes                          | no, the page is a picture               |
 
 **PowerPoint gets real runs.** A line becomes a paragraph and each formatted
 piece of it a run carrying its own `bold`, `italic`, `underline`, `strike`,
@@ -844,7 +848,7 @@ src/common/methods/export/textRuns.ts   the same markup as PowerPoint text runs
 ## Curved text
 
 What a badge, a crest or a Sports Day header is set on. Select a text box and
-drag **Curve**, on the *Curve text* row under Effects in the settings panel, or
+drag **Curve**, on the _Curve text_ row under Effects in the settings panel, or
 type the angle into the field beside it — −180 to 180, arrow keys stepping by
 one and Shift by ten.
 
@@ -947,7 +951,7 @@ and the tagline, and under them **Apply brand to this design** with a sentence
 saying what pressing it would do and how many pages it would reach. It is first
 because it answers the question anyone opening this tab has — is my kit set up,
 and what will it do to this design. The five blocks below it are the pieces that
-card is made of. An empty kit shows a checkerboard and *Your school*, and the
+card is made of. An empty kit shows a checkerboard and _Your school_, and the
 button is off, because there is nothing yet to apply.
 
 - **Logo.** One logo, shown as a tile you click to put it on the page — at a
@@ -964,7 +968,7 @@ button is off, because there is nothing yet to apply.
   school's navy is one click away from any swatch.
 
   Each row is labelled by where it sits — Primary, Secondary, Colour 3 — beside
-  the nearest common name for the hue, *navy*, *gold*, *paper*. Neither is
+  the nearest common name for the hue, _navy_, _gold_, _paper_. Neither is
   stored: a kit holds an order and a set of colours, and a name typed in once
   would be wrong the moment the order changed.
 
@@ -972,8 +976,8 @@ button is off, because there is nothing yet to apply.
   the colour as a band with whichever of white and ink reads on it. They are
   samples rather than ticks, so the colour that cannot be read on paper is shown
   being unreadable and needs no legend; hovering gives both ratios. The editing
-  card says the same thing in a sentence — *"Reads on white at 1.3:1 — lighter
-  text will be darkened on posters."* None of it stops a colour going in the
+  card says the same thing in a sentence — _"Reads on white at 1.3:1 — lighter
+  text will be darkened on posters."_ None of it stops a colour going in the
   kit. A school's colour is its colour; the line only says what the editor will
   have to do when it lands on a poster.
 
@@ -986,6 +990,7 @@ button is off, because there is nothing yet to apply.
   because the strip and that line are the reasons to change a colour at all, and
   neither survives being read through a hole. **Add a colour** opens the same
   card on a fresh colour.
+
 - **Fonts.** A heading font and a body font, each card showing the chosen
   family's name set in that family, at about the size the Apply brand pass uses
   it at — so the pair can be judged as a pair before it is put on a design.
@@ -1015,7 +1020,7 @@ Springfield Elementary, `office@springfield.k12.us`, and so on — which is
 exactly the copy the templates used to carry outright. So the gallery looks the
 same to somebody who has never opened the Brand panel.
 
-Once *any* detail is filled in, the kit answers only what it has: an empty email
+Once _any_ detail is filled in, the kit answers only what it has: an empty email
 box leaves `{{school.email}}` standing on the page rather than quietly filling
 it with somebody else's. A field nothing answers is always left exactly as it
 was, so the author can see what is still waiting.
@@ -1076,8 +1081,8 @@ not on a slide.
 Two repairs, and only two. Text that was a **neutral** — the white headline —
 swaps to whichever of white and the ink the design already uses can be read on
 the band, because a white headline made grey is neither one thing nor the other.
-Text in one of the **school's own colours** is darkened or lightened *in its own
-hue*, so a pale gold heading comes out a deeper gold rather than a brown or a
+Text in one of the **school's own colours** is darkened or lightened _in its own
+hue_, so a pale gold heading comes out a deeper gold rather than a brown or a
 black; only when that cannot reach the target inside a bounded shift does it
 fall back to ink or white.
 
@@ -1155,8 +1160,8 @@ It does three passes:
 
 The same readability guard runs after the colour pass (above): a text box whose
 colour or whose background the recolour changed is checked, and repaired if the
-new colours would have hidden it. The notification says so — *"3 lines adjusted
-to stay readable"* — because it is a change nobody asked for.
+new colours would have hidden it. The notification says so — _"3 lines adjusted
+to stay readable"_ — because it is a change nobody asked for.
 
 Afterwards a notification says what changed, including how many fields were left
 standing for want of a detail the kit does not have.
@@ -1191,7 +1196,7 @@ it.
 
 Tab and Shift+Tab run along the cells, Enter drops a row, Escape stops, and Tab
 off the last cell adds a row rather than losing what you were about to type.
-Right-click a cell to put a row or a column in or out *at that cell*; the panel
+Right-click a cell to put a row or a column in or out _at that cell_; the panel
 adds and removes them at the end, which is the other thing people mean. With the
 table selected, the dividers between its columns can be dragged to trade width
 between neighbours.
@@ -1391,8 +1396,8 @@ app rather than a panel bolted onto it.
 Two things to know before adding styles:
 
 - Each token is a `var()` reference, so Less colour functions cannot be applied
-  to one. `fade(@accent, 25%)` fails the build with *"Argument cannot be
-  evaluated to a color"*. Use `@accent-a25` / `@accent-a45`, or add a token.
+  to one. `fade(@accent, 25%)` fails the build with _"Argument cannot be
+  evaluated to a color"_. Use `@accent-a25` / `@accent-a45`, or add a token.
 - Never hardcode a hex for chrome. `tools/` has no lint for this; the check is
   `grep -rn '#[0-9a-f]\{3,8\}' src --include='*.tsx'`, and everything that
   legitimately remains is either artwork (a widget's default colour, a swatch
@@ -1420,11 +1425,11 @@ is about a hundred lines of a stable, thirty-year-old format, against roughly
 PDF. It is a resolution multiplier, but it is labelled in the terms the decision
 is actually made in:
 
-| Setting  | Resolution | For                                    |
-| -------- | ---------- | -------------------------------------- |
-| Standard | 150 DPI    | Screen, email, the office copier       |
-| Print    | 300 DPI    | What a print shop asks for             |
-| Large    | 450 DPI    | Something read from across a corridor  |
+| Setting  | Resolution | For                                   |
+| -------- | ---------- | ------------------------------------- |
+| Standard | 150 DPI    | Screen, email, the office copier      |
+| Print    | 300 DPI    | What a print shop asks for            |
+| Large    | 450 DPI    | Something read from across a corridor |
 
 Those numbers are real, not decorative. The editor stores a page in pixels and
 records nothing about how big it is meant to be, so the paper size has to be
@@ -1571,35 +1576,51 @@ school planning tool for events, tasks and staff assignments. It is a separate,
 closed-source codebase, so nothing here depends on it; this section is a record
 of how the two would be joined, and of what a real deployment still needs.
 
-School Planner is React Router 7 and so is this, so the two can share a runtime.
-The options, most joined-up first:
+School Planner is React Router 7 and so is this, so the two share a runtime. The
+editor mounts as a component: `<DesignStudio />` renders into a `<div>` in the
+host — no iframe, no second React root, and the host's copy of React is the only
+one on the page. Its CSS is scoped so it cannot leak into the surrounding
+chrome. [EMBEDDING.md](EMBEDDING.md) is the reference, and `embed-demo/` is a
+working host page to check it against.
 
-1. **Mount it as a component.** `npm run build:embed` produces an embeddable
-   `<DesignStudio />` that renders into a `<div>` in the host — no iframe, no
-   second React root, and the host's copy of React is the only one on the page.
-   Its CSS is scoped so it cannot leak into the surrounding chrome.
-   [EMBEDDING.md](EMBEDDING.md) is the reference, and `embed-demo/` is a working
-   host page to check it against.
-2. **Iframe it** at a route like `/design`, and set `HOME_URL` in
-   `src/config.ts` so the app name links back into the planner. Cruder, but it
-   isolates the editor completely. Its dark palette is the planner's admin
-   theme, so an iframe on an `/admin/*` route matches the chrome around it —
-   drive the theme from the host by setting `ds_theme` in `localStorage` on the
-   same origin, or by dropping the `dark` class on `<html>` directly.
-3. **Serve it as a separate app** on a subdomain, sharing a session cookie.
+The planner installs it from a tag carrying the built output:
 
-Either way, the things a real deployment still needs:
+```json
+"design-studio": "github:alexwhb/school-design-studio#embed-v0.1.0"
+```
 
-- **Auth and tenancy.** There is none. `src/utils/axios.ts` ships a hard-coded
-  demo token from upstream. Any real deployment must scope saved designs by
-  school, exactly as the rest of the planner does.
-- **Storage.** Uploads live in the visitor's own browser (see
-  [Uploads](#uploads)) — fine for one person at one desk, wrong the moment two
-  members of staff are meant to share a picture, or the same person opens the
-  editor on a different machine. Point `src/common/methods/localUploads.ts` at
-  the planner's own file store, scoped by school, before this is more than a
-  demo. Saved *designs* still target the upstream backend and are not wired up
-  at all.
+`npm run release:embed` cuts one. Three entry points come out of it:
+
+| Entry                   | What                                                                                                                                              | Where it runs      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `design-studio`         | `<DesignStudio />`, its types, `configure`, `setBackgroundRemover`                                                                                | browser            |
+| `design-studio/compose` | Design JSON in, design JSON out: compose a deck or a sign from an outline, describe one for a model, apply the model's changes, apply a brand kit | server and browser |
+| `design-studio/server`  | `createContentLibrary(…)` — the six read-only `/design/*` endpoints, framework-agnostic                                                           | Node               |
+
+The host takes over each of the three things the editor would otherwise keep in
+the browser, one prop each:
+
+- **The design.** `document`, `onDocumentChange` and `onSave`. Nothing is
+  written to IndexedDB, the restore offer never appears, and Save is a request
+  the planner makes. The pill above the canvas follows the promise.
+- **Uploads.** `uploads`, three calls against the planner's own file store,
+  scoped by school. Without it a picture uploaded on the staffroom machine is
+  not on the teacher's laptop.
+- **The brand kit.** `brand` and `onBrandChange`, which the planner already
+  keeps per school.
+
+And two the editor never had: `assistant`, a panel of the planner's own behind
+an "AI" tab in the rail, and a `ref` that lets it read the design, change it,
+and take a PDF, a `.pptx` or a page's PNG as bytes rather than as a download.
+
+Still not done, and worth saying:
+
+- **Auth and tenancy.** There is none in this repo. `src/utils/axios.ts` ships a
+  hard-coded demo token from upstream. Scoping designs by school is the
+  planner's job, on its side of the props above.
+- **The standalone editor still keeps everything in the browser.** That is
+  right for what it is — a tool somebody opens on their own machine — and it is
+  what the props above turn off.
 
 ## Developer tooling
 
@@ -1609,19 +1630,19 @@ or extend it. Run them from the repository root. The `.mjs` scripts need Node
 20+ and the `.py` scripts need Python 3.9+; the screenshot scripts additionally
 need Puppeteer and a running server.
 
-| Script | Purpose |
-| --- | --- |
-| `fetch-fonts.mjs` + `font-list.json` | Downloads the 26 bundled font families from Google Fonts and regenerates `public/fonts/fonts.css` |
-| `fetch-iconfont.mjs` | Re-downloads the toolbar icon font into `public/iconfont/`, so no CDN sits in the critical path (`npm run fetch-iconfont`) |
-| `apply-i18n.py` + `i18n-map.json` | The translation pass — replaces Chinese source strings with English across the tree |
-| `add-content.mjs` | Imports a folder of your own SVGs or PNGs into Graphics (shapes, stickers or masks) and rewrites the manifest |
-| `make-stickers.py` | Draws the bundled school sticker set as SVG and rewrites `png.json` |
-| `make-school-templates.py` | Generates the school template pack (`--remove` takes it back out) |
-| `make-slide-themes.py` | Generates the five themed slide decks (`--remove` takes them back out) |
-| `make-template-covers.mjs` | Screenshots each template to produce its gallery thumbnail (`--pack=` narrows it to one pack) |
-| `make-samples.py`, `englishify-samples.py`, `make-sample-covers.mjs` | Build and re-render the sample element groups shown under Text |
-| `test-export.mjs` | End-to-end check: drives the editor, exports, unzips the `.pptx` and asserts the slide contents |
-| `shot.mjs`, `shot-state.mjs`, `screenshots.mjs` | Screenshot helpers used while working on the interface |
+| Script                                                               | Purpose                                                                                                                    |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `fetch-fonts.mjs` + `font-list.json`                                 | Downloads the 26 bundled font families from Google Fonts and regenerates `public/fonts/fonts.css`                          |
+| `fetch-iconfont.mjs`                                                 | Re-downloads the toolbar icon font into `public/iconfont/`, so no CDN sits in the critical path (`npm run fetch-iconfont`) |
+| `apply-i18n.py` + `i18n-map.json`                                    | The translation pass — replaces Chinese source strings with English across the tree                                        |
+| `add-content.mjs`                                                    | Imports a folder of your own SVGs or PNGs into Graphics (shapes, stickers or masks) and rewrites the manifest              |
+| `make-stickers.py`                                                   | Draws the bundled school sticker set as SVG and rewrites `png.json`                                                        |
+| `make-school-templates.py`                                           | Generates the school template pack (`--remove` takes it back out)                                                          |
+| `make-slide-themes.py`                                               | Generates the five themed slide decks (`--remove` takes them back out)                                                     |
+| `make-template-covers.mjs`                                           | Screenshots each template to produce its gallery thumbnail (`--pack=` narrows it to one pack)                              |
+| `make-samples.py`, `englishify-samples.py`, `make-sample-covers.mjs` | Build and re-render the sample element groups shown under Text                                                             |
+| `test-export.mjs`                                                    | End-to-end check: drives the editor, exports, unzips the `.pptx` and asserts the slide contents                            |
+| `shot.mjs`, `shot-state.mjs`, `screenshots.mjs`                      | Screenshot helpers used while working on the interface                                                                     |
 
 [CONTENT.md](CONTENT.md) documents what each content type expects and walks
 through adding your own.

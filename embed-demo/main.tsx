@@ -26,7 +26,8 @@ const params = new URLSearchParams(window.location.search)
 const HOSTS_THE_KIT = params.get('brand') === '1'
 const HOSTS_THE_DOC = params.get('doc') === '1'
 const HAS_ASSISTANT = params.get('ai') === '1'
-const KIND = params.get('kind') === 'poster' ? 'poster' : 'slides'
+/** Left out entirely unless asked for, which is the standalone editor's case. */
+const KIND = params.has('kind') ? (params.get('kind') === 'poster' ? 'poster' : 'slides') : undefined
 
 const HOST_KIT = {
   name: 'Riverbend Academy',
@@ -184,7 +185,7 @@ function Host() {
             ref={studio}
             homeUrl="/"
             appName="Design Studio"
-            documentKind={KIND}
+            {...(KIND ? { documentKind: KIND } : null)}
             {...(HOSTS_THE_KIT ? { brand, onBrandChange: setBrand } : null)}
             {...(HOSTS_THE_DOC
               ? {
@@ -203,10 +204,11 @@ function Host() {
   )
 }
 
-// The ref is handed out before the editor mounts, so a host holding it from its
-// first render can still be given one that works. Kept on `window` for the e2e
-// suite, which drives the host API the way the planner will.
-createRoot(document.getElementById('host')!).render(
+// One root, kept across hot reloads. Calling createRoot again on a container
+// that already has one is an error React prints on every save.
+const container = document.getElementById('host') as HTMLElement & { __root?: ReturnType<typeof createRoot> }
+container.__root ??= createRoot(container)
+container.__root.render(
   <StrictMode>
     <Host />
   </StrictMode>,

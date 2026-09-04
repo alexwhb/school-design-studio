@@ -2,6 +2,23 @@ import { expect, test } from '@playwright/test'
 
 const EMBED_URL = process.env.EMBED_URL || 'http://127.0.0.1:5373/embed-demo/index.html'
 
+/** The demo's flags: ?brand, ?doc, ?ai, ?kind. See embed-demo/main.tsx. */
+const embedUrl = (query = '') => (query ? `${EMBED_URL}?${query}` : EMBED_URL)
+
+/** The editor loads fonts and a design before it settles; wait for the canvas. */
+async function openEditor(page: import('@playwright/test').Page, query = '') {
+  await page.goto(embedUrl(query))
+  await page.waitForSelector('.ds-root #page-design-canvas')
+  await page.waitForTimeout(1200)
+}
+
+/** The `ref` the demo hands out, which is how a host drives the editor. */
+async function handle(page: import('@playwright/test').Page) {
+  await page.waitForFunction(() => Boolean((window as any).__studio?.current))
+}
+
+const pill = (page: import('@playwright/test').Page) => page.locator('.ds-root .top-title__saved')
+
 /**
  * The editor has to be able to sit inside another React app without an iframe.
  * That means two things have to hold: the editor works, and nothing it ships
@@ -96,8 +113,7 @@ test.describe('embedded in a host app', () => {
   })
 
   test('follows the host between light and dark', async ({ page }) => {
-    const surface = () =>
-      page.evaluate(() => getComputedStyle(document.querySelector('.ds-root')!).getPropertyValue('--ds-surface').trim())
+    const surface = () => page.evaluate(() => getComputedStyle(document.querySelector('.ds-root')!).getPropertyValue('--ds-surface').trim())
 
     expect(await surface()).toBe('#ffffff')
 
@@ -139,7 +155,10 @@ test.describe('embedded in a host app', () => {
   })
 
   test('the toolbar icons are drawn from the bundled font, not boxes', async ({ page }) => {
-    const family = await page.locator('.ds-root .iconfont').first().evaluate((el) => getComputedStyle(el).fontFamily)
+    const family = await page
+      .locator('.ds-root .iconfont')
+      .first()
+      .evaluate((el) => getComputedStyle(el).fontFamily)
     expect(family).toContain('iconfont')
     const loaded = await page.evaluate(() => document.fonts.check('16px iconfont'))
     expect(loaded, 'the icon font is available without the host serving it').toBe(true)
@@ -220,5 +239,189 @@ test.describe('embedded in a host app', () => {
     const background = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
     expect(background).not.toBe('rgba(0, 0, 0, 0)')
     await expect(dialog.locator('.choice')).toHaveCount(3)
+  })
+})
+
+/**
+ * The half of the API a planner actually uses: it hands the design in, it is
+ * told when it changes, it saves it, and it drives the editor through a ref
+ * rather than through the editor's DOM.
+ */
+test.describe('the host API', () => {
+  test('a document handed in is what opens, and the restore offer never appears', async ({ page }) => {
+    // Leave a draft in IndexedDB the way a previous standalone session would,
+    // so that "no restore offer" means the offer was suppressed rather than
+    // that there was nothing to offer.
+    await openEditor(page)
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Text' }).click()
+    await page.waitForTimeout(400)
+    await page.locator('.ds-root').getByText('Heading', { exact: true }).click()
+    await page.waitForTimeout(2600)
+
+    await openEditor(page, 'doc=1')
+    await expect(page.locator('.ds-root .el-message-box')).toHaveCount(0)
+    await expect(page.locator('.ds-root .top-title input')).toHaveValue('Open House 2026')
+    const lines = await page.locator('.ds-root #page-design-canvas .edit-text').allInnerTexts()
+    expect(lines).toContain('Open House')
+    // And the pill says the work is safe, because nothing has happened to it.
+    await expect(pill(page)).toHaveText('Saved')
+  })
+
+  test('Save calls onSave, and the pill goes Saving… then Saved', async ({ page }) => {
+    await openEditor(page, 'doc=1&ai=1')
+    await handle(page)
+
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'AI' }).click()
+    await page.locator('#assistant-heading').click()
+    await expect(pill(page)).toHaveText('Unsaved changes')
+
+    const button = page.locator('.ds-root .host-save-btn')
+    await expect(button).toHaveText('Save to planner')
+    await button.click()
+    await expect(pill(page)).toHaveText('Saving\u2026')
+    await expect(pill(page)).toHaveText('Saved')
+    await expect(page.locator('#host-saved')).toContainText('2 pages')
+    expect(await page.evaluate(() => (window as any).__studio.current.isDirty())).toBe(false)
+  })
+
+  test('Cmd/Ctrl-S saves the same way the button does', async ({ page }) => {
+    await openEditor(page, 'doc=1&ai=1')
+    await handle(page)
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'AI' }).click()
+    await page.locator('#assistant-heading').click()
+    await expect(pill(page)).toHaveText('Unsaved changes')
+
+    // On the editor rather than on the host bar: the shortcut is the editor's,
+    // and a press with the focus outside it belongs to the host.
+    await page.locator('.ds-root #page-design-canvas').click({ position: { x: 5, y: 5 } })
+    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+s' : 'Control+s')
+    await expect(pill(page)).toHaveText('Saved')
+    await expect(page.locator('#host-saved')).toContainText('pages')
+  })
+
+  test('applyOps through the ref changes what is on the canvas', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+
+    const result = await page.evaluate(() => {
+      const studio = (window as any).__studio.current
+      const heading = studio.getDocument().layouts[0].layers.find((layer: any) => layer.brandRole === 'heading')
+      return studio.applyOps([
+        { op: 'setText', id: heading.uuid, text: 'Spring Open House' },
+        { op: 'setText', id: 'nosuchwidget', text: 'nowhere' },
+      ])
+    })
+    expect(result.applied).toBe(1)
+    expect(result.rejected).toHaveLength(1)
+    expect(result.rejected[0].reason).toContain('nosuchwidget')
+
+    await expect(page.locator('.ds-root #page-design-canvas')).toContainText('Spring Open House')
+
+    // One press of undo takes the whole batch back. The diff that makes an
+    // entry is worked out off the main thread, so the button is disabled for a
+    // moment after the change lands — waiting for it to come alive is waiting
+    // for the entry to exist.
+    const undo = page.locator('.ds-root .operation-item--icon').first()
+    await expect(undo).not.toHaveClass(/disable/)
+    await undo.click()
+    await page.waitForTimeout(600)
+    await expect(page.locator('.ds-root #page-design-canvas')).toContainText('Open House')
+    await expect(page.locator('.ds-root #page-design-canvas')).not.toContainText('Spring Open House')
+  })
+
+  test('exportPdf resolves to a PDF the host can post somewhere', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const pdf = await page.evaluate(async () => {
+      const blob = await (window as any).__studio.current.exportPdf()
+      return { type: blob.type, size: blob.size }
+    })
+    expect(pdf.type).toBe('application/pdf')
+    expect(pdf.size).toBeGreaterThan(10_000)
+  })
+
+  test('exportPng draws one page, and refuses a page that is not there', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const png = await page.evaluate(async () => {
+      const blob = await (window as any).__studio.current.exportPng(0)
+      return { type: blob.type, size: blob.size }
+    })
+    expect(png.type).toBe('image/png')
+    expect(png.size).toBeGreaterThan(1_000)
+
+    const refused = await page.evaluate(() =>
+      (window as any).__studio.current
+        .exportPng(99)
+        .then(() => 'resolved')
+        .catch((error: Error) => error.message),
+    )
+    expect(refused).toContain('no page 99')
+  })
+
+  test('the AI tab is there only when the host brought a panel', async ({ page }) => {
+    await openEditor(page, 'ai=1')
+    const rail = page.locator('.ds-root #widget-panel .classify-item')
+    await expect(rail.first()).toContainText('AI')
+    await rail.first().click()
+    await expect(page.locator('.ds-root .assistant-wrap')).toBeVisible()
+    await expect(page.locator('#assistant-heading')).toBeVisible()
+
+    await openEditor(page)
+    await expect(page.locator('.ds-root #widget-panel .classify-item').first()).toContainText('Templates')
+    await expect(page.locator('.ds-root .assistant-wrap')).toHaveCount(0)
+  })
+
+  test('documentKind sets the page and narrows the gallery', async ({ page }) => {
+    await openEditor(page, 'kind=poster')
+    // Letter portrait at 150 DPI, which is what a school prints on.
+    await expect(page.locator('.ds-root #style-panel input').first()).toHaveValue('1275')
+    await expect(page.locator('.ds-root #style-panel input').nth(1)).toHaveValue('1650')
+    // Nothing to present, and nobody to say speaker notes to.
+    await expect(page.locator('.ds-root .present-btn')).toHaveCount(0)
+    const chips = await page.locator('.ds-root .cates__chip').allInnerTexts()
+    expect(chips).not.toContain('Slides')
+    expect(chips).toContain('Posters')
+
+    await openEditor(page, 'kind=slides')
+    await expect(page.locator('.ds-root #style-panel input').first()).toHaveValue('1920')
+    await expect(page.locator('.ds-root .present-btn')).toHaveCount(1)
+    const slideChips = await page.locator('.ds-root .cates__chip').allInnerTexts()
+    expect(slideChips).toContain('Slides')
+    expect(slideChips).not.toContain('Posters')
+  })
+
+  test('uploads come from the host, not the browser', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Photos' }).click()
+    await page.waitForTimeout(900)
+    // The one picture the demo's in-memory store starts with.
+    await expect(page.locator('.ds-root .photo-list-wrap img[src="/covers/template-101.png"]').first()).toBeVisible()
+
+    // Nothing was written to the browser's own uploads store.
+    const stored = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('design-studio')
+          open.onsuccess = () => {
+            const db = open.result
+            if (!db.objectStoreNames.contains('uploads')) return resolve('no store')
+            const request = db.transaction('uploads', 'readonly').objectStore('uploads').getAll()
+            request.onsuccess = () => resolve(request.result.length)
+            request.onerror = () => resolve('error')
+          }
+          open.onerror = () => resolve('error')
+        }),
+    )
+    expect(stored === 0 || stored === 'no store').toBe(true)
+  })
+
+  test('onDocumentChange reports an edit, debounced', async ({ page }) => {
+    await openEditor(page, 'doc=1&ai=1')
+    await handle(page)
+    await expect(page.locator('#host-changes')).toHaveText('Changes seen: 0')
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'AI' }).click()
+    await page.locator('#assistant-heading').click()
+    await expect(page.locator('#host-changes')).toHaveText('Changes seen: 1', { timeout: 5000 })
   })
 })
