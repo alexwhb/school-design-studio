@@ -20,6 +20,7 @@ import { slideTheme, posterPack } from './themes'
 import { kindOf } from './describe'
 import { markup } from './widgets'
 import { sanitizeMarkup } from './markup'
+import { sanitizeFields } from './fields'
 import type { TBrandKit } from '@/common/methods/brandKitCore'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
@@ -31,8 +32,18 @@ export function pageKinds(kind: 'slides' | 'poster'): string[] {
 /** The editor's own ceiling, so a design composed here is one it will open. */
 const MAX_PAGES = 50
 
+/**
+ * A working copy, with the fields that get interpolated somewhere checked.
+ *
+ * Both halves matter. The copy is so a host can hand in a document it is still
+ * holding; the check is because this is one of the three ways a document
+ * reaches the editor, and a route that skipped it would be the route somebody
+ * used. See `fields.ts`.
+ */
 function clone(doc: DesignDocument): DesignDocument {
-  return JSON.parse(JSON.stringify(doc)) as DesignDocument
+  const { doc: safe, report } = sanitizeFields(doc)
+  if (report.dropped.length) console.warn('[design] dropped fields a design may not carry', report.dropped)
+  return safe
 }
 
 function findWidget(doc: DesignDocument, id: string): TdWidgetData | null {

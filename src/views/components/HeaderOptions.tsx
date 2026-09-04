@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { autosaveState, type SaveStatus } from '@/common/hooks/autosave'
 import { useHostApi, type DesignDocument } from '@/common/hooks/hostApi'
+import { sanitizeFields } from '@/compose/fields'
 import { canvasState, userState, widgetState } from '@/store/state'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 import { setShowMoveable } from '@/store/control'
@@ -280,8 +281,15 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
    * the host's copy of a design it thinks it is holding unchanged.
    */
   function showDocument(doc: DesignDocument) {
-    const layouts = Array.isArray(doc?.layouts) && doc.layouts.length ? (JSON.parse(JSON.stringify(doc.layouts)) as TdLayout[]) : null
-    applyTitle(doc?.title || '')
+    // Every document reaching the canvas comes through here — the `document`
+    // prop and the ref's `setDocument` both — so this is where the fields that
+    // are interpolated somewhere get checked. `sanitizeFields` copies, which is
+    // also the copy this function needs: the store mutates deeply, and writing
+    // straight through would edit the host's own object.
+    const { doc: safe, report } = sanitizeFields(doc)
+    if (report.dropped.length) console.warn('[design] dropped fields a design may not carry', report.dropped)
+    const layouts = Array.isArray(safe?.layouts) && safe.layouts.length ? (safe.layouts as TdLayout[]) : null
+    applyTitle(safe?.title || '')
     if (!layouts) {
       initBoard()
       return

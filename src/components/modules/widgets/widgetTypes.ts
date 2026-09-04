@@ -67,3 +67,35 @@ export const NESTED_URL_PATHS: Record<string, readonly string[]> = {
   'w-text': ['fontClass.url', 'textEffects[].filling.imageContent.image'],
   'w-table': ['fontClass.url'],
 }
+
+/**
+ * A font family name the editor is willing to write into a stylesheet.
+ *
+ * Letters, digits, spaces, underscores and hyphens, and no more than sixty-four
+ * of them. Every family the editor bundles fits — "IBM Plex Mono", "Source
+ * Serif 4", "Libre Baskerville" — and nothing that fits can end a CSS string,
+ * open a rule, or start a comment, which is the whole job. The space has to be
+ * in the list: without it nine of the twenty-seven bundled families are
+ * rejected, which is every two-word one.
+ */
+export const SAFE_FONT_FAMILY = /^[A-Za-z0-9 _-]{1,64}$/
+
+/**
+ * Fields that are neither a URL nor markup, and are still interpolated into
+ * something that parses.
+ *
+ * `fontClass.value` is written into a `<style>` element as
+ * `@font-face { font-family: "…" }` and that element's markup is appended to
+ * the document's head. Nothing reaches that today — it is behind
+ * `supportSubFont`, which is off — but the value comes from a stored document,
+ * and a field whose safety rests on a feature flag staying off is a field that
+ * is unsafe. `sanitizeFields` in `design-studio/compose` drops any that do not
+ * match `SAFE_FONT_FAMILY`, and every way a document enters the editor goes
+ * through it.
+ *
+ * Paths are dotted, as in `NESTED_URL_PATHS`.
+ */
+export const SANITISED_FIELDS: Record<string, readonly string[]> = {
+  'w-text': ['fontClass.value'],
+  'w-table': ['fontClass.value'],
+}
