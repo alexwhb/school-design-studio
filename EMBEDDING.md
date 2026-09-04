@@ -3,10 +3,11 @@
 The editor is a React component. It mounts into a `<div>` in the host app — no
 iframe, no second React root, no separate bundle to keep in step.
 
-Two things it does that reach past its own box, both deliberate: presentation
-mode takes over the viewport (it is still inside `.ds-root`, so it keeps its
-styles), and exporting writes a file through the browser's download. Everything
-else stays inside the container it was given.
+Two things it does that reach past its own box, both deliberate. Presentation
+mode takes over the viewport; it is still inside `.ds-root`, so it keeps its
+styles. And the Export menu writes a file through the browser's download, which
+is what somebody clicking Export means — a host that wants the bytes instead
+asks the ref for them. Everything else stays inside the container it was given.
 
 ## What you get
 
@@ -14,7 +15,9 @@ else stays inside the container it was given.
 import { DesignStudio } from 'design-studio'
 import 'design-studio/style.css'
 
-;<DesignStudio />
+export default function Editor() {
+  return <DesignStudio />
+}
 ```
 
 | Prop               | Default           | What it does                                                                        |
