@@ -28,6 +28,20 @@ import { decodeEntities } from '@/utils/mergeFieldsCore'
 const TEXT_NODE = 3
 const ELEMENT_NODE = 1
 
+/**
+ * How deep the elements may nest before the tree stops getting deeper.
+ *
+ * The reader walks the tree by recursion, so a document nesting twenty thousand
+ * `<b>` — which is eight characters each to write and which the planner would
+ * hand straight to this function — is a stack overflow rather than a slow
+ * answer. Past the cap an element still contributes its words; it just does not
+ * open a level of its own, so nothing is dropped and the formatting somebody
+ * meant is long since applied. The canonical writer nests six deep, and markup
+ * pasted from a word processor rarely passes twenty, so sixty-four is well
+ * clear of anything real.
+ */
+const MAX_DEPTH = 64
+
 /** Elements with no closing tag. A `</br>` in the wild is one of these too. */
 const VOID = new Set(['AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT', 'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR'])
 
@@ -109,7 +123,56 @@ function elementNode(tagName: string, attributes: Record<string, string>): Node 
   }
 }
 
-const TAG = /<(\/)?([a-zA-Z][a-zA-Z0-9:-]*)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/)?>/g
+/**
+ * Reads the tag starting at `<`, without backtracking.
+ *
+ * A regex was the obvious thing and was quietly quadratic. `<(\/)?([a-zA-Z…])(…*?)>` has
+ * to scan to the end of the input before it can decide there is no closing `>`,
+ * and the caller then advances one character and asks again — so `"<a".repeat(100000)`,
+ * which a model will produce eventually and which the planner would hand
+ * straight to this function, took fifty-two seconds of a server's time.
+ *
+ * This scans each character once and tracks whether it is inside a quote, which
+ * is all the state a tag has. The important case is `eof`: if there is no
+ * unquoted `>` between here and the end, there is none after any later `<`
+ * either, so the rest of the input is text and the walk is over. That is what
+ * makes the whole thing linear rather than merely faster.
+ */
+type Tag =
+  | { kind: 'tag'; close: boolean; name: string; attrs: string; selfClosing: boolean; end: number }
+  /** A `<` that begins no element — `5 < 6`, or `<-`. One character of text. */
+  | { kind: 'text' }
+  /** No unquoted `>` remains anywhere. Everything from here is text. */
+  | { kind: 'eof' }
+
+const NAME_START = /[a-zA-Z]/
+const NAME_CHAR = /[a-zA-Z0-9:-]/
+
+function readTag(source: string, start: number): Tag {
+  let at = start + 1
+  const close = source[at] === '/'
+  if (close) at++
+  if (!NAME_START.test(source[at] ?? '')) return { kind: 'text' }
+  const nameAt = at
+  while (at < source.length && NAME_CHAR.test(source[at])) at++
+  const name = source.slice(nameAt, at).toUpperCase()
+
+  const attrsAt = at
+  let quote = ''
+  for (; at < source.length; at++) {
+    const character = source[at]
+    if (quote) {
+      if (character === quote) quote = ''
+      continue
+    }
+    if (character === '"' || character === "'") quote = character
+    else if (character === '>') break
+  }
+  if (at >= source.length) return { kind: 'eof' }
+
+  const attrs = source.slice(attrsAt, at)
+  return { kind: 'tag', close, name, attrs, selfClosing: attrs.trimEnd().endsWith('/'), end: at + 1 }
+}
 
 /**
  * The markup as a tree `richText.ts` can read.
@@ -170,19 +233,22 @@ export function parseMarkup(html: string): TReadNode {
       continue
     }
 
-    TAG.lastIndex = next
-    const tag = TAG.exec(source)
-    if (!tag || tag.index !== next) {
+    const tag = readTag(source, next)
+    if (tag.kind === 'text') {
       // A `<` that is not a tag. It is a character, and it is escaped on the
       // way out, so it can never become one.
       addText('<')
       at = next + 1
       continue
     }
-    at = TAG.lastIndex
+    if (tag.kind === 'eof') {
+      addText(source.slice(next))
+      break
+    }
+    at = tag.end
 
-    const name = tag[2].toUpperCase()
-    if (tag[1]) {
+    const name = tag.name
+    if (tag.close) {
       // A close tag: unwind to it, if it is open at all. One that is not open
       // closes nothing, which is what a browser does with a stray `</div>`.
       const depth = stack.findIndex((node) => node.tagName === name)
@@ -193,7 +259,7 @@ export function parseMarkup(html: string): TReadNode {
     const closes = CLOSES[name]
     if (closes && stack.length > 1 && closes.test(top().tagName ?? '')) stack.pop()
 
-    const element = elementNode(name, parseAttributes(tag[3] || ''))
+    const element = elementNode(name, parseAttributes(tag.attrs))
     append(element)
 
     if (RAW_TEXT.has(name)) {
@@ -204,7 +270,7 @@ export function parseMarkup(html: string): TReadNode {
       at = close < 0 ? source.length : source.indexOf('>', close) + 1 || source.length
       continue
     }
-    if (!VOID.has(name) && !tag[4]) stack.push(element)
+    if (!VOID.has(name) && !tag.selfClosing && stack.length < MAX_DEPTH) stack.push(element)
   }
 
   return root

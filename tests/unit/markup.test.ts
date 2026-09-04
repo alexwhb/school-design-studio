@@ -118,6 +118,46 @@ describe('agreeing with the browser', () => {
   })
 })
 
+describe('markup nobody meant', () => {
+  /**
+   * The planner runs this on a server, over text that reached it through a
+   * model, so an input that takes a minute is a way to take the server down.
+   * Every one of these was a real answer at some point in this file's life: the
+   * tag matcher used to scan to the end of the input before it could decide
+   * there was no `>`, which made `"<a".repeat(100000)` fifty-two seconds, and
+   * the reader walks by recursion, which made twenty thousand nested `<b>` a
+   * stack overflow.
+   *
+   * The bound is loose on purpose. It is here to catch a return to quadratic,
+   * not to measure a machine.
+   */
+  const BUDGET = 4000
+
+  it.each([
+    ['a run of brackets', '<'.repeat(200000)],
+    ['brackets that look like tags', '<a'.repeat(100000)],
+    ['a quote that never closes', '<a ' + '"'.repeat(20000)],
+    ['quotes in pairs', '<a ' + '"x"'.repeat(20000) + '>'],
+    ['quotes that do not match', '<a ' + `"x'`.repeat(20000)],
+    ['one tag, many attributes', '<a ' + 'b=c '.repeat(50000) + '>x</a>'],
+    ['nested past any sane depth', '<b>'.repeat(20000) + 'x'],
+    ['a great many tags', '<b>x</b>'.repeat(50000)],
+    ['a comment with no end', '<!--' + 'a'.repeat(500000)],
+    ['a script with no end', '<script>' + 'a'.repeat(500000)],
+    ['plain text, at length', 'x'.repeat(1000000)],
+  ])('answers %s without hanging', (_name, input) => {
+    const started = Date.now()
+    expect(() => sanitizeMarkup(input)).not.toThrow()
+    expect(Date.now() - started).toBeLessThan(BUDGET)
+  })
+
+  it('keeps the words of something nested past the cap', () => {
+    // Past the depth cap an element stops opening a level; it does not stop
+    // contributing what it says.
+    expect(sanitizeMarkup('<b>'.repeat(20000) + 'still here')).toContain('still here')
+  })
+})
+
 describe('setText and setMarkup', () => {
   it('setText escapes, always, whatever it looks like', () => {
     const { doc, id } = page()
