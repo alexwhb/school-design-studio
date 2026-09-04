@@ -36,9 +36,13 @@ const DEBOUNCE = 2000
  * work is safe is to close the tab and see whether the browser objects.
  *
  * `idle` is before any of it is running — the design is still being loaded, and
- * saying either "Saved" or "Unsaved" then would be a guess.
+ * saying either "Saved" or "Unsaved" then would be a guess. `error` is only
+ * reachable when a host is doing the saving: a write to IndexedDB that fails
+ * leaves the design unsaved rather than failed, and says so in a message.
  */
-export const autosaveState = proxy<{ status: 'idle' | 'saved' | 'unsaved' | 'saving' }>({ status: 'idle' })
+export type SaveStatus = 'idle' | 'saved' | 'unsaved' | 'saving' | 'error'
+
+export const autosaveState = proxy<{ status: SaveStatus }>({ status: 'idle' })
 
 type TOptions = {
   /** Reads the design's name, which lives in the toolbar's own state. */
@@ -150,12 +154,7 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
         start()
         return
       }
-      const answer = await confirmChoice(
-        'Pick up where you left off?',
-        `You were working on “${draft.title || 'Untitled design'}” ${describeAge(draft.savedAt)}.`,
-        'info',
-        { confirmButtonText: 'Restore it', cancelButtonText: 'Start fresh' },
-      )
+      const answer = await confirmChoice('Pick up where you left off?', `You were working on “${draft.title || 'Untitled design'}” ${describeAge(draft.savedAt)}.`, 'info', { confirmButtonText: 'Restore it', cancelButtonText: 'Start fresh' })
       if (answer === 'confirm') {
         setDLayouts(draft.layouts)
         setDWidgets(getWidgets())

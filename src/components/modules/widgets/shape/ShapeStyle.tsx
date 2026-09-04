@@ -50,15 +50,7 @@ export default function ShapeStyle({ shape }: { shape?: ReactNode }) {
       <PanelSection title="Appearance">
         <div className="slide-wrap">
           <OpacityRow value={active.opacity} onChange={(value) => finish('opacity', value)} />
-          <ColorSelect
-            variant="row"
-            label="Fill"
-            value={active.color}
-            enabled={isPainted(active.color)}
-            onEnabledChange={(on) => finish('color', withPaint(active.color, on))}
-            modes={['Solid', 'Gradient']}
-            onValueChange={(value) => finish('color', value)}
-          />
+          <ColorSelect variant="row" label="Fill" value={active.color} enabled={isPainted(active.color)} onEnabledChange={(on) => finish('color', withPaint(active.color, on))} modes={['Solid', 'Gradient']} onValueChange={(value) => finish('color', value)} />
           <BorderControls width={active.borderWidth} color={active.borderColor} style={active.borderStyle} onChange={finish} />
         </div>
       </PanelSection>

@@ -107,14 +107,8 @@ const BulkDocuments = forwardRef<BulkDocumentsHandle, Props>(function BulkDocume
   const table = useMemo(() => readTable(text, headerOverride ?? undefined), [text, headerOverride])
   const people = table.rows.length
 
-  const templateIndices = useMemo(
-    () => (scope === 'all' ? dLayouts.map((_, index) => index) : [Math.min(dCurrentPage, dLayouts.length - 1)]),
-    [scope, dLayouts, dCurrentPage],
-  )
-  const fields = useMemo(
-    () => fieldsInLayouts(templateIndices.map((index) => dLayouts[index]) as unknown as TdLayout[]),
-    [templateIndices, dLayouts],
-  )
+  const templateIndices = useMemo(() => (scope === 'all' ? dLayouts.map((_, index) => index) : [Math.min(dCurrentPage, dLayouts.length - 1)]), [scope, dLayouts, dCurrentPage])
+  const fields = useMemo(() => fieldsInLayouts(templateIndices.map((index) => dLayouts[index]) as unknown as TdLayout[]), [templateIndices, dLayouts])
   const listFields = fields.filter((name) => !isBrandField(name))
   const brandFields = fields.filter(isBrandField)
 
@@ -218,11 +212,7 @@ const BulkDocuments = forwardRef<BulkDocumentsHandle, Props>(function BulkDocume
       return
     }
     const removed = removeTemplates ? ` The template ${plural(templateIndices.length, 'page').replace(/^\d+ /, '')} ${templateIndices.length === 1 ? 'was' : 'were'} removed.` : ''
-    useNotification(
-      'Pages added',
-      `${plural(outcome.added, 'page')} added, one for each of ${plural(people, 'person', 'people')}.${removed}`,
-      { type: 'success' },
-    )
+    useNotification('Pages added', `${plural(outcome.added, 'page')} added, one for each of ${plural(people, 'person', 'people')}.${removed}`, { type: 'success' })
   }
 
   async function downloadPdf() {
@@ -262,10 +252,7 @@ const BulkDocuments = forwardRef<BulkDocumentsHandle, Props>(function BulkDocume
     }
   }
 
-  const targetBox =
-    dActiveElement && dActiveElement.uuid !== '-1' && dActiveElement.type === 'w-text' && typeof dActiveElement.text === 'string'
-      ? renderedText(dActiveElement.text).trim().slice(0, 40) || 'the selected text box'
-      : null
+  const targetBox = dActiveElement && dActiveElement.uuid !== '-1' && dActiveElement.type === 'w-text' && typeof dActiveElement.text === 'string' ? renderedText(dActiveElement.text).trim().slice(0, 40) || 'the selected text box' : null
 
   const qualityName = scale === 1 ? 'Standard' : scale === 2 ? 'Print' : 'Large'
 
@@ -301,15 +288,7 @@ const BulkDocuments = forwardRef<BulkDocumentsHandle, Props>(function BulkDocume
   })()
 
   return (
-    <Dialog
-      open={visible}
-      onOpenChange={close}
-      title="Make one for each person"
-      width={620}
-      className="is-align-center ds-bulk-documents"
-      closeOnClickModal={false}
-      footer={footer}
-    >
+    <Dialog open={visible} onOpenChange={close} title="Make one for each person" width={620} className="is-align-center ds-bulk-documents" closeOnClickModal={false} footer={footer}>
       <ol className="steps" aria-label="Steps">
         {STEPS.map((name, index) => (
           <li key={name} className={cx('steps__item', { 'is-on': index === step, 'is-done': index < step })}>
@@ -336,12 +315,7 @@ const BulkDocuments = forwardRef<BulkDocumentsHandle, Props>(function BulkDocume
             <Uploader hold accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain" onLoad={readFile}>
               <Button plain>Choose a file</Button>
             </Uploader>
-            <Checkbox
-              className="header-toggle"
-              value={table.header}
-              label="First row is column names"
-              onChange={(value) => setHeaderOverride(value)}
-            />
+            <Checkbox className="header-toggle" value={table.header} label="First row is column names" onChange={(value) => setHeaderOverride(value)} />
             <span className="people-count" role="status">
               {people === 0 ? 'No people yet' : plural(people, 'person', 'people')}
             </span>
@@ -377,32 +351,22 @@ const BulkDocuments = forwardRef<BulkDocumentsHandle, Props>(function BulkDocume
           <div className="fields">
             <h4 className="block__title">Fields in the design</h4>
             {listFields.length === 0 ? (
-              <p className="empty">This design has no fields yet. Click a column on the right to add one, such as <code>{'{{Name}}'}</code> where the name should go.</p>
+              <p className="empty">
+                This design has no fields yet. Click a column on the right to add one, such as <code>{'{{Name}}'}</code> where the name should go.
+              </p>
             ) : (
               listFields.map((field) => {
                 const column = columnFor(field)
                 return (
                   <div key={fieldKey(field)} className={cx('field-row', { 'is-unmatched': column < 0 })}>
                     <code className="field-row__name">{`{{${field}}}`}</code>
-                    <Select
-                      className="field-row__pick"
-                      value={column < 0 ? LEAVE : String(column)}
-                      options={[
-                        ...table.columns.map((name, index) => ({ label: name, value: String(index) })),
-                        { label: 'Leave as it is', value: LEAVE },
-                      ]}
-                      onChange={(value) => setChosen((prev) => ({ ...prev, [fieldKey(field)]: String(value) }))}
-                    />
+                    <Select className="field-row__pick" value={column < 0 ? LEAVE : String(column)} options={[...table.columns.map((name, index) => ({ label: name, value: String(index) })), { label: 'Leave as it is', value: LEAVE }]} onChange={(value) => setChosen((prev) => ({ ...prev, [fieldKey(field)]: String(value) }))} />
                     {column < 0 ? <span className="field-row__flag">No column — left as typed</span> : null}
                   </div>
                 )
               })
             )}
-            {brandFields.length > 0 ? (
-              <p className="reserved">
-                Filled by the brand kit: {brandFields.map((field) => `{{${field}}}`).join(', ')}
-              </p>
-            ) : null}
+            {brandFields.length > 0 ? <p className="reserved">Filled by the brand kit: {brandFields.map((field) => `{{${field}}}`).join(', ')}</p> : null}
           </div>
           <div className="columns">
             <h4 className="block__title">Columns in the list</h4>
@@ -413,9 +377,7 @@ const BulkDocuments = forwardRef<BulkDocumentsHandle, Props>(function BulkDocume
                 </button>
               ))}
             </div>
-            <p className="hint">
-              {targetBox ? `Click a column to add it to the end of “${targetBox}”.` : 'Click a column to add a new text box carrying it. Select a text box before opening this window to add to that box instead.'}
-            </p>
+            <p className="hint">{targetBox ? `Click a column to add it to the end of “${targetBox}”.` : 'Click a column to add a new text box carrying it. Select a text box before opening this window to add to that box instead.'}</p>
           </div>
         </section>
       ) : null}
@@ -449,8 +411,7 @@ const BulkDocuments = forwardRef<BulkDocumentsHandle, Props>(function BulkDocume
           </div>
 
           <p className="summary" role="status">
-            {plural(people, 'person', 'people')} × {plural(templateIndices.length, 'page')} = {plural(toAdd, 'page')}.
-            {unmatched.length > 0 ? ` ${plural(unmatched.length, 'field')} left as typed: ${unmatched.map((f) => `{{${f}}}`).join(', ')}.` : ''}
+            {plural(people, 'person', 'people')} × {plural(templateIndices.length, 'page')} = {plural(toAdd, 'page')}.{unmatched.length > 0 ? ` ${plural(unmatched.length, 'field')} left as typed: ${unmatched.map((f) => `{{${f}}}`).join(', ')}.` : ''}
           </p>
 
           {output === 'pages' && overPages ? (

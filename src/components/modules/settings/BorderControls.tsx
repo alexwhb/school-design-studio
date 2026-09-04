@@ -48,15 +48,7 @@ export default function BorderControls({ width = 0, color = '#000000ff', style =
 
   return (
     <div className="border-controls">
-      <ColorSelect
-        variant="row"
-        label={label}
-        value={color}
-        enabled={thickness > 0}
-        onEnabledChange={toggle}
-        modes={['Solid', 'Gradient']}
-        onValueChange={(value) => onChange('borderColor', value)}
-      />
+      <ColorSelect variant="row" label={label} value={color} enabled={thickness > 0} onEnabledChange={toggle} modes={['Solid', 'Gradient']} onValueChange={(value) => onChange('borderColor', value)} />
       <div className="border-controls__fields">
         <NumberSlider value={thickness} label="Thickness" maxValue={maxWidth} onChange={(value) => onChange('borderWidth', value)} />
         {thickness > 0 ? (

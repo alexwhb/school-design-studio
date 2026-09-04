@@ -62,9 +62,7 @@ export default function ShapePaint({ params, radius }: Props) {
         sit inside the transparent border that was made for it and come out one
         thickness too small on every side.
       */}
-      {ring ? (
-        <div className="shape__outline" style={{ ...gradientRingStyle(border!.width, border!.color, radius), inset: `-${border!.width}px` }} />
-      ) : null}
+      {ring ? <div className="shape__outline" style={{ ...gradientRingStyle(border!.width, border!.color, radius), inset: `-${border!.width}px` }} /> : null}
     </div>
   )
 }

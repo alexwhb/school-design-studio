@@ -46,22 +46,8 @@ export default function PageSizeFields({ width, height, onOpenResize }: Props) {
   return (
     <div className="page-size-fields">
       <div className="page-size-fields__grid">
-        <NumberInput
-          variant="underline"
-          label="W"
-          value={draft.width}
-          minValue={MIN_SIDE}
-          onChange={(value) => setDraft((prev) => ({ ...prev, width: Number(value) }))}
-          onFinish={(value) => commit({ width: Number(value), height: draft.height })}
-        />
-        <NumberInput
-          variant="underline"
-          label="H"
-          value={draft.height}
-          minValue={MIN_SIDE}
-          onChange={(value) => setDraft((prev) => ({ ...prev, height: Number(value) }))}
-          onFinish={(value) => commit({ width: draft.width, height: Number(value) })}
-        />
+        <NumberInput variant="underline" label="W" value={draft.width} minValue={MIN_SIDE} onChange={(value) => setDraft((prev) => ({ ...prev, width: Number(value) }))} onFinish={(value) => commit({ width: Number(value), height: draft.height })} />
+        <NumberInput variant="underline" label="H" value={draft.height} minValue={MIN_SIDE} onChange={(value) => setDraft((prev) => ({ ...prev, height: Number(value) }))} onFinish={(value) => commit({ width: draft.width, height: Number(value) })} />
       </div>
       <button type="button" className="page-size-fields__preset" onClick={onOpenResize}>
         <span className="page-size-fields__name">{paper || 'Custom size'}</span>

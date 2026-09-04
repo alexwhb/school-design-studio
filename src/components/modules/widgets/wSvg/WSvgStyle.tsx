@@ -44,14 +44,7 @@ export default function WSvgStyle() {
         <div className="slide-wrap">
           <OpacityRow value={active.opacity} onChange={(value) => finish('opacity', value)} />
           {colors.map((colour, index) => (
-            <ColorSelect
-              key={index}
-              variant="row"
-              label={colors.length > 1 ? `Fill ${index + 1}` : 'Fill'}
-              value={colour}
-              modes={['Solid', 'Gradient']}
-              onValueChange={(value) => colorFinish(index, value)}
-            />
+            <ColorSelect key={index} variant="row" label={colors.length > 1 ? `Fill ${index + 1}` : 'Fill'} value={colour} modes={['Solid', 'Gradient']} onValueChange={(value) => colorFinish(index, value)} />
           ))}
           <BorderControls width={active.borderWidth} color={active.borderColor} style={active.borderStyle} onChange={finish} />
         </div>

@@ -93,9 +93,7 @@ export default function ColorSelect({ label = '', value = '', width = '100%', mo
     onOpenChange?.(next)
   }
 
-  const picker = (
-    <ColorPicker value={innerColor} modes={modes} history={history} presets={presets} onHistoryChange={setHistory} onValueChange={handleValueChange} onChange={onChange} />
-  )
+  const picker = <ColorPicker value={innerColor} modes={modes} history={history} presets={presets} onHistoryChange={setHistory} onValueChange={handleValueChange} onChange={onChange} />
 
   if (variant === 'row') {
     return (

@@ -32,16 +32,7 @@ import Tooltip from '@/components/ui/Tooltip'
 import Uploader, { type TModelData, type TUploadDoneData } from '@/components/common/Uploader/Uploader'
 import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
 import { drawToolOrder, drawTools, toolHint } from '@/components/business/draw-shape/drawTools'
-import {
-  ArrowToolIcon,
-  ChevronUpIcon,
-  PictureIcon,
-  QrCodeIcon,
-  SelectToolIcon,
-  ShapesIcon,
-  TableIcon,
-  UploadArrowIcon,
-} from '@/components/ui/icons'
+import { ArrowToolIcon, ChevronUpIcon, PictureIcon, QrCodeIcon, SelectToolIcon, ShapesIcon, TableIcon, UploadArrowIcon } from '@/components/ui/icons'
 import { cx } from '@/utils/dom'
 import type { TDrawTool } from '@/store/types'
 import { addQrcode, addTable } from './addFromDock'
@@ -201,13 +192,7 @@ export default function ToolDock() {
           <DockButton label="Select" tool="select" quiet={!!armed} active={!armed} onClick={() => setDrawTool(null)}>
             <SelectToolIcon className="tool-dock__icon" />
           </DockButton>
-          <DockButton
-            label={`${drawTools.text.label} (${drawTools.text.shortcut})`}
-            tool="text"
-            quiet={!!armed}
-            active={armed === 'text'}
-            onClick={() => pick('text')}
-          >
+          <DockButton label={`${drawTools.text.label} (${drawTools.text.shortcut})`} tool="text" quiet={!!armed} active={armed === 'text'} onClick={() => pick('text')}>
             <TextIcon className="tool-dock__icon" />
           </DockButton>
           <Popover
@@ -219,14 +204,7 @@ export default function ToolDock() {
               <div className="tool-dock__shapes">
                 {shapes.map((shape) => (
                   <Tooltip key={shape.key} content={`${shape.label} (${shape.shortcut})`} placement="top" showAfter={400}>
-                    <button
-                      type="button"
-                      className={cx('tool-dock__shape', { 'is-armed': shape.armed })}
-                      data-tool={shape.key}
-                      aria-label={shape.label}
-                      aria-pressed={shape.armed}
-                      onClick={shape.pick}
-                    >
+                    <button type="button" className={cx('tool-dock__shape', { 'is-armed': shape.armed })} data-tool={shape.key} aria-label={shape.label} aria-pressed={shape.armed} onClick={shape.pick}>
                       <shape.Icon className="tool-dock__shape-icon" />
                     </button>
                   </Tooltip>
@@ -239,13 +217,7 @@ export default function ToolDock() {
               <ChevronUpIcon className="tool-dock__caret" />
             </DockButton>
           </Popover>
-          <DockButton
-            label={`${drawTools.pen.label} (${drawTools.pen.shortcut})`}
-            tool="pen"
-            quiet={!!armed}
-            active={armed === 'pen'}
-            onClick={() => pick('pen')}
-          >
+          <DockButton label={`${drawTools.pen.label} (${drawTools.pen.shortcut})`} tool="pen" quiet={!!armed} active={armed === 'pen'} onClick={() => pick('pen')}>
             <PenToolIcon className="tool-dock__icon" />
           </DockButton>
           <Popover
@@ -315,14 +287,7 @@ type DockButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 function DockButton({ label, tool, active, wide, quiet, children, ...rest }: DockButtonProps) {
   return (
     <Tooltip content={label} placement="top" showAfter={400} disabled={quiet}>
-      <button
-        {...rest}
-        type="button"
-        className={cx('tool-dock__item', { 'is-armed': active, 'is-wide': wide })}
-        data-tool={tool}
-        aria-label={label}
-        aria-pressed={active}
-      >
+      <button {...rest} type="button" className={cx('tool-dock__item', { 'is-armed': active, 'is-wide': wide })} data-tool={tool} aria-label={label} aria-pressed={active}>
         {children}
       </button>
     </Tooltip>

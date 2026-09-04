@@ -64,16 +64,7 @@ export default function NumberSlider({ label = '', value = 0, minValue = 0, maxV
     typedChange(displayValue + (e.key === 'ArrowUp' ? 10 : -10) * step)
   }
 
-  const run = (
-    <Slider
-      value={innerValue}
-      min={minValue}
-      max={maxValue}
-      step={step}
-      onChange={commit}
-      onChangeEnd={(next) => onFinish?.(next)}
-    />
-  )
+  const run = <Slider value={innerValue} min={minValue} max={maxValue} step={step} onChange={commit} onChangeEnd={(next) => onFinish?.(next)} />
 
   if (field) {
     return (

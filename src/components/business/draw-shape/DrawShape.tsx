@@ -110,9 +110,7 @@ export default function DrawShape() {
           dy = dy < 0 ? -side : side
         }
 
-        const box = ev.altKey
-          ? { left: from.x - Math.abs(dx), top: from.y - Math.abs(dy), width: Math.abs(dx) * 2, height: Math.abs(dy) * 2 }
-          : { left: Math.min(from.x, from.x + dx), top: Math.min(from.y, from.y + dy), width: Math.abs(dx), height: Math.abs(dy) }
+        const box = ev.altKey ? { left: from.x - Math.abs(dx), top: from.y - Math.abs(dy), width: Math.abs(dx) * 2, height: Math.abs(dy) * 2 } : { left: Math.min(from.x, from.x + dx), top: Math.min(from.y, from.y + dy), width: Math.abs(dx), height: Math.abs(dy) }
 
         const left = clamp(box.left, 0, page.width)
         const top = clamp(box.top, 0, page.height)

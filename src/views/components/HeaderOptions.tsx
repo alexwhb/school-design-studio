@@ -11,10 +11,12 @@ import { readQuery, replaceQuery } from '@/common/hooks/useRouteQuery'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { autosaveState } from '@/common/hooks/autosave'
+import { autosaveState, type SaveStatus } from '@/common/hooks/autosave'
+import { useHostApi, type DesignDocument } from '@/common/hooks/hostApi'
 import { canvasState, userState, widgetState } from '@/store/state'
-import type { TdWidgetData } from '@/store/types'
+import type { TdLayout, TdWidgetData } from '@/store/types'
 import { setShowMoveable } from '@/store/control'
+import { setLayoutsChange } from '@/store/force'
 import { managerEdit } from '@/store/base'
 import { setDPage, getDPage } from '@/store/canvas'
 import { addGroup, addWidget, fillTemplateLayouts, getWidgets, setDWidgets, setTemplate } from '@/store/widget'
@@ -28,6 +30,8 @@ export type HeaderOptionsHandle = {
   getTitle: () => string
   /** Puts a name back in the box — used when a saved design is restored. */
   setTitle: (title: string) => void
+  /** Replaces the canvas with a whole document. See `showDocument`. */
+  showDocument: (doc: DesignDocument) => void
   download: (scale?: number) => Promise<void>
   save: (hasCover?: boolean) => Promise<void>
   saveTemp: () => Promise<void>
@@ -35,13 +39,16 @@ export type HeaderOptionsHandle = {
   load: (cb: () => void) => Promise<void>
 }
 
-const SAVE_LABEL: Record<'saved' | 'unsaved' | 'saving', string> = {
+const SAVE_LABEL: Record<Exclude<SaveStatus, 'idle'>, string> = {
   saved: 'Saved',
   unsaved: 'Unsaved changes',
   saving: 'Saving\u2026',
+  error: 'Couldn\u2019t save',
 }
 
 type Props = {
+  /** Saves through the host. Absent when the editor keeps its own design. */
+  onHostSave?: () => Promise<void>
   isContinue: boolean
   onContinueChange: (value: boolean) => void
   onChange: (data: { downloadPercent: number; downloadText: string; downloadMsg?: string }) => void
@@ -50,11 +57,9 @@ type Props = {
   children?: ReactNode
 }
 
-const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOptions(
-  { isContinue, onContinueChange, onChange, onTitleChange, children },
-  ref,
-) {
+const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOptions({ onHostSave, isContinue, onContinueChange, onChange, onTitleChange, children }, ref) {
   const mode = useEditorMode()
+  const host = useHostApi()
   const { tempEditing } = useSnapshot(userState)
   const saveStatus = useSnapshot(autosaveState).status
   const [title, setTitle] = useState('')
@@ -181,6 +186,14 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
     if (mode !== 'draw') {
       await useFontStore.init()
     }
+    // A design the host handed in wins over anything in the URL. The planner
+    // opened this editor on a particular artefact; a ?tempid left over from a
+    // previous visit is not a reason to show a different one.
+    if (host.document) {
+      showDocument(host.document)
+      cb()
+      return
+    }
     const apiName = tempId && !id ? 'getTempDetail' : 'getWorks'
     if (w_h && !id && !tempId) {
       const wh: any = w_h.toString().split('*')
@@ -243,6 +256,29 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
     cb()
   }
 
+  /**
+   * Puts a whole document on the canvas: the host's, or one it hands in later
+   * through the component's ref.
+   *
+   * The layouts are copied on the way in. What arrives is the host's own
+   * object, and the store mutates deeply — writing straight through would edit
+   * the host's copy of a design it thinks it is holding unchanged.
+   */
+  function showDocument(doc: DesignDocument) {
+    const layouts = Array.isArray(doc?.layouts) && doc.layouts.length ? (JSON.parse(JSON.stringify(doc.layouts)) as TdLayout[]) : null
+    setTitle(doc?.title || '')
+    if (!layouts) {
+      initBoard()
+      return
+    }
+    setShowMoveable(false)
+    canvasState.dCurrentPage = 0
+    widgetState.dLayouts = layouts
+    setDWidgets(getWidgets())
+    setLayoutsChange()
+    setDPage(getDPage())
+  }
+
   function initBoard() {
     setDWidgets(getWidgets())
     setDPage(getDPage())
@@ -250,8 +286,9 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
 
   useImperativeHandle(
     ref,
-    () => ({ getTitle: () => titleRef.current, setTitle: (next: string) => setTitle(next || ''), download, save, saveTemp, stateChange, load }),
-    [mode],
+    () => ({ getTitle: () => titleRef.current, setTitle: (next: string) => setTitle(next || ''), showDocument, download, save, saveTemp, stateChange, load }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mode, host.document],
   )
 
   return (
@@ -284,6 +321,11 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
           </>
         ) : null}
         <ThemeToggle />
+        {host.onSave ? (
+          <Button className="host-save-btn" type="primary" plain onClick={() => void onHostSave?.()}>
+            {host.saveLabel}
+          </Button>
+        ) : null}
         <div className="top-nav-divider" />
         {children}
       </div>

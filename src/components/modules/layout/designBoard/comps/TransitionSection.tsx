@@ -14,17 +14,7 @@ import message from '@/components/ui/message'
 import NumberSlider from '@/components/modules/settings/NumberSlider'
 import { applyTransitionToAllPages, setPageTransition } from '@/store/widget/pageMeta'
 import { widgetState } from '@/store/state'
-import {
-  DEFAULT_TRANSITION_DURATION,
-  MAX_TRANSITION_DURATION,
-  MIN_TRANSITION_DURATION,
-  TRANSITIONS,
-  cancelTransitions,
-  getTransitionSpec,
-  previewTransition,
-  readTransition,
-  type TTransitionType,
-} from '@/common/animations/transitions'
+import { DEFAULT_TRANSITION_DURATION, MAX_TRANSITION_DURATION, MIN_TRANSITION_DURATION, TRANSITIONS, cancelTransitions, getTransitionSpec, previewTransition, readTransition, type TTransitionType } from '@/common/animations/transitions'
 import type { TPageState } from '@/store/types'
 import './transitionSection.less'
 
@@ -76,14 +66,7 @@ export default function TransitionSection({ page }: { page: TPageState }) {
         {transition ? (
           <>
             <div className="slide-wrap">
-              <NumberSlider
-                label="Duration (ms)"
-                value={transition.duration}
-                minValue={MIN_TRANSITION_DURATION}
-                maxValue={MAX_TRANSITION_DURATION}
-                step={50}
-                onChange={setDuration}
-              />
+              <NumberSlider label="Duration (ms)" value={transition.duration} minValue={MIN_TRANSITION_DURATION} maxValue={MAX_TRANSITION_DURATION} step={50} onChange={setDuration} />
             </div>
             <div className="ds-transition__actions">
               <Button plain size="small" disabled={previewing} onClick={preview}>

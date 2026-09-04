@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSnapshot } from 'valtio'
 import api from '@/api'
 import type { IGetTempListData, TGetCategoriesData } from '@/api/home'
 import useConfirm from '@/common/methods/confirm'
@@ -11,6 +12,7 @@ import { managerEdit } from '@/store/base'
 import { setDPage } from '@/store/canvas'
 import { historyState } from '@/store/state'
 import { selectWidget, setDWidgets, setTemplate } from '@/store/widget'
+import { KIND_CATEGORIES, documentKindState } from '@/store/documentKind'
 import SearchHeader from './components/SearchHeader'
 import FilterChips from './components/FilterChips'
 import PanelEyebrow from './components/PanelEyebrow'
@@ -41,6 +43,12 @@ const ratioOf = (item: IGetTempListData) => (item.width && item.height ? `${item
 
 export default function TempListWrap() {
   const listRef = useRef<HTMLDivElement | null>(null)
+  // A host that said what it is making sees only what it can make: somebody
+  // asked for a presentation two screens ago, and offering them a certificate
+  // here is offering to throw that away.
+  const kind = useSnapshot(documentKindState).kind
+  const allowed = useMemo(() => (kind ? KIND_CATEGORIES[kind] : null), [kind])
+  const keep = useCallback((item: IGetTempListData) => !allowed || allowed.includes(String(item.cate || '')), [allowed])
   const [loading, setLoading] = useState(false)
   const [loadDone, setLoadDone] = useState(false)
   const [list, setList] = useState<IGetTempListData[]>([])
@@ -67,36 +75,43 @@ export default function TempListWrap() {
     edit && managerEdit(true)
   }
 
-  const load = useCallback(async (init: boolean = false, stat?: string) => {
-    stat && (pageOptions.current.state = stat)
+  const load = useCallback(
+    async (init: boolean = false, stat?: string) => {
+      stat && (pageOptions.current.state = stat)
 
-    if (init && listRef.current) {
-      listRef.current.scrollTop = 0
-      setList([])
-      pageOptions.current.page = 0
-      doneRef.current = false
-      setLoadDone(false)
-    }
-    if (doneRef.current || loadingRef.current) {
-      return
-    }
+      if (init && listRef.current) {
+        listRef.current.scrollTop = 0
+        setList([])
+        pageOptions.current.page = 0
+        doneRef.current = false
+        setLoadDone(false)
+      }
+      if (doneRef.current || loadingRef.current) {
+        return
+      }
 
-    loadingRef.current = true
-    setLoading(true)
-    pageOptions.current.page += 1
+      loadingRef.current = true
+      setLoading(true)
+      pageOptions.current.page += 1
 
-    const res = await api.home.getTempList({ search: keywordRef.current, ...pageOptions.current })
-    if (res.list.length <= 0) {
-      doneRef.current = true
-      setLoadDone(true)
-    }
-    setList((prev) => (init ? res.list : prev.concat(res.list)))
-    setTimeout(() => {
-      loadingRef.current = false
-      setLoading(false)
-      checkHeight()
-    }, 100)
-  }, [])
+      const res = await api.home.getTempList({ search: keywordRef.current, ...pageOptions.current })
+      // The end of the gallery is still the server's empty page, not an empty
+      // page after filtering — a run of slides in the middle of a poster gallery
+      // would otherwise stop the scroll before the posters underneath it.
+      if (res.list.length <= 0) {
+        doneRef.current = true
+        setLoadDone(true)
+      }
+      const page = res.list.filter(keep)
+      setList((prev) => (init ? page : prev.concat(page)))
+      setTimeout(() => {
+        loadingRef.current = false
+        setLoading(false)
+        checkHeight()
+      }, 100)
+    },
+    [keep],
+  )
 
   useInfiniteScroll(listRef, load)
 
@@ -145,7 +160,8 @@ export default function TempListWrap() {
 
   useEffect(() => {
     api.home.getCategories().then((found: TGetCategoriesData[]) => {
-      const all = [ALL, ...(found || [])]
+      const offered = (found || []).filter((item) => !allowed || allowed.includes(String(item.id)))
+      const all = [ALL, ...offered]
       setCates(all)
       // A ?cate= naming something the gallery no longer has would otherwise
       // leave every chip unselected over an empty list.
@@ -157,7 +173,7 @@ export default function TempListWrap() {
         return current
       })
     })
-  }, [cateChange])
+  }, [cateChange, allowed])
 
   /**
    * Why the list came back empty. A search inside a category is the one case
@@ -181,12 +197,7 @@ export default function TempListWrap() {
   async function selectItem(item: IGetTempListData) {
     setShowMoveable(false)
     if (!hideReplacePrompt && historyState.dHistoryParams.length > 0) {
-      const doNotPrompt = await useConfirm(
-        'Add to my designs',
-        'This template will replace everything on the page.',
-        'warning',
-        { confirmButtonText: 'Got it', cancelButtonText: 'Do not show again' },
-      )
+      const doNotPrompt = await useConfirm('Add to my designs', 'This template will replace everything on the page.', 'warning', { confirmButtonText: 'Got it', cancelButtonText: 'Do not show again' })
       if (!doNotPrompt) {
         localStorage.setItem('hide_replace_prompt', '1')
         hideReplacePrompt = true

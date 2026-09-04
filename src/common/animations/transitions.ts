@@ -96,20 +96,35 @@ export function transitionTracks(type: TTransitionType, forwards: boolean): TTra
       return { in: [{ opacity: 0 }, { opacity: 1 }], out: [{ opacity: 1 }, { opacity: 0 }], easing: EASE_IN_OUT }
     case 'slide':
       return {
-        in: [{ transform: `translateX(${from})`, opacity: 1 }, { transform: 'translateX(0)', opacity: 1 }],
+        in: [
+          { transform: `translateX(${from})`, opacity: 1 },
+          { transform: 'translateX(0)', opacity: 1 },
+        ],
         out: [{ opacity: 1 }, { opacity: 1 }],
         easing: GLIDE,
       }
     case 'push':
       return {
-        in: [{ transform: `translateX(${from})`, opacity: 1 }, { transform: 'translateX(0)', opacity: 1 }],
-        out: [{ transform: 'translateX(0)', opacity: 1 }, { transform: `translateX(${to})`, opacity: 1 }],
+        in: [
+          { transform: `translateX(${from})`, opacity: 1 },
+          { transform: 'translateX(0)', opacity: 1 },
+        ],
+        out: [
+          { transform: 'translateX(0)', opacity: 1 },
+          { transform: `translateX(${to})`, opacity: 1 },
+        ],
         easing: EASE_IN_OUT,
       }
     case 'zoom':
       return {
-        in: [{ transform: 'scale(0.86)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }],
-        out: [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.06)', opacity: 0 }],
+        in: [
+          { transform: 'scale(0.86)', opacity: 0 },
+          { transform: 'scale(1)', opacity: 1 },
+        ],
+        out: [
+          { transform: 'scale(1)', opacity: 1 },
+          { transform: 'scale(1.06)', opacity: 0 },
+        ],
         easing: GLIDE,
       }
     case 'wipe':

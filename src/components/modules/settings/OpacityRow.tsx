@@ -24,15 +24,7 @@ export default function OpacityRow({ value = 1, onChange }: Props) {
   return (
     <div className="opacity-row">
       <span className="opacity-row__chip transparent-bg" aria-hidden="true" />
-      <NumberInput
-        className="opacity-row__value"
-        variant="underline"
-        value={percent}
-        suffix="%"
-        minValue={0}
-        maxValue={100}
-        onChange={(next) => onChange(Math.min(100, Math.max(0, Number(next) || 0)) / 100)}
-      />
+      <NumberInput className="opacity-row__value" variant="underline" value={percent} suffix="%" minValue={0} maxValue={100} onChange={(next) => onChange(Math.min(100, Math.max(0, Number(next) || 0)) / 100)} />
       <Slider className="opacity-row__slider" value={percent} min={0} max={100} step={1} onChange={(next) => onChange(next / 100)} />
     </div>
   )

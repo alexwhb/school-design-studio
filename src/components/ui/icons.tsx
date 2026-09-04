@@ -144,10 +144,7 @@ export function UnlinkedIcon({ className, width = '1em', height = '1em' }: IconP
 export function EllipseIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (
     <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-      <path
-        fill="currentColor"
-        d="M512 160a352 352 0 1 1 0 704 352 352 0 0 1 0-704zm0 64a288 288 0 1 0 0 576 288 288 0 0 0 0-576z"
-      />
+      <path fill="currentColor" d="M512 160a352 352 0 1 1 0 704 352 352 0 0 1 0-704zm0 64a288 288 0 1 0 0 576 288 288 0 0 0 0-576z" />
     </svg>
   )
 }
@@ -156,10 +153,7 @@ export function EllipseIcon({ className, width = '1em', height = '1em' }: IconPr
 export function RectangleIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (
     <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-      <path
-        fill="currentColor"
-        d="M320 160h384a160 160 0 0 1 160 160v384a160 160 0 0 1-160 160H320a160 160 0 0 1-160-160V320a160 160 0 0 1 160-160zm0 64a96 96 0 0 0-96 96v384a96 96 0 0 0 96 96h384a96 96 0 0 0 96-96V320a96 96 0 0 0-96-96z"
-      />
+      <path fill="currentColor" d="M320 160h384a160 160 0 0 1 160 160v384a160 160 0 0 1-160 160H320a160 160 0 0 1-160-160V320a160 160 0 0 1 160-160zm0 64a96 96 0 0 0-96 96v384a96 96 0 0 0 96 96h384a96 96 0 0 0 96-96V320a96 96 0 0 0-96-96z" />
     </svg>
   )
 }
@@ -168,10 +162,7 @@ export function RectangleIcon({ className, width = '1em', height = '1em' }: Icon
 export function PolygonIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (
     <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-      <path
-        fill="currentColor"
-        d="M512 128a64 64 0 0 1 55 31l360 608a64 64 0 0 1-55 97H152a64 64 0 0 1-55-97l360-608a64 64 0 0 1 55-31zm0 96L177 800h670z"
-      />
+      <path fill="currentColor" d="M512 128a64 64 0 0 1 55 31l360 608a64 64 0 0 1-55 97H152a64 64 0 0 1-55-97l360-608a64 64 0 0 1 55-31zm0 96L177 800h670z" />
     </svg>
   )
 }
@@ -203,10 +194,7 @@ export function BrandIcon({ className, width = '1em', height = '1em' }: IconProp
 export function BringToFrontIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (
     <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-      <path
-        fill="currentColor"
-        d="M384 128h512v512H768v160H608v128H128V416h128V256h128zM224 512v320h288V512zM352 416h384V224H352z"
-      />
+      <path fill="currentColor" d="M384 128h512v512H768v160H608v128H128V416h128V256h128zM224 512v320h288V512zM352 416h384V224H352z" />
     </svg>
   )
 }
@@ -215,10 +203,7 @@ export function BringToFrontIcon({ className, width = '1em', height = '1em' }: I
 export function SendToBackIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (
     <svg className={className} width={width} height={height} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-      <path
-        fill="currentColor"
-        d="M128 416h512v512H128zM384 128h512v512H768V384H384zM224 512v320h320V512z"
-      />
+      <path fill="currentColor" d="M128 416h512v512H128zM384 128h512v512H768V384H384zM224 512v320h320V512z" />
     </svg>
   )
 }
@@ -231,7 +216,6 @@ export function LineIcon({ className, width = '1em', height = '1em' }: IconProps
     </svg>
   )
 }
-
 
 export function TableIcon({ className, width = '1em', height = '1em' }: IconProps) {
   return (
@@ -561,6 +545,16 @@ export function ArrowToolIcon({ className, width = '1em', height = '1em' }: Icon
   return (
     <svg className={className} width={width} height={height} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
       <path d="M4 12h14M14 7l5 5-5 5" />
+    </svg>
+  )
+}
+
+/** AI: a four-pointed sparkle with a smaller one beside it. */
+export function SparkleIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 3l1.6 4.4L15 9l-4.4 1.6L9 15l-1.6-4.4L3 9l4.4-1.6z" />
+      <path d="M16.5 13l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" />
     </svg>
   )
 }

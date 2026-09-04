@@ -183,16 +183,7 @@ export default function BrandColors() {
       </div>
       <div className="brand-editor__strip">
         {picks.map((color) => (
-          <button
-            key={color}
-            type="button"
-            className={cx('brand-editor__pick', { 'is-on': color === draft })}
-            style={{ background: color }}
-            title={shortHex(color)}
-            aria-label={shortHex(color)}
-            aria-pressed={color === draft}
-            onClick={() => pickDraft(color)}
-          />
+          <button key={color} type="button" className={cx('brand-editor__pick', { 'is-on': color === draft })} style={{ background: color }} title={shortHex(color)} aria-label={shortHex(color)} aria-pressed={color === draft} onClick={() => pickDraft(color)} />
         ))}
       </div>
       <ColorPicker value={draft} modes={['Solid']} onValueChange={setDraft} />
@@ -232,10 +223,7 @@ export default function BrandColors() {
               {/* Two samples rather than two ticks: the pale colour that
                   cannot be read on paper is shown being unreadable on paper,
                   which needs no legend. */}
-              <span
-                className="brand-swatch__reads"
-                title={`As text on white: ${asRatio(reads.asText)}. As a surface: ${reads.onIsPaper ? 'white' : 'ink'} reads on it at ${asRatio(reads.onRatio)}.`}
-              >
+              <span className="brand-swatch__reads" title={`As text on white: ${asRatio(reads.asText)}. As a surface: ${reads.onIsPaper ? 'white' : 'ink'} reads on it at ${asRatio(reads.onRatio)}.`}>
                 <span className="brand-swatch__mark" style={{ background: PAPER, color: reads.flat }}>
                   Aa
                 </span>

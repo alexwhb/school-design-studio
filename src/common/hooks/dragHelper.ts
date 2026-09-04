@@ -35,8 +35,20 @@ export default class DragHelper {
     // Whether the button is still held. Tracked in the capture phase so it is
     // already true when a panel's own mousedown handler runs, and false again
     // before its mouseup handler does.
-    window.addEventListener('mousedown', () => { this.pointerDown = true }, true)
-    window.addEventListener('mouseup', () => { this.pointerDown = false }, true)
+    window.addEventListener(
+      'mousedown',
+      () => {
+        this.pointerDown = true
+      },
+      true,
+    )
+    window.addEventListener(
+      'mouseup',
+      () => {
+        this.pointerDown = false
+      },
+      true,
+    )
     window.addEventListener('mousemove', (e) => {
       if (this.dragging && this.cloneEl) {
         const { width, height } = this.initial as TInitial
@@ -52,12 +64,7 @@ export default class DragHelper {
       el.classList.remove('drag_active')
       const target = e.target as HTMLElement
       const cl = target.classList
-      if (
-        target.id === 'page-design-canvas' ||
-        cl.contains('target') ||
-        cl.contains('drop__mask') ||
-        cl.contains('edit-text')
-      ) {
+      if (target.id === 'page-design-canvas' || cl.contains('target') || cl.contains('drop__mask') || cl.contains('edit-text')) {
         setTimeout(() => {
           this.finish(true)
         }, 10)
@@ -82,13 +89,13 @@ export default class DragHelper {
       if (!app || !e) return
       app.classList.add('drag_active') // Show the grab cursor everywhere
       const target = e.target as HTMLElement
-      this.cloneEl = (target.cloneNode(true) as HTMLElement)
+      this.cloneEl = target.cloneNode(true) as HTMLElement
       this.cloneEl.classList.add('flutter')
       this.init(e, target, finallySize || target.offsetWidth, Math.random())
       // simulate(cloneEl.src, initial.flag)
       this.cloneEl.style.width = `${target.offsetWidth}`
       // e.target.parentElement.parentElement.appendChild(this.cloneEl)
-      const widgetPanel =  window.document.getElementById('widget-panel')
+      const widgetPanel = window.document.getElementById('widget-panel')
       if (!widgetPanel) return
       widgetPanel.appendChild(this.cloneEl)
       this.dragging = true
@@ -98,12 +105,7 @@ export default class DragHelper {
       })
     }
   }
-  private init(
-    { offsetX, offsetY, pageX, pageY, x, y }: MouseEvent,
-    { offsetWidth: width, offsetHeight: height }: HTMLElement,
-    finallySize: number,
-    flag: number
-  ) {
+  private init({ offsetX, offsetY, pageX, pageY, x, y }: MouseEvent, { offsetWidth: width, offsetHeight: height }: HTMLElement, finallySize: number, flag: number) {
     this.initial = { offsetX, offsetY, pageX, pageY, width, height, finallySize, flag, x, y }
     // store.commit('setDragInitData', { offsetX: 0, offsetY: 0 })
     this.moveFlutter(pageX - offsetX, pageY - offsetY, 0, 0.3)
@@ -134,7 +136,6 @@ export default class DragHelper {
     this.cloneEl.style.cssText = original.concat(arr).join(';') + ';'
   }
   private finish(done = false) {
-    
     if (!this.dragging) {
       return
     }
@@ -157,7 +158,7 @@ export default class DragHelper {
       done ? 0 : 300,
     )
   }
-  private distance({ pageX, pageY }: { pageX: number, pageY: number }) {
+  private distance({ pageX, pageY }: { pageX: number; pageY: number }) {
     const { pageX: x, pageY: y } = this.initial as TInitial
     return Math.hypot(pageX - x, pageY - y)
   }

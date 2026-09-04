@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Button from '@/components/ui/Button'
 import Slider from '@/components/ui/Slider'
-import {
-  DEFAULT_FOCUS,
-  MAX_SCALE,
-  MIN_SCALE,
-  backgroundTransformOf,
-  pageBackgroundStyle,
-  type TBackgroundTransform,
-} from '@/common/methods/pageBackground'
+import { DEFAULT_FOCUS, MAX_SCALE, MIN_SCALE, backgroundTransformOf, pageBackgroundStyle, type TBackgroundTransform } from '@/common/methods/pageBackground'
 import type { TPageState } from '@/store/types'
 import './backgroundCrop.less'
 
@@ -132,38 +125,14 @@ export default function BackgroundCrop({ page, onChange }: Props) {
 
   return (
     <div className="background-crop">
-      <div
-        ref={boxRef}
-        className={`background-crop__page${movable ? ' is-movable' : ''}${dragging ? ' is-dragging' : ''}`}
-        style={{ ...pageBackgroundStyle(page), width: box.width, height: box.height }}
-        aria-label="Background position — drag, or use the arrow keys"
-        tabIndex={0}
-        onPointerDown={onPointerDown}
-        onKeyDown={onKeyDown}
-      />
-      <p className="background-crop__hint">
-        {movable ? 'Drag the picture to choose what shows.' : 'Zoom in to choose which part of the picture shows.'}
-      </p>
+      <div ref={boxRef} className={`background-crop__page${movable ? ' is-movable' : ''}${dragging ? ' is-dragging' : ''}`} style={{ ...pageBackgroundStyle(page), width: box.width, height: box.height }} aria-label="Background position — drag, or use the arrow keys" tabIndex={0} onPointerDown={onPointerDown} onKeyDown={onKeyDown} />
+      <p className="background-crop__hint">{movable ? 'Drag the picture to choose what shows.' : 'Zoom in to choose which part of the picture shows.'}</p>
       <div className="background-crop__zoom">
         <span className="label">Zoom</span>
-        <Slider
-          className="background-crop__slider"
-          value={stored.scale}
-          min={MIN_SCALE}
-          max={MAX_SCALE}
-          step={0.01}
-          disabled={!ratio}
-          onChange={(value) => commit({ scale: value })}
-        />
+        <Slider className="background-crop__slider" value={stored.scale} min={MIN_SCALE} max={MAX_SCALE} step={0.01} disabled={!ratio} onChange={(value) => commit({ scale: value })} />
         <span className="value">{Math.round(stored.scale * 100)}%</span>
       </div>
-      <Button
-        className="background-crop__reset"
-        text
-        size="small"
-        disabled={!changed}
-        onClick={() => commit({ x: DEFAULT_FOCUS, y: DEFAULT_FOCUS, scale: MIN_SCALE })}
-      >
+      <Button className="background-crop__reset" text size="small" disabled={!changed} onClick={() => commit({ x: DEFAULT_FOCUS, y: DEFAULT_FOCUS, scale: MIN_SCALE })}>
         Reset position
       </Button>
     </div>

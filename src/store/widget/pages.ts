@@ -140,8 +140,7 @@ export function removePage(index: number) {
   widgetState.dLayouts.splice(index, 1)
   // Stay where you were looking. Deleting the page you are on moves you to the
   // one that took its place, or back one if it was the last.
-  const next =
-    canvasState.dCurrentPage > index ? canvasState.dCurrentPage - 1 : Math.min(canvasState.dCurrentPage, widgetState.dLayouts.length - 1)
+  const next = canvasState.dCurrentPage > index ? canvasState.dCurrentPage - 1 : Math.min(canvasState.dCurrentPage, widgetState.dLayouts.length - 1)
   showPage(next)
 }
 

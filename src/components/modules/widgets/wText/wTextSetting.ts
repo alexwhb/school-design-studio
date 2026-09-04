@@ -4,7 +4,7 @@ export type TwTextData = {
   name: string
   type: string
   uuid: number
-  editable: boolean,
+  editable: boolean
   left: number
   top: number
   transform: string
@@ -17,7 +17,7 @@ export type TwTextData = {
     id: number
     value: string
     url: string
-  },
+  }
   fontFamily: string
   fontWeight: string
   fontStyle: string
@@ -40,7 +40,7 @@ export type TwTextData = {
     minWidth: number
     minHeight: number
     dir: string
-  },
+  }
   textEffects?: {
     filling: {
       enable: boolean

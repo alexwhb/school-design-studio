@@ -70,19 +70,8 @@ const Layers = memo(function Layers({
         const Comp = widgetComponents[layer.type]
         if (!Comp) return null
         return (
-          <Comp
-            key={layer.uuid}
-            id={layer.uuid}
-            params={layer}
-            parent={parent}
-            className={cx({ layer: needTools }, { 'layer-hover': layer.uuid === hoverUuid || activeParent === layer.uuid, 'layer-no-hover': activeUuid === layer.uuid })}
-            data-title={layer.type}
-            data-type={layer.type}
-            data-uuid={layer.uuid}
-          >
-            {layer.isContainer ? (
-              <Children parentLayer={layer} needTools={needTools} activeUuid={activeUuid} activeParent={activeParent} widgets={widgets} />
-            ) : null}
+          <Comp key={layer.uuid} id={layer.uuid} params={layer} parent={parent} className={cx({ layer: needTools }, { 'layer-hover': layer.uuid === hoverUuid || activeParent === layer.uuid, 'layer-no-hover': activeUuid === layer.uuid })} data-title={layer.type} data-type={layer.type} data-uuid={layer.uuid}>
+            {layer.isContainer ? <Children parentLayer={layer} needTools={needTools} activeUuid={activeUuid} activeParent={activeParent} widgets={widgets} /> : null}
           </Comp>
         )
       })}
@@ -90,19 +79,7 @@ const Layers = memo(function Layers({
   )
 })
 
-function Children({
-  parentLayer,
-  needTools,
-  activeUuid,
-  activeParent,
-  widgets,
-}: {
-  parentLayer: TdWidgetData
-  needTools: boolean
-  activeUuid?: string
-  activeParent?: string
-  widgets?: TdWidgetData[]
-}) {
+function Children({ parentLayer, needTools, activeUuid, activeParent, widgets }: { parentLayer: TdWidgetData; needTools: boolean; activeUuid?: string; activeParent?: string; widgets?: TdWidgetData[] }) {
   const snap = useSnapshot(widgetState)
   const layoutsChange = useSnapshot(forceState).layoutsChange
   const childs = useMemo(() => {
@@ -120,34 +97,13 @@ function Children({
       {childs.map((widget) => {
         const Comp = widgetComponents[widget.type]
         if (!Comp) return null
-        return (
-          <Comp
-            key={widget.uuid}
-            id={widget.uuid}
-            child
-            params={widget}
-            parent={parentLayer}
-            className={cx({ layer: needTools }, { 'layer-no-hover': activeUuid !== widget.parent && activeParent !== widget.parent })}
-            data-title={widget.type}
-            data-type={widget.type}
-            data-uuid={widget.uuid}
-          />
-        )
+        return <Comp key={widget.uuid} id={widget.uuid} child params={widget} parent={parentLayer} className={cx({ layer: needTools }, { 'layer-no-hover': activeUuid !== widget.parent && activeParent !== widget.parent })} data-title={widget.type} data-type={widget.type} data-uuid={widget.uuid} />
       })}
     </>
   )
 }
 
-export default function DesignBoard({
-  pageDesignCanvasId,
-  padding,
-  renderDPage,
-  renderDWidgets,
-  zoom,
-  className,
-  children,
-  bottom,
-}: Props) {
+export default function DesignBoard({ pageDesignCanvasId, padding, renderDPage, renderDWidgets, zoom, className, children, bottom }: Props) {
   const mode = useEditorMode()
   const needTools = mode !== 'draw' && mode !== 'html'
 
@@ -367,10 +323,7 @@ export default function DesignBoard({
 
   return (
     <div id="main" className={className}>
-      <div
-        id="page-design"
-        style={{ paddingTop: dPaddingTop + 'px', minWidth: (dPage.width * dZoom) / 100 + outPadding * 2 + 'px' }}
-      >
+      <div id="page-design" style={{ paddingTop: dPaddingTop + 'px', minWidth: (dPage.width * dZoom) / 100 + outPadding * 2 + 'px' }}>
         <div
           id="out-page"
           className="out-page"
@@ -402,13 +355,7 @@ export default function DesignBoard({
           >
             {/* Under the artwork, and out of every export: see PageGrid */}
             {needTools ? <PageGrid width={dPage.width} height={dPage.height} zoom={dZoom} /> : null}
-            <Layers
-              needTools={needTools}
-              pageUuid={dPage.uuid}
-              parentLeft={dPage.left}
-              parentTop={dPage.top}
-              widgets={renderDWidgets}
-            />
+            <Layers needTools={needTools} pageUuid={dPage.uuid} parentLeft={dPage.left} parentTop={dPage.top} widgets={renderDWidgets} />
             {/* What Moveable snaps to when a ruler guide is in the way */}
             {needTools ? <SnapGuides /> : null}
           </div>

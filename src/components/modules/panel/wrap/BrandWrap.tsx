@@ -100,10 +100,7 @@ export default function BrandWrap() {
             <StarIcon />
             Apply brand to this design
           </Button>
-          <p className="brand-card__impact">
-            {pages === 1 ? 'Swaps fonts and colours across this page.' : `Swaps fonts and colours across all ${pages} pages.`} Photos and uploads are left
-            alone.
-          </p>
+          <p className="brand-card__impact">{pages === 1 ? 'Swaps fonts and colours across this page.' : `Swaps fonts and colours across all ${pages} pages.`} Photos and uploads are left alone.</p>
         </div>
 
         <PanelSection title="Logo">
@@ -124,18 +121,12 @@ export default function BrandWrap() {
               <span>{kit.logo ? 'Replace' : 'Upload'}</span>
             </Uploader>
           </div>
-          <p className="brand-hint">
-            A PNG or SVG with a transparent background sits best on a coloured page. {kit.logo ? 'Click it to put it on this page.' : ''}
-          </p>
+          <p className="brand-hint">A PNG or SVG with a transparent background sits best on a coloured page. {kit.logo ? 'Click it to put it on this page.' : ''}</p>
         </PanelSection>
 
         <PanelSection title="Colours">
           <BrandColors />
-          <p className="brand-hint">
-            {kit.colors.length
-              ? 'Click a colour to put it on whatever is selected, or on the page when nothing is.'
-              : 'Add the school’s colours, main colour first. They appear in every colour picker.'}
-          </p>
+          <p className="brand-hint">{kit.colors.length ? 'Click a colour to put it on whatever is selected, or on the page when nothing is.' : 'Add the school’s colours, main colour first. They appear in every colour picker.'}</p>
         </PanelSection>
 
         <PanelSection title="Fonts">
@@ -164,10 +155,7 @@ export default function BrandWrap() {
               </button>
             )
           })}
-          <p className="brand-hint">
-            Click one to add it to the selected text box, or to a new one. Templates fill these in as they are added; Apply brand fills any still
-            standing.
-          </p>
+          <p className="brand-hint">Click one to add it to the selected text box, or to a new one. Templates fill these in as they are added; Apply brand fills any still standing.</p>
         </PanelSection>
       </div>
       <ApplyBrand open={applying} onOpenChange={setApplying} />

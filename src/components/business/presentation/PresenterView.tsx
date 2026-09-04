@@ -107,12 +107,7 @@ export default function PresenterView() {
         <span className="presenter__count">
           Slide <b>{index + 1}</b> of {pages.length}
         </span>
-        <Elapsed
-          startedAt={talk.startedAt}
-          onReset={() => send({ kind: 'restartClock' })}
-          className="presenter__timer"
-          title="Time on this presentation — click to start it again"
-        />
+        <Elapsed startedAt={talk.startedAt} onReset={() => send({ kind: 'restartClock' })} className="presenter__timer" title="Time on this presentation — click to start it again" />
         <span className="presenter__spacer" />
         <button type="button" className="presenter__btn" onClick={() => send({ kind: 'step', by: -1 })} disabled={!talk.live}>
           Back
@@ -131,16 +126,10 @@ export default function PresenterView() {
         <div className="presenter__side">
           <div className="presenter__label">Coming next</div>
           <div className="presenter__next" ref={nextRef}>
-            {upcoming ? (
-              <SlideView page={upcoming} maxWidth={nextBox.width} maxHeight={nextBox.height} />
-            ) : (
-              <span className="presenter__last">Last slide</span>
-            )}
+            {upcoming ? <SlideView page={upcoming} maxWidth={nextBox.width} maxHeight={nextBox.height} /> : <span className="presenter__last">Last slide</span>}
           </div>
           <div className="presenter__label">Your notes</div>
-          <div className={notes ? 'presenter__notes' : 'presenter__notes is-empty'}>
-            {notes || 'Nothing written for this page. Notes are typed in the drawer under the canvas.'}
-          </div>
+          <div className={notes ? 'presenter__notes' : 'presenter__notes is-empty'}>{notes || 'Nothing written for this page. Notes are typed in the drawer under the canvas.'}</div>
         </div>
       </div>
     </div>

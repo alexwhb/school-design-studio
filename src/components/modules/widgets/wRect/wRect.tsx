@@ -19,12 +19,7 @@ function WRect(props: WidgetProps) {
    * handles on screen, and not locked or nested inside a group — a grip on a
    * child of a group would round a corner nobody could see they had selected.
    */
-  const rounding =
-    !child &&
-    !p.lock &&
-    showMoveable &&
-    snap.dSelectWidgets.length === 0 &&
-    snap.dActiveElement?.uuid === params.uuid
+  const rounding = !child && !p.lock && showMoveable && snap.dSelectWidgets.length === 0 && snap.dActiveElement?.uuid === params.uuid
 
   return (
     <ShapeWidget {...props} kind="w-rect" radius={cornersCss(readCorners(p))}>

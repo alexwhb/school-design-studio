@@ -39,14 +39,7 @@ export default function ArrowPresets() {
       <PanelEyebrow label="Arrows" />
       <div className="arrow-presets__list">
         {LINE_PRESETS.map((preset) => (
-          <button
-            key={preset.name}
-            type="button"
-            className={cx('arrow-presets__item', { 'is-armed': dDrawTool === 'line' && dLinePreset === preset.name })}
-            title={preset.name}
-            aria-pressed={dDrawTool === 'line' && dLinePreset === preset.name}
-            onClick={() => toggleLinePreset(preset.name)}
-          >
+          <button key={preset.name} type="button" className={cx('arrow-presets__item', { 'is-armed': dDrawTool === 'line' && dLinePreset === preset.name })} title={preset.name} aria-pressed={dDrawTool === 'line' && dLinePreset === preset.name} onClick={() => toggleLinePreset(preset.name)}>
             <PathPaint params={thumbnail(preset)} />
           </button>
         ))}

@@ -30,9 +30,7 @@ export default function TransformGrid({ active, onChange, minSize, rotation }: P
       <NumberInput variant="underline" label="Y" value={Math.round(active.top)} onChange={(v) => onChange('top', Number(v))} />
       <NumberInput variant="underline" label="W" value={Math.round(active.width)} minValue={minSize} onChange={(v) => onChange('width', Number(v))} />
       <NumberInput variant="underline" label="H" value={Math.round(active.height)} minValue={minSize} onChange={(v) => onChange('height', Number(v))} />
-      {rotation ? (
-        <NumberInput variant="underline" label="R" suffix="°" value={angle} onChange={(v) => onChange('rotate', `${Math.round(Number(v) || 0)}deg`)} />
-      ) : null}
+      {rotation ? <NumberInput variant="underline" label="R" suffix="°" value={angle} onChange={(v) => onChange('rotate', `${Math.round(Number(v) || 0)}deg`)} /> : null}
     </div>
   )
 }

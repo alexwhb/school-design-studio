@@ -112,12 +112,7 @@ export default function Folder({ onSelect, showGuides, children }: Props) {
               <span>Grid spacing</span>
               <span className="grid-sizes">
                 {GRID_SIZES.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    className={cx('grid-size', { 'is-on': showGrid && gridSize === size })}
-                    onClick={() => setGridSize(size)}
-                  >
+                  <button key={size} type="button" className={cx('grid-size', { 'is-on': showGrid && gridSize === size })} onClick={() => setGridSize(size)}>
                     {size}
                   </button>
                 ))}

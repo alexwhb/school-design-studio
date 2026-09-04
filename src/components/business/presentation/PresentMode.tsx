@@ -583,15 +583,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
   if (!isOpen) return null
 
   return createPortal(
-    <div
-      ref={rootRef}
-      className={cx('present', { 'present--idle': isIdle && !isOverview })}
-      tabIndex={-1}
-      onMouseMove={wake}
-      onClick={onStageClick}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
+    <div ref={rootRef} className={cx('present', { 'present--idle': isIdle && !isOverview })} tabIndex={-1} onMouseMove={wake} onClick={onStageClick} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <div ref={stageRef} className="present__stage">
         {pages.map((page, i) => (
           <div
@@ -634,11 +626,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
               Hide (N)
             </button>
           </div>
-          {viewBlocked ? (
-            <p className="present__notes-blocked">
-              Your browser blocked the presenter window. Allow pop-ups for this site to put your notes on a second screen.
-            </p>
-          ) : null}
+          {viewBlocked ? <p className="present__notes-blocked">Your browser blocked the presenter window. Allow pop-ups for this site to put your notes on a second screen.</p> : null}
           <div className={cx('present__notes-body', { 'present__notes-empty': !notes })}>{notes || 'No notes for this page.'}</div>
         </div>
       ) : null}
@@ -674,7 +662,14 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
         </div>
       ) : null}
 
-      <div className="present__chrome" onClick={(e) => e.stopPropagation()} onMouseMove={(e) => { e.stopPropagation(); wake() }}>
+      <div
+        className="present__chrome"
+        onClick={(e) => e.stopPropagation()}
+        onMouseMove={(e) => {
+          e.stopPropagation()
+          wake()
+        }}
+      >
         <div className="present__bar">
           <button type="button" className="present__btn" title="Previous (←)" disabled={index === 0 && buildStep === 0} onClick={prev}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -684,13 +679,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
           <button type="button" className="present__counter" title="All slides (G)" onClick={() => setIsOverview((v) => !v)}>
             <b>{index + 1}</b> / {pages.length}
           </button>
-          <button
-            type="button"
-            className="present__btn"
-            title={hasBuildsLeft ? 'Next build (→)' : 'Next slide (→)'}
-            disabled={index >= pages.length - 1 && !hasBuildsLeft}
-            onClick={next}
-          >
+          <button type="button" className="present__btn" title={hasBuildsLeft ? 'Next build (→)' : 'Next slide (→)'} disabled={index >= pages.length - 1 && !hasBuildsLeft} onClick={next}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="m9 5 7 7-7 7" />
             </svg>
@@ -699,33 +688,18 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
           <span className="present__divider" />
 
           <Elapsed startedAt={startedAt} onReset={() => setStartedAt(Date.now())} />
-          <button
-            type="button"
-            className={cx('present__btn', { 'is-on': showNotes })}
-            title="Speaker notes (N)"
-            onClick={() => setShowNotes((value) => !value)}
-          >
+          <button type="button" className={cx('present__btn', { 'is-on': showNotes })} title="Speaker notes (N)" onClick={() => setShowNotes((value) => !value)}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M5 3.5h14v17H5zM8.5 8h7M8.5 12h7M8.5 16h4.5" />
             </svg>
           </button>
-          <button
-            type="button"
-            className={cx('present__btn', { 'is-on': !!viewMount })}
-            title="Presenter view (S)"
-            onClick={openPresenterView}
-          >
+          <button type="button" className={cx('present__btn', { 'is-on': !!viewMount })} title="Presenter view (S)" onClick={openPresenterView}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <rect x="2" y="4.5" width="12" height="9" rx="1" />
               <path d="M17 8.5h5v11h-9v-6" />
             </svg>
           </button>
-          <button
-            type="button"
-            className={cx('present__btn', { 'is-on': isOverview })}
-            title="All slides (G)"
-            onClick={() => setIsOverview((v) => !v)}
-          >
+          <button type="button" className={cx('present__btn', { 'is-on': isOverview })} title="All slides (G)" onClick={() => setIsOverview((v) => !v)}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <rect x="3" y="4" width="7" height="7" rx="1" />
               <rect x="14" y="4" width="7" height="7" rx="1" />
@@ -733,12 +707,7 @@ const PresentMode = forwardRef<PresentModeHandle, {}>(function PresentMode(_prop
               <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
           </button>
-          <button
-            type="button"
-            className="present__btn"
-            title={isFullscreen ? 'Leave full screen (F)' : 'Full screen (F)'}
-            onClick={toggleFullscreen}
-          >
+          <button type="button" className="present__btn" title={isFullscreen ? 'Leave full screen (F)' : 'Full screen (F)'} onClick={toggleFullscreen}>
             {isFullscreen ? (
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />

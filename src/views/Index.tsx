@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import _config from '@/config'
 import Moveable from '@/components/business/moveable/Moveable'
@@ -28,15 +28,25 @@ import Helper from './components/Helper'
 import Tooltip from '@/components/ui/Tooltip'
 import Button from '@/components/ui/Button'
 import { RedoIcon, UndoIcon } from '@/components/ui/icons'
-import useHistory from '@/common/hooks/history'
+import useHistory, { recordHistory } from '@/common/hooks/history'
 import useAutosave from '@/common/hooks/autosave'
+import useHostDocument, { readDocument } from '@/common/hooks/hostDocument'
+import { useHostApi, type DesignStudioHandle } from '@/common/hooks/hostApi'
+import { buildPdf } from '@/common/methods/export/exportPdf'
+import { buildPptx } from '@/common/methods/export/exportPptx'
+import { withPageRenderer } from '@/common/methods/export/renderPage'
+import { dataUrlToBlob } from '@/common/methods/export/utils'
+import { applyOps as applyDocumentOps } from '@/compose/ops'
+import { exportQuality } from '@/common/methods/export/quality'
+import { isPresentable } from '@/store/documentKind'
+import { showPage } from '@/store/widget/pages'
 import { handleKeydowm, handleKeyup } from '@/mixins/shortcuts'
 import { watchOverlayEscape } from '@/mixins/overlayEscape'
 import { wGroupSetting } from '@/components/modules/widgets/wGroup/groupSetting'
-import { canvasState, historyState } from '@/store/state'
+import { canvasState, historyState, widgetState } from '@/store/state'
 import { panelState } from '@/store/panels'
 import { updateScreen } from '@/store/canvas'
-import { setUpdateRect } from '@/store/force'
+import { setUpdateRect, setZoomScreenChange } from '@/store/force'
 import { readQuery } from '@/common/hooks/useRouteQuery'
 import { initGroupJson } from '@/store/group'
 import { toggleNotes } from '@/store/notes'
@@ -47,6 +57,8 @@ import './design.less'
 
 export default function Index() {
   useHistory()
+  const host = useHostApi()
+  const presentable = isPresentable()
 
   const canvas = useSnapshot(canvasState)
   const history = useSnapshot(historyState)
@@ -78,6 +90,69 @@ export default function Index() {
     getTitle: () => optionsRef.current?.getTitle() || '',
     setTitle: (title: string) => optionsRef.current?.setTitle(title),
   })
+
+  // Two ways of keeping a design, and only ever one of them running. The host's
+  // takes over the moment it hands a document in; without one, the browser's.
+  const hostDocument = useHostDocument({
+    getTitle: () => optionsRef.current?.getTitle() || '',
+    onChange: host.onDocumentChange,
+    onSave: host.onSave,
+  })
+  const keeper = host.hostsDocument ? hostDocument : autosave
+  const saveNow = () => void keeper.saveNow()
+
+  // Everything the host can ask the editor to do. Held on the ref the component
+  // handed down rather than passed up through props, because the screen is
+  // chosen by `mode` and the other two screens have no editor to drive.
+  useImperativeHandle(
+    host.handleRef,
+    (): DesignStudioHandle => ({
+      getDocument: () => readDocument(optionsRef.current?.getTitle() || ''),
+      setDocument: (doc, opts) => {
+        optionsRef.current?.showDocument(doc)
+        // One undo takes the whole swap back, unless the host says this is the
+        // new starting point — which is what it means to open a different
+        // design rather than to change the one that is open.
+        if (opts?.resetHistory !== false) hostDocument.rebase()
+        setZoomScreenChange()
+      },
+      applyOps: (ops) => {
+        const current = readDocument(optionsRef.current?.getTitle() || '')
+        const { doc, rejected } = applyDocumentOps(current, ops)
+        // Through recordHistory so that a run of ops from the host's own panel
+        // is one press of Ctrl+Z, not one per operation.
+        if (rejected.length < ops.length) recordHistory(() => optionsRef.current?.showDocument(doc))
+        return { applied: ops.length - rejected.length, rejected }
+      },
+      exportPdf: () =>
+        withPageRenderer((renderer) =>
+          buildPdf(widgetState.dLayouts as any, {
+            title: getDesignTitle(),
+            scale: exportQuality.scale,
+            renderPage: renderer.renderPage,
+          }),
+        ),
+      exportPptx: () =>
+        withPageRenderer((renderer) =>
+          buildPptx(widgetState.dLayouts as any, {
+            title: getDesignTitle(),
+            mode: 'editable',
+            renderPage: renderer.renderPage,
+            renderWidget: renderer.renderWidget,
+          }),
+        ),
+      exportPng: async (pageIndex, opts) => {
+        if (!widgetState.dLayouts[pageIndex]) throw new Error(`There is no page ${pageIndex} to export.`)
+        const dataUrl = await withPageRenderer((renderer) => renderer.renderPage(pageIndex, opts?.scale ?? 1))
+        if (!dataUrl) throw new Error(`Page ${pageIndex + 1} could not be drawn.`)
+        return dataUrlToBlob(dataUrl)
+      },
+      goToPage: (index) => showPage(index),
+      isDirty: () => keeper.isDirty(),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [host.handleRef, keeper],
+  )
 
   const presentShortcut = useMemo(() => (navigator.userAgent.includes('Mac') ? '\u2318 + Enter' : 'Ctrl + Enter'), [])
 
@@ -112,7 +187,7 @@ export default function Index() {
 
   useEffect(() => {
     const beforeUnload = function (e: BeforeUnloadEvent): any {
-      if (autosave.isDirty()) {
+      if (keeper.isDirty()) {
         const confirmationMessage = 'Your most recent changes have not been saved yet.'
         e.returnValue = confirmationMessage
         return confirmationMessage
@@ -123,7 +198,7 @@ export default function Index() {
     return () => {
       if (!_config.isDev) window.removeEventListener('beforeunload', beforeUnload)
     }
-  }, [autosave])
+  }, [keeper])
 
   useEffect(() => {
     initGroupJson(JSON.stringify(wGroupSetting))
@@ -135,7 +210,7 @@ export default function Index() {
     window.addEventListener('scroll', fixTopBarScroll)
 
     const instanceFn = {
-      save: () => void autosave.saveNow(),
+      save: saveNow,
       zoomAdd: () => zoomControlRef.current?.add(),
       zoomSub: () => zoomControlRef.current?.sub(),
       present: () => presentRef.current?.open(),
@@ -153,6 +228,13 @@ export default function Index() {
       loaded.current = true
       optionsRef.current?.load(async () => {
         selectWidget({ uuid: '-1' })
+        // A host that keeps the design is never asked about a draft: the draft
+        // would be somebody else's work, and there is no database to read it
+        // out of anyway.
+        if (host.hostsDocument) {
+          hostDocument.start()
+          return
+        }
         // Offer the last design back, but only on a blank canvas: arriving with
         // an id or a template id is a request for that design, and asking about
         // a different one would be an interruption. Watching starts either way.
@@ -168,7 +250,8 @@ export default function Index() {
       document.removeEventListener('keyup', onKeyUp, false)
       document.oncontextmenu = null
     }
-  }, [autosave])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keeper])
 
   function jump2home() {
     window.location.href = _config.HOME_URL
@@ -179,15 +262,7 @@ export default function Index() {
     setIsContinue(false)
   }
 
-  function optionsChange({
-    downloadPercent: percent,
-    downloadText: text,
-    downloadMsg: msg,
-  }: {
-    downloadPercent: number
-    downloadText: string
-    downloadMsg?: string
-  }) {
+  function optionsChange({ downloadPercent: percent, downloadText: text, downloadMsg: msg }: { downloadPercent: number; downloadText: string; downloadMsg?: string }) {
     setDownloadPercent(percent)
     setDownloadText(text)
     setDownloadMsg(msg)
@@ -199,7 +274,7 @@ export default function Index() {
 
   const fns: Record<string, (params?: any) => void> = {
     openTour: () => tourRef.current?.open(),
-    save: () => void autosave.saveNow(),
+    save: saveNow,
     // The export menu passes the chosen quality; the File menu has no such
     // choice and leaves it to the default.
     download: (scale?: number) => optionsRef.current?.download(scale),
@@ -223,9 +298,13 @@ export default function Index() {
       <div style={navStyle} className="top-nav">
         <div className="top-nav-wrap">
           <div className="top-left">
-            <div className="name" onClick={jump2home}>
-              {_config.APP_NAME}
-            </div>
+            {/* A host with its own Save has its own chrome above this bar, and
+                a second app name under it reads as two apps. */}
+            {host.onSave ? null : (
+              <div className="name" onClick={jump2home}>
+                {_config.APP_NAME}
+              </div>
+            )}
             <Folder onSelect={dealWith} showGuides={showLineGuides}>
               <div className="operation-item" ref={step1Ref}>
                 <i className="icon sd-wenjian" /> <span className="text">File</span>
@@ -250,21 +329,19 @@ export default function Index() {
               </Tooltip>
             </div>
           </div>
-          <HeaderOptions
-            ref={optionsRef}
-            isContinue={isContinue}
-            onContinueChange={setIsContinue}
-            onChange={optionsChange}
-            onTitleChange={autosave.schedule}
-          >
-            <Tooltip content={`Show these pages full screen (${presentShortcut})`} placement="bottom" showAfter={400}>
-              <Button className="present-btn" onClick={() => presentRef.current?.open()}>
-                <svg className="present-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M8 5.4v13.2L18.4 12z" />
-                </svg>
-                Present
-              </Button>
-            </Tooltip>
+          <HeaderOptions ref={optionsRef} onHostSave={host.onSave ? () => hostDocument.saveNow() : undefined} isContinue={isContinue} onContinueChange={setIsContinue} onChange={optionsChange} onTitleChange={autosave.schedule}>
+            {/* A poster is read, not presented, and it has nobody to say
+                speaker notes to. */}
+            {presentable ? (
+              <Tooltip content={`Show these pages full screen (${presentShortcut})`} placement="bottom" showAfter={400}>
+                <Button className="present-btn" onClick={() => presentRef.current?.open()}>
+                  <svg className="present-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 5.4v13.2L18.4 12z" />
+                  </svg>
+                  Present
+                </Button>
+              </Tooltip>
+            ) : null}
             <div ref={step4Ref}>
               <ExportMenu getTitle={getDesignTitle} onSelect={dealWith} onProgress={optionsChange} />
             </div>
@@ -281,7 +358,7 @@ export default function Index() {
           bottom={
             <>
               <MultipleBoards />
-              <NotesDrawer />
+              {presentable ? <NotesDrawer /> : null}
             </>
           }
         >
@@ -300,19 +377,13 @@ export default function Index() {
       <DrawPen />
       <DrawLine />
       <DrawText />
-      <DownloadProgress
-        percent={downloadPercent}
-        text={downloadText}
-        msg={downloadMsg}
-        cancelText="Cancel"
-        onCancel={downloadCancel}
-      />
+      <DownloadProgress percent={downloadPercent} text={downloadText} msg={downloadMsg} cancelText="Cancel" onCancel={downloadCancel} />
       <Tour ref={tourRef} steps={[step1Ref, step2Ref, step3Ref, step4Ref]} />
       <CreateDesign ref={createDesignRef} />
       <ResizeDesign ref={resizeDesignRef} />
       <FindReplace ref={findReplaceRef} />
       <BulkDocuments ref={bulkDocumentsRef} getTitle={getDesignTitle} />
-      <PresentMode ref={presentRef} />
+      {presentable ? <PresentMode ref={presentRef} /> : null}
     </div>
   )
 }

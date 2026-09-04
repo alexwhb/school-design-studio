@@ -59,30 +59,14 @@ export default function PathPaint({ params }: Props) {
   const paint = border ? stroke.paint : 'none'
 
   return (
-    <svg
-      className="shape__paint path__paint"
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ filter: shadowFilter(params.shadow) }}
-      aria-hidden="true"
-    >
+    <svg className="shape__paint path__paint" width={width} height={height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg" style={{ filter: shadowFilter(params.shadow) }} aria-hidden="true">
       {fill.defs || stroke.defs ? (
         <defs>
           {fill.defs}
           {stroke.defs}
         </defs>
       ) : null}
-      <path
-        d={d}
-        fill={fill.paint}
-        stroke={paint}
-        strokeWidth={strokeWidth}
-        strokeDasharray={border ? dashesFor(border) || undefined : undefined}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
+      <path d={d} fill={fill.paint} stroke={paint} strokeWidth={strokeWidth} strokeDasharray={border ? dashesFor(border) || undefined : undefined} strokeLinejoin="round" strokeLinecap="round" />
       {border
         ? heads.map((head, index) => {
             const key = `${head.kind}-${index}`

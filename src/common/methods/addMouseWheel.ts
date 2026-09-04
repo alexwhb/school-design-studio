@@ -9,12 +9,12 @@ import { controlState } from '@/store/state'
 
 type TAddEventCb = (e: Event) => void
 type TAddEventObj = {
-  attachEvent?: HTMLElement["addEventListener"]
+  attachEvent?: HTMLElement['addEventListener']
 } & HTMLElement
 
-export default function(el: HTMLElement | string, cb: Function, altLimit: boolean = true) {
+export default function (el: HTMLElement | string, cb: Function, altLimit: boolean = true) {
   const box = typeof el === 'string' ? document.getElementById(el) : el
-  if (!box) return () => {};
+  if (!box) return () => {}
   const onWheel = (e: any) => {
     const ev = e || window.event
     const down = ev.wheelDelta ? ev.wheelDelta < 0 : ev.detail > 0

@@ -87,7 +87,10 @@ function escapeHtml(text: string): string {
 const HEX = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i
 const RGB = /^rgba?\(\s*([^)]+)\)$/i
 
-const channel = (n: number) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0')
+const channel = (n: number) =>
+  Math.max(0, Math.min(255, Math.round(n)))
+    .toString(16)
+    .padStart(2, '0')
 
 /**
  * A colour as the editor stores one: #rrggbb, or #rrggbbaa when it is not
@@ -101,12 +104,19 @@ export function normaliseColor(value: string | null | undefined): string | undef
   const hex = raw.match(HEX)
   if (hex) {
     let digits = hex[1].toLowerCase()
-    if (digits.length <= 4) digits = digits.split('').map((c) => c + c).join('')
+    if (digits.length <= 4)
+      digits = digits
+        .split('')
+        .map((c) => c + c)
+        .join('')
     return '#' + (digits.length === 8 && digits.endsWith('ff') ? digits.slice(0, 6) : digits)
   }
   const rgb = raw.match(RGB)
   if (rgb) {
-    const parts = rgb[1].split(/[\s,/]+/).filter(Boolean).map(Number)
+    const parts = rgb[1]
+      .split(/[\s,/]+/)
+      .filter(Boolean)
+      .map(Number)
     if (parts.length < 3 || parts.slice(0, 3).some(Number.isNaN)) return undefined
     const alpha = parts.length > 3 && !Number.isNaN(parts[3]) ? parts[3] : 1
     const out = '#' + channel(parts[0]) + channel(parts[1]) + channel(parts[2])
@@ -327,7 +337,10 @@ function serialise(runs: TTextRun[], keys: (keyof TFormat)[]): string {
 
 /** One line's runs as markup, with no line structure round them. */
 export function runsToHtml(runs: TTextRun[]): string {
-  return serialise(runs.filter((run) => run.text), FORMAT_KEYS)
+  return serialise(
+    runs.filter((run) => run.text),
+    FORMAT_KEYS,
+  )
 }
 
 /**
@@ -403,11 +416,7 @@ function retypeLine(line: TTextLine, text: string): TTextLine {
   // replaced, or of the one just before it when it was added at the end — the
   // way a caret picks up the style of the text it is in.
   const inherited = before[prefix]?.format ?? before[prefix - 1]?.format ?? {}
-  return fromChars([
-    ...before.slice(0, prefix),
-    ...after.slice(prefix, after.length - suffix).map((char) => ({ char, format: inherited })),
-    ...before.slice(before.length - suffix),
-  ])
+  return fromChars([...before.slice(0, prefix), ...after.slice(prefix, after.length - suffix).map((char) => ({ char, format: inherited })), ...before.slice(before.length - suffix)])
 }
 
 /**

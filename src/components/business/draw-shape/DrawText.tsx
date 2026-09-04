@@ -257,10 +257,12 @@ function putCaretIn(uuid: string) {
 
 /** Whether a box has anything in it once the markup is taken off. */
 function hasWords(text: unknown) {
-  return String(text ?? '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .trim().length > 0
+  return (
+    String(text ?? '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .trim().length > 0
+  )
 }
 
 /**

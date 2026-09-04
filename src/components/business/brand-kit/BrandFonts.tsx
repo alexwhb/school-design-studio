@@ -54,14 +54,7 @@ export default function BrandFonts() {
                   {!chosen ? <CheckIcon /> : null}
                 </button>
                 {fonts.map((font) => (
-                  <button
-                    key={font.id}
-                    type="button"
-                    className={cx('brand-fonts__option', { 'is-on': chosen?.id === font.id })}
-                    role="option"
-                    aria-selected={chosen?.id === font.id}
-                    onClick={() => choose(slot, font.id)}
-                  >
+                  <button key={font.id} type="button" className={cx('brand-fonts__option', { 'is-on': chosen?.id === font.id })} role="option" aria-selected={chosen?.id === font.id} onClick={() => choose(slot, font.id)}>
                     <span className="brand-fonts__option-name" style={{ fontFamily: font.value }}>
                       {font.alias}
                     </span>

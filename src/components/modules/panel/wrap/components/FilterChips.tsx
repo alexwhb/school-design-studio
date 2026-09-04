@@ -31,12 +31,7 @@ export default function FilterChips<T extends TFilterChip>({ items, value, onCha
   return (
     <div className="cates">
       {items.map((item) => (
-        <button
-          key={item.id}
-          className={cx('cates__chip', { 'cates__chip--on': value === item.id })}
-          type="button"
-          onClick={() => onChange(item)}
-        >
+        <button key={item.id} className={cx('cates__chip', { 'cates__chip--on': value === item.id })} type="button" onClick={() => onChange(item)}>
           {item.name}
         </button>
       ))}

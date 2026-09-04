@@ -6,10 +6,7 @@ export default function ThemeToggle() {
   const { preference, resolved, toggleTheme, setThemePreference } = useTheme()
 
   const next = resolved === 'dark' ? 'light' : 'dark'
-  const tip =
-    preference === 'system'
-      ? `Switch to ${next} mode (following your system)`
-      : `Switch to ${next} mode · shift-click to follow your system`
+  const tip = preference === 'system' ? `Switch to ${next} mode (following your system)` : `Switch to ${next} mode · shift-click to follow your system`
 
   function onClick(e: React.MouseEvent | React.KeyboardEvent) {
     if ((e as React.MouseEvent).shiftKey) setThemePreference('system')

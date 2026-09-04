@@ -25,13 +25,7 @@ export type TLinePreset = {
   width?: number
 }
 
-export const LINE_PRESETS: TLinePreset[] = [
-  { name: 'Line' },
-  { name: 'Arrow', end: 'triangle' },
-  { name: 'Double arrow', start: 'triangle', end: 'triangle' },
-  { name: 'Dashed arrow', end: 'arrow', style: 'dashed' },
-  { name: 'Dotted line', start: 'circle', end: 'circle', style: 'dotted' },
-]
+export const LINE_PRESETS: TLinePreset[] = [{ name: 'Line' }, { name: 'Arrow', end: 'triangle' }, { name: 'Double arrow', start: 'triangle', end: 'triangle' }, { name: 'Dashed arrow', end: 'arrow', style: 'dashed' }, { name: 'Dotted line', start: 'circle', end: 'circle', style: 'dotted' }]
 
 /** How long a preset line arrives, in design pixels, before the page is allowed a say. */
 const PRESET_LENGTH = 320

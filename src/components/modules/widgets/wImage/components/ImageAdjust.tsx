@@ -15,16 +15,7 @@
  */
 import { useRef, useState } from 'react'
 import { beginHistory, endHistory, recordHistory } from '@/common/hooks/history'
-import {
-  IMAGE_FILTER_PRESETS,
-  IMAGE_FILTER_SLIDERS,
-  isUntouched,
-  matchImageFilterPreset,
-  packImageFilters,
-  readImageFilters,
-  type TImageFilterKey,
-  type TImageFilters,
-} from '@/common/methods/imageFilters'
+import { IMAGE_FILTER_PRESETS, IMAGE_FILTER_SLIDERS, isUntouched, matchImageFilterPreset, packImageFilters, readImageFilters, type TImageFilterKey, type TImageFilters } from '@/common/methods/imageFilters'
 import Button from '@/components/ui/Button'
 import { PanelSection } from '@/components/ui/PanelSection'
 import { updateWidgetData } from '@/store/widget'
@@ -79,39 +70,17 @@ export default function ImageAdjust({ uuid, filters }: Props) {
   }
 
   return (
-    <PanelSection
-      name="adjust"
-      title="Adjust"
-      open={open}
-      onToggle={() => setOpen(!open)}
-      className="image-adjust"
-      aside={untouched ? null : <span className="image-adjust__state">{preset ? preset.name : 'Edited'}</span>}
-    >
+    <PanelSection name="adjust" title="Adjust" open={open} onToggle={() => setOpen(!open)} className="image-adjust" aside={untouched ? null : <span className="image-adjust__state">{preset ? preset.name : 'Edited'}</span>}>
       <div className="image-adjust__presets">
         {IMAGE_FILTER_PRESETS.map((look) => (
-          <button
-            key={look.name}
-            type="button"
-            className={cx('image-adjust__preset', { 'is-active': preset?.name === look.name })}
-            aria-pressed={preset?.name === look.name}
-            onClick={() => recordHistory(() => write(look.filters))}
-          >
+          <button key={look.name} type="button" className={cx('image-adjust__preset', { 'is-active': preset?.name === look.name })} aria-pressed={preset?.name === look.name} onClick={() => recordHistory(() => write(look.filters))}>
             {look.name}
           </button>
         ))}
       </div>
       <div className="slide-wrap">
         {IMAGE_FILTER_SLIDERS.map(({ key, label, min, max }) => (
-          <NumberSlider
-            key={key}
-            className={`image-adjust__slider image-adjust__slider--${key}`}
-            label={label}
-            value={values[key]}
-            minValue={min}
-            maxValue={max}
-            onChange={(value) => slide(key, value)}
-            onFinish={(value) => release(key, value)}
-          />
+          <NumberSlider key={key} className={`image-adjust__slider image-adjust__slider--${key}`} label={label} value={values[key]} minValue={min} maxValue={max} onChange={(value) => slide(key, value)} onFinish={(value) => release(key, value)} />
         ))}
       </div>
       <Button className="image-adjust__reset" plain size="small" disabled={untouched} onClick={() => recordHistory(() => write(null))}>

@@ -17,14 +17,16 @@ type Props = {
  * with two different lists.
  */
 export default function SizePresets({ width, height, onPick }: Props) {
-  const isCurrent = (size: { width: number; height: number }) =>
-    Math.round(width || 0) === size.width && Math.round(height || 0) === size.height
+  const isCurrent = (size: { width: number; height: number }) => Math.round(width || 0) === size.width && Math.round(height || 0) === size.height
 
   return (
     <ul className="pre-list">
       {sizes.map((size, index) => (
         <li key={'s' + index} className={cx('item', { 'is-on': isCurrent(size) })} onClick={() => onPick(size)}>
-          <i className={cx('icon', size.icon)} /> {size.name} <span className="info">{size.width} × {size.height} px</span>
+          <i className={cx('icon', size.icon)} /> {size.name}{' '}
+          <span className="info">
+            {size.width} × {size.height} px
+          </span>
         </li>
       ))}
     </ul>

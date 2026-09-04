@@ -43,19 +43,8 @@ export default function AngleHandle({ value, onChange, onCommit }: Props) {
 
   return (
     <div className="angle-input-box">
-      <input
-        className="angle-input"
-        value={num}
-        onFocus={() => setVisible(true)}
-        onBlur={() => setVisible(false)}
-        onChange={(e) => update(Number(e.target.value) || 0)}
-      />
-      <div
-        className="AngleHandle"
-        style={{ display: visible ? undefined : 'none' }}
-        onMouseDown={(e) => touch(e, true)}
-        onMouseUp={(e) => touch(e, false)}
-      >
+      <input className="angle-input" value={num} onFocus={() => setVisible(true)} onBlur={() => setVisible(false)} onChange={(e) => update(Number(e.target.value) || 0)} />
+      <div className="AngleHandle" style={{ display: visible ? undefined : 'none' }} onMouseDown={(e) => touch(e, true)} onMouseUp={(e) => touch(e, false)}>
         <div className="angle" onMouseUp={turn} onMouseMove={turn}>
           <div style={{ transform: `rotate(${angleInDegrees}deg)` }} className="line" />
         </div>

@@ -198,3 +198,14 @@
     }
   }
 }
+
+/* The host's own panel, given the column and nothing else — no padding, no
+   background of ours. Whatever it puts here is its own design system, and the
+   only thing the editor owes it is the width and the height. */
+.assistant-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}

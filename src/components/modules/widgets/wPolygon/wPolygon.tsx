@@ -20,12 +20,7 @@ function WPolygon(props: WidgetProps) {
    * a child of a group would reshape something nobody could see they had
    * selected.
    */
-  const reshaping =
-    !child &&
-    !p.lock &&
-    showMoveable &&
-    snap.dSelectWidgets.length === 0 &&
-    snap.dActiveElement?.uuid === params.uuid
+  const reshaping = !child && !p.lock && showMoveable && snap.dSelectWidgets.length === 0 && snap.dActiveElement?.uuid === params.uuid
 
   return (
     <ShapeWidget {...props} kind="w-polygon" paint={<PolygonPaint params={p} />}>

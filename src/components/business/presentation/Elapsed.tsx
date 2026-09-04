@@ -9,17 +9,7 @@ import { useEffect, useState } from 'react'
  * a mounted slide in it for every page within reach. Every one of those is
  * memoised and would skip the render, but there is no reason to ask.
  */
-export default function Elapsed({
-  startedAt,
-  onReset,
-  className = 'present__timer',
-  title = 'Time on this presentation — click to reset',
-}: {
-  startedAt: number
-  onReset: () => void
-  className?: string
-  title?: string
-}) {
+export default function Elapsed({ startedAt, onReset, className = 'present__timer', title = 'Time on this presentation — click to reset' }: { startedAt: number; onReset: () => void; className?: string; title?: string }) {
   const [seconds, setSeconds] = useState(0)
 
   useEffect(() => {

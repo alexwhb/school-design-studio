@@ -123,15 +123,7 @@ export default function Html() {
     <div>
       <div className="page-design-index-wrap" id="page-draw-html-wrap">
         {pageGroup.map((x) => (
-          <DesignBoard
-            key={x.pageData.uuid}
-            className="page-design-wrap fixed-canvas"
-            pageDesignCanvasId="page-design-canvas"
-            padding={0}
-            renderDWidgets={x.dWidgets}
-            renderDPage={x.pageData}
-            zoom={x.zoom * 100}
-          />
+          <DesignBoard key={x.pageData.uuid} className="page-design-wrap fixed-canvas" pageDesignCanvasId="page-design-canvas" padding={0} renderDWidgets={x.dWidgets} renderDPage={x.pageData} zoom={x.zoom * 100} />
         ))}
       </div>
     </div>

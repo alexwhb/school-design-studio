@@ -43,7 +43,19 @@ export default defineConfig({
       fileName: () => 'design-studio.js',
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client'],
+      /**
+       * React, because the host's copy has to be the only one on the page.
+       *
+       * Transformers.js, because bundling it puts a 63 MB chunk in a package
+       * the host has to install for a button most designs never touch. It is
+       * behind a dynamic import already (`backgroundRemoval.ts`), so leaving it
+       * external means a host that wants background removal in the browser adds
+       * `@huggingface/transformers` itself, and one that does not — or that
+       * installs its own remover with `setBackgroundRemover`, or points
+       * `BACKGROUND_REMOVAL_URL` at a service — carries none of it. The button
+       * says so if it is reached with nothing behind it.
+       */
+      external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client', '@huggingface/transformers'],
       output: {
         assetFileNames: 'design-studio.[ext]',
       },

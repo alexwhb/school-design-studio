@@ -86,9 +86,7 @@ export default function ApplyBrand({ open, onOpenChange }: Props) {
         {kit.colors.length ? (
           <>
             <Checkbox value={recolour} label="Recolour with brand colours" onChange={setRecolour} />
-            <p className="ds-apply-brand__note">
-              The colours this design uses most become the kit’s, in the same order. Whites, blacks and greys are left alone.
-            </p>
+            <p className="ds-apply-brand__note">The colours this design uses most become the kit’s, in the same order. Whites, blacks and greys are left alone.</p>
           </>
         ) : (
           <p className="ds-apply-brand__note">There are no colours in the kit, so nothing is recoloured. Add some in the Brand panel and run this again.</p>

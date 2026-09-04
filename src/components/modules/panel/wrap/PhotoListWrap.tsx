@@ -241,12 +241,7 @@ export default function PhotoListWrap() {
               <span>Upload</span>
             </Uploader>
             {uploads.map((item) => (
-              <Card
-                key={item.id}
-                ratio="1"
-                title={item.title}
-                {...thumbProps(item)}
-              >
+              <Card key={item.id} ratio="1" title={item.title} {...thumbProps(item)}>
                 <EditModel options={[{ name: 'Delete', fn: deleteUploadItem }] as any} data={{ item }}>
                   <Image className="list__img transparent-bg" src={item.url} fit="cover" lazy />
                 </EditModel>
@@ -260,19 +255,9 @@ export default function PhotoListWrap() {
           {notice ? <p className="panel-wrap__note">{notice}</p> : null}
           <CardGrid columns={2} className="photo-list-wrap__library">
             {photos.map((item, i) => (
-              <Card
-                key={String(item.id) + i}
-                meta={item.author}
-                {...thumbProps(item)}
-              >
+              <Card key={String(item.id) + i} meta={item.author} {...thumbProps(item)}>
                 <ImageTip detail={item as any}>
-                  <Image
-                    className="list__img"
-                    src={item.thumb || item.url}
-                    fit="cover"
-                    lazy
-                    placeholder={<div style={{ backgroundColor: item.color }} className="image-color" />}
-                  />
+                  <Image className="list__img" src={item.thumb || item.url} fit="cover" lazy placeholder={<div style={{ backgroundColor: item.color }} className="image-color" />} />
                 </ImageTip>
               </Card>
             ))}

@@ -89,15 +89,7 @@ function outwardAt(points: TPathPoint[], which: 'start' | 'end'): TXY | null {
   const neighbour = which === 'start' ? points[1] : points[points.length - 2]
   const point = points[index]
   const handle = which === 'start' ? point.out : point.in
-  const towards = handle
-    ? { x: point.x + handle.x, y: point.y + handle.y }
-    : which === 'start'
-      ? neighbour.in
-        ? { x: neighbour.x + neighbour.in.x, y: neighbour.y + neighbour.in.y }
-        : neighbour
-      : neighbour.out
-        ? { x: neighbour.x + neighbour.out.x, y: neighbour.y + neighbour.out.y }
-        : neighbour
+  const towards = handle ? { x: point.x + handle.x, y: point.y + handle.y } : which === 'start' ? (neighbour.in ? { x: neighbour.x + neighbour.in.x, y: neighbour.y + neighbour.in.y } : neighbour) : neighbour.out ? { x: neighbour.x + neighbour.out.x, y: neighbour.y + neighbour.out.y } : neighbour
   const dx = point.x - towards.x
   const dy = point.y - towards.y
   const length = Math.hypot(dx, dy)
@@ -129,13 +121,7 @@ function setback(kind: TLineEnd, strokeWidth: number): number {
  * A line too short for both setbacks keeps a little length in the middle rather
  * than turning inside out.
  */
-export function lineWithEnds(
-  points: TPathPoint[],
-  closed: boolean,
-  box: TPaintBox,
-  strokeWidth: number,
-  ends: TLineEnds,
-): { d: string; heads: TLineHead[] } {
+export function lineWithEnds(points: TPathPoint[], closed: boolean, box: TPaintBox, strokeWidth: number, ends: TLineEnds): { d: string; heads: TLineHead[] } {
   const placed = absolutePoints(points, { left: box.x, top: box.y, width: box.width, height: box.height })
   const unit = { x: 0, y: 0, width: 1, height: 1 }
   if (closed || placed.length < 2 || (!ends.start && !ends.end)) {

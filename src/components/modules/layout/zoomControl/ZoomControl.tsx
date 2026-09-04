@@ -188,11 +188,7 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
     }
     window.addEventListener('resize', changeScreen)
 
-    const unsubCanvas = subscribeSelector(
-      canvasState,
-      () => [canvasState.dScreen.width, canvasState.dScreen.height, canvasState.dPage.width, canvasState.dPage.height, canvasState.dPage.uuid],
-      screenChange,
-    )
+    const unsubCanvas = subscribeSelector(canvasState, () => [canvasState.dScreen.width, canvasState.dScreen.height, canvasState.dPage.width, canvasState.dPage.height, canvasState.dPage.uuid], screenChange)
     const unsubForce = subscribeKey(forceState, 'zoomScreenChange', () => {
       setActiveZoomIndex(ZoomList.length - 1)
       screenChange()

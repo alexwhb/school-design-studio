@@ -84,7 +84,11 @@ export function insertRow(cells: string[][], at: number): string[][] {
   if (cells.length >= MAX_ROWS) return cells
   const cols = cells[0]?.length ?? 1
   const next = cells.map((line) => [...line])
-  next.splice(Math.max(0, Math.min(at, cells.length)), 0, Array.from({ length: cols }, () => ''))
+  next.splice(
+    Math.max(0, Math.min(at, cells.length)),
+    0,
+    Array.from({ length: cols }, () => ''),
+  )
   return next
 }
 

@@ -80,9 +80,7 @@ const ResizeDesign = forwardRef<ResizeDesignHandle, {}>(function ResizeDesign(_p
         <h4 className="block__title">New size</h4>
         <SizeEditor params={size} onChange={setSize} className="size-row" />
         <p className="from-to">
-          {Math.round(current.width)} × {Math.round(current.height)} px{' '}
-          <i className="iconfont icon-right arrow" />{' '}
-          {Math.round(size.width)} × {Math.round(size.height)} px
+          {Math.round(current.width)} × {Math.round(current.height)} px <i className="iconfont icon-right arrow" /> {Math.round(size.width)} × {Math.round(size.height)} px
         </p>
         <SizePresets width={size.width} height={size.height} onPick={setSize} />
       </section>

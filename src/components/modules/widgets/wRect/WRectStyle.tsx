@@ -42,13 +42,7 @@ export default function WRectStyle() {
     <ShapeStyle
       shape={
         <PanelSection title="Corners">
-          <CornerRadius
-            corners={readCorners(active)}
-            unlinked={isUnlinked(active)}
-            maxValue={Math.round(maxRadius(active.width, active.height))}
-            onLinkChange={linkChange}
-            onChange={radiusChange}
-          />
+          <CornerRadius corners={readCorners(active)} unlinked={isUnlinked(active)} maxValue={Math.round(maxRadius(active.width, active.height))} onLinkChange={linkChange} onChange={radiusChange} />
         </PanelSection>
       }
     />

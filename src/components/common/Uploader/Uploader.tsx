@@ -29,18 +29,7 @@ type Props = {
   children?: ReactNode
 }
 
-export default function Uploader({
-  value = {},
-  hold = false,
-  accept = 'image/*',
-  drag = false,
-  className,
-  style,
-  onChange,
-  onDone,
-  onLoad,
-  children,
-}: Props) {
+export default function Uploader({ value = {}, hold = false, accept = 'image/*', drag = false, className, style, onChange, onDone, onLoad, children }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const uploading = useRef(false)
   const timer = useRef<any>(null)
@@ -76,13 +65,8 @@ export default function Uploader({
           useNotification('Uploaded', saved.title, { position: 'bottom-left' })
           onDone?.({ id: saved.id, width: saved.width, height: saved.height, url: saved.url, title: saved.title })
         } catch (error) {
-          const quota =
-            error instanceof DOMException && (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
-          useNotification(
-            quota ? 'No room left for uploads' : 'That image could not be added',
-            quota ? 'Delete some uploads and try again.' : (error as Error)?.message || 'The file could not be read.',
-            { type: 'error', position: 'bottom-left' },
-          )
+          const quota = error instanceof DOMException && (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
+          useNotification(quota ? 'No room left for uploads' : 'That image could not be added', quota ? 'Delete some uploads and try again.' : (error as Error)?.message || 'The file could not be read.', { type: 'error', position: 'bottom-left' })
         }
       }
       uploading.current = false

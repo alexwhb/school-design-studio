@@ -14,7 +14,7 @@ const baseUrl = () => app_config.API_URL
 
 axios.interceptors.request.use(
   (config: AxiosRequestConfig) => {
-    const url = config.url ?? ""
+    const url = config.url ?? ''
     const values = {}
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       config.url = url.startsWith('/') ? baseUrl() + url : (config.url = baseUrl() + '/' + url)
@@ -36,7 +36,8 @@ axios.interceptors.request.use(
   },
 )
 
-axios.interceptors.response.use((res: AxiosResponse<any>) => {
+axios.interceptors.response.use(
+  (res: AxiosResponse<any>) => {
     // store.dispatch('hideLoading');
     if (!res.data) {
       return Promise.reject(res)
@@ -93,26 +94,14 @@ let warnedOffline = false
 function warnBackendOffline() {
   if (warnedOffline) return
   warnedOffline = true
-  console.info(
-    `[Design Studio] No content backend at ${baseUrl() || 'the configured API URL'}. ` +
-      'Templates and stock photos are unavailable; everything else works normally.',
-  )
+  console.info(`[Design Studio] No content backend at ${baseUrl() || 'the configured API URL'}. ` + 'Templates and stock photos are unavailable; everything else works normally.')
 }
 
 type TFetchRequestConfigParams = AxiosRequestConfig & Record<string, any>
-type TFetchMethod = keyof Pick<
-  AxiosStatic, 
-  "get" | "post" | "put" | "getUri" | "request" | "delete" | "head" | "options" | "patch"
->
+type TFetchMethod = keyof Pick<AxiosStatic, 'get' | 'post' | 'put' | 'getUri' | 'request' | 'delete' | 'head' | 'options' | 'patch'>
 
 // export default axios;
-const fetch = <T = any> (
-  url: string,
-  params: TFetchRequestConfigParams, 
-  type: TFetchMethod = 'get',
-  exheaders: Record<string, any> = {},
-  extra: Record<string, any> = {}
-): Promise<T> => {
+const fetch = <T = any>(url: string, params: TFetchRequestConfigParams, type: TFetchMethod = 'get', exheaders: Record<string, any> = {}, extra: Record<string, any> = {}): Promise<T> => {
   if (params?._noLoading) {
     delete params._noLoading
   }
@@ -124,7 +113,7 @@ const fetch = <T = any> (
   const token = localStorage.getItem(LocalStorageKey.tokenKey)
   const headerObject: Record<string, any> = {}
   token && (headerObject.Authorization = token)
-  
+
   if (type === 'get') {
     return axios.get(url, {
       headers: Object.assign(headerObject, exheaders),

@@ -156,9 +156,7 @@ export default function Psd() {
                 <UploadFilledIcon style={{ width: 48, height: 48, marginRight: '1rem' }} />
                 <div className="uploader__copy">
                   <span>Drop a PSD file here, or choose one</span>
-                  <span className="uploader__hint">
-                    Text, pictures and shapes arrive as separate layers. Effects, masks and adjustment layers are flattened.
-                  </span>
+                  <span className="uploader__hint">Text, pictures and shapes arrive as separate layers. Effects, masks and adjustment layers are flattened.</span>
                 </div>
               </div>
             </Uploader>
@@ -171,14 +169,7 @@ export default function Psd() {
       {isDone ? <ZoomControl ref={zoomControlRef} /> : null}
       <RcMenu />
       <Moveable />
-      <ProgressLoading
-        percent={downloadPercent}
-        text={downloadText}
-        cancelText={cancelText}
-        msg={downloadMsg}
-        onCancel={cancel}
-        onDone={() => setDownloadPercent(0)}
-      />
+      <ProgressLoading percent={downloadPercent} text={downloadText} cancelText={cancelText} msg={downloadMsg} onCancel={cancel} onDone={() => setDownloadPercent(0)} />
     </div>
   )
 }
