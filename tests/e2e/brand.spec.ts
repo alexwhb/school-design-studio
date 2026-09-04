@@ -267,10 +267,14 @@ test('undo after adding a recoloured template takes the whole template off', asy
   expect(await widgetCount(page)).toBeGreaterThan(10)
 
   await page.keyboard.press('ControlOrMeta+z')
-  await page.waitForTimeout(900)
   // One entry, not two: the recolour is part of adding the template rather
   // than a step of its own to be peeled off first.
-  expect(await widgetCount(page)).toBe(0)
+  //
+  // Waited for rather than slept on. The diff that makes an undo entry is
+  // computed off the main thread behind a debounce, so how long it takes
+  // depends on what else the machine is doing — a fixed pause passed alone and
+  // failed about one run in four alongside everything else.
+  await expect(page.locator(WIDGET)).toHaveCount(0)
 })
 
 /* ------------------------------------------------------------- the colours */
