@@ -77,13 +77,16 @@ function slimPackage() {
     peerDependencies: {
       react: '>=19',
       'react-dom': '>=19',
+      // Only for cutting a background out in the browser, and marked optional
+      // below so npm neither installs nor warns about it. Three other ways to
+      // have that feature need nothing installed; see EMBEDDING.md. It has to
+      // be listed here as well as in the meta block — `peerDependenciesMeta`
+      // for a package that is not a peer says nothing at all.
+      '@huggingface/transformers': '>=3',
     },
     peerDependenciesMeta: {
-      // Only for cutting a background out in the browser. Three other ways to
-      // have that feature need nothing installed; see EMBEDDING.md.
       '@huggingface/transformers': { optional: true },
     },
-    optionalDependencies: {},
     browserslist: source.browserslist,
     homepage: source.homepage,
   }
