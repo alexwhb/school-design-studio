@@ -265,6 +265,13 @@ It is the editor's own rule, not a second one. `richText.ts` in the browser and
 only in how they parse; the e2e suite runs both over the same thirty-odd inputs
 and requires them to agree character for character.
 
+It is also safe to point at rubbish. This runs on your server over text that
+reached you through a model, so the cost of an answer matters as much as the
+answer: the parser reads each character once, and it stops deepening the tree
+past sixty-four levels, which is where a recursive reader would otherwise run
+out of stack. Two hundred thousand stray `<` take about a tenth of a second. An
+element past the depth cap still contributes its words.
+
 **Nothing overflows.** There is no font engine on a server, so text is measured
 from the shape of the letters and a factor per family, deliberately a few per
 cent pessimistic: guessing a line wider than it turns out to be costs a slightly
