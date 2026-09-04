@@ -49,3 +49,21 @@ export const URL_FIELDS: Record<string, readonly string[]> = {
   // One string of markup per cell, the same shape a text widget's `text` is.
   'w-table': ['cells'],
 }
+
+/**
+ * URLs that are not a field of the layer but a field of something inside it.
+ *
+ * `URL_FIELDS` is a flat list of names because that is what most of them are.
+ * These two are not, and a host that checked only the flat list would let a
+ * document point at somebody else's server through either of them: a text
+ * effect can be filled with a picture, and a font can name the file it is
+ * loaded from. Neither is something a person types — the editor writes both
+ * from its own bundled lists — which is exactly why a document arriving from
+ * outside should be made to prove it.
+ *
+ * Paths are dotted, with `[]` for "every element of this array".
+ */
+export const NESTED_URL_PATHS: Record<string, readonly string[]> = {
+  'w-text': ['fontClass.url', 'textEffects[].filling.imageContent.image'],
+  'w-table': ['fontClass.url'],
+}

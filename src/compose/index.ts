@@ -18,7 +18,7 @@ export { sanitizeMarkup, markupToText, parseMarkup } from './markup'
 // What a design may be made of, for a host validating one before it stores it.
 // Derived from the widget registry rather than typed out again — see the
 // `satisfies` in `components/modules/widgets/registry.ts`.
-export { WIDGET_TYPES, URL_FIELDS, PAGE_TYPE } from '@/components/modules/widgets/widgetTypes'
+export { WIDGET_TYPES, URL_FIELDS, NESTED_URL_PATHS, PAGE_TYPE } from '@/components/modules/widgets/widgetTypes'
 export type { TWidgetType } from '@/components/modules/widgets/widgetTypes'
 export { applyBrand } from './brand'
 export { SLIDE_THEME_KEYS, POSTER_PACK_KEYS, slideTheme, posterPack } from './themes'
