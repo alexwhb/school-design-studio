@@ -351,9 +351,9 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
 
   onProgress?.(95, 'Writing the file')
   const blob = (await pptx.write({ outputType: 'blob' })) as Blob
-  // pptxgenjs writes its own type, which some readers use to decide what the
-  // file is. Say it outright rather than leaving it to whatever came back.
-  return blob.type ? blob : new Blob([blob], { type: PPTX_TYPE })
+  // pptxgenjs hands back `application/zip`, which a .pptx technically is and
+  // which some readers then refuse to open as a presentation. Say what it is.
+  return blob.type === PPTX_TYPE ? blob : new Blob([blob], { type: PPTX_TYPE })
 }
 
 const PPTX_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'

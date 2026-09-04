@@ -7,6 +7,7 @@ import { cx } from '@/utils/dom'
 import { GRID_SIZES, controlState } from '@/store/state'
 import { setGridSize, toggleShowGrid, toggleSnapEnabled } from '@/store/control'
 import { notesState } from '@/store/notes'
+import { isPresentable } from '@/store/documentKind'
 import './folder.less'
 
 type Props = {
@@ -119,16 +120,18 @@ export default function Folder({ onSelect, showGuides, children }: Props) {
               </span>
             </div>
           </DropdownItem>
-          <DropdownItem onSelect={() => onSelect('toggleNotes')}>
-            <div className="item item--toggle">
-              <span>Speaker notes</span>
-              {notesOpen ? (
-                <i className="el-icon tick">
-                  <CheckIcon />
-                </i>
-              ) : null}
-            </div>
-          </DropdownItem>
+          {isPresentable() ? (
+            <DropdownItem onSelect={() => onSelect('toggleNotes')}>
+              <div className="item item--toggle">
+                <span>Speaker notes</span>
+                {notesOpen ? (
+                  <i className="el-icon tick">
+                    <CheckIcon />
+                  </i>
+                ) : null}
+              </div>
+            </DropdownItem>
+          ) : null}
           <DropdownItem onSelect={toggleSpellcheck}>
             <div className="item item--toggle">
               <span>Check spelling</span>

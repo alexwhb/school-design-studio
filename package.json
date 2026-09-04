@@ -1,6 +1,6 @@
 {
   "name": "design-studio",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "author": "ShawnPhang",
   "scripts": {
@@ -19,7 +19,8 @@
     "test:e2e": "playwright test --project=e2e",
     "bench": "node tools/bench/bench.mjs",
     "bench:prod": "node tools/bench/start-prod.mjs && cross-env APP_URL=http://127.0.0.1:4873 node tools/bench/bench.mjs",
-    "build:embed": "cross-env NODE_ENV=production vite build --config vite.embed.config.ts",
+    "build:embed": "cross-env NODE_ENV=production vite build --config vite.embed.config.ts && cross-env NODE_ENV=production vite build --config vite.compose.config.ts && node tools/build/emit-types.mjs && node tools/build/copy-content.mjs",
+    "release:embed": "node tools/release-embed.mjs",
     "dev:embed-demo": "cross-env NODE_ENV=development vite --config vite.embed-demo.config.ts"
   },
   "dependencies": {

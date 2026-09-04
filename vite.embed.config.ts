@@ -32,6 +32,11 @@ export default defineConfig({
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
   },
+  // No copy of `public/` into the output. This is a library build with no page
+  // in it, and the package ships `public/` beside `dist-embed` for the host to
+  // serve at its own root — copying it as well made every font, sticker and
+  // cover land in the tag twice, for fifteen megabytes of nothing.
+  publicDir: false,
   build: {
     outDir: resolve('dist-embed'),
     emptyOutDir: true,

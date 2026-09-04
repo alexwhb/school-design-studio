@@ -13,6 +13,7 @@ import { pageBackgroundStyle } from '@/common/methods/pageBackground'
 import { staticWidgetComponents } from '../../widgets/registry'
 import { NOTES_DRAWER_HEIGHT, notesState } from '@/store/notes'
 import NotesToggle from '@/components/business/notes/NotesToggle'
+import { isPresentable } from '@/store/documentKind'
 import ToolDock from '@/components/business/tool-dock/ToolDock'
 import { PlusIcon } from '@/components/ui/icons'
 import PageTransitionGlyph from './PageTransitionGlyph'
@@ -147,6 +148,8 @@ const Page = memo(function Page({ layout, index, isCurrent, isFirst, isLast, onC
 export default function MultipleBoards() {
   const canvas = useSnapshot(canvasState)
   const dLayouts = useSnapshot(widgetState).dLayouts as readonly TdLayout[]
+  // A poster has nobody to say speaker notes to.
+  const presentable = isPresentable()
   // The notes drawer sits along the very bottom, so the strip stands on top of
   // it rather than under it.
   const notesOpen = useSnapshot(notesState).open
@@ -316,15 +319,15 @@ export default function MultipleBoards() {
                   <span className="chip-add__label">Add page</span>
                 </button>
               </Tooltip>
-              <div className="chip-divider" />
-              <NotesToggle />
+              {presentable ? <div className="chip-divider" /> : null}
+              {presentable ? <NotesToggle /> : null}
             </>
           ) : (
             <div className="list">
               <span onClick={() => setIsFold(!isFold)} className="icon-btn">
                 <i className="icon sd-zhankai" />
               </span>
-              <NotesToggle />
+              {presentable ? <NotesToggle /> : null}
               <div ref={pagesRef} className="pages">
                 {dLayouts.map((l, li) => (
                   <Page key={pageKey(li)} layout={l as TdLayout} index={li} isCurrent={index === li} isFirst={li === 0} isLast={li === dLayouts.length - 1} onCommand={runPageCommand} />

@@ -66,7 +66,18 @@ export default function useHostDocument({ getTitle, onChange, onSave }: Options)
     let watching = false
     let unsubscribe: (() => void) | undefined
 
-    const snapshot = () => JSON.stringify([options.current.getTitle(), widgetState.dLayouts])
+    /**
+     * What "the design changed" is measured against.
+     *
+     * Two keys are left out of it. `record` is a widget's measured box, written
+     * back by the widget itself the first time it draws — so a design that has
+     * merely been *shown* differs from the one that was handed in, and the pill
+     * read "Unsaved changes" over an untouched page. `tag` is the counter that
+     * forces a redraw. Neither is anything a person changed, and neither is
+     * worth telling the host about.
+     */
+    const IGNORED = new Set(['record', 'tag'])
+    const snapshot = () => JSON.stringify([options.current.getTitle(), widgetState.dLayouts], (key, value) => (IGNORED.has(key) ? undefined : value))
 
     function isDirty(): boolean {
       return watching && snapshot() !== baseline
@@ -96,7 +107,9 @@ export default function useHostDocument({ getTitle, onChange, onSave }: Options)
       clearTimeout(timer)
       const title = options.current.getTitle()
       const doc = readDocument(title)
-      const attempt = JSON.stringify([title, widgetState.dLayouts])
+      // Taken the same way the dirty check takes it, or the two never agree and
+      // a save that worked still reads as unsaved.
+      const attempt = snapshot()
       autosaveState.status = 'saving'
       try {
         await save(doc)

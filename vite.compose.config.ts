@@ -23,6 +23,9 @@ export default defineConfig({
       '~data': resolve('src/assets/data'),
     },
   },
+  // Same reason as the editor build: a library has no page, and `public/` is
+  // shipped beside the bundle rather than inside it.
+  publicDir: false,
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
   },

@@ -67,12 +67,27 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
   titleRef.current = title
   const loadingRef = useRef(false)
 
+  /**
+   * Renames the design, and says so at once.
+   *
+   * `setTitle` alone is not enough for anything that reads the name back in the
+   * same tick: the ref is written during render, so a caller that renames and
+   * then asks for the name gets the old one. That is how the save pill came up
+   * reading "Unsaved changes" over a design nobody had touched — the baseline
+   * was taken with the name still empty, and the render that filled it in
+   * looked like an edit.
+   */
+  function applyTitle(next: string) {
+    titleRef.current = next || ''
+    setTitle(next || '')
+  }
+
   // Gallery selection replaces the whole canvas in place, so unlike a deep
   // link it has no load response that would otherwise populate the title.
   useEffect(() => {
     const setTemplateTitle = (event: Event) => {
       const next = (event as CustomEvent<string>).detail
-      setTitle(next || '')
+      applyTitle(next)
       onTitleChange?.()
     }
     window.addEventListener('design-title', setTemplateTitle)
@@ -229,7 +244,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
       cb()
       return
     }
-    setTitle(loadedTitle)
+    applyTitle(loadedTitle)
     setShowMoveable(false)
     if (Number(type) == 1) {
       canvasState.dPage.width = width
@@ -266,7 +281,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
    */
   function showDocument(doc: DesignDocument) {
     const layouts = Array.isArray(doc?.layouts) && doc.layouts.length ? (JSON.parse(JSON.stringify(doc.layouts)) as TdLayout[]) : null
-    setTitle(doc?.title || '')
+    applyTitle(doc?.title || '')
     if (!layouts) {
       initBoard()
       return
@@ -286,7 +301,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
 
   useImperativeHandle(
     ref,
-    () => ({ getTitle: () => titleRef.current, setTitle: (next: string) => setTitle(next || ''), showDocument, download, save, saveTemp, stateChange, load }),
+    () => ({ getTitle: () => titleRef.current, setTitle: applyTitle, showDocument, download, save, saveTemp, stateChange, load }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mode, host.document],
   )
@@ -299,7 +314,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
           placeholder="Untitled design"
           wrapperClassName="input-wrap"
           onChange={(next: string) => {
-            setTitle(next)
+            applyTitle(next)
             onTitleChange?.()
           }}
         />
