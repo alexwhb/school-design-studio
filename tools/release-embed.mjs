@@ -38,7 +38,10 @@ const dryRun = args.has('--dry-run')
 const push = !args.has('--no-push') && !dryRun
 
 const run = (command, commandArgs, options = {}) => execFileSync(command, commandArgs, { cwd: ROOT, stdio: 'inherit', ...options })
-const read = (command, commandArgs) => execFileSync(command, commandArgs, { cwd: ROOT, encoding: 'utf8' }).trim()
+// `options` matters here as much as it does for `run`: every git call that
+// builds the release tree has to be pointed at the scratch index, and one that
+// silently used the repository's own would write a tree of the whole checkout.
+const read = (command, commandArgs, options = {}) => execFileSync(command, commandArgs, { cwd: ROOT, encoding: 'utf8', ...options }).trim()
 
 const source = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
 const version = source.version
@@ -141,13 +144,24 @@ function release() {
     // -f because dist-embed is in .gitignore, which is right for the source
     //  tree and exactly wrong for this one commit.
     run('git', ['add', '-f', '--', ...PAYLOAD], { env })
-    const tree = read('git', ['write-tree']).trim()
+    const tree = read('git', ['write-tree'], { env })
     const message = `design-studio ${tag}\n\nBuilt from ${head} on ${branch}.\nEditor, compose entry, content library, fonts and types. No source, no toolchain.\n`
     const commit = execFileSync('git', ['commit-tree', tree, '-m', message], { cwd: ROOT, encoding: 'utf8', env }).trim()
     fs.rmSync(indexFile, { force: true })
 
     run('git', ['tag', '-a', tag, commit, '-m', message])
+
+    // What actually went in, rather than what was meant to. A tree built from
+    // the wrong index looks fine from the outside and ships the whole checkout.
+    const inTag = read('git', ['ls-tree', '--name-only', tag]).split('\n').filter(Boolean)
+    const unexpected = inTag.filter((entry) => !PAYLOAD.includes(entry))
+    if (unexpected.length) throw new Error(`the tag holds files it should not: ${unexpected.join(', ')}`)
+    const missing = PAYLOAD.filter((entry) => !inTag.includes(entry))
+    if (missing.length) throw new Error(`the tag is missing ${missing.join(', ')}`)
+    if (JSON.parse(read('git', ['show', `${tag}:package.json`])).devDependencies) throw new Error('the tag carries devDependencies')
+
     console.log(`\n— tagged ${tag} at ${commit.slice(0, 8)} (orphan, built from ${head.slice(0, 8)})`)
+    console.log(`  ${inTag.join(', ')}`)
   } finally {
     fs.writeFileSync(path.join(ROOT, 'package.json'), realPackage)
   }
