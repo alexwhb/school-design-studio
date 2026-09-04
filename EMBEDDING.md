@@ -380,6 +380,33 @@ by construction.
 `react`, `react-dom` and the JSX runtime are external, so the host's copy of
 React is the only one on the page.
 
+### Exporting from a host with a stylesheet of its own
+
+The PDF and PNG exports rasterise the page, and the rasteriser clones the
+**whole document**, not the editor's subtree. Your stylesheet therefore goes
+past its parser whether or not the editor uses any of it. That matters because
+every current framework writes CSS Color 4: Tailwind 4 emits `oklch()` for
+colours and `color-mix(in oklab, …)` for opacity modifiers, and the original
+html2canvas throws on the first one it meets — which is why an export can come
+back empty from a host whose own CSS the editor never touches.
+
+The studio uses `html2canvas-pro`, which reads those. Nothing is asked of you.
+
+If an export does fail, it now says where it stopped rather than returning
+nothing: look for `[export] could not draw the page — <stage>: <reason>` in the
+console. The stages are preparing the page, pre-rendering the widgets the
+renderer cannot draw, turning the shapes into images, rendering the page, and
+reading the drawn page back. A colour it could not parse says so specifically,
+and reminds you that it may have come from your CSS rather than the editor's.
+
+A strict Content-Security-Policy is fine. `embed-demo/csp.html` runs the editor
+under `default-src 'self'; img-src 'self' data: blob:; style-src 'self'
+'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline';
+frame-src 'self' blob:; worker-src 'self' blob:` with the exports asserted, so
+that policy is known to work. The two directives worth naming: `img-src` needs
+`data:` and `blob:`, because a rasterised widget is a data URL and an export is
+a blob; `frame-src` needs `blob:` because the renderer clones into an iframe.
+
 **Transformers.js is external too, and invisible to your bundler.** Bundled, it
 put a 63 MB chunk in a package the host has to install for a button most designs
 never touch. It was already behind a dynamic import, and there are three other
