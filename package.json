@@ -1,0 +1,45 @@
+{
+  "name": "design-studio",
+  "version": "0.1.1",
+  "description": "A simple English-language design editor for schools: posters, flyers, newsletters and slides, with PDF and PowerPoint export.",
+  "author": "ShawnPhang",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist-embed/index.d.ts",
+      "import": "./dist-embed/design-studio.js"
+    },
+    "./style.css": "./dist-embed/design-studio.css",
+    "./compose": {
+      "types": "./dist-embed/compose.d.ts",
+      "import": "./dist-embed/compose.js"
+    },
+    "./server": {
+      "types": "./server/index.d.ts",
+      "import": "./server/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist-embed",
+    "public",
+    "server",
+    "LICENSE",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19",
+    "@huggingface/transformers": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "@huggingface/transformers": {
+      "optional": true
+    }
+  },
+  "browserslist": [
+    "Chrome >= 90"
+  ],
+  "homepage": "https://xp.palxp.cn"
+}
