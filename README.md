@@ -1591,11 +1591,11 @@ The planner installs it from a tag carrying the built output:
 
 `npm run release:embed` cuts one. Three entry points come out of it:
 
-| Entry                   | What                                                                                                                                              | Where it runs      |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `design-studio`         | `<DesignStudio />`, its types, `configure`, `setBackgroundRemover`                                                                                | browser            |
-| `design-studio/compose` | Design JSON in, design JSON out: compose a deck or a sign from an outline, describe one for a model, apply the model's changes, apply a brand kit | server and browser |
-| `design-studio/server`  | `createContentLibrary(…)` — the six read-only `/design/*` endpoints, framework-agnostic                                                           | Node               |
+| Entry                   | What                                                                                                                                                                                      | Where it runs      |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `design-studio`         | `<DesignStudio />`, its types, `configure`, `setBackgroundRemover`                                                                                                                        | browser            |
+| `design-studio/compose` | Design JSON in, design JSON out: compose a deck or a sign from an outline, describe one for a model, apply the model's changes, apply a brand kit, and sanitise the markup a design holds | server and browser |
+| `design-studio/server`  | `createContentLibrary(…)` — the six read-only `/design/*` endpoints, framework-agnostic                                                                                                   | Node               |
 
 The host takes over each of the three things the editor would otherwise keep in
 the browser, one prop each:
@@ -1612,6 +1612,13 @@ the browser, one prop each:
 And two the editor never had: `assistant`, a panel of the planner's own behind
 an "AI" tab in the rail, and a `ref` that lets it read the design, change it,
 and take a PDF, a `.pptx` or a page's PNG as bytes rather than as a download.
+
+One thing the planner must do rather than may: call `sanitizeMarkup` on every
+text widget of every document it stores. A design's text is HTML, and the
+planner renders it back into other people's browsers, so the point to decide
+what may be in it is before the bytes are written down. It is the editor's own
+allowlist, exported so there is one answer rather than two. See
+[EMBEDDING.md](EMBEDDING.md).
 
 Still not done, and worth saying:
 
