@@ -34,42 +34,66 @@ function advance(character: string): number {
 }
 
 /**
- * How much narrower or wider a family runs than the table above.
+ * Families whose every glyph is the same width, and what that width is.
  *
- * Only the families the bundled themes and packs actually use are named; a
- * family nobody named measures as an ordinary sans, which is what the table is.
+ * A per-character table cannot describe a monospace face at all: it makes `i`
+ * narrow and `M` wide, and in these they are both exactly 0.6em. Measured in
+ * the browser rather than guessed — `iiiillll` came out twice as wide as this
+ * file thought, which is the sort of error that puts a heading off a page.
  */
-const FAMILY_FACTOR: Record<string, number> = {
-  Anton: 0.78,
-  'Bebas Neue': 0.72,
-  Oswald: 0.8,
-  Archivo: 0.98,
-  Inter: 1,
-  Roboto: 0.98,
-  'Open Sans': 1.01,
-  Lato: 0.97,
-  Montserrat: 1.08,
-  Poppins: 1.06,
-  Nunito: 1,
-  Quicksand: 1.02,
-  Fredoka: 1.03,
-  Merriweather: 1.09,
-  'Playfair Display': 1.02,
-  Lora: 1.02,
-  'Libre Baskerville': 1.12,
-  'Source Serif 4': 1,
-  Spectral: 1,
-  'DM Serif Display': 1.02,
-  'Space Grotesk': 1,
-  Karla: 0.96,
-  Caveat: 0.72,
-  Pacifico: 1.05,
-  'IBM Plex Mono': 1.15,
-  'JetBrains Mono': 1.15,
+const MONOSPACE: Record<string, number> = {
+  'IBM Plex Mono': 0.6,
+  'JetBrains Mono': 0.6,
 }
 
-/** A safety margin, because being wrong in one direction is much worse. */
-const PESSIMISM = 1.03
+/**
+ * How much narrower or wider a family runs than the table above.
+ *
+ * Not guessed. Each of these is the old estimate multiplied by the worst error
+ * it made when checked against the browser's own `measureText`, over a dozen
+ * strings a school actually writes — a heading, a date, a sentence of prose —
+ * at both weights. Before that pass every family was under-measured, Anton by
+ * fourteen per cent, which is how a nine-letter heading came out on one line
+ * here and two in the browser, with the arrow underneath it disappearing
+ * behind the second.
+ *
+ * Re-derive them the same way if a family is added: set the factor to 1, print
+ * `browser width / measureText(...)` for those strings, and use the worst.
+ */
+const FAMILY_FACTOR: Record<string, number> = {
+  Anton: 0.888,
+  'Bebas Neue': 0.746,
+  Oswald: 0.878,
+  Archivo: 1.05,
+  Inter: 1.079,
+  Roboto: 1.003,
+  'Open Sans': 1.081,
+  Lato: 1.0,
+  Montserrat: 1.15,
+  Poppins: 1.144,
+  Nunito: 1.028,
+  Quicksand: 1.049,
+  Fredoka: 0.999,
+  Merriweather: 1.087,
+  'Playfair Display': 1.009,
+  Lora: 1.055,
+  'Libre Baskerville': 1.179,
+  'Source Serif 4': 1.073,
+  Spectral: 1.019,
+  'DM Serif Display': 0.974,
+  'Space Grotesk': 1.076,
+  Karla: 1.032,
+  Caveat: 0.768,
+  Pacifico: 1.139,
+}
+
+/**
+ * A safety margin on top of the calibration, because being wrong in one
+ * direction is much worse than the other. Six per cent is a heading a couple of
+ * points smaller than it had to be, which nobody notices; the other way is a
+ * word off the edge of something already printed.
+ */
+const PESSIMISM = 1.06
 
 export type TextMetrics = {
   fontFamily?: string
@@ -82,8 +106,15 @@ export type TextMetrics = {
 }
 
 export function measureText(text: string, style: TextMetrics): number {
+  const fixed = style.fontFamily ? MONOSPACE[style.fontFamily] : undefined
   const factor = (style.fontFamily && FAMILY_FACTOR[style.fontFamily]) || 1
   let ems = 0
+  // A monospace face is exact, so it needs no factor and no pessimism beyond
+  // the letter spacing — every character is the same width by definition.
+  if (fixed !== undefined) {
+    for (const _ of text) ems += fixed
+    return ems * style.fontSize + (style.letterSpacing || 0) * text.length
+  }
   for (const character of text) ems += advance(character)
   const bold = style.bold ? 1.03 : 1
   return (ems * style.fontSize * factor * bold + (style.letterSpacing || 0) * text.length) * PESSIMISM
@@ -152,27 +183,44 @@ export function fitText(text: string, style: TextMetrics, options: FitOptions): 
   const words = String(text || '').trim()
   if (!words) return { text: '', fontSize: style.fontSize, lines: [], truncated: false }
 
+  const scaleTo = (size: number): TextMetrics => ({ ...style, fontSize: size, letterSpacing: (style.letterSpacing || 0) * (size / style.fontSize) })
+  const widest = (lines: string[], scaled: TextMetrics) => lines.reduce((most, line) => Math.max(most, measureText(line, scaled)), 0)
+
   const floor = Math.max(6, Math.min(options.minFontSize, style.fontSize))
   for (let size = style.fontSize; size >= floor; size -= 1) {
-    const scaled = { ...style, fontSize: size, letterSpacing: (style.letterSpacing || 0) * (size / style.fontSize) }
+    const scaled = scaleTo(size)
     const lines = wrapText(words, options.width, scaled)
     const room = Math.min(linesThatFit(options.height, size, style.lineHeight), options.maxLines || Number.MAX_SAFE_INTEGER)
-    if (lines.length <= room) return { text: words, fontSize: size, lines, truncated: false }
+    // Both, and the width is the one that is easy to forget. `wrapText` breaks
+    // at spaces and nowhere else, so a single long word — "Gymnasium" on a
+    // direction sign — comes back as one line at any size and passes a check
+    // that only counts lines. The browser then wraps it mid-word, the box grows
+    // downwards, and whatever was laid out under it disappears behind the
+    // second line. That is what happened to the arrow.
+    if (lines.length <= room && widest(lines, scaled) <= options.width) return { text: words, fontSize: size, lines, truncated: false }
   }
 
-  // At the floor and still too long. Keep whole words, and say so with an
-  // ellipsis on the end of the last line that fits.
-  const scaled = { ...style, fontSize: floor, letterSpacing: (style.letterSpacing || 0) * (floor / style.fontSize) }
+  // At the floor and still too big. Cut, and say so with an ellipsis.
+  const scaled = scaleTo(floor)
   const room = Math.min(linesThatFit(options.height, floor, style.lineHeight), options.maxLines || Number.MAX_SAFE_INTEGER)
   const lines = wrapText(words, options.width, scaled).slice(0, room)
+
+  // Whole words first, because half a word reads as a mistake rather than as a
+  // cut. A single word too wide for the box has no words to drop, so that one
+  // is cut by characters — the alternative is an empty box.
   while (lines.length && measureText(`${lines[lines.length - 1]}…`, scaled) > options.width) {
-    const last = lines[lines.length - 1].split(' ')
-    last.pop()
-    if (last.length === 0) {
+    const last = lines[lines.length - 1]
+    const parts = last.split(' ')
+    if (parts.length > 1) {
+      parts.pop()
+      lines[lines.length - 1] = parts.join(' ')
+      continue
+    }
+    if (last.length <= 1) {
       lines.pop()
       continue
     }
-    lines[lines.length - 1] = last.join(' ')
+    lines[lines.length - 1] = last.slice(0, -1)
   }
   if (lines.length === 0) return { text: '…', fontSize: floor, lines: ['…'], truncated: true }
   lines[lines.length - 1] = `${lines[lines.length - 1].replace(/[\s,;:.]+$/, '')}…`

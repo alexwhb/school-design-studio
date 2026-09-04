@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { POSTER_PACK_KEYS, SLIDE_THEME_KEYS, applyBrand, applyOps, composeDeck, composePoster, describeDocument, pageKinds, type DeckOutline, type DeckSlide, type DesignDocument, type PosterOutline, type PosterSize, type TBrandKit } from '@/compose'
+import { ICON_KEYS, POSTER_PACK_KEYS, SLIDE_THEME_KEYS, applyBrand, applyOps, composeDeck, composePoster, describeDocument, pageKinds, type DeckOutline, type DeckSlide, type DesignDocument, type PosterOutline, type PosterSize, type TBrandKit } from '@/compose'
 import type { TdWidgetData } from '@/store/types'
 
 const SIGN_KINDS = ['direction', 'icon', 'statement', 'number', 'notice'] as const
@@ -194,6 +194,37 @@ describe('composePoster', () => {
     expect(composePoster(OUT).layouts[0].global).toMatchObject({ width: 1275, height: 1650 })
     expect(composePoster({ ...OUT, orientation: 'LANDSCAPE' }).layouts[0].global).toMatchObject({ width: 1650, height: 1275 })
     expect(composePoster({ ...OUT, size: 'tabloid' }).layouts[0].global).toMatchObject({ width: 1650, height: 2550 })
+  })
+
+  it('draws the arrow on a direction sign', () => {
+    // A direction sign is an arrow and a place. It went missing once, and not
+    // because it was not composed: the heading beside it was measured as one
+    // line, wrapped to two in the browser, and came down over the top of it.
+    for (const theme of POSTER_PACK_KEYS) {
+      const doc = composePoster({ ...OUT, signs: [OUT.signs[0]] }, { theme })
+      const layers = doc.layouts[0].layers as TdWidgetData[]
+      const arrow = layers.find((layer) => layer.name === 'arrow right')
+      expect(arrow, `${theme} lost its arrow`).toBeTruthy()
+      expect(arrow?.type).toBe('w-svg')
+      expect(String((arrow as TdWidgetData & { svgUrl: string }).svgUrl)).toContain('{{colors[0]}}')
+      expect(arrow!.width).toBeGreaterThan(100)
+
+      // And nothing is laid out on top of it. The heading is the one that can
+      // grow, so it is the one worth checking against.
+      const heading = layers.find((layer) => layer.role === 'heading') as TdWidgetData
+      expect(heading.top + heading.height, `${theme} heading runs into the arrow`).toBeLessThanOrEqual(arrow!.top)
+    }
+  })
+
+  it('draws every icon a sign asks for by name', () => {
+    for (const key of ICON_KEYS.slice(0, 12)) {
+      for (const layout of ['icon', 'notice'] as const) {
+        const doc = composePoster({ ...OUT, signs: [{ ...OUT.signs[1], layout, icon: key }] })
+        const drawn = (doc.layouts[0].layers as TdWidgetData[]).find((layer) => layer.name === key)
+        expect(drawn, `${layout} lost the ${key} icon`).toBeTruthy()
+        expect(drawn?.type).toBe('w-svg')
+      }
+    }
   })
 
   it('places an icon it ships and drops one it does not', () => {
