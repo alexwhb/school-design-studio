@@ -305,4 +305,16 @@
   &:disabled {
     opacity: 0.55;
   }
+
+  /* The divider between two sections is drawn by an adjacency rule, and a
+     fieldset round the last two breaks it — the first of them is no longer
+     anybody's next sibling. Put that one back rather than reaching into
+     panelSection.less, which knows nothing about this panel. */
+  > .ds-section:first-child::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: @line;
+    margin: @space-4 -@panel-gutter;
+  }
 }
