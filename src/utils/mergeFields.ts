@@ -12,30 +12,14 @@
  * what is still waiting to be filled.
  */
 import { findInMarkup, renderedText, replaceInMarkup } from './widgets/textMatch'
+import { FIELD_PATTERN, fieldKey, type TFieldResolver } from './mergeFieldsCore'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
-/** `{{ name }}` — braces around anything that is not a brace or a line break. */
-export const FIELD_PATTERN = /\{\{\s*([^{}\n]+?)\s*\}\}/g
-
-/** Given a field's name, its value — or `undefined` to leave the field standing. */
-export type TFieldResolver = (name: string) => string | undefined
-
-/**
- * How two spellings of a field are compared: `{{Pupil}}`, `{{ pupil }}` and
- * `{{PUPIL}}` are the same column of the same list.
- */
-export function fieldKey(name: string): string {
-  return name.trim().toLowerCase()
-}
-
-/** A resolver over a plain map, matched by `fieldKey`. */
-export function valuesResolver(values: Record<string, string | undefined>): TFieldResolver {
-  const byKey = new Map<string, string>()
-  for (const [name, value] of Object.entries(values)) {
-    if (value !== undefined) byKey.set(fieldKey(name), value)
-  }
-  return (name) => byKey.get(fieldKey(name))
-}
+// The grammar — what a field looks like, how two spellings of one compare, and
+// how a plain map answers one — is in `mergeFieldsCore.ts` so that code with no
+// DOM can share it. What is left here is the part that needs one.
+export { FIELD_PATTERN, fieldKey, valuesResolver } from './mergeFieldsCore'
+export type { TFieldResolver } from './mergeFieldsCore'
 
 /** Whether a text box carries any field at all. Cheap enough to run on every widget. */
 export function hasFields(html: string | undefined): boolean {

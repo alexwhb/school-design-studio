@@ -15,7 +15,7 @@
  * words. Everything here is a pure function of the strings it is given — no
  * DOM, no store — so it can be reasoned about, and tested, on its own.
  */
-import { DESIGN_DPI } from './export/exportPdf'
+import { DESIGN_DPI } from './export/dpi'
 import { paperName } from './pageSize'
 
 /** The two ends a poster is printed between: the paper and the ink. */
@@ -272,7 +272,7 @@ function fromHsl(h: number, s: number, l: number): TRgba {
   const c = (1 - Math.abs(2 * l - 1)) * s
   const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
   const m = l - c / 2
-  const sixth = Math.floor(((h % 360) + 360) % 360 / 60)
+  const sixth = Math.floor((((h % 360) + 360) % 360) / 60)
   const [r, g, b] = [
     [c, x, 0],
     [x, c, 0],

@@ -32,10 +32,12 @@ import type { TdLayout } from '@/store/types'
  * 1275 × 1650, which is 8.5 × 11 inches at 150 — so reading them back at 150
  * returns exactly the paper size the person picked. Read at the CSS-pixel 96
  * instead, that same Letter page would come out as a 13 × 17 inch sheet.
+ *
+ * It lives in `dpi.ts` and is re-exported here, so that code with no browser
+ * behind it can read the number without loading this file's canvas work.
  */
-export const DESIGN_DPI = 150
-
-const PT_PER_INCH = 72
+export { DESIGN_DPI, pxToPdfPoints } from './dpi'
+import { pxToPdfPoints } from './dpi'
 
 /** Multiplier applied to the render. 1 gives 150 DPI, 2 gives 300, 3 gives 450. */
 export type ExportScale = 1 | 2 | 3
@@ -47,11 +49,6 @@ export type ExportScale = 1 | 2 | 3
  * standard trade every "download as PDF" makes.
  */
 const JPEG_QUALITY = 0.92
-
-/** Design pixels to PDF points, via the paper size the design implies. */
-export function pxToPdfPoints(px: number): number {
-  return ((Number(px) || 0) / DESIGN_DPI) * PT_PER_INCH
-}
 
 type RasterPage = {
   jpeg: Uint8Array

@@ -7,7 +7,7 @@
  * DESIGN_DPI in export/exportPdf.ts. One convention, in one place: a page that
  * says "A4" in this file is the page that comes out of the PDF as A4.
  */
-import { DESIGN_DPI } from './export/exportPdf'
+import { DESIGN_DPI } from './export/dpi'
 
 export type TSizeUnit = 'px' | 'in' | 'mm' | 'cm'
 
@@ -35,7 +35,7 @@ const PLACES: Record<TSizeUnit, number> = { px: 0, in: 2, mm: 1, cm: 2 }
 export function fromPx(px: number, unit: TSizeUnit): number {
   const places = PLACES[unit]
   const factor = 10 ** places
-  return Math.round((Number(px) || 0) / PX_PER_UNIT[unit] * factor) / factor
+  return Math.round(((Number(px) || 0) / PX_PER_UNIT[unit]) * factor) / factor
 }
 
 /** A measurement typed in `unit`, as the whole design pixels the store keeps. */
@@ -78,9 +78,7 @@ function matchPaper(widthPx: number, heightPx: number): TPaper | null {
   const height = fromPx(heightPx, 'mm')
   const short = Math.min(width, height)
   const long = Math.max(width, height)
-  return (
-    PAPERS.find((item) => Math.abs(item.mm[0] - short) <= PAPER_TOLERANCE && Math.abs(item.mm[1] - long) <= PAPER_TOLERANCE) ?? null
-  )
+  return PAPERS.find((item) => Math.abs(item.mm[0] - short) <= PAPER_TOLERANCE && Math.abs(item.mm[1] - long) <= PAPER_TOLERANCE) ?? null
 }
 
 /**
