@@ -156,6 +156,50 @@ by the picture picker, none of which know which store they are talking to. A
 `HostUpload` is `{ id, url, width, height, name }`; `url` is what goes into the
 design, so it has to keep working for as long as the design does.
 
+### Stock photos
+
+There is a fourth call, and it is optional:
+
+```ts
+async importUrl(url: string, meta: HostImportMeta): Promise<HostUpload>
+```
+
+The Photos panel and the background library hand back `images.unsplash.com`
+addresses, and without this the editor writes them straight into the design.
+That is fine for a tool whose work lives in one browser and wrong for a planner:
+a design has to still look like itself in a year, and Unsplash can change a URL
+or a key can be revoked. Given `importUrl`, every _remote_ picture is fetched
+into your store first and the design points at the copy.
+
+`meta` carries what the panel knows — `name`, `width`, `height`, and an
+`attribution` of `{ photographer, profileUrl, photoUrl }`. Keep the attribution:
+Unsplash's terms ask for it, and once the URL has been replaced the studio has
+nowhere to put it.
+
+Only remote pictures go through it. An upload is already yours, a sticker is
+markup rather than an address, and a data URL is the bytes themselves. The
+editor shows its loading overlay while the call runs, and if it rejects it says
+so and **does not place the picture** — falling back to the remote address would
+put in exactly the thing you refused. Download tracking still fires either way,
+because Unsplash counts the picture being used and it is being used. The copy
+also turns up under "My uploads", since it is one of the school's pictures now.
+
+## A brand kit somebody else looks after
+
+```tsx
+<DesignStudio brand={kit} brandReadOnly={!user.isAdmin} />
+```
+
+The panel shows the kit and will not change it. What it does _with_ the kit is
+untouched, because none of that changes the kit: Apply brand still applies, a
+colour still paints the selection, the crest still drops onto the page, a field
+still goes into a text box. What goes is replacing or removing the crest,
+editing or adding a colour, and the fonts and the written details.
+
+The guarantee is not the greying-out. `updateBrandKit` is the one door into the
+kit and it refuses outright, so a control somebody forgot to disable cannot get
+through it either.
+
 ## Driving it from outside
 
 ```tsx

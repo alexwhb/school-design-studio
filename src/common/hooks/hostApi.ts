@@ -26,6 +26,24 @@ export type HostUpload = {
 }
 
 /**
+ * What is known about a stock photograph as it is taken into the host's store.
+ *
+ * The attribution is passed on because Unsplash's terms ask for it and the host
+ * is the one that will still have the picture in a year; the studio has nowhere
+ * to keep it once the URL has been replaced.
+ */
+export type HostImportMeta = {
+  name?: string
+  width?: number
+  height?: number
+  attribution?: {
+    photographer?: string
+    profileUrl?: string
+    photoUrl?: string
+  }
+}
+
+/**
  * The host's file store, standing in for the browser's.
  *
  * Three calls, because that is all the Uploads section does: list what is
@@ -37,6 +55,22 @@ export type HostUploads = {
   list(): Promise<HostUpload[]>
   upload(file: File): Promise<HostUpload>
   remove(id: string): Promise<void>
+  /**
+   * Takes a copy of a picture that lives on somebody else's server.
+   *
+   * The Photos panel and the background library place `images.unsplash.com`
+   * addresses straight into a design, which is fine for an editor that keeps
+   * its work in a browser and wrong for a planner: a design has to still look
+   * like itself in a year, and Unsplash can change a URL or a key can be
+   * revoked. Given this, a stock photograph is fetched into the host's own
+   * store first and the design points at the copy.
+   *
+   * Only remote pictures go through it. An upload is already the host's, and a
+   * sticker is markup rather than an address.
+   *
+   * Left out, nothing changes: the design points at Unsplash, as it always did.
+   */
+  importUrl?(url: string, meta: HostImportMeta): Promise<HostUpload>
 }
 
 /**

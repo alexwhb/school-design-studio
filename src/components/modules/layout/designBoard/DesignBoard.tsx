@@ -218,7 +218,11 @@ export default function DesignBoard({ pageDesignCanvasId, padding, renderDPage, 
     if (!type) {
       return
     }
-    setting = await setWidgetData(type, item, setting)
+    const built = await setWidgetData(type, item, setting)
+    // Null means the drop was abandoned — see `setWidgetData`. It has already
+    // said why, so there is nothing to add here.
+    if (!built) return
+    setting = built
     const canvasEl = document.getElementById('page-design-canvas')
     if (!canvasEl) return
     const lostX = e.x - canvasEl.getBoundingClientRect().left

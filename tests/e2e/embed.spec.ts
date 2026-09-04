@@ -487,3 +487,112 @@ test.describe('the markup allowlist', () => {
     await expect(page.locator('.ds-root #page-design-canvas b').first()).toHaveText('Open')
   })
 })
+
+/**
+ * A stock photograph is on somebody else's server, and a design that points at
+ * one stops looking like itself the day that server changes its mind. A host
+ * that says it can take a copy gets asked to.
+ */
+test.describe('stock photos and the host’s store', () => {
+  /** The first library tile whose picture lives somewhere else. */
+  async function remoteTile(page: import('@playwright/test').Page) {
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Photos' }).click()
+    const tile = page.locator('.ds-root .photo-list-wrap__library img[src^="https://"]').first()
+    await tile.waitFor({ state: 'attached', timeout: 30_000 })
+    return tile
+  }
+
+  test('placing one calls importUrl, and the widget ends up on the host’s copy', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const tile = await remoteTile(page)
+    const remote = await tile.getAttribute('src')
+    expect(remote).toMatch(/^https:\/\//)
+
+    await tile.click()
+    await page.waitForFunction(() => ((window as any).__imported || []).length > 0, undefined, { timeout: 30_000 })
+
+    // The host was asked for the photo it was showing, with what is known about it.
+    const asked = await page.evaluate(() => (window as any).__imported[0])
+    expect(asked.url).toMatch(/^https:\/\//)
+    expect(asked.meta).toHaveProperty('width')
+    expect(asked.meta).toHaveProperty('attribution')
+
+    // And the design points at what came back, not at the library.
+    await page.waitForFunction(() => (window as any).__studio.current.getDocument().layouts[0].layers.some((layer: any) => layer.type === 'w-image'), undefined, { timeout: 15_000 })
+    const placed = await page.evaluate(() => {
+      const image = (window as any).__studio.current
+        .getDocument()
+        .layouts[0].layers.filter((layer: any) => layer.type === 'w-image')
+        .pop()
+      return { url: image.imgUrl, width: image.width, height: image.height }
+    })
+    expect(placed.url).not.toMatch(/^https?:\/\//)
+    expect(placed.url).toContain('/covers/')
+    expect(placed.width).toBeGreaterThan(0)
+
+    // The copy is one of the school's pictures now, so it is in My uploads.
+    await expect(page.locator(`.ds-root .photo-list-wrap__uploads img[src="${placed.url}"]`).first()).toBeVisible()
+  })
+
+  test('a picture the host already has is not imported again', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Photos' }).click()
+    // The demo's store starts with one picture, at a path of the host's own.
+    await page.locator('.ds-root .photo-list-wrap__uploads img[src="/covers/template-101.png"]').first().click()
+    await page.waitForTimeout(1500)
+    expect(await page.evaluate(() => ((window as any).__imported || []).length)).toBe(0)
+  })
+
+  test('a host with no importUrl places the library’s own address, as before', async ({ page }) => {
+    // No ?doc, so no uploads adapter at all: the standalone behaviour.
+    await openEditor(page)
+    const tile = await remoteTile(page)
+    await tile.click()
+    await page.waitForTimeout(2500)
+    // The tile shows the thumbnail and the page gets the full-size picture, so
+    // the two are different addresses on the same server. What matters is that
+    // it is still that server's, and that nothing was asked of the host.
+    const placed = await page.locator('.ds-root #page-design-canvas .w-image img').first().getAttribute('src')
+    expect(placed).toMatch(/^https:\/\/(images|plus)\.unsplash\.com\//)
+    expect(await page.evaluate(() => ((window as any).__imported || []).length)).toBe(0)
+  })
+})
+
+test.describe('a brand kit somebody else looks after', () => {
+  test('shows the kit, and will not let this reader change it', async ({ page }) => {
+    await openEditor(page, 'brand=1&readonly=1')
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Brand' }).click()
+    await page.waitForTimeout(600)
+
+    // The kit is there to look at.
+    await expect(page.locator('.ds-root #brand-name')).toHaveValue('Riverbend Academy')
+    await expect(page.locator('.ds-root .brand-readonly')).toHaveText('Only an administrator can change the school’s brand.')
+
+    // Every way of changing it is gone or dead.
+    await expect(page.locator('.ds-root #brand-name')).toBeDisabled()
+    await expect(page.locator('.ds-root .brand-swatch__edit')).toHaveCount(0)
+    await expect(page.locator('.ds-root .brand-swatch--add')).toHaveCount(0)
+    await expect(page.locator('.ds-root .brand-upload')).toHaveCount(0)
+
+    // That the one writer refuses — which is what makes this a rule rather than
+    // a look — is `tests/unit/brandReadOnly.test.ts`. It cannot be checked from
+    // here: the editor's module graph is inside the built bundle, and importing
+    // the source file over Vite would give a second copy with its own state.
+
+    // What the panel does *with* the kit still works: it changes the design,
+    // not the school.
+    await expect(page.locator('.ds-root .brand-card__apply')).toBeEnabled()
+    await expect(page.locator('.ds-root .brand-token').first()).toBeEnabled()
+  })
+
+  test('without the prop the panel is editable, as it always was', async ({ page }) => {
+    await openEditor(page, 'brand=1')
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Brand' }).click()
+    await page.waitForTimeout(600)
+    await expect(page.locator('.ds-root .brand-readonly')).toHaveCount(0)
+    await expect(page.locator('.ds-root #brand-name')).toBeEnabled()
+    await expect(page.locator('.ds-root .brand-upload')).toHaveCount(1)
+  })
+})

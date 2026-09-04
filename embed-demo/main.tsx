@@ -20,12 +20,15 @@ import '../dist-embed/design-studio.css'
  *   ?brand=1     the host keeps the school's brand kit
  *   ?doc=1       the host keeps the design, with Save and the restore offer off
  *   ?ai=1        the host supplies the AI panel
+ *   ?readonly=1  the brand kit is shown but cannot be changed here
  *   ?kind=poster Letter portrait, poster templates, no presenter
  */
 const params = new URLSearchParams(window.location.search)
 const HOSTS_THE_KIT = params.get('brand') === '1'
 const HOSTS_THE_DOC = params.get('doc') === '1'
 const HAS_ASSISTANT = params.get('ai') === '1'
+/** The school's brand, shown but not editable — what a non-administrator sees. */
+const BRAND_LOCKED = params.get('readonly') === '1'
 /** Left out entirely unless asked for, which is the standalone editor's case. */
 const KIND = params.has('kind') ? (params.get('kind') === 'poster' ? 'poster' : 'slides') : undefined
 
@@ -83,6 +86,9 @@ const HOST_DOC = composeDeck(
  * A file store that is not IndexedDB, kept in memory. Enough to show that the
  * Uploads section reads and writes the host's rather than the browser's.
  */
+/** Every importUrl call, so a test can see what the host was asked for. */
+const imported: { url: string; meta: Record<string, unknown> }[] = []
+
 function makeUploads() {
   let store: { id: string; url: string; width: number; height: number; name: string }[] = [{ id: 'host-1', url: '/covers/template-101.png', width: 1275, height: 1650, name: 'Field Day poster.png' }]
   return {
@@ -101,6 +107,28 @@ function makeUploads() {
     },
     async remove(id: string) {
       store = store.filter((item) => item.id !== id)
+    },
+    /**
+     * Stands in for a planner taking its own copy of a stock photograph.
+     *
+     * A real one would fetch the bytes on the server and put them in the
+     * school's file store; this only records what it was asked for and hands
+     * back an address of its own, which is enough to show that the design ends
+     * up pointing at the host rather than at Unsplash.
+     */
+    async importUrl(url: string, meta: Record<string, unknown>) {
+      imported.push({ url, meta })
+      ;(window as any).__imported = imported
+      await new Promise((resolve) => setTimeout(resolve, 150))
+      const item = {
+        id: `host-import-${imported.length}`,
+        url: `/covers/template-10${(imported.length % 9) + 1}.png`,
+        width: Number(meta.width) || 1275,
+        height: Number(meta.height) || 1650,
+        name: String(meta.name || 'Stock photo'),
+      }
+      store = [item, ...store]
+      return item
     },
   }
 }
@@ -199,6 +227,7 @@ function Host() {
             appName="Design Studio"
             {...(KIND ? { documentKind: KIND } : null)}
             {...(HOSTS_THE_KIT ? { brand, onBrandChange: setBrand } : null)}
+            {...(BRAND_LOCKED ? { brandReadOnly: true } : null)}
             {...(HOSTS_THE_DOC
               ? {
                   document: HOST_DOC,

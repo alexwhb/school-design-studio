@@ -30,7 +30,7 @@
  */
 
 import { run, STORES } from './localDb'
-import type { HostUploads } from '@/common/hooks/hostApi'
+import type { HostImportMeta, HostUploads } from '@/common/hooks/hostApi'
 
 export type LocalUpload = {
   id: string
@@ -134,6 +134,23 @@ export function setHostUploads(uploads: HostUploads | null) {
 
 export function hostKeepsUploads(): boolean {
   return host !== null
+}
+
+/** Whether the host will take a copy of a picture that lives somewhere else. */
+export function hostImportsUrls(): boolean {
+  return typeof host?.importUrl === 'function'
+}
+
+/**
+ * Asks the host to take a copy of a remote picture and hands back its own.
+ *
+ * Rejects when it cannot, rather than answering with the address it was given:
+ * a caller that fell back would put the very URL the host refuses into the
+ * design the host is about to store.
+ */
+export async function importRemoteImage(url: string, meta: HostImportMeta): Promise<LocalUpload> {
+  if (!host?.importUrl) throw new Error('This app cannot save pictures from the web.')
+  return fromHost(await host.importUrl(url, meta))
 }
 
 /**

@@ -1605,9 +1605,12 @@ the browser, one prop each:
   the planner makes. The pill above the canvas follows the promise.
 - **Uploads.** `uploads`, three calls against the planner's own file store,
   scoped by school. Without it a picture uploaded on the staffroom machine is
-  not on the teacher's laptop.
+  not on the teacher's laptop. A fourth, `importUrl`, takes a copy of a stock
+  photograph as it is placed, so a design does not end up pointing at somebody
+  else's server.
 - **The brand kit.** `brand` and `onBrandChange`, which the planner already
-  keeps per school.
+  keeps per school; `brandReadOnly` shows it to everyone and lets only an
+  administrator change it.
 
 And two the editor never had: `assistant`, a panel of the planner's own behind
 an "AI" tab in the rail, and a `ref` that lets it read the design, change it,
