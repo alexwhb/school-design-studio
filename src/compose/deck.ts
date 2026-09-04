@@ -21,7 +21,7 @@ import type { Theme } from './themes'
 import { slideTheme } from './themes'
 import { fitText, heightOf } from './textFit'
 import { imageWidget, markup, page, rectWidget, textWidget } from './widgets'
-import { applyBrand } from './brand'
+import { applyBrand, fieldFiller } from './brand'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
 const M = 110
@@ -167,8 +167,9 @@ function bulletColumn(theme: Theme, bullets: OutlineBullet[], box: Box, size: nu
 }
 
 /** The hairline and the school's name along the bottom of every slide. */
-function footer(theme: Theme): TdWidgetData[] {
+function footer(theme: Theme, fill: (text: string) => string): TdWidgetData[] {
   const rule = rectWidget(M, FOOTER, CONTENT, 2, theme.rule)
+  const line = fill('{{school.name|upper}}')
   const name = textWidget({
     left: M,
     top: FOOTER + 22,
@@ -181,12 +182,12 @@ function footer(theme: Theme): TdWidgetData[] {
     font: theme.eyebrow,
     brandRole: 'keep',
     label: 'school.name',
-    text: '{{school.name|upper}}',
+    text: markup(line),
   })
   return [rule, name]
 }
 
-function titleSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
+function titleSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[] {
   const layers: TdWidgetData[] = []
   const brow = eyebrow(theme, slide.kicker, 110)
   if (brow) layers.push(brow.widget)
@@ -226,10 +227,10 @@ function titleSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
     },
   )
   if (sub) layers.push(sub.widget)
-  return [...layers, ...footer(theme)]
+  return [...layers, ...footer(theme, fill)]
 }
 
-function statementSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
+function statementSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[] {
   const layers: TdWidgetData[] = [rectWidget(M, 250, 10, 420, theme.accent)]
   const left = M + 70
   const width = CONTENT - 70
@@ -270,7 +271,7 @@ function statementSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
     },
   )
   if (sub) layers.push(sub.widget)
-  return [...layers, ...footer(theme)]
+  return [...layers, ...footer(theme, fill)]
 }
 
 /** The heading block every content-shaped slide starts with. Returns its floor. */
@@ -301,7 +302,7 @@ function heading(theme: Theme, slide: DeckSlide, layers: TdWidgetData[], width =
   return top + 40
 }
 
-function contentSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
+function contentSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[] {
   const layers: TdWidgetData[] = []
   let top = heading(theme, slide, layers)
 
@@ -344,10 +345,10 @@ function contentSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
     )
     if (words) layers.push(words.widget)
   }
-  return [...layers, ...footer(theme)]
+  return [...layers, ...footer(theme, fill)]
 }
 
-function twoColumnSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
+function twoColumnSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[] {
   const layers: TdWidgetData[] = []
   const top = heading(theme, slide, layers)
   const gutter = 80
@@ -381,10 +382,10 @@ function twoColumnSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
     }
     layers.push(...bulletColumn(theme, side.bullets, { left: side.left, top: y, width: column, height: FOOTER - 40 - y }, 28))
   }
-  return [...layers, ...footer(theme)]
+  return [...layers, ...footer(theme, fill)]
 }
 
-function mediaSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
+function mediaSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[] {
   const layers: TdWidgetData[] = []
   const column = Math.round(CONTENT * 0.46)
   const slot = { left: M + column + 70, top: 110, width: CONTENT - column - 70, height: FOOTER - 150 }
@@ -436,10 +437,13 @@ function mediaSlide(theme: Theme, slide: DeckSlide): TdWidgetData[] {
   if (sub) layers.push(sub.widget)
 
   layers.push(...bulletColumn(theme, slide.bullets, { left: M, top, width: column, height: FOOTER - 40 - top }, 26))
-  return [...layers, ...footer(theme)]
+  return [...layers, ...footer(theme, fill)]
 }
 
-const LAYOUTS: Record<DeckSlide['layout'], (theme: Theme, slide: DeckSlide) => TdWidgetData[]> = {
+/** Fills a `{{school.*}}` line before it is measured. See `fieldFiller`. */
+type Fill = (text: string) => string
+
+const LAYOUTS: Record<DeckSlide['layout'], (theme: Theme, slide: DeckSlide, fill: Fill) => TdWidgetData[]> = {
   title: titleSlide,
   statement: statementSlide,
   content: contentSlide,
@@ -448,16 +452,17 @@ const LAYOUTS: Record<DeckSlide['layout'], (theme: Theme, slide: DeckSlide) => T
 }
 
 /** One slide, as a page of the design. Exported so `addPage` can make one. */
-export function composeSlide(slide: DeckSlide, theme: Theme): TdLayout {
+export function composeSlide(slide: DeckSlide, theme: Theme, fill: Fill = (text) => text): TdLayout {
   const draw = LAYOUTS[slide.layout] || contentSlide
   const name = slide.title?.trim() || slide.kicker?.trim() || 'Slide'
-  return { global: page(name.slice(0, 60), W, H, theme.paper, slide.notes), layers: draw(theme, slide) }
+  return { global: page(name.slice(0, 60), W, H, theme.paper, slide.notes), layers: draw(theme, slide, fill) }
 }
 
 export function composeDeck(outline: DeckOutline, options: ComposeOptions = {}): DesignDocument {
   const theme = slideTheme(options.theme)
+  const fill = fieldFiller(options.brand)
   const slides = Array.isArray(outline?.slides) ? outline.slides : []
-  const layouts = (slides.length ? slides : [blankSlide('title')]).map((slide) => composeSlide({ ...blankSlide(slide?.layout || 'content'), ...slide }, theme))
+  const layouts = (slides.length ? slides : [blankSlide('title')]).map((slide) => composeSlide({ ...blankSlide(slide?.layout || 'content'), ...slide }, theme, fill))
   const doc: DesignDocument = { format: 'design-studio/v1', title: String(outline?.title || 'Untitled deck'), layouts }
   // The kit goes on last, over a finished deck, so that every page's footer
   // reads the school's name and the theme's one accent becomes the school's

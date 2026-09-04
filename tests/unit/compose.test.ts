@@ -329,6 +329,37 @@ describe('applyBrand', () => {
     expect(overflowing(doc)).toEqual([])
   })
 
+  it('measures the footer against the name that will be in it, not the field', () => {
+    // A footer laid out around `{{school.name}}` and only then filled with a
+    // long one is a footer that fits the arithmetic and runs off the printed
+    // page. So the field is filled before the line is measured, and the box the
+    // composer reserved is a box the words actually need.
+    const long: TBrandKit = { ...KIT, name: 'Riverbend Academy Middle and Upper School Foundation Trust', phone: '(555) 013-8800 ext. 2214' }
+    const sign = { layout: 'notice' as const, icon: 'bell', eyebrow: 'Please note', badge: null, head: 'Pick-up moves', sub: 'From Monday.', foot: null }
+    const outline = { orientation: 'PORTRAIT' as const, size: 'letter' as const, signs: [sign] }
+    const footerOf = (doc: DesignDocument) => doc.layouts[0].layers.find((layer) => layer.label === 'footer') as TdWidgetData
+
+    const short = footerOf(composePoster(outline, { brand: KIT }))
+    const wide = footerOf(composePoster(outline, { brand: long }))
+    expect(short.text).toContain('Riverbend Academy')
+    expect(wide.text).toContain('Riverbend Academy Middle')
+    // The long one needed a second line, or smaller type. Either way the box it
+    // was given is not the box the short name got.
+    expect(wide.height > short.height || Number((wide as any).fontSize) < Number((short as any).fontSize)).toBe(true)
+
+    for (const theme of SLIDE_THEME_KEYS) {
+      expect(overflowing(composeDeck(OUTLINE, { theme, brand: long })), `${theme} overflowed`).toEqual([])
+    }
+    for (const theme of POSTER_PACK_KEYS) {
+      expect(overflowing(composePoster(outline, { theme, brand: long })), `${theme} overflowed`).toEqual([])
+    }
+  })
+
+  it('leaves a field standing when there is no kit to fill it', () => {
+    const doc = composePoster({ orientation: 'PORTRAIT', size: 'letter', signs: [{ layout: 'icon', icon: 'bus', eyebrow: null, badge: null, head: 'Bus bay', sub: null, foot: null }] })
+    expect(JSON.stringify(describeDocument(doc))).toContain('{{school.name}}')
+  })
+
   it('applies through applyOps too, and refuses without a kit', () => {
     const doc = composePoster({ orientation: 'PORTRAIT', size: 'letter', signs: [{ layout: 'notice', icon: null, eyebrow: null, badge: null, head: 'Pick-up moves', sub: 'From Monday', foot: null }] })
     const { doc: branded, rejected } = applyOps(doc, [{ op: 'applyBrand' }], { brand: KIT })

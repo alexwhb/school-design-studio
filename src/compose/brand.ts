@@ -11,8 +11,23 @@
  * quietly rewrote it would be a function nobody could call twice.
  */
 import { applyBrandToLayouts } from '@/store/widget/brandCore'
-import { normaliseBrandKit, type TBrandKit } from '@/common/methods/brandKitCore'
+import { brandResolver, normaliseBrandKit, type TBrandKit } from '@/common/methods/brandKitCore'
+import { fillMarkup } from '@/utils/mergeFieldsCore'
 import type { DesignDocument } from './types'
+
+/**
+ * What a line carrying `{{school.*}}` will actually read once the kit fills it.
+ *
+ * Needed *before* the line is measured, not after. A footer laid out around
+ * `{{school.name}}` and then filled with "Riverbend Academy Middle School" is a
+ * footer that fits in the composer's arithmetic and runs off the page in print.
+ * With no kit the field is left standing, which is what an author should see.
+ */
+export function fieldFiller(brand?: TBrandKit): (text: string) => string {
+  if (!brand) return (text) => text
+  const resolve = brandResolver(normaliseBrandKit(brand))
+  return (text) => fillMarkup(text, resolve)
+}
 
 export function applyBrand(doc: DesignDocument, brand: TBrandKit): DesignDocument {
   const next = JSON.parse(JSON.stringify(doc)) as DesignDocument

@@ -13,7 +13,7 @@
  * one. Everything an op does not name is left exactly as it was.
  */
 import type { DesignDocument, DesignOp, RejectedOp } from './types'
-import { applyBrand } from './brand'
+import { applyBrand, fieldFiller } from './brand'
 import { composeSlide, blankSlide, DECK_PAGE_KINDS } from './deck'
 import { composeSign, blankSign, SIGN_PAGE_KINDS } from './poster'
 import { slideTheme, posterPack } from './themes'
@@ -90,7 +90,7 @@ function buildPage(doc: DesignDocument, kind: string, fields: Record<string, str
       sub: fields.sub || null,
       foot: fields.foot || null,
     }
-    return brandPage(composeSign(sign, posterPack(fields.theme), size), brand)
+    return brandPage(composeSign(sign, posterPack(fields.theme), size, fieldFiller(brand)), brand)
   }
 
   if (!DECK_PAGE_KINDS.includes(kind as never)) return null
@@ -109,7 +109,7 @@ function buildPage(doc: DesignDocument, kind: string, fields: Record<string, str
       .filter(Boolean)
       .map((text) => ({ text, sub: [] as string[] })),
   }
-  return brandPage(composeSlide(slide, slideTheme(fields.theme)), brand)
+  return brandPage(composeSlide(slide, slideTheme(fields.theme), fieldFiller(brand)), brand)
 }
 
 export function applyOps(doc: DesignDocument, ops: DesignOp[], options: { brand?: TBrandKit } = {}): { doc: DesignDocument; rejected: RejectedOp[] } {

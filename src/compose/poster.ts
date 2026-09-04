@@ -16,7 +16,7 @@ import { posterPack } from './themes'
 import { fitText, heightOf } from './textFit'
 import { hasIcon, iconWidget } from './icons'
 import { markup, page, rectWidget, textWidget } from './widgets'
-import { applyBrand } from './brand'
+import { applyBrand, fieldFiller } from './brand'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
 /** The paper a sign can be printed on, in design pixels at 150 DPI. */
@@ -86,8 +86,11 @@ function place(text: string | null | undefined, box: { left: number; top: number
   }
 }
 
+/** Fills a `{{school.*}}` line before it is measured. See `fieldFiller`. */
+type Fill = (text: string) => string
+
 /** The band across the top, and the school's line along the bottom. */
-function furniture(theme: Theme, frame: Frame, sign: PosterSign, onDark: boolean): TdWidgetData[] {
+function furniture(theme: Theme, frame: Frame, sign: PosterSign, onDark: boolean, fill: Fill): TdWidgetData[] {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
   const soft = onDark ? theme.paper : theme.muted
@@ -113,7 +116,7 @@ function furniture(theme: Theme, frame: Frame, sign: PosterSign, onDark: boolean
   const footTop = Math.round(H * 0.9)
   layers.push(rectWidget(M, footTop, content, 3, onDark ? theme.paper : theme.rule))
   const foot = place(
-    sign.foot || '{{school.name}} · {{school.phone}}',
+    fill(sign.foot || '{{school.name}} · {{school.phone}}'),
     { left: M, top: footTop + Math.round(H * 0.018), width: content, height: Math.round(H * 0.05) },
     {
       font: theme.eyebrow,
@@ -134,7 +137,7 @@ function headBox(frame: Frame, top: number, height: number) {
   return { left: frame.M, top: Math.round(top), width: frame.content, height: Math.round(height) }
 }
 
-function directionSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: TdWidgetData[]; background: string } {
+function directionSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
   layers.push(rectWidget(0, 0, W, Math.round(H * 0.055), theme.accent))
@@ -171,10 +174,10 @@ function directionSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: 
     label: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, false)], background: theme.paper }
+  return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
 }
 
-function iconSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: TdWidgetData[]; background: string } {
+function iconSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
   const size = Math.round(W * 0.34)
@@ -211,11 +214,11 @@ function iconSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: TdWid
     label: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, false)], background: theme.paper }
+  return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
 }
 
 /** The one that is set on the school's colour rather than on paper. */
-function statementSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: TdWidgetData[]; background: string } {
+function statementSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
   const { W, H } = frame
   const layers: TdWidgetData[] = []
 
@@ -244,10 +247,10 @@ function statementSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: 
     label: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, true)], background: theme.accent }
+  return { layers: [...layers, ...furniture(theme, frame, sign, true, fill)], background: theme.accent }
 }
 
-function numberSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: TdWidgetData[]; background: string } {
+function numberSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
 
@@ -294,11 +297,11 @@ function numberSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: TdW
     label: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, false)], background: theme.paper }
+  return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
 }
 
 /** The one meant to be read standing still: left-aligned, and room for prose. */
-function noticeSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: TdWidgetData[]; background: string } {
+function noticeSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
   layers.push(rectWidget(M, Math.round(H * 0.135), Math.round(content * 0.18), 10, theme.accent))
@@ -334,10 +337,10 @@ function noticeSign(theme: Theme, frame: Frame, sign: PosterSign): { layers: TdW
     label: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, false)], background: theme.paper }
+  return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
 }
 
-const LAYOUTS: Record<PosterSign['layout'], (theme: Theme, frame: Frame, sign: PosterSign) => { layers: TdWidgetData[]; background: string }> = {
+const LAYOUTS: Record<PosterSign['layout'], (theme: Theme, frame: Frame, sign: PosterSign, fill: Fill) => { layers: TdWidgetData[]; background: string }> = {
   direction: directionSign,
   icon: iconSign,
   statement: statementSign,
@@ -346,19 +349,20 @@ const LAYOUTS: Record<PosterSign['layout'], (theme: Theme, frame: Frame, sign: P
 }
 
 /** One sign, as a page. Exported so `addPage` can make one. */
-export function composeSign(sign: PosterSign, theme: Theme, size: { width: number; height: number }): TdLayout {
+export function composeSign(sign: PosterSign, theme: Theme, size: { width: number; height: number }, fill: Fill = (text) => text): TdLayout {
   const frame = frameOf(size.width, size.height)
   const draw = LAYOUTS[sign.layout] || noticeSign
-  const { layers, background } = draw(theme, frame, sign)
+  const { layers, background } = draw(theme, frame, sign, fill)
   const name = sign.head?.trim() || sign.eyebrow?.trim() || 'Sign'
   return { global: page(name.slice(0, 60), size.width, size.height, background), layers }
 }
 
 export function composePoster(outline: PosterOutline, options: ComposeOptions = {}): DesignDocument {
   const theme = posterPack(options.theme)
+  const fill = fieldFiller(options.brand)
   const size = pageSize(outline || { orientation: 'PORTRAIT', size: 'letter' })
   const signs = Array.isArray(outline?.signs) ? outline.signs : []
-  const layouts = (signs.length ? signs : [blankSign('notice')]).map((sign) => composeSign({ ...blankSign(sign?.layout || 'notice'), ...sign }, theme, size))
+  const layouts = (signs.length ? signs : [blankSign('notice')]).map((sign) => composeSign({ ...blankSign(sign?.layout || 'notice'), ...sign }, theme, size, fill))
   const doc: DesignDocument = { format: 'design-studio/v1', title: signs[0]?.head?.trim() || 'Untitled sign', layouts }
   return options.brand ? applyBrand(doc, options.brand) : doc
 }
