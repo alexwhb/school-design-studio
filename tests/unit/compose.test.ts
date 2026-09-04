@@ -223,6 +223,31 @@ describe('describeDocument', () => {
     expect(view.pages[4].images[0].id).toMatch(/^[0-9a-f]{12}$/)
   })
 
+  it('never puts a data URL in front of a model, from anywhere a design can hold one', () => {
+    // This view is what goes into a prompt. A page carrying a photograph, a
+    // crest and a cut-out background is megabytes of base64 that say nothing
+    // about what the page means, and sending them would cost real money on
+    // every refine. So every place a design can keep image bytes is filled
+    // here, and none of them may come out the other side.
+    const bytes = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+    const doc = composeDeck(OUTLINE)
+    const page = doc.layouts[0]
+    page.global.backgroundImage = bytes
+    page.layers.push({ ...(doc.layouts[4].layers.find((layer) => layer.type === 'w-image') as TdWidgetData), uuid: 'aaaaaaaaaaaa', imgUrl: bytes, originalImgUrl: bytes })
+    // A text box whose markup carries a picture: the words are what is read.
+    const heading = page.layers.find((layer) => layer.role === 'heading') as TdWidgetData
+    heading.text = `Open <img src="${bytes}"> House`
+
+    const serialised = JSON.stringify(describeDocument(doc))
+    expect(serialised).not.toContain('data:')
+    expect(serialised).not.toContain('base64')
+    expect(serialised).not.toContain('iVBORw0')
+    // And the widget is still reported, by id — it is the bytes that are left
+    // out, not the picture's existence.
+    expect(describeDocument(doc).pages[0].images.some((image) => image.id === 'aaaaaaaaaaaa')).toBe(true)
+    expect(describeDocument(doc).pages[0].texts.find((text) => text.id === heading.uuid)?.text).toBe('Open  House')
+  })
+
   it('reads the words rather than the markup', () => {
     const doc = composeDeck({ title: 'x', slides: [slide({ layout: 'title', title: 'Bake sale & book fair' })] })
     const heading = describeDocument(doc).pages[0].texts.find((text) => text.role === 'heading')

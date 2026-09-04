@@ -87,7 +87,20 @@ export type ComposeOptions = {
   brand?: TBrandKit
 }
 
-export type DesignOp = { op: 'setText'; id: string; text: string } | { op: 'setImage'; id: string; url: string; width: number; height: number } | { op: 'addPage'; after: number; kind: string; fields: Record<string, string> } | { op: 'removePage'; index: number } | { op: 'movePage'; from: number; to: number } | { op: 'applyBrand' }
+export type DesignOp =
+  /** Words. Always escaped — `<b>` lands on the page as the characters `<b>`. */
+  | { op: 'setText'; id: string; text: string }
+  /**
+   * Markup, for a host round-tripping the editor's own output. It goes through
+   * the allowlist first, so what is stored is what a design may hold whatever
+   * was sent. Anything that came from a person or a model wants `setText`.
+   */
+  | { op: 'setMarkup'; id: string; html: string }
+  | { op: 'setImage'; id: string; url: string; width: number; height: number }
+  | { op: 'addPage'; after: number; kind: string; fields: Record<string, string> }
+  | { op: 'removePage'; index: number }
+  | { op: 'movePage'; from: number; to: number }
+  | { op: 'applyBrand' }
 
 export type RejectedOp = { op: DesignOp; reason: string }
 

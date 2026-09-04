@@ -231,6 +231,40 @@ rule reads the dark theme and the cream one. Only those eight files are bundled;
 importing the whole gallery to find twenty numbers would put three quarters of a
 megabyte of somebody else's artwork into the module.
 
+### What markup a design may hold
+
+```ts
+import { sanitizeMarkup } from 'design-studio/compose'
+
+const safe = sanitizeMarkup(widget.text)
+```
+
+A text widget's `text` is an HTML string, and a planner stores those and renders
+them back into other people's browsers. So call this on every `w-text.text` of
+every document you store. It is the one description of what may be in one:
+
+```
+b/strong   i/em   u   s/strike/del   span[style=color:…]   a[href]   br
+div/p/ul/ol/li
+```
+
+Everything else is read for its words and dropped — fonts, sizes, classes,
+tables, images, stylesheets, scripts. A colour comes out as `#rrggbb`, a link as
+an `http`, `https`, `mailto` or `tel` address, and a `javascript:` URL not at
+all.
+
+It is an allowlist by construction rather than a list of forbidden things. The
+markup is parsed into runs of text with a fixed handful of on-or-off styles, and
+then written back out: every run is escaped, and the only elements that can be
+emitted are the six above with the two attributes above. There is no branch on
+which an unexpected attribute survives, so there is no `onerror` to remember to
+block, and nothing here to keep up to date as new attacks are invented.
+
+It is the editor's own rule, not a second one. `richText.ts` in the browser and
+`compose/markup.ts` on a server share the allowlist and the writer, and differ
+only in how they parse; the e2e suite runs both over the same thirty-odd inputs
+and requires them to agree character for character.
+
 **Nothing overflows.** There is no font engine on a server, so text is measured
 from the shape of the letters and a factor per family, deliberately a few per
 cent pessimistic: guessing a line wider than it turns out to be costs a slightly
@@ -295,14 +329,23 @@ by construction.
 `react`, `react-dom` and the JSX runtime are external, so the host's copy of
 React is the only one on the page.
 
-**Transformers.js is external too.** Bundled, it put a 63 MB chunk in a package
-the host has to install for a button most designs never touch. It was already
-behind a dynamic import, and there are three other ways to have background
-removal — a host's own remover through `setBackgroundRemover`, a service through
-`config.BACKGROUND_REMOVAL_URL`, or `config.BACKGROUND_REMOVAL: false` to take
-the button away. So the one that costs 63 MB is now the one you opt into, by
-installing `@huggingface/transformers` yourself. Reached with nothing behind it,
-the button says the background could not be removed.
+**Transformers.js is external too, and invisible to your bundler.** Bundled, it
+put a 63 MB chunk in a package the host has to install for a button most designs
+never touch. It was already behind a dynamic import, and there are three other
+ways to have background removal — a host's own remover through
+`setBackgroundRemover`, a service through `config.BACKGROUND_REMOVAL_URL`, or
+`config.BACKGROUND_REMOVAL: false` to take the button away. So the one that
+costs 63 MB is the one you opt into, by installing `@huggingface/transformers`
+yourself. It is an optional peer, so npm neither installs it nor warns.
+
+Being external is not enough on its own. A literal `import('@huggingface/transformers')`
+in the shipped chunk is a static dependency as far as your bundler is concerned:
+esbuild fails the dev pre-bundle and Rollup fails the production build, and the
+app that does not use background removal is the one that will not start. So the
+specifier is held in a variable and the call carries `/* @vite-ignore */` and
+`/* webpackIgnore: true */`. A specifier a bundler cannot read is one it hands
+to the browser untouched, which is what this import is for. Reached with nothing
+behind it, the import rejects and the button says the library is not installed.
 
 ### Cutting a release
 

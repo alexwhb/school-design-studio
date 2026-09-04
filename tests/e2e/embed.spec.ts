@@ -425,3 +425,65 @@ test.describe('the host API', () => {
     await expect(page.locator('#host-changes')).toHaveText('Changes seen: 1', { timeout: 5000 })
   })
 })
+
+/**
+ * What markup a design may hold has to have one answer, and it is asked in two
+ * places: the editor sanitises in a browser with a DOM, and the planner
+ * sanitises on a server with none. They share the allowlist and the writer.
+ * These check that they also agree about what the markup said.
+ */
+test.describe('the markup allowlist', () => {
+  test('the server’s reader and the browser’s agree, character for character', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    const result = await page.evaluate(async () => {
+      // Vite serves both to the page; TypeScript here has no idea what a URL
+      // import resolves to, which is why the specifiers are held in variables.
+      const richUrl = '/src/utils/widgets/richText.ts'
+      const composeUrl = '/dist-embed/compose.js'
+      const rich = (await import(/* @vite-ignore */ richUrl)) as { sanitiseText: (html: string) => string }
+      const compose = (await import(/* @vite-ignore */ composeUrl)) as { sanitizeMarkup: (html: string) => string }
+      const cases = (window as any).__markupCases as string[]
+      const disagree: { input: string; dom: string; pure: string }[] = []
+      for (const input of cases) {
+        const dom = rich.sanitiseText(input)
+        const pure = compose.sanitizeMarkup(input)
+        if (dom !== pure) disagree.push({ input, dom, pure })
+      }
+      return { checked: cases.length, disagree }
+    })
+    expect(result.checked).toBeGreaterThan(30)
+    expect(result.disagree, JSON.stringify(result.disagree, null, 1)).toEqual([])
+  })
+
+  test('a setText that looks like markup lands on the page as words', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const shown = await page.evaluate(async () => {
+      const studio = (window as any).__studio.current
+      const heading = studio.getDocument().layouts[0].layers.find((layer: any) => layer.brandRole === 'heading')
+      studio.applyOps([{ op: 'setText', id: heading.uuid, text: '<img src=x onerror="window.__pwned = true">' }])
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      return { pwned: Boolean((window as any).__pwned), imgs: document.querySelectorAll('.ds-root #page-design-canvas img[src="x"]').length }
+    })
+    expect(shown.pwned).toBe(false)
+    expect(shown.imgs).toBe(0)
+    // The characters somebody sent are on the page, as characters.
+    await expect(page.locator('.ds-root #page-design-canvas')).toContainText('<img src=x onerror=')
+  })
+
+  test('a setMarkup keeps the bold and drops the script', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const text = await page.evaluate(async () => {
+      const studio = (window as any).__studio.current
+      const heading = studio.getDocument().layouts[0].layers.find((layer: any) => layer.brandRole === 'heading')
+      studio.applyOps([{ op: 'setMarkup', id: heading.uuid, html: '<b>Open</b> <script>window.__pwned2 = true</script>House' }])
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      const widget = studio.getDocument().layouts[0].layers.find((layer: any) => layer.uuid === heading.uuid)
+      return { held: widget.text, pwned: Boolean((window as any).__pwned2) }
+    })
+    expect(text.pwned).toBe(false)
+    expect(text.held).toBe('<b>Open</b> House')
+    await expect(page.locator('.ds-root #page-design-canvas b').first()).toHaveText('Open')
+  })
+})

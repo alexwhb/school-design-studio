@@ -19,6 +19,7 @@ import { composeSign, blankSign, SIGN_PAGE_KINDS } from './poster'
 import { slideTheme, posterPack } from './themes'
 import { kindOf } from './describe'
 import { markup } from './widgets'
+import { sanitizeMarkup } from './markup'
 import type { TBrandKit } from '@/common/methods/brandKitCore'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
@@ -41,20 +42,6 @@ function findWidget(doc: DesignDocument, id: string): TdWidgetData | null {
     }
   }
   return null
-}
-
-/**
- * The words a model wrote, as the markup a text widget holds.
- *
- * Plain text is what a model should be sending, so plain text is what is
- * assumed: it is escaped and its line breaks become `<br/>`. Markup that
- * arrives anyway is taken as markup, because a host round-tripping the editor's
- * own `getDocument()` output is holding real markup and re-escaping it would
- * turn a bold word into the characters `<b>`.
- */
-function asMarkup(text: string): string {
-  const value = String(text ?? '')
-  return /<\/?[a-z][^>]*>/i.test(value) ? value : markup(value)
 }
 
 /**
@@ -133,7 +120,27 @@ export function applyOps(doc: DesignDocument, ops: DesignOp[], options: { brand?
           rejected.push({ op, reason: `Widget ${op.id} is a ${widget.type}, which holds no text.` })
           break
         }
-        widget.text = asMarkup(op.text)
+        // Always escaped, never sniffed. This text comes from a model, and
+        // through a model from whatever a person typed at it, so a version that
+        // guessed "this looks like markup, pass it through" would be a version
+        // that stores `<img src=x onerror=…>` and renders it in every
+        // colleague's browser. A host that genuinely holds markup says so with
+        // `setMarkup`, which is a different word for a different thing.
+        widget.text = markup(op.text)
+        break
+      }
+
+      case 'setMarkup': {
+        const widget = findWidget(next, op.id)
+        if (!widget) {
+          rejected.push({ op, reason: `No widget with id ${op.id}.` })
+          break
+        }
+        if (widget.type !== 'w-text') {
+          rejected.push({ op, reason: `Widget ${op.id} is a ${widget.type}, which holds no text.` })
+          break
+        }
+        widget.text = sanitizeMarkup(String(op.html ?? ''), widget.listStyle as never)
         break
       }
 

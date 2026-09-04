@@ -53,6 +53,40 @@ const BLOCK = /^(ADDRESS|ARTICLE|BLOCKQUOTE|DIV|DL|DD|DT|FOOTER|H[1-6]|HEADER|LI
 const UNDRAWN = /^(HEAD|LINK|META|NOSCRIPT|SCRIPT|STYLE|TEMPLATE|TITLE)$/
 
 /**
+ * The little of a DOM node the reader below actually touches.
+ *
+ * Named so that the reader can be run over a tree that is not the browser's.
+ * `design-studio/compose` sanitises stored markup on a server, where there is
+ * no DOM at all, and a second reader written to match this one would be a
+ * second opinion about what the markup may be — which is exactly what this
+ * module exists to stop there being. So the parser is swappable and the
+ * reader is not. See `src/compose/markup.ts`.
+ */
+export type TReadStyle = {
+  length?: number
+  color?: string
+  fontWeight?: string
+  fontStyle?: string
+  textDecorationLine?: string
+  textDecoration?: string
+}
+
+export type TReadNode = {
+  nodeType: number
+  data?: string
+  tagName?: string
+  childNodes: ArrayLike<TReadNode>
+  nextSibling: TReadNode | null
+  parentNode: TReadNode | null
+  getAttribute?: (name: string) => string | null
+  style?: TReadStyle | null
+}
+
+// Spelled out rather than read off `Node`, which does not exist on a server.
+const TEXT_NODE = 3
+const ELEMENT_NODE = 1
+
+/**
  * Markup parsed where it cannot do anything: a document with no browsing
  * context, so an <img> in a pasted design fetches nothing and a <script> is
  * inert markup rather than code. Setting innerHTML on a detached div does not
@@ -60,11 +94,9 @@ const UNDRAWN = /^(HEAD|LINK|META|NOSCRIPT|SCRIPT|STYLE|TEMPLATE|TITLE)$/
  */
 const parser = typeof DOMParser === 'undefined' ? null : new DOMParser()
 
-function parse(html: string): HTMLElement {
-  if (parser) return parser.parseFromString(`<body>${html}`, 'text/html').body
-  const root = document.createElement('div')
-  root.innerHTML = html
-  return root
+function parse(html: string): TReadNode {
+  const root = parser ? parser.parseFromString(`<body>${html}`, 'text/html').body : Object.assign(document.createElement('div'), { innerHTML: html })
+  return root as unknown as TReadNode
 }
 
 const ESCAPES: Record<string, string> = {
@@ -153,7 +185,7 @@ function sameFormat(a: TFormat, b: TFormat): boolean {
 }
 
 /** The format an element adds to whatever it is inside. */
-function formatOf(el: HTMLElement, inherited: TFormat): TFormat {
+function formatOf(el: TReadNode, inherited: TFormat): TFormat {
   const next: TFormat = { ...inherited }
   switch (el.tagName) {
     case 'B':
@@ -173,12 +205,12 @@ function formatOf(el: HTMLElement, inherited: TFormat): TFormat {
       next.strike = true
       break
     case 'A': {
-      const href = normaliseHref(el.getAttribute('href'))
+      const href = normaliseHref(el.getAttribute?.('href'))
       if (href) next.href = href
       break
     }
     case 'FONT': {
-      const color = normaliseColor(el.getAttribute('color'))
+      const color = normaliseColor(el.getAttribute?.('color'))
       if (color) next.color = color
       break
     }
@@ -194,7 +226,7 @@ function formatOf(el: HTMLElement, inherited: TFormat): TFormat {
     const weight = style.fontWeight
     if (weight === 'bold' || weight === 'bolder' || Number(weight) >= 600) next.bold = true
     if (style.fontStyle === 'italic' || style.fontStyle === 'oblique') next.italic = true
-    const decoration = style.textDecorationLine || style.textDecoration
+    const decoration = style.textDecorationLine || style.textDecoration || ''
     if (/underline/.test(decoration)) next.underline = true
     if (/line-through/.test(decoration)) next.strike = true
   }
@@ -213,8 +245,13 @@ function formatOf(el: HTMLElement, inherited: TFormat): TFormat {
  * row.
  */
 export function htmlToLines(html: string | undefined): TTextLine[] {
-  const root = parse(html ?? '')
+  return linesFromTree(parse(html ?? ''))
+}
 
+/**
+ * The same reading, over a tree somebody else parsed. See `TReadNode`.
+ */
+export function linesFromTree(root: TReadNode): TTextLine[] {
   const lines: TTextLine[] = []
   let line: TTextLine = []
   // Whether the current line exists yet — true once anything has been written
@@ -227,15 +264,15 @@ export function htmlToLines(html: string | undefined): TTextLine[] {
     open = false
   }
   /** Whether nothing with any text follows `node` before its line ends. */
-  const isTrailing = (node: Node): boolean => {
-    let current: Node = node
+  const isTrailing = (node: TReadNode): boolean => {
+    let current: TReadNode = node
     for (;;) {
       for (let next = current.nextSibling; next; next = next.nextSibling) {
-        if (next.nodeType === Node.TEXT_NODE && (next as Text).data) return false
-        if (next.nodeType === Node.ELEMENT_NODE && !UNDRAWN.test((next as HTMLElement).tagName)) return false
+        if (next.nodeType === TEXT_NODE && next.data) return false
+        if (next.nodeType === ELEMENT_NODE && !UNDRAWN.test(next.tagName ?? '')) return false
       }
-      const parent = current.parentNode as HTMLElement | null
-      if (!parent || parent === root || BLOCK.test(parent.tagName)) return true
+      const parent = current.parentNode
+      if (!parent || parent === root || BLOCK.test(parent.tagName ?? '')) return true
       current = parent
     }
   }
@@ -247,14 +284,14 @@ export function htmlToLines(html: string | undefined): TTextLine[] {
     open = true
   }
 
-  const walk = (parent: Node, format: TFormat) => {
+  const walk = (parent: TReadNode, format: TFormat) => {
     for (const child of Array.from(parent.childNodes)) {
-      if (child.nodeType === Node.TEXT_NODE) {
-        const data = (child as Text).data
+      if (child.nodeType === TEXT_NODE) {
+        const data = child.data
         if (!data) continue
         // Text straight inside a list is not in any item; the browser draws
         // nothing for the whitespace a template leaves between the tags.
-        if (/^(UL|OL)$/.test((parent as HTMLElement).tagName) && !data.trim()) continue
+        if (/^(UL|OL)$/.test(parent.tagName ?? '') && !data.trim()) continue
         const pieces = data.split('\n')
         pieces.forEach((piece, index) => {
           if (index > 0) endLine()
@@ -263,9 +300,9 @@ export function htmlToLines(html: string | undefined): TTextLine[] {
         })
         continue
       }
-      if (child.nodeType !== Node.ELEMENT_NODE) continue
-      const el = child as HTMLElement
-      if (UNDRAWN.test(el.tagName)) continue
+      if (child.nodeType !== ELEMENT_NODE) continue
+      const el = child
+      if (UNDRAWN.test(el.tagName ?? '')) continue
       if (el.tagName === 'BR') {
         // The last <br> of a line holds an empty row open when there is nothing
         // else on it, and is the browser's own filler when there is.
@@ -276,7 +313,7 @@ export function htmlToLines(html: string | undefined): TTextLine[] {
         endLine()
         continue
       }
-      if (BLOCK.test(el.tagName)) {
+      if (BLOCK.test(el.tagName ?? '')) {
         if (open) endLine()
         walk(el, format)
         if (open) endLine()

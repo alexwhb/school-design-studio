@@ -107,6 +107,15 @@ function makeUploads() {
 
 const HOST_UPLOADS = makeUploads()
 
+/**
+ * Markup the server's sanitiser and the browser's are held to agree on.
+ *
+ * `design-studio/compose` sanitises without a DOM and the editor sanitises with
+ * one; they share the allowlist and the writer but not the parser. The e2e
+ * suite runs both over this list and requires the answers to match.
+ */
+const MARKUP_CASES = ['<b>Open</b> House', '<strong>x</strong>', '<em>y</em>', '<u>u</u> <del>d</del>', '<span style="color:#ff0000">Red</span>', '<span style="color: rgb(255,0,0)">Red</span>', '<a href="https://school.org/trips">Trips</a>', '<a href="mailto:a@b.test">Mail</a>', '<a href="javascript:alert(1)">Go</a>', '<a href="//school.org">bare</a>', 'one<br>two', 'one<br>two<br>', '<p>one</p><p>two</p>', '<div>a</div><div>b</div>', '<b>unclosed', '</b>stray', '<img src=x onerror=alert(1)>', '<script>alert(1)</script>Hi', '<style>b{}</style>Hi', '<span onclick="alert(1)">Click</span>', '5 &lt; 6', 'a &amp; b', '&nbsp;gap', '<b><i>both</i></b>', '<b>a</b><b>b</b>', '<span style="font-weight:700">bold</span>', '<span style="text-decoration:underline">u</span>', '<font color="#00ff00">green</font>', '', '<br>', 'plain words', '<!--><img src=x onerror=alert(1)>-->safe', '<<SCRIPT>alert(1);//<</SCRIPT>', '<b>a<br>b</b>']
+
 function Host() {
   const [dark, setDark] = useState(false)
   const [brand, setBrand] = useState(HOST_KIT)
@@ -116,6 +125,9 @@ function Host() {
   // The e2e suite drives the host API the way the planner will — through the
   // ref, not the editor's DOM — so the ref has to be reachable from a test.
   ;(window as any).__studio = studio
+  // The markup the two sanitisers are checked to agree on. Kept beside the ref
+  // rather than in the spec so the browser test and the unit test read one list.
+  ;(window as any).__markupCases = MARKUP_CASES
 
   function toggle() {
     const next = !dark
