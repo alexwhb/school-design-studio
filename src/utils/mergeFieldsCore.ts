@@ -14,6 +14,8 @@
  * Nothing composed here is ever split, and a stored design almost never is.
  */
 
+import type { TdLayout, TdWidgetData } from '@/store/types'
+
 /** `{{ name }}` — braces around anything that is not a brace or a line break. */
 export const FIELD_PATTERN = /\{\{\s*([^{}\n]+?)\s*\}\}/g
 
@@ -122,4 +124,29 @@ export function fillMarkup(html: string | undefined, resolve: TFieldResolver): s
 /** A value going into markup. Field values are words, not HTML. */
 export function escapeMarkup(value: string): string {
   return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function carriesText(widget: TdWidgetData): widget is TdWidgetData & { text: string } {
+  return widget.type === 'w-text' && typeof widget.text === 'string'
+}
+
+/** Every field on a page, deduplicated across its text boxes. */
+export function fieldsInLayers(layers: TdWidgetData[]): string[] {
+  const names: string[] = []
+  const seen = new Set<string>()
+  for (const layer of layers) {
+    if (!carriesText(layer)) continue
+    for (const name of fieldsInText(layer.text)) {
+      const key = fieldKey(name)
+      if (seen.has(key)) continue
+      seen.add(key)
+      names.push(name)
+    }
+  }
+  return names
+}
+
+/** Every field in a design, deduplicated across all of its pages. */
+export function fieldsInLayouts(layouts: TdLayout[]): string[] {
+  return fieldsInLayers(layouts.flatMap((layout) => layout.layers))
 }

@@ -12,66 +12,17 @@
  * what is still waiting to be filled.
  */
 import { findInMarkup, renderedText, replaceInMarkup } from './widgets/textMatch'
-import { FIELD_PATTERN, fieldKey, type TFieldResolver } from './mergeFieldsCore'
+import { FIELD_PATTERN, fieldKey, fieldsInText, hasFields, type TFieldResolver } from './mergeFieldsCore'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
 // The grammar — what a field looks like, how two spellings of one compare, and
 // how a plain map answers one — is in `mergeFieldsCore.ts` so that code with no
 // DOM can share it. What is left here is the part that needs one.
-export { FIELD_PATTERN, fieldKey, valuesResolver } from './mergeFieldsCore'
+// Reading a field out of markup needs no DOM — the core's own reader strips the
+// tags — so the whole detection half comes from there and there is one answer to
+// "which fields does this box ask for". Only filling one in needs a document.
+export { FIELD_PATTERN, fieldKey, valuesResolver, hasFields, fieldsInText, fieldsInLayers, fieldsInLayouts, plainFromMarkup } from './mergeFieldsCore'
 export type { TFieldResolver } from './mergeFieldsCore'
-
-/** Whether a text box carries any field at all. Cheap enough to run on every widget. */
-export function hasFields(html: string | undefined): boolean {
-  if (!html || !html.includes('{{')) return false
-  // `search` rather than `test`: a global regex remembers where its last match
-  // ended, and `matchAll` starts from there — so a `test` left un-reset would
-  // make the next `fieldsInText` or `fillText` skip the first field.
-  return renderedText(html).search(FIELD_PATTERN) !== -1
-}
-
-/**
- * The fields a text box asks for, in reading order, each named once with the
- * spelling it was first written in.
- */
-export function fieldsInText(html: string | undefined): string[] {
-  if (!html || !html.includes('{{')) return []
-  const names: string[] = []
-  const seen = new Set<string>()
-  for (const match of renderedText(html).matchAll(FIELD_PATTERN)) {
-    const name = match[1].trim()
-    const key = fieldKey(name)
-    if (seen.has(key)) continue
-    seen.add(key)
-    names.push(name)
-  }
-  return names
-}
-
-function carriesText(widget: TdWidgetData): widget is TdWidgetData & { text: string } {
-  return widget.type === 'w-text' && typeof widget.text === 'string'
-}
-
-/** Every field on a page, deduplicated across its text boxes. */
-export function fieldsInLayers(layers: TdWidgetData[]): string[] {
-  const names: string[] = []
-  const seen = new Set<string>()
-  for (const layer of layers) {
-    if (!carriesText(layer)) continue
-    for (const name of fieldsInText(layer.text)) {
-      const key = fieldKey(name)
-      if (seen.has(key)) continue
-      seen.add(key)
-      names.push(name)
-    }
-  }
-  return names
-}
-
-/** Every field in a design, deduplicated across all of its pages. */
-export function fieldsInLayouts(layouts: TdLayout[]): string[] {
-  return fieldsInLayers(layouts.flatMap((layout) => layout.layers))
-}
 
 /**
  * The markup with every resolvable field replaced by its value. Fields the
@@ -96,6 +47,10 @@ export function fillText(html: string | undefined, resolve: TFieldResolver): str
     out = replaceInMarkup(out, [{ start: hit.start, length: hit.length }], hit.value)
   }
   return out
+}
+
+function carriesText(widget: TdWidgetData): widget is TdWidgetData & { text: string } {
+  return widget.type === 'w-text' && typeof widget.text === 'string'
 }
 
 /**
