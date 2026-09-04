@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      The planner's own Content-Security-Policy, as close as a meta tag gets.
+      The editor has to work inside it: the rasteriser behind the PDF and PNG
+      exports clones the document into an iframe and paints through a canvas,
+      and every one of those steps is something a policy can refuse. If an
+      export works here it works there, and if it does not this page says which
+      directive stopped it.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline'; frame-src 'self' blob:; connect-src 'self' https://images.unsplash.com https://plus.unsplash.com; worker-src 'self' blob:"
+    />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <title>Embed host under the planner's CSP</title>
+    <link rel="stylesheet" href="/embed-demo/host.css" />
+  </head>
+  <body>
+    <div id="host"></div>
+    <!-- Loaded the way the planner loads it: a lazy chunk that pulls in the
+         component and its stylesheet together, rather than a static import. -->
+    <script type="module" src="/embed-demo/csp.tsx"></script>
+    <script defer src="/snap.svg-min.js"></script>
+  </body>
+</html>

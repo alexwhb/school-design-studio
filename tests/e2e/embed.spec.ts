@@ -55,8 +55,12 @@ test.describe('embedded in a host app', () => {
     expect(host.h1FontSize).toBe('20px')
     expect(host.h1Family).toBe('ui-sans-serif')
     expect(host.liMarker).toBe('disc')
-    expect(host.bodyBackground).toBe('rgb(248, 250, 252)')
-    expect(host.buttonBackground).toBe('rgb(15, 23, 42)')
+    // The host writes its colours in CSS Color 4, and a browser that
+    // understands them reports them back as written. That the editor has not
+    // repainted them is the point; which notation they are in is the host's
+    // business.
+    expect(host.bodyBackground).toBe('oklch(0.98 0.003 247.86)')
+    expect(host.buttonBackground).toBe('oklch(0.21 0.034 264.67)')
     expect(host.htmlColorScheme).toBe('')
   })
 
@@ -71,8 +75,10 @@ test.describe('embedded in a host app', () => {
           continue
         }
         const owner = sheet.ownerNode as HTMLElement | null
-        // The host page's own <style> block is the first one in the document.
+        // The host page's own styles, whether written inline or linked. They
+        // are the thing the editor must not disturb, not something it ships.
         if (owner && owner.textContent?.includes('host-shell')) continue
+        if (/\/embed-demo\/host\.css/.test(sheet.href || '')) continue
         for (const rule of Array.from(rules)) {
           if (!(rule instanceof CSSStyleRule)) continue
           const selector = rule.selectorText || ''
@@ -594,5 +600,101 @@ test.describe('a brand kit somebody else looks after', () => {
     await expect(page.locator('.ds-root .brand-readonly')).toHaveCount(0)
     await expect(page.locator('.ds-root #brand-name')).toBeEnabled()
     await expect(page.locator('.ds-root .brand-upload')).toHaveCount(1)
+  })
+})
+
+/**
+ * The host the planner actually is: a strict Content-Security-Policy, a
+ * stylesheet written in CSS Color 4, and the editor arriving through a lazy
+ * chunk rather than a static import.
+ *
+ * All three exports came back empty there while the same code passed here,
+ * because the rasteriser clones the whole document and threw on the first
+ * `oklch()` it met — in the host's stylesheet, which the editor never touches.
+ * `csp.html` reproduces that, so this is the test that would have caught it.
+ */
+test.describe('inside a host with a policy and modern colours', () => {
+  const CSP_URL = EMBED_URL.replace('index.html', 'csp.html')
+
+  async function openUnderCsp(page: import('@playwright/test').Page, query = 'doc=1') {
+    await page.goto(`${CSP_URL}?${query}`)
+    await page.waitForSelector('.ds-root #page-design-canvas')
+    await page.waitForFunction(() => Boolean((window as any).__studio?.current))
+    await page.waitForTimeout(1500)
+  }
+
+  test('the host really is using the colours that broke it', async ({ page }) => {
+    await openUnderCsp(page)
+    const host = await page.evaluate(() => {
+      const modern = [...document.styleSheets].filter((sheet) => {
+        try {
+          return [...sheet.cssRules].some((rule) => /oklch\(|color-mix\(in oklab/.test(rule.cssText))
+        } catch {
+          return false
+        }
+      })
+      const inside = [...document.querySelectorAll('.ds-root *')].some((el) => /oklch|color-mix/.test(getComputedStyle(el).backgroundColor + getComputedStyle(el).color))
+      return { sheets: modern.length, policy: document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute('content')?.slice(0, 40), insideTheEditor: inside }
+    })
+    expect(host.sheets, 'the host page has a CSS Color 4 stylesheet').toBeGreaterThan(0)
+    expect(host.policy).toContain("default-src 'self'")
+    // The point being that the editor's own CSS is not what breaks it.
+    expect(host.insideTheEditor).toBe(false)
+  })
+
+  test('exportPdf and exportPng still come back with real bytes', async ({ page }) => {
+    await openUnderCsp(page)
+    const out = await page.evaluate(async () => {
+      const studio = (window as any).__studio.current
+      const png = await studio.exportPng(0)
+      const pdf = await studio.exportPdf()
+      return { png: { type: png.type, size: png.size }, pdf: { type: pdf.type, size: pdf.size } }
+    })
+    expect(out.png.type).toBe('image/png')
+    expect(out.png.size).toBeGreaterThan(10_000)
+    expect(out.pdf.type).toBe('application/pdf')
+    expect(out.pdf.size).toBeGreaterThan(10_000)
+  })
+
+  test('so does the .pptx, which was the only one that ever worked', async ({ page }) => {
+    await openUnderCsp(page)
+    const pptx = await page.evaluate(async () => {
+      const blob = await (window as any).__studio.current.exportPptx()
+      return { type: blob.type, size: blob.size }
+    })
+    expect(pptx.type).toBe('application/vnd.openxmlformats-officedocument.presentationml.presentation')
+    expect(pptx.size).toBeGreaterThan(10_000)
+  })
+
+  test('nothing the policy refuses, and nothing the renderer could not read', async ({ page }) => {
+    const noise: string[] = []
+    page.on('console', (message) => {
+      if (message.type() === 'error' || message.type() === 'warning') noise.push(message.text())
+    })
+    page.on('pageerror', (error) => noise.push(String(error.message)))
+    await openUnderCsp(page)
+    await page.evaluate(async () => {
+      const studio = (window as any).__studio.current
+      await studio.exportPng(0)
+      await studio.exportPdf()
+    })
+    // A refused fetch, a blocked frame and an unreadable colour all land here.
+    const real = noise.filter((line) => !/DevTools|React DevTools/.test(line))
+    expect(real, real.join('\n')).toEqual([])
+  })
+
+  test('and the editor says why when it cannot draw a page', async ({ page }) => {
+    // The failure used to be a null and one line naming neither the page nor
+    // the reason, which is nothing for a host to act on.
+    await openUnderCsp(page)
+    const said: string[] = []
+    page.on('console', (message) => said.push(message.text()))
+    const refused = await page.evaluate(() =>
+      (window as any).__studio.current
+        .exportPng(99)
+        .then(() => 'resolved')
+        .catch((error: Error) => error.message),
+    )
+    expect(refused).toContain('no page 99')
   })
 })
