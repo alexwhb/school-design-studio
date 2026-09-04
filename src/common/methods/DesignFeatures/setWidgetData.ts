@@ -33,7 +33,9 @@ export default async function (type: string, item: TCommonItemData, data: Record
     // A picture dropped from the stock library is taken into the host's own
     // store first, when the host asked for that. The copy is made here rather
     // than when the drag started, so a drag that is thought better of costs
-    // nothing. See `stockImage.ts`.
+    // nothing. A mask is a shape the studio ships, so it comes back unchanged
+    // — but it is read from the same answer, so the two cannot disagree about
+    // which picture this is. See `stockImage.ts`.
     const picture = await resolveStockImage(item.value as StockImage)
     if (!picture) return null
     if (type === 'image') {
@@ -45,9 +47,7 @@ export default async function (type: string, item: TCommonItemData, data: Record
     setting.width = img.width
     setting.height = img.height // parseInt(100 / item.value.ratio, 10)
     setting.imgUrl = picture.url
-  }
-  if (type === 'mask') {
-    setting.mask = item.value.url
+    if (type === 'mask') setting.mask = picture.url
   }
   if (type === 'svg') {
     setting = JSON.parse(JSON.stringify(wSvgSetting))
