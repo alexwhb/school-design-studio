@@ -234,12 +234,37 @@ function shiftOrigin(origin: string, bleed: number): string {
  * that is exactly the kind of thing the caller cannot guess and the message can
  * say.
  */
+/**
+ * The four things that actually go wrong, and what a host can do about each.
+ *
+ * The message matters because none of these are the host's fault in a way it
+ * could guess: the failure happens inside a clone of a page it did not know was
+ * being cloned.
+ */
+const HINTS: { match: RegExp; say: string }[] = [
+  {
+    match: /unsupported color function|oklch|oklab|color-mix|\blch\(|\blab\(/i,
+    say: "a stylesheet on this page uses a CSS Color 4 value the renderer cannot read. The whole document is cloned to draw a page, so this can come from the host's own CSS rather than the editor's.",
+  },
+  {
+    match: /tainted|SecurityError|cross-origin|insecure/i,
+    say: 'a picture from another origin is on the page, and a canvas that has drawn one cannot be read back. Serve it from this origin, or as a data URL — `uploads.importUrl` is the seam for that.',
+  },
+  {
+    match: /timed out|timeout/i,
+    say: 'something never finished — usually a picture that is still loading, or a tab that was in the background while the export ran.',
+  },
+  {
+    match: /Content Security Policy|violates|blocked/i,
+    say: "the page's Content-Security-Policy refused something. Drawing a page needs `img-src` to allow `data:` and `blob:`, and `frame-src` to allow `blob:` — the renderer clones into an iframe.",
+  },
+]
+
 function reportFailure(stage: string, error: unknown): null {
   const detail = error instanceof Error ? error.message : String(error)
   console.warn(`[export] could not draw the page — ${stage}: ${detail}`)
-  if (/unsupported color function|oklch|oklab|color-mix|lch\(|lab\(/i.test(detail)) {
-    console.warn("[export] a stylesheet on this page uses a CSS Color 4 value the renderer cannot read. The whole document is cloned, so this can come from the host's own CSS rather than the editor's.")
-  }
+  const hint = HINTS.find((entry) => entry.match.test(detail))
+  if (hint) console.warn(`[export] ${hint.say}`)
   return null
 }
 
