@@ -19,12 +19,27 @@ import { markup, page, rectWidget, textWidget } from './widgets'
 import { applyBrand, fieldFiller } from './brand'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
-/** The paper a sign can be printed on, in design pixels at 150 DPI. */
-const SIZES: Record<PosterOutline['size'], { width: number; height: number }> = {
+/**
+ * The paper a sign can be printed on, portrait, in design pixels at 150 DPI.
+ */
+const SIZES: Record<'letter' | 'tabloid' | 'banner', { width: number; height: number }> = {
   letter: { width: 1275, height: 1650 },
   tabloid: { width: 1650, height: 2550 },
   // A roll-up banner: 24 × 72 inches, the size a school already owns a stand for.
   banner: { width: 3600, height: 10800 },
+}
+
+/**
+ * A size name that carries its own orientation, and what it means.
+ *
+ * The planner stores `letter-landscape`; this has always taken the way round
+ * separately. Rather than make one of them convert, both spellings are read,
+ * and a name that says which way round it is settles it — somebody who wrote
+ * `letter-portrait` meant portrait, whatever else the outline says.
+ */
+const FIXED: Record<string, { size: 'letter' | 'tabloid' | 'banner'; landscape: boolean }> = {
+  'letter-landscape': { size: 'letter', landscape: true },
+  'letter-portrait': { size: 'letter', landscape: false },
 }
 
 export const SIGN_PAGE_KINDS: PosterSign['layout'][] = ['direction', 'icon', 'statement', 'number', 'notice']
@@ -34,8 +49,10 @@ export function blankSign(layout: PosterSign['layout']): PosterSign {
 }
 
 export function pageSize(outline: Pick<PosterOutline, 'orientation' | 'size'>): { width: number; height: number } {
-  const base = SIZES[outline?.size as PosterOutline['size']] || SIZES.letter
-  return outline?.orientation === 'LANDSCAPE' ? { width: base.height, height: base.width } : { ...base }
+  const fixed = FIXED[String(outline?.size)]
+  const base = SIZES[fixed ? fixed.size : (outline?.size as 'letter' | 'tabloid' | 'banner')] || SIZES.letter
+  const landscape = fixed ? fixed.landscape : outline?.orientation === 'LANDSCAPE'
+  return landscape ? { width: base.height, height: base.width } : { ...base }
 }
 
 type Frame = { W: number; H: number; M: number; content: number }

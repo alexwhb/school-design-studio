@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { POSTER_PACK_KEYS, SLIDE_THEME_KEYS, applyBrand, applyOps, composeDeck, composePoster, describeDocument, pageKinds, type DeckOutline, type DeckSlide, type DesignDocument, type PosterOutline, type TBrandKit } from '@/compose'
+import { POSTER_PACK_KEYS, SLIDE_THEME_KEYS, applyBrand, applyOps, composeDeck, composePoster, describeDocument, pageKinds, type DeckOutline, type DeckSlide, type DesignDocument, type PosterOutline, type PosterSize, type TBrandKit } from '@/compose'
 import type { TdWidgetData } from '@/store/types'
+
+const SIGN_KINDS = ['direction', 'icon', 'statement', 'number', 'notice'] as const
 
 const KIT: TBrandKit = {
   name: 'Riverbend Academy',
@@ -390,5 +392,38 @@ describe('applyBrand', () => {
     const { doc: branded, rejected } = applyOps(doc, [{ op: 'applyBrand' }], { brand: KIT })
     expect(rejected).toEqual([])
     expect(JSON.stringify(branded.layouts)).toContain('Riverbend Academy')
+  })
+})
+
+describe('the sizes a poster can be', () => {
+  const sign = { layout: 'notice' as const, icon: null, eyebrow: null, badge: null, head: 'Notice', sub: null, foot: null }
+  const at = (size: PosterSize, orientation: 'LANDSCAPE' | 'PORTRAIT' = 'PORTRAIT') => composePoster({ orientation, size, signs: [sign] }).layouts[0].global
+
+  it('takes the orientation separately, as it always did', () => {
+    expect(at('letter')).toMatchObject({ width: 1275, height: 1650 })
+    expect(at('letter', 'LANDSCAPE')).toMatchObject({ width: 1650, height: 1275 })
+    expect(at('tabloid')).toMatchObject({ width: 1650, height: 2550 })
+    expect(at('tabloid', 'LANDSCAPE')).toMatchObject({ width: 2550, height: 1650 })
+  })
+
+  it('takes a size that names its own way round, and lets it win', () => {
+    expect(at('letter-portrait')).toMatchObject({ width: 1275, height: 1650 })
+    expect(at('letter-landscape')).toMatchObject({ width: 1650, height: 1275 })
+    // A name that says which way round it is means it. An `orientation` beside
+    // it saying otherwise is the planner's two fields disagreeing, and the more
+    // specific one is the one somebody actually chose.
+    expect(at('letter-portrait', 'LANDSCAPE')).toMatchObject({ width: 1275, height: 1650 })
+    expect(at('letter-landscape', 'PORTRAIT')).toMatchObject({ width: 1650, height: 1275 })
+  })
+
+  it('falls back to Letter for a size it has never heard of', () => {
+    expect(at('a3' as PosterSize)).toMatchObject({ width: 1275, height: 1650 })
+  })
+
+  it('lays every sign out without overflowing, whichever way round it is', () => {
+    for (const size of ['letter', 'letter-portrait', 'letter-landscape', 'tabloid', 'banner'] as PosterSize[]) {
+      const doc = composePoster({ orientation: 'PORTRAIT', size, signs: SIGN_KINDS.map((layout) => ({ ...sign, layout, head: 'Gymnasium', sub: 'Through the double doors and left' })) })
+      expect(overflowing(doc), `${size} overflowed`).toEqual([])
+    }
   })
 })

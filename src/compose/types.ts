@@ -75,9 +75,19 @@ export type PosterSign = {
   foot: string | null
 }
 
+/**
+ * The paper a sign is printed on.
+ *
+ * Two spellings, because the planner stores the orientation in the size for
+ * Letter and this has always taken it separately. `letter-landscape` and
+ * `letter-portrait` say which way round they are and win over `orientation`;
+ * the bare names leave that to `orientation`, as they always did.
+ */
+export type PosterSize = 'letter' | 'letter-landscape' | 'letter-portrait' | 'tabloid' | 'banner'
+
 export type PosterOutline = {
   orientation: 'LANDSCAPE' | 'PORTRAIT'
-  size: 'letter' | 'tabloid' | 'banner'
+  size: PosterSize
   signs: PosterSign[]
 }
 

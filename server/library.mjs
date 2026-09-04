@@ -234,14 +234,17 @@ export function createContentLibrary(options = {}) {
    */
   async function trackDownload(downloadLocation) {
     if (!hasUnsplashKey || !downloadLocation) return { ok: false }
-    // Only ever call back to Unsplash: the location arrives from the client, so
-    // an untrusted value must not be able to aim a keyed request anywhere else.
+    // Only ever call back to Unsplash, and only over TLS: the location arrives
+    // from the client, so an untrusted value must not be able to aim a keyed
+    // request anywhere else — and `http://api.unsplash.com/...` would put the
+    // access key on the wire in the clear for anyone on the path to keep.
     let target
     try {
       target = new URL(downloadLocation)
     } catch {
       return { ok: false }
     }
+    if (target.protocol !== 'https:') return { ok: false }
     if (target.hostname !== 'api.unsplash.com' && target.origin !== apiBase) return { ok: false }
 
     try {

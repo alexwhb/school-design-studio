@@ -87,6 +87,19 @@ const TEXT_NODE = 3
 const ELEMENT_NODE = 1
 
 /**
+ * How deep the elements may nest before the reader stops going down.
+ *
+ * The walk below is recursive, so markup nesting twenty thousand `<b>` — eight
+ * characters each to write — is a stack overflow rather than a slow answer.
+ * That is reachable from a paste as well as from a server, so the guard is here
+ * rather than in either parser. Past the cap an element still contributes its
+ * words; it just adds no formatting of its own, and by sixty-four levels
+ * whatever formatting was meant has long since been applied. The canonical
+ * writer nests six deep and a word-processor paste rarely passes twenty.
+ */
+export const MAX_MARKUP_DEPTH = 64
+
+/**
  * Markup parsed where it cannot do anything: a document with no browsing
  * context, so an <img> in a pasted design fetches nothing and a <script> is
  * inert markup rather than code. Setting innerHTML on a detached div does not
@@ -284,7 +297,8 @@ export function linesFromTree(root: TReadNode): TTextLine[] {
     open = true
   }
 
-  const walk = (parent: TReadNode, format: TFormat) => {
+  const walk = (parent: TReadNode, format: TFormat, depth = 0) => {
+    if (depth > MAX_MARKUP_DEPTH) return
     for (const child of Array.from(parent.childNodes)) {
       if (child.nodeType === TEXT_NODE) {
         const data = child.data
@@ -315,11 +329,11 @@ export function linesFromTree(root: TReadNode): TTextLine[] {
       }
       if (BLOCK.test(el.tagName ?? '')) {
         if (open) endLine()
-        walk(el, format)
+        walk(el, format, depth + 1)
         if (open) endLine()
         continue
       }
-      walk(el, formatOf(el, format))
+      walk(el, formatOf(el, format), depth + 1)
     }
   }
 

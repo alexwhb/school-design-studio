@@ -22,25 +22,18 @@
  * to the same string a browser would have produced. Anything it misreads it
  * misreads towards plain text.
  */
-import { linesFromTree, linesToHtml, type TReadNode, type TReadStyle, type TLineListStyle } from '@/utils/widgets/richText'
+import { MAX_MARKUP_DEPTH, linesFromTree, linesToHtml, type TReadNode, type TReadStyle, type TLineListStyle } from '@/utils/widgets/richText'
 import { decodeEntities } from '@/utils/mergeFieldsCore'
 
 const TEXT_NODE = 3
 const ELEMENT_NODE = 1
 
 /**
- * How deep the elements may nest before the tree stops getting deeper.
- *
- * The reader walks the tree by recursion, so a document nesting twenty thousand
- * `<b>` — which is eight characters each to write and which the planner would
- * hand straight to this function — is a stack overflow rather than a slow
- * answer. Past the cap an element still contributes its words; it just does not
- * open a level of its own, so nothing is dropped and the formatting somebody
- * meant is long since applied. The canonical writer nests six deep, and markup
- * pasted from a word processor rarely passes twenty, so sixty-four is well
- * clear of anything real.
+ * How deep the tree may get. The reader has the same cap — see
+ * `MAX_MARKUP_DEPTH` — and this stops the tree being built that deep in the
+ * first place, so neither the parsing nor the reading can run out of stack.
  */
-const MAX_DEPTH = 64
+const MAX_DEPTH = MAX_MARKUP_DEPTH
 
 /** Elements with no closing tag. A `</br>` in the wild is one of these too. */
 const VOID = new Set(['AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT', 'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR'])

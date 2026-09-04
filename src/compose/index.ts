@@ -15,9 +15,14 @@ export { composePoster, composeSign, blankSign, pageSize, SIGN_PAGE_KINDS } from
 export { describeDocument, kindOf } from './describe'
 export { applyOps, pageKinds } from './ops'
 export { sanitizeMarkup, markupToText, parseMarkup } from './markup'
+// What a design may be made of, for a host validating one before it stores it.
+// Derived from the widget registry rather than typed out again — see the
+// `satisfies` in `components/modules/widgets/registry.ts`.
+export { WIDGET_TYPES, URL_FIELDS, PAGE_TYPE } from '@/components/modules/widgets/widgetTypes'
+export type { TWidgetType } from '@/components/modules/widgets/widgetTypes'
 export { applyBrand } from './brand'
 export { SLIDE_THEME_KEYS, POSTER_PACK_KEYS, slideTheme, posterPack } from './themes'
 export type { Theme, SlideThemeKey, PosterPackKey } from './themes'
 export { ICON_KEYS } from './icons'
 export { SLIDE_PAGE, POSTER_PAGE, pageSizeFor } from './types'
-export type { ComposeOptions, DeckOutline, DeckSlide, DeckSlideLayout, DesignDocument, DesignKind, DesignOp, DocumentView, ImageRef, OutlineBullet, PosterOutline, PosterSign, PosterSignLayout, RejectedOp, TBrandKit, TdLayout } from './types'
+export type { ComposeOptions, DeckOutline, DeckSlide, DeckSlideLayout, DesignDocument, DesignKind, DesignOp, DocumentView, ImageRef, OutlineBullet, PosterOutline, PosterSign, PosterSignLayout, PosterSize, RejectedOp, TBrandKit, TdLayout } from './types'
