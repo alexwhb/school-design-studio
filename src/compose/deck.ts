@@ -57,7 +57,7 @@ function place(
     tracking?: number
     align?: 'left' | 'center' | 'right'
     brandRole?: 'heading' | 'body' | 'keep'
-    label?: string
+    role?: string
     maxLines?: number
   },
 ): { widget: TdWidgetData; bottom: number } | null {
@@ -80,7 +80,7 @@ function place(
       fontWeight: style.weight,
       textAlign: style.align,
       brandRole: style.brandRole,
-      label: style.label,
+      role: style.role,
       text: markup(fit.lines.join('\n')),
     }),
     bottom: box.top + height,
@@ -99,7 +99,7 @@ function eyebrow(theme: Theme, text: string | null, top: number, left = M, width
       tracking: theme.eyebrowTracking,
       color: theme.accent,
       brandRole: 'keep',
-      label: 'eyebrow',
+      role: 'eyebrow',
       maxLines: 1,
     },
   )
@@ -132,7 +132,7 @@ function bulletColumn(theme: Theme, bullets: OutlineBullet[], box: Box, size: nu
         lineHeight: 1.4,
         color: theme.ink,
         brandRole: 'body',
-        label: 'bullet',
+        role: 'bullet',
       },
     )
     // Out of room. Everything after this would be off the page too, so stop
@@ -153,7 +153,7 @@ function bulletColumn(theme: Theme, bullets: OutlineBullet[], box: Box, size: nu
           lineHeight: 1.4,
           color: theme.muted,
           brandRole: 'body',
-          label: 'sub-bullet',
+          role: 'sub-bullet',
         },
       )
       if (!child || child.bottom > limit) break
@@ -181,7 +181,7 @@ function footer(theme: Theme, fill: (text: string) => string): TdWidgetData[] {
     color: theme.muted,
     font: theme.eyebrow,
     brandRole: 'keep',
-    label: 'school.name',
+    role: 'school.name',
     text: markup(line),
   })
   return [rule, name]
@@ -205,7 +205,7 @@ function titleSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[] 
       color: theme.ink,
       weight: theme.displayWeight,
       brandRole: 'heading',
-      label: 'heading',
+      role: 'heading',
     },
   )
   let top = 660
@@ -223,7 +223,7 @@ function titleSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[] 
       lineHeight: 1.4,
       color: theme.muted,
       brandRole: 'body',
-      label: 'body',
+      role: 'body',
     },
   )
   if (sub) layers.push(sub.widget)
@@ -249,7 +249,7 @@ function statementSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetDat
       color: theme.ink,
       weight: theme.displayWeight,
       brandRole: 'heading',
-      label: 'heading',
+      role: 'heading',
     },
   )
   let top = 680
@@ -267,7 +267,7 @@ function statementSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetDat
       lineHeight: 1.4,
       color: theme.muted,
       brandRole: 'body',
-      label: 'body',
+      role: 'body',
     },
   )
   if (sub) layers.push(sub.widget)
@@ -291,7 +291,7 @@ function heading(theme: Theme, slide: DeckSlide, layers: TdWidgetData[], width =
       color: theme.ink,
       weight: theme.displayWeight,
       brandRole: 'heading',
-      label: 'heading',
+      role: 'heading',
     },
   )
   if (title) {
@@ -316,7 +316,7 @@ function contentSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[
       lineHeight: 1.4,
       color: theme.muted,
       brandRole: 'body',
-      label: 'body',
+      role: 'body',
     },
   )
   if (sub) {
@@ -340,7 +340,7 @@ function contentSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[
         lineHeight: 1.35,
         color: theme.paper,
         brandRole: 'body',
-        label: 'callout',
+        role: 'callout',
       },
     )
     if (words) layers.push(words.widget)
@@ -373,7 +373,7 @@ function twoColumnSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetDat
         color: theme.accent,
         weight: theme.displayWeight,
         brandRole: 'heading',
-        label: 'column heading',
+        role: 'column heading',
       },
     )
     if (head) {
@@ -413,7 +413,7 @@ function mediaSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[] 
       color: theme.ink,
       weight: theme.displayWeight,
       brandRole: 'heading',
-      label: 'heading',
+      role: 'heading',
     },
   )
   if (title) {
@@ -430,7 +430,7 @@ function mediaSlide(theme: Theme, slide: DeckSlide, fill: Fill): TdWidgetData[] 
       lineHeight: 1.4,
       color: theme.muted,
       brandRole: 'body',
-      label: 'body',
+      role: 'body',
     },
   )
   if (sub) top = sub.bottom + 30

@@ -44,8 +44,8 @@ export type TextSpec = {
   textAlign?: 'left' | 'center' | 'right'
   /** Which of the kit's two fonts this box asks for when a brand lands on it. */
   brandRole?: 'heading' | 'body' | 'keep'
-  /** A merge field or role name, so `describeDocument` can say what the box is. */
-  label?: string
+  /** What the box is for, so `describeDocument` can say. See `TdWidgetData.role`. */
+  role?: string
 }
 
 export function textWidget(spec: TextSpec): TdWidgetData {
@@ -75,7 +75,7 @@ export function textWidget(spec: TextSpec): TdWidgetData {
     opacity: 1,
     backgroundColor: '',
     parent: '-1',
-    label: spec.label,
+    role: spec.role,
     record: { width: 0, height: 0, minWidth: 0, minHeight: 0, dir: 'horizontal' },
     rotate: '0',
     imgUrl: '',

@@ -134,8 +134,8 @@ describe('composeDeck', () => {
       slides: [slide({ layout: 'content', title: 'Changes', bullets: [{ text: 'Two sections added', sub: ['Class sizes fell'] }] })],
     })
     const layers = doc.layouts[0].layers as TdWidgetData[]
-    const parent = layers.find((layer) => layer.label === 'bullet')
-    const child = layers.find((layer) => layer.label === 'sub-bullet')
+    const parent = layers.find((layer) => layer.role === 'bullet')
+    const child = layers.find((layer) => layer.role === 'sub-bullet')
     expect(parent && child).toBeTruthy()
     expect((child as TdWidgetData).left).toBeGreaterThan((parent as TdWidgetData).left)
     expect((child as TdWidgetData).top).toBeGreaterThan((parent as TdWidgetData).top)
@@ -144,10 +144,10 @@ describe('composeDeck', () => {
   it('puts a two-column slide’s two lists under their own headings', () => {
     const doc = composeDeck(OUTLINE)
     const layers = doc.layouts[3].layers as TdWidgetData[]
-    const heads = layers.filter((layer) => layer.label === 'column heading')
+    const heads = layers.filter((layer) => layer.role === 'column heading')
     expect(heads).toHaveLength(2)
     expect(heads[1].left).toBeGreaterThan(heads[0].left)
-    const bullets = layers.filter((layer) => layer.label === 'bullet')
+    const bullets = layers.filter((layer) => layer.role === 'bullet')
     expect(bullets).toHaveLength(2)
   })
 
@@ -337,7 +337,7 @@ describe('applyBrand', () => {
     const long: TBrandKit = { ...KIT, name: 'Riverbend Academy Middle and Upper School Foundation Trust', phone: '(555) 013-8800 ext. 2214' }
     const sign = { layout: 'notice' as const, icon: 'bell', eyebrow: 'Please note', badge: null, head: 'Pick-up moves', sub: 'From Monday.', foot: null }
     const outline = { orientation: 'PORTRAIT' as const, size: 'letter' as const, signs: [sign] }
-    const footerOf = (doc: DesignDocument) => doc.layouts[0].layers.find((layer) => layer.label === 'footer') as TdWidgetData
+    const footerOf = (doc: DesignDocument) => doc.layouts[0].layers.find((layer) => layer.role === 'footer') as TdWidgetData
 
     const short = footerOf(composePoster(outline, { brand: KIT }))
     const wide = footerOf(composePoster(outline, { brand: long }))

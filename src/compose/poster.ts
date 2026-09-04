@@ -55,7 +55,7 @@ type Style = {
   tracking?: number
   align?: 'left' | 'center' | 'right'
   brandRole?: 'heading' | 'body' | 'keep'
-  label?: string
+  role?: string
   maxLines?: number
 }
 
@@ -79,7 +79,7 @@ function place(text: string | null | undefined, box: { left: number; top: number
       fontWeight: style.weight,
       textAlign: style.align ?? 'center',
       brandRole: style.brandRole,
-      label: style.label,
+      role: style.role,
       text: markup(fit.lines.join('\n')),
     }),
     bottom: box.top + height,
@@ -107,7 +107,7 @@ function furniture(theme: Theme, frame: Frame, sign: PosterSign, onDark: boolean
       tracking: theme.eyebrowTracking,
       color: onDark ? theme.paper : theme.accent,
       brandRole: 'keep',
-      label: 'eyebrow',
+      role: 'eyebrow',
       maxLines: 1,
     },
   )
@@ -125,7 +125,7 @@ function furniture(theme: Theme, frame: Frame, sign: PosterSign, onDark: boolean
       lineHeight: 1.35,
       color: soft,
       brandRole: 'keep',
-      label: 'footer',
+      role: 'footer',
       maxLines: 2,
     },
   )
@@ -150,7 +150,7 @@ function directionSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill)
     color: theme.ink,
     weight: theme.displayWeight,
     brandRole: 'heading',
-    label: 'heading',
+    role: 'heading',
   })
   let top = Math.round(H * 0.56)
   if (head) {
@@ -171,7 +171,7 @@ function directionSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill)
     lineHeight: 1.3,
     color: theme.muted,
     brandRole: 'body',
-    label: 'body',
+    role: 'body',
   })
   if (sub) layers.push(sub.widget)
   return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
@@ -197,7 +197,7 @@ function iconSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { l
     color: theme.ink,
     weight: theme.displayWeight,
     brandRole: 'heading',
-    label: 'heading',
+    role: 'heading',
   })
   if (head) {
     layers.push(head.widget)
@@ -211,7 +211,7 @@ function iconSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { l
     lineHeight: 1.35,
     color: theme.muted,
     brandRole: 'body',
-    label: 'body',
+    role: 'body',
   })
   if (sub) layers.push(sub.widget)
   return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
@@ -230,7 +230,7 @@ function statementSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill)
     color: theme.paper,
     weight: theme.displayWeight,
     brandRole: 'heading',
-    label: 'heading',
+    role: 'heading',
   })
   let top = Math.round(H * 0.66)
   if (head) {
@@ -244,7 +244,7 @@ function statementSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill)
     lineHeight: 1.4,
     color: theme.paper,
     brandRole: 'body',
-    label: 'body',
+    role: 'body',
   })
   if (sub) layers.push(sub.widget)
   return { layers: [...layers, ...furniture(theme, frame, sign, true, fill)], background: theme.accent }
@@ -262,7 +262,7 @@ function numberSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
     color: theme.accent,
     weight: theme.displayWeight,
     brandRole: 'heading',
-    label: 'number',
+    role: 'number',
     maxLines: 1,
   })
   let top = Math.round(H * 0.5)
@@ -281,7 +281,7 @@ function numberSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
     color: theme.ink,
     weight: theme.displayWeight,
     brandRole: 'heading',
-    label: 'heading',
+    role: 'heading',
   })
   if (head) {
     layers.push(head.widget)
@@ -294,7 +294,7 @@ function numberSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
     lineHeight: 1.35,
     color: theme.muted,
     brandRole: 'body',
-    label: 'body',
+    role: 'body',
   })
   if (sub) layers.push(sub.widget)
   return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
@@ -315,7 +315,7 @@ function noticeSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
     weight: theme.displayWeight,
     align: 'left',
     brandRole: 'heading',
-    label: 'heading',
+    role: 'heading',
   })
   let top = Math.round(H * 0.46)
   if (head) {
@@ -334,7 +334,7 @@ function noticeSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
     color: theme.ink,
     align: 'left',
     brandRole: 'body',
-    label: 'body',
+    role: 'body',
   })
   if (sub) layers.push(sub.widget)
   return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }

@@ -88,6 +88,17 @@ export type TdWidgetData = TPageState &
     label?: string
     editable?: boolean
     /**
+     * What a composed page put this box here for — 'heading', 'body',
+     * 'bullet', 'eyebrow', 'footer'. Written by the compose entry and read by
+     * `describeDocument`, so that a model shown eleven strings does not have to
+     * guess which is the heading and guess by length.
+     *
+     * Deliberately not `label`, which is the name a *person* gave the layer and
+     * is what the layer list shows. A composed deck whose layers were all
+     * called "body" would have thrown that away.
+     */
+    role?: string
+    /**
      * Text in a template: which of the kit's two fonts this box asks for as it
      * lands. Absent leaves the guess in `store/widget/brand.ts` to decide from
      * the box's weight and size, and 'keep' is for the one line whose face is

@@ -21,24 +21,25 @@ import type { TdWidgetData } from '@/store/types'
  * What one text box is for.
  *
  * A merge field wins — a box holding `{{school.name}}` is the school's name
- * wherever it sits — then the label the composer wrote on it, then the role a
- * template gave it. A box that answers to none of those has no role, which is
- * an honest answer and better than a guess.
+ * wherever it sits — then what the composer put the box there for, then the
+ * role a template gave it. A box that answers to none of those has no role,
+ * which is an honest answer and better than a guess.
  */
 function roleOf(layer: TdWidgetData): string | null {
   const fields = fieldsInText(layer.text)
   const brandField = fields.find((name) => isBrandField(name))
   if (brandField) return brandField.split('|')[0].trim().toLowerCase()
   if (fields.length) return fields[0].trim().toLowerCase()
-  if (layer.label) return String(layer.label)
+  if (layer.role) return String(layer.role)
   if (layer.brandRole && layer.brandRole !== 'keep') return layer.brandRole
   return null
 }
 
 /** A picture's own description, when it has one worth showing. Never its bytes. */
 function altOf(layer: TdWidgetData): string | null {
-  const label = layer.label || (layer as any).alt
-  return label ? String(label) : null
+  // The name a person gave the layer first, then whatever put the picture here.
+  const described = layer.label || layer.role || (layer as any).alt
+  return described ? String(described) : null
 }
 
 /**
