@@ -378,7 +378,7 @@ Three things worth knowing before you add one:
 - **The step in an extrude has to be one pixel.** At three the diagonals come
   out visibly stepped; depth comes from the number of layers instead.
 - **A stroke, a gradient or an image fill does not survive PNG export.** All
-  three are drawn with CSS that html2canvas has no renderer for
+  three are drawn with CSS that the rasteriser has no renderer for
   (`-webkit-text-stroke`, `background-clip: text`), so an outlined heading
   exports as a flat one. Shadows and offsets do survive. The .pptx export is
   aware of this and rasterises text carrying any effect rather than writing it

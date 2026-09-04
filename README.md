@@ -538,7 +538,7 @@ a photograph with rounded corners or a keyline casts those too. It is a CSS
 
 A shadow is saved with the design, undo puts it back, and the page thumbnails
 and the presenter draw it as well as the canvas. It survives the PNG, the PDF
-and both PowerPoint exports — html2canvas cannot draw a CSS filter, so a
+and both PowerPoint exports — the rasteriser cannot draw a CSS filter, so a
 shadowed element is pre-rendered by the browser instead, with room left round it
 for the shadow to fall into. A .pptx gets a real PowerPoint shadow rather than a
 picture of one, so whoever opens the deck can still edit it.
@@ -628,7 +628,7 @@ button to swap the two over. A head is sized from the stroke, so thickening the
 line thickens its arrowhead with it, and painted in the stroke's colour.
 
 The heads are drawn as ordinary SVG geometry rather than as SVG markers.
-html2canvas has no SVG renderer at all, so a path is exported by serialising its
+The rasteriser has no SVG renderer at all, so a path is exported by serialising its
 whole `<svg>` into an `<img>` and letting the browser draw it; a polygon inside
 that `<svg>` comes through the same door, where a marker would not. The line is
 also drawn back to where a solid head begins, so a dashed stroke stops at the
@@ -661,7 +661,7 @@ any of this existed reads exactly as it did.
 
 Dragging a slider is one undo entry however far the thumb travels. The page
 thumbnails and the presenter draw the same adjustments the canvas does, and so
-do the PNG and PDF exports — html2canvas cannot draw a CSS filter, so an
+do the PNG and PDF exports — the rasteriser cannot draw a CSS filter, so an
 adjusted photograph is pre-rendered by the browser first, the same path a shadow
 takes. A .pptx gets a picture of the adjusted photograph rather than the
 original with the adjustments quietly dropped, because PowerPoint has no way to
@@ -881,7 +881,7 @@ negative hangs under, and zero is straight.
   Each keeps its own letter spacing, so the inner one sweeps further than the
   outer one rather than being squeezed to match it.
 
-Exports need nothing special: html2canvas draws the turned characters as the
+Exports need nothing special: the rasteriser draws the turned characters as the
 browser does, to within antialiasing, and a curved heading that also carries an
 outline or a gradient goes down the same pre-render path those already use. A
 PowerPoint export is the exception — a text box there runs in a straight line,

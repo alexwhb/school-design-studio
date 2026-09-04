@@ -165,7 +165,7 @@ layer paints over the plain text, so without carrying the colour through, the
 swatch appears to do nothing.
 
 **Same libraries where they are framework-agnostic:** moveable, selecto,
-@scena/guides, sortablejs, qr-code-styling, html2canvas, pptxgenjs, psd.js,
+@scena/guides, sortablejs, qr-code-styling, html2canvas-pro, pptxgenjs, psd.js,
 immer, microdiff, nanoid.
 
 ## Embedding
