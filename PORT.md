@@ -14,9 +14,10 @@ it is written down here rather than left to a test that no longer exists.
 ```bash
 npm run dev             # the editor on :5273
 npm run dev:servers     # editor on :5273, embed demo on :5373
-npm run test:e2e        # 90 end-to-end tests for the app and the embed
+npm run test            # unit tests for the compose entry
+npm run test:e2e        # 358 end-to-end tests for the app and the embed
 npm run typecheck       # the app
-npm run typecheck:tests # the e2e suite
+npm run typecheck:tests # the test suites
 npm run bench           # performance run, compared against the previous one
 ```
 
@@ -27,7 +28,9 @@ deps and 504.
 
 The embed demo serves the **built** `dist-embed`, so run `npm run build:embed`
 after changing anything the embed uses, and restart that server — its module
-graph caches the old chunk hashes.
+graph caches the old chunk hashes. Skip the restart and it answers with
+`Failed to resolve import "./index-XXXX.mjs"`, naming the chunk from the build
+before last.
 
 ## What parity proved
 
@@ -46,7 +49,7 @@ offset from the trigger. Menus are positioned by their own engine in each app,
 so the same text rendered a third of a pixel apart; every number the layout
 depends on was checked instead.
 
-The text-effect picker was deliberately *not* held to Element Plus's placement.
+The text-effect picker was deliberately _not_ held to Element Plus's placement.
 It is 626px of presets opened from a control near the bottom of the panel:
 Element Plus let it hang 283px off the bottom of the window, where a third of
 the presets could not be reached, while Radix shifts it up until it fits. The
@@ -71,7 +74,7 @@ list of things that a Vue-to-React port gets wrong, so they are worth keeping:
   `position: absolute`; Radix positions from a fixed wrapper it expects the
   content to fill, so every collision adjustment was made against a zero-size box.
 - **Choosing from a menu also clicked what was behind it.** A React portal
-  bubbles events up the *React* tree, so a page's ⋯ menu selected that page as
+  bubbles events up the _React_ tree, so a page's ⋯ menu selected that page as
   well. Vue's Teleport does not, which is why the original never hit it.
 - **Menus never closed on select**, which left `pointer-events: none` on the body
   and made the next dialog unclickable.
@@ -97,20 +100,20 @@ list of things that a Vue-to-React port gets wrong, so they are worth keeping:
 Production builds, median of five runs, measured against the Vue app just before
 it was removed:
 
-| | Vue | React | |
-| --- | --- | --- | --- |
-| cold load to first canvas | 165 ms | 131 ms | **−21%** |
-| insert 30 text widgets | 695 ms | 580 ms | **−17%** |
-| drag, mean frame | 8.33 ms | 8.32 ms | — |
-| drag, 95th percentile frame | 10.2 ms | 10.3 ms | +1% |
-| zoom, mean frame | 8.35 ms | 8.35 ms | — |
-| zoom, 95th percentile frame | 10.1 ms | 10.0 ms | −1% |
-| drag and zoom, frames over 32 ms | 0 | 0 | — |
-| select one element after another | 582 ms | 570 ms | −2% |
-| switch page | 892 ms | 861 ms | −3% |
-| resize a design | 40 ms | 28 ms | **−30%** |
-| open the presenter | 329 ms | 42 ms | **−87%** |
-| step through slides | 563 ms | 565 ms | — |
+|                                  | Vue     | React   |          |
+| -------------------------------- | ------- | ------- | -------- |
+| cold load to first canvas        | 165 ms  | 131 ms  | **−21%** |
+| insert 30 text widgets           | 695 ms  | 580 ms  | **−17%** |
+| drag, mean frame                 | 8.33 ms | 8.32 ms | —        |
+| drag, 95th percentile frame      | 10.2 ms | 10.3 ms | +1%      |
+| zoom, mean frame                 | 8.35 ms | 8.35 ms | —        |
+| zoom, 95th percentile frame      | 10.1 ms | 10.0 ms | −1%      |
+| drag and zoom, frames over 32 ms | 0       | 0       | —        |
+| select one element after another | 582 ms  | 570 ms  | −2%      |
+| switch page                      | 892 ms  | 861 ms  | −3%      |
+| resize a design                  | 40 ms   | 28 ms   | **−30%** |
+| open the presenter               | 329 ms  | 42 ms   | **−87%** |
+| step through slides              | 563 ms  | 565 ms  | —        |
 
 Resizing a design was the noisiest line — it read +7% on one run and −30% on the
 next, on a job that takes about 30ms. The presenter was the opposite: 329ms
@@ -169,7 +172,9 @@ immer, microdiff, nanoid.
 
 See `EMBEDDING.md`. `npm run build:embed` produces `dist-embed/design-studio.js`
 plus a stylesheet whose every rule is scoped to the editor's own root, so it can
-be dropped into the school planner without an iframe.
+be dropped into the school planner without an iframe. It also produces the
+`compose` entry, which is the layout code as pure functions with no browser
+behind it, and `npm run release:embed` tags that build for a host to install.
 
 ## Snapping and ruler guides
 
@@ -180,7 +185,7 @@ What they add: dragging and resizing snap to other objects, to the page and to
 the page's centre, with equal-spacing hints; the rulers produce real guides
 (their `changeGuides` handler was two `console.log`s); the rulers' zero point
 agrees with the page rather than being 35px out; and `snapBox` finishes the snap
-Moveable leaves a fraction short — it rounds guides to a tenth of a *screen*
+Moveable leaves a fraction short — it rounds guides to a tenth of a _screen_
 pixel, which at 37% zoom is nearly three page pixels, invisible until you zoom
 back in. Snapping is a File-menu toggle, remembered in localStorage.
 
