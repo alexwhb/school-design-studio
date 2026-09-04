@@ -1,0 +1,10 @@
+{
+  "id": 12,
+  "cover": "/covers/sample-12.png",
+  "data": "{\"name\":\"Text\",\"type\":\"w-text\",\"uuid\":\"9f54f0765dbd\",\"editable\":false,\"left\":24,\"top\":86,\"transform\":\"\",\"lineHeight\":1.15,\"letterSpacing\":-1,\"fontSize\":150,\"fontClass\":{\"alias\":\"Archivo\",\"id\":0,\"value\":\"Archivo\",\"url\":\"/fonts/archivo-400-700.woff2\"},\"fontFamily\":\"Archivo\",\"fontWeight\":700,\"fontStyle\":\"normal\",\"writingMode\":\"horizontal-tb\",\"textDecoration\":\"none\",\"color\":\"#B3C4D2ff\",\"textAlign\":\"center\",\"text\":\"Quiet%20Please\",\"opacity\":1,\"backgroundColor\":\"\",\"parent\":\"-1\",\"record\":{\"width\":0,\"height\":0,\"minWidth\":0,\"minHeight\":0,\"dir\":\"horizontal\"},\"width\":922,\"height\":173,\"rotate\":0,\"textEffects\":[{\"filling\":{\"enable\":true,\"type\":0,\"color\":\"#B3C4D2ff\"},\"stroke\":{\"enable\":false,\"type\":\"center\",\"color\":\"#1E3A5Fff\",\"width\":0},\"shadow\":{\"enable\":true,\"color\":\"#FFFFFFff\",\"offsetX\":3,\"offsetY\":3,\"blur\":2},\"offset\":{\"enable\":false,\"x\":0,\"y\":0},\"skew\":{\"enable\":false,\"x\":0,\"y\":0}},{\"filling\":{\"enable\":true,\"type\":0,\"color\":\"#B3C4D2ff\"},\"stroke\":{\"enable\":false,\"type\":\"center\",\"color\":\"#1E3A5Fff\",\"width\":0},\"shadow\":{\"enable\":true,\"color\":\"#1E3A5F80\",\"offsetX\":-3,\"offsetY\":-3,\"blur\":6},\"offset\":{\"enable\":false,\"x\":0,\"y\":0},\"skew\":{\"enable\":false,\"x\":0,\"y\":0}}]}",
+  "title": "Letterpress",
+  "width": 970,
+  "height": 344,
+  "state": 1,
+  "tag": ""
+}
