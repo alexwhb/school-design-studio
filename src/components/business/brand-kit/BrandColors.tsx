@@ -81,7 +81,7 @@ type TEditing = number | 'new' | null
  * change a colour at all, and neither survives being read through a hole.
  */
 export default function BrandColors() {
-  const { kit } = useSnapshot(brandState)
+  const { kit, readOnly } = useSnapshot(brandState)
   const [editing, setEditing] = useState<TEditing>(null)
   const [draft, setDraft] = useState(FIRST_COLOR)
   const [hexText, setHexText] = useState(shortHex(FIRST_COLOR))
@@ -208,7 +208,7 @@ export default function BrandColors() {
   return (
     <div className="brand-colours" role="list" aria-label="Brand colours">
       {kit.colors.map((color, index) => {
-        if (editing === index) return editor
+        if (!readOnly && editing === index) return editor
         const hex = shortHex(color)
         const tone = brandColorTone(color)
         const reads = readability(color)
@@ -233,14 +233,18 @@ export default function BrandColors() {
               </span>
               <span className="brand-swatch__hex">{hex}</span>
             </button>
-            <button type="button" className="brand-swatch__edit" title="Edit this colour" aria-label={`Edit ${hex}`} onClick={() => openEditor(index)}>
-              <PencilIcon />
-            </button>
+            {/* Painting the selection with a colour changes the design, so it
+                stays; editing the colour changes the kit, so it goes. */}
+            {readOnly ? null : (
+              <button type="button" className="brand-swatch__edit" title="Edit this colour" aria-label={`Edit ${hex}`} onClick={() => openEditor(index)}>
+                <PencilIcon />
+              </button>
+            )}
           </div>
         )
       })}
-      {editing === 'new' ? editor : null}
-      {editing !== 'new' && kit.colors.length < MAX_BRAND_COLORS ? (
+      {!readOnly && editing === 'new' ? editor : null}
+      {!readOnly && editing !== 'new' && kit.colors.length < MAX_BRAND_COLORS ? (
         <button type="button" className="brand-swatch--add" onClick={() => openEditor('new')}>
           <PlusIcon />
           Add a colour

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSnapshot } from 'valtio'
 import { recordHistory } from '@/common/hooks/history'
+import { useHostApi } from '@/common/hooks/hostApi'
 import { BRAND_FIELDS, SAMPLE_BRAND, brandResolver, brandState, hasBrandContent, updateBrandKit, type TBrandDetailKey, type TBrandKit } from '@/common/methods/brandKit'
 import ApplyBrand from '@/components/business/brand-kit/ApplyBrand'
 import BrandColors from '@/components/business/brand-kit/BrandColors'
@@ -40,7 +41,8 @@ const DETAILS: { key: TBrandDetailKey; label: string; id: string; type?: string 
  * here needs a Save.
  */
 export default function BrandWrap() {
-  const { kit } = useSnapshot(brandState)
+  const { kit, readOnly } = useSnapshot(brandState)
+  const { brandReadOnlyNote } = useHostApi()
   const pages = useSnapshot(widgetState).dLayouts.length || 1
   const [applying, setApplying] = useState(false)
   const resolve = brandResolver(kit as TBrandKit)
@@ -88,6 +90,13 @@ export default function BrandWrap() {
   return (
     <div className="wrap brand-wrap">
       <div className="brand-wrap__scroll">
+        {/*
+          Said once, at the top, rather than on each greyed-out control. What is
+          locked is the kit; everything the panel does *with* the kit — Apply
+          brand, putting a colour on the selection, dropping the crest or a
+          field onto the page — still works, because none of it changes the kit.
+        */}
+        {readOnly ? <p className="brand-readonly">{brandReadOnlyNote}</p> : null}
         <div className="brand-card">
           <div className="brand-card__head">
             <div className="brand-card__crest transparent-bg">{kit.logo ? <img src={kit.logo.url} alt="" /> : null}</div>
@@ -111,17 +120,21 @@ export default function BrandWrap() {
                   <img src={kit.logo.url} alt="School logo" />
                 </button>
                 <span className="brand-logo__caption">primary</span>
-                <button type="button" className="brand-logo__remove" aria-label="Remove the logo" title="Remove the logo" onClick={removeLogo}>
-                  <CloseIcon />
-                </button>
+                {readOnly ? null : (
+                  <button type="button" className="brand-logo__remove" aria-label="Remove the logo" title="Remove the logo" onClick={removeLogo}>
+                    <CloseIcon />
+                  </button>
+                )}
               </div>
             ) : null}
-            <Uploader className="brand-upload" onDone={logoUploaded}>
-              <PlusIcon />
-              <span>{kit.logo ? 'Replace' : 'Upload'}</span>
-            </Uploader>
+            {readOnly ? null : (
+              <Uploader className="brand-upload" onDone={logoUploaded}>
+                <PlusIcon />
+                <span>{kit.logo ? 'Replace' : 'Upload'}</span>
+              </Uploader>
+            )}
           </div>
-          <p className="brand-hint">A PNG or SVG with a transparent background sits best on a coloured page. {kit.logo ? 'Click it to put it on this page.' : ''}</p>
+          <p className="brand-hint">{readOnly ? (kit.logo ? 'Click the crest to put it on this page.' : 'No crest has been set for this school yet.') : `A PNG or SVG with a transparent background sits best on a coloured page. ${kit.logo ? 'Click it to put it on this page.' : ''}`}</p>
         </PanelSection>
 
         <PanelSection title="Colours">
@@ -129,21 +142,29 @@ export default function BrandWrap() {
           <p className="brand-hint">{kit.colors.length ? 'Click a colour to put it on whatever is selected, or on the page when nothing is.' : 'Add the school’s colours, main colour first. They appear in every colour picker.'}</p>
         </PanelSection>
 
-        <PanelSection title="Fonts">
-          <BrandFonts />
-          <p className="brand-hint">Chosen fonts appear first in the text panel’s font list.</p>
-        </PanelSection>
+        {/*
+          A fieldset rather than a flag on each control: `disabled` on one of
+          these disables every form control inside it, for the keyboard as much
+          as the mouse. Neither of these two sections does anything but edit the
+          kit, so both go behind it whole.
+        */}
+        <fieldset className="brand-locked" disabled={readOnly}>
+          <PanelSection title="Fonts">
+            <BrandFonts />
+            <p className="brand-hint">Chosen fonts appear first in the text panel’s font list.</p>
+          </PanelSection>
 
-        <PanelSection title="Details">
-          {DETAILS.map((detail) => (
-            <div key={detail.key} className="brand-field">
-              <label className="brand-field__label" htmlFor={detail.id}>
-                {detail.label}
-              </label>
-              <Input id={detail.id} type={detail.type} value={kit[detail.key]} placeholder={SAMPLE_BRAND[detail.key]} onChange={(value) => setDetail(detail.key, value)} />
-            </div>
-          ))}
-        </PanelSection>
+          <PanelSection title="Details">
+            {DETAILS.map((detail) => (
+              <div key={detail.key} className="brand-field">
+                <label className="brand-field__label" htmlFor={detail.id}>
+                  {detail.label}
+                </label>
+                <Input id={detail.id} type={detail.type} value={kit[detail.key]} placeholder={SAMPLE_BRAND[detail.key]} disabled={readOnly} onChange={(value) => setDetail(detail.key, value)} />
+              </div>
+            ))}
+          </PanelSection>
+        </fieldset>
 
         <PanelSection title="Fields">
           {BRAND_FIELDS.map((item) => {

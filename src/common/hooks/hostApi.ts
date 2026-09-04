@@ -70,9 +70,15 @@ export type HostApi = {
   onDocumentChange: ((doc: DesignDocument, meta: { dirty: boolean }) => void) | null
   /** The host's own panel, shown behind an "AI" tab in the rail. */
   assistant: ReactNode | null
+  /** Whether the Brand panel may change the kit, or only show and use it. */
+  brandReadOnly: boolean
+  brandReadOnlyNote: string
   /** Filled in by the editor screen; read by the component's own ref. */
   handleRef: MutableRefObject<DesignStudioHandle | null>
 }
+
+/** Said above a Brand panel the reader is not allowed to change. */
+export const BRAND_READ_ONLY_NOTE = 'Only an administrator can change the school’s brand.'
 
 export const HostApiContext = createContext<HostApi | null>(null)
 
@@ -84,6 +90,8 @@ const NONE: HostApi = {
   onSave: null,
   onDocumentChange: null,
   assistant: null,
+  brandReadOnly: false,
+  brandReadOnlyNote: BRAND_READ_ONLY_NOTE,
   handleRef: { current: null },
 }
 

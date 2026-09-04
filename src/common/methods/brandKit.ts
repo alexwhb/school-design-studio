@@ -26,7 +26,20 @@ import { run, STORES } from './localDb'
 
 export * from './brandKitCore'
 
-export const brandState = proxy<{ kit: TBrandKit; loaded: boolean }>({ kit: emptyBrandKit(), loaded: false })
+export const brandState = proxy<{ kit: TBrandKit; loaded: boolean; readOnly: boolean }>({ kit: emptyBrandKit(), loaded: false, readOnly: false })
+
+/**
+ * Whether the kit may be edited here.
+ *
+ * A school's brand belongs to the school, not to whoever happens to have a
+ * design open, so a planner can hand the kit in for everyone to use and let
+ * only an administrator change it. The panel greys itself out, but the answer
+ * that matters is `updateBrandKit` below refusing: a guard at the one writer
+ * cannot be got round by a control somebody forgot to disable.
+ */
+export function setBrandReadOnly(readOnly: boolean) {
+  brandState.readOnly = readOnly
+}
 
 /**
  * Answers `school.*` fields, from the editor's live kit when no other is named.
@@ -125,6 +138,10 @@ export function flushBrandKit(): Promise<boolean> {
  * through here so that typing a name is one write rather than one per letter.
  */
 export function updateBrandKit(change: (kit: TBrandKit) => void) {
+  // The one door into the kit, so it is the one place worth guarding. Silent
+  // rather than thrown: nothing should be calling this while the panel is read
+  // only, and a throw would take a click handler down with it.
+  if (brandState.readOnly) return
   change(brandState.kit)
   clearTimeout(saveTimer)
   saveTimer = setTimeout(() => void saveBrandKit(), SAVE_DEBOUNCE)

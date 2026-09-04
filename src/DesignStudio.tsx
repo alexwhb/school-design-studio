@@ -1,9 +1,9 @@
 import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { EditorModeContext, type EditorMode } from '@/common/hooks/useEditorMode'
 import { setAppRoot } from '@/common/hooks/appRoot'
-import { HostApiContext, type DesignStudioHandle, type HostApi, type HostUploads } from '@/common/hooks/hostApi'
+import { BRAND_READ_ONLY_NOTE, HostApiContext, type DesignStudioHandle, type HostApi, type HostUploads } from '@/common/hooks/hostApi'
 import { clearThemeTarget, setThemePreference, setThemeTarget, type ThemePreference } from '@/common/hooks/useTheme'
-import { adoptBrandKit, loadBrandKit, type TBrandKit } from '@/common/methods/brandKit'
+import { adoptBrandKit, loadBrandKit, setBrandReadOnly, type TBrandKit } from '@/common/methods/brandKit'
 import { setHostUploads } from '@/common/methods/localUploads'
 import { TooltipProvider } from '@/components/ui/Tooltip'
 import { configure, type DesignStudioConfig } from '@/config'
@@ -41,6 +41,17 @@ export type DesignStudioProps = {
    */
   brand?: TBrandKit
   onBrandChange?: (kit: TBrandKit) => void
+  /**
+   * Shows the kit without letting it be changed here. A school's brand belongs
+   * to the school rather than to whoever has a design open, so a planner can
+   * hand it to everyone and let only an administrator edit it. What the panel
+   * does *with* the kit — Apply brand, putting a colour on the selection,
+   * dropping the crest or a field onto the page — is untouched, since none of
+   * that changes the kit.
+   */
+  brandReadOnly?: boolean
+  /** The line shown above the greyed-out panel. */
+  brandReadOnlyNote?: string
   /**
    * The design to edit, when the host keeps it.
    *
@@ -100,7 +111,7 @@ function notReady(): never {
   throw new Error('The Design Studio editor is not on screen yet. Wait for it to mount before driving it.')
 }
 
-export default function DesignStudio({ mode = 'home', apiUrl, homeUrl, appName, config, theme = 'host', brand, onBrandChange, document: hostDocument, documentKind, onDocumentChange, onSave, saveLabel = 'Save', uploads, assistant, ref, className, style }: DesignStudioProps) {
+export default function DesignStudio({ mode = 'home', apiUrl, homeUrl, appName, config, theme = 'host', brand, onBrandChange, brandReadOnly = false, brandReadOnlyNote = BRAND_READ_ONLY_NOTE, document: hostDocument, documentKind, onDocumentChange, onSave, saveLabel = 'Save', uploads, assistant, ref, className, style }: DesignStudioProps) {
   const Screen = mode === 'draw' ? Draw : mode === 'html' ? Html : Index
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [ready, setReady] = useState(false)
@@ -138,6 +149,14 @@ export default function DesignStudio({ mode = 'home', apiUrl, homeUrl, appName, 
     return () => setHostUploads(null)
   }, [uploads])
 
+  // Before the panel can be opened, and kept in the store rather than only in
+  // the context: the guard that matters is in `updateBrandKit`, which is
+  // reached from places that have no React context to read.
+  useLayoutEffect(() => {
+    setBrandReadOnly(brandReadOnly)
+    return () => setBrandReadOnly(false)
+  }, [brandReadOnly])
+
   useLayoutEffect(() => {
     const element = rootRef.current
     if (!element) return
@@ -166,12 +185,14 @@ export default function DesignStudio({ mode = 'home', apiUrl, homeUrl, appName, 
       onSave: onSave ? (doc) => (callbacks.current.onSave as (d: DesignDocument) => Promise<void>)(doc) : null,
       onDocumentChange: onDocumentChange ? (doc, meta) => callbacks.current.onDocumentChange?.(doc, meta) : null,
       assistant: assistant ?? null,
+      brandReadOnly,
+      brandReadOnlyNote,
       handleRef,
     }),
     // Whether a callback was given matters; which function it is does not, and
     // is read through `callbacks` at the moment of the call.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [documentKind, saveLabel, !!onSave, !!onDocumentChange, assistant],
+    [documentKind, saveLabel, !!onSave, !!onDocumentChange, assistant, brandReadOnly, brandReadOnlyNote],
   )
 
   // Forwarded rather than held: the editor screen fills `handleRef` in as it
