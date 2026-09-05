@@ -222,6 +222,9 @@ the canvas, and its Text tool draws the box the words go in. See below.
 
 **Lines and arrows.** New — a Line tool and an Arrow tool. See below.
 
+**Combining shapes.** New — add, subtract, intersect and exclude, on a
+selection of shapes. See below.
+
 **Image adjustments.** New. See below.
 
 **Background removal.** New. See below.
@@ -639,6 +642,51 @@ and both the switch and the pickers refit the frame afterwards, so the line
 stays where it was drawn even though a head needs more room round the curve than
 a bare stroke does. Every change is one undo entry, and the heads draw in the
 page thumbnails, the presenter and the PNG, PDF and PowerPoint exports.
+
+## Combining shapes
+
+Select two or more shapes and the Design tab offers **Combine**: four buttons,
+the four Adobe XD has. **Add** keeps everything both shapes cover. **Subtract**
+takes the ones on top out of the one at the bottom. **Intersect** keeps only
+what they all cover, and **Exclude overlap** keeps everything except that. It is
+how you cut a window out of a banner, put a notch in a badge or make a ring out
+of two circles, without leaving the editor for a drawing program.
+
+Two rules are worth knowing, and both are XD's. Subtract works down the stack
+rather than in the order things were clicked, so what comes off is whatever is
+on top of the shape at the bottom. And the shape that is left takes the
+**bottom** one's fill, outline, opacity and shadow — the other shapes' paint is
+gone, which is why a subtraction of a grey circle from a blue one comes out
+blue.
+
+What you get is one new shape rather than a group that remembers the shapes it
+was made from. That is the deliberate difference from XD, which keeps a boolean
+re-editable for the life of the document: here the operands are replaced, the
+whole thing is one press of Ctrl+Z, and undo is how you get them back. The
+result is a shape like any other — recolour it in the panel, outline it, give it
+a shadow, resize it, turn it.
+
+Only shapes can be combined: rectangles, ellipses, polygons, paths drawn with
+the pen and the shapes in the Graphics panel. Photographs, text, tables, QR
+codes and groups have no outline to combine, so a selection holding one of them
+leaves the four buttons greyed out rather than hiding them. Shapes that do not
+meet say so — an intersection of two shapes that never touch would leave nothing
+on the page, so it is refused instead.
+
+Everything is worked out where the shapes sit on the page, turns included, so a
+shape rotated 30° combines with what it overlaps on screen rather than with what
+it would have overlapped lying flat. The curves stay curves: the arithmetic is
+done on beziers by paper.js rather than on a shape chopped into short straight
+lines, which is the difference between an ellipse that is still an ellipse at
+print resolution and one that is a hundred-sided polygon.
+
+The result is stored as an inline `<svg>` — a `w-path` holds one contour, and a
+subtraction that leaves a hole, or two separate pieces, needs more than one. The
+markup is one `<path>` and nothing else, with the fill left as a placeholder the
+widget's colour list fills in, which is what keeps it recolourable.
+
+The geometry is `src/components/modules/widgets/shape/booleanShapes.ts` and the
+swap on the page is `src/store/widget/boolean.ts`.
 
 ## Adjusting a photo
 
