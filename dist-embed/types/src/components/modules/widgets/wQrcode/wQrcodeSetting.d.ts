@@ -1,0 +1,32 @@
+import { DotType } from 'qr-code-styling';
+export type TWQrcodeSetting = {
+    name: string;
+    type: string;
+    uuid: string | number;
+    width: number;
+    height: number;
+    left: number;
+    top: number;
+    zoom: number;
+    transform: string;
+    radius: number;
+    opacity: number;
+    parent: string;
+    url: string;
+    dotType: DotType;
+    dotColorType: string;
+    dotRotation: number;
+    dotColor: string;
+    dotColor2: string;
+    value: string;
+    setting: Record<string, any>[];
+    record: {
+        width: number;
+        height: number;
+        minWidth: number;
+        minHeight: number;
+        dir: string;
+    };
+    cropEdit?: boolean;
+};
+export declare const wQrcodeSetting: TWQrcodeSetting;

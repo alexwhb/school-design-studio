@@ -1,0 +1,23 @@
+export declare const config: {
+    isDev: boolean;
+    BASE_URL: string;
+    VERSION: string;
+    APP_NAME: string;
+    HOME_URL: string;
+    COPYRIGHT: string;
+    API_URL: string;
+    SCREEN_URL: string;
+    ICONFONT_URL: string;
+    supportSubFont: boolean;
+    BACKGROUND_REMOVAL: boolean;
+    BACKGROUND_REMOVAL_MODEL: string;
+    BACKGROUND_REMOVAL_URL: string;
+};
+type TComObj = Record<string, any>;
+export declare const isInArray: (arr: (string | number)[], value: string | number) => number | false;
+export declare const deleteSome: <R extends TComObj, T extends TComObj = TComObj>(obj: T, arr: string[]) => R extends T ? R : Partial<T>;
+export declare const pickSome: <R extends TComObj, T extends TComObj = TComObj>(obj: T, arr: string[]) => R extends T ? R : Partial<T>;
+export declare const rndNum: (n: number, m: number) => number;
+export declare const findClosestNumber: (target: number, numbers: number[]) => number;
+declare const _default: {};
+export default _default;
