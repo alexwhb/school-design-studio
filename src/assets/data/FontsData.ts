@@ -59,6 +59,18 @@ const fonts: TFontItem[] = [
   { id: 24, oid: 0, value: 'DM Serif Display', alias: 'DM Serif Display', kind: 'serif', url: '/fonts/dm-serif-display-400.woff2', preview: '' },
   { id: 25, oid: 0, value: 'IBM Plex Mono', alias: 'IBM Plex Mono', kind: 'mono', url: '/fonts/ibm-plex-mono-400.woff2', preview: '' },
   { id: 26, oid: 0, value: 'JetBrains Mono', alias: 'JetBrains Mono', kind: 'mono', url: '/fonts/jetbrains-mono-400-700.woff2', preview: '' },
+  { id: 27, oid: 0, value: 'Raleway', alias: 'Raleway', kind: 'sans', url: '/fonts/raleway-400-700.woff2', preview: '' },
+  { id: 28, oid: 0, value: 'Lexend', alias: 'Lexend', kind: 'sans', url: '/fonts/lexend-400-700.woff2', preview: '' },
+  { id: 29, oid: 0, value: 'Atkinson Hyperlegible', alias: 'Atkinson Hyperlegible', kind: 'sans', url: '/fonts/atkinson-hyperlegible-400.woff2', preview: '' },
+  { id: 30, oid: 0, value: 'Archivo Narrow', alias: 'Archivo Narrow', kind: 'sans', url: '/fonts/archivo-narrow-400-700.woff2', preview: '' },
+  { id: 31, oid: 0, value: 'Barlow Condensed', alias: 'Barlow Condensed', kind: 'sans', url: '/fonts/barlow-condensed-400.woff2', preview: '' },
+  { id: 32, oid: 0, value: 'Roboto Slab', alias: 'Roboto Slab', kind: 'serif', url: '/fonts/roboto-slab-400-700.woff2', preview: '' },
+  { id: 33, oid: 0, value: 'EB Garamond', alias: 'EB Garamond', kind: 'serif', url: '/fonts/eb-garamond-400-700.woff2', preview: '' },
+  { id: 34, oid: 0, value: 'Alfa Slab One', alias: 'Alfa Slab One', kind: 'display', url: '/fonts/alfa-slab-one-400.woff2', preview: '' },
+  { id: 35, oid: 0, value: 'Lilita One', alias: 'Lilita One', kind: 'display', url: '/fonts/lilita-one-400.woff2', preview: '' },
+  { id: 36, oid: 0, value: 'Abril Fatface', alias: 'Abril Fatface', kind: 'display', url: '/fonts/abril-fatface-400.woff2', preview: '' },
+  { id: 37, oid: 0, value: 'Patrick Hand', alias: 'Patrick Hand', kind: 'handwriting', url: '/fonts/patrick-hand-400.woff2', preview: '' },
+  { id: 38, oid: 0, value: 'Permanent Marker', alias: 'Permanent Marker', kind: 'handwriting', url: '/fonts/permanent-marker-400.woff2', preview: '' },
 ]
 
 export default fonts

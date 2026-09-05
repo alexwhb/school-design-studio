@@ -41,6 +41,21 @@ const FAMILIES = [
   ['DM Serif Display', 'DM Serif Display', 'DM Serif Display', [400], 'serif'],
   ['IBM Plex Mono', 'IBM Plex Mono', 'IBM Plex Mono', [400, 700], 'mono'],
   ['JetBrains Mono', 'JetBrains Mono', 'JetBrains Mono', [400, 700], 'mono'],
+  // Appended, never reordered or removed: a brand kit stores a font by its id
+  // and a saved design stores it by file path, so a family that moves changes
+  // what somebody's heading font resolves to a year after they chose it.
+  ['Raleway', 'Raleway', 'Raleway', [400, 700], 'sans'],
+  ['Lexend', 'Lexend', 'Lexend', [400, 700], 'sans'],
+  ['Atkinson Hyperlegible', 'Atkinson Hyperlegible', 'Atkinson Hyperlegible', [400, 700], 'sans'],
+  ['Archivo Narrow', 'Archivo Narrow', 'Archivo Narrow', [400, 700], 'sans'],
+  ['Barlow Condensed', 'Barlow Condensed', 'Barlow Condensed', [400, 700], 'sans'],
+  ['Roboto Slab', 'Roboto Slab', 'Roboto Slab', [400, 700], 'serif'],
+  ['EB Garamond', 'EB Garamond', 'EB Garamond', [400, 700], 'serif'],
+  ['Alfa Slab One', 'Alfa Slab One', 'Alfa Slab One', [400], 'display'],
+  ['Lilita One', 'Lilita One', 'Lilita One', [400], 'display'],
+  ['Abril Fatface', 'Abril Fatface', 'Abril Fatface', [400], 'display'],
+  ['Patrick Hand', 'Patrick Hand', 'Patrick Hand', [400], 'handwriting'],
+  ['Permanent Marker', 'Permanent Marker', 'Permanent Marker', [400], 'handwriting'],
 ]
 
 const slug = (s) =>
@@ -101,8 +116,13 @@ for (const [family, cssName, alias, weights, kind] of FAMILIES) {
   for (const [url, entry] of byUrl) {
     const ws = entry.weights
     const file = `${slug(family)}-${ws.join('-')}.woff2`
-    const buf = Buffer.from(await (await fetch(url, { headers: { 'User-Agent': UA } })).arrayBuffer())
-    await fs.writeFile(path.join(OUT, file), buf)
+    // A file that has already shipped is left exactly as it is. Designs point
+    // at their font by path and reflow if the metrics move underneath them, so
+    // adding a family must not quietly restyle every design made before it.
+    const dest = path.join(OUT, file)
+    const existing = await fs.readFile(dest).catch(() => null)
+    const buf = existing ?? Buffer.from(await (await fetch(url, { headers: { 'User-Agent': UA } })).arrayBuffer())
+    if (!existing) await fs.writeFile(dest, buf)
     const descriptor = ws.length > 1 ? `${Math.min(...ws)} ${Math.max(...ws)}` : String(ws[0])
     faces.push(`@font-face {\n  font-family: '${cssName}';\n  font-style: normal;\n  font-weight: ${descriptor};\n  font-display: swap;\n  src: url('/fonts/${file}') format('woff2');\n}`)
     got.push({ w: Math.min(...ws), ws, file, size: buf.length })
