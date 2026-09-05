@@ -222,7 +222,9 @@ function pptxShadow(widget: TdWidgetData, scale: number): PptxGenJS.ShadowProps 
 async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: number) {
   const url = (widget as any).imgUrl
   if (!url) return
-  const data = await imageToDataUrl(url)
+  // The size it is laid out at, so a vector is rasterised for this frame rather
+  // than at whatever intrinsic size it happens to declare.
+  const data = await imageToDataUrl(url, { width: Number(widget.width) || 0, height: Number(widget.height) || 0 })
   if (!data) return false
 
   slide.addImage({
@@ -253,7 +255,7 @@ async function addRasterWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, pag
 async function applyBackground(slide: PptxGenJS.Slide, page: Record<string, any>) {
   const image = page.backgroundImage
   if (image) {
-    const data = await imageToDataUrl(image)
+    const data = await imageToDataUrl(image, { width: Number(page.width) || 0, height: Number(page.height) || 0 })
     if (data) {
       slide.background = { data }
       return

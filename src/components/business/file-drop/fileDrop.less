@@ -1,0 +1,48 @@
+// Over everything, including the panels and the toolbar, because the answer to
+// "can I let go here?" should not depend on which part of the editor the
+// pointer happens to be over.
+.ds-file-drop__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: @scrim;
+  // A drop target that swallows the drag events it is meant to report is the
+  // classic way an overlay breaks its own drop: every dragenter over this
+  // element would be a dragleave of what is underneath it, and the counter in
+  // the hook would never come back down.
+  pointer-events: none;
+}
+
+.ds-file-drop__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: @space-2;
+  padding: @space-6 @space-6 + @space-2;
+  border-radius: @radius-lg;
+  border: 2px dashed @accent-border;
+  background: @surface;
+  box-shadow: @shadow-pop;
+  color: @ink;
+
+  svg {
+    width: 24px;
+    height: 24px;
+    color: @accent;
+  }
+
+  b {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  span {
+    font-size: 12px;
+    color: @ink-3;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
