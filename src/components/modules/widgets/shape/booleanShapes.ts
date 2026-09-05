@@ -39,6 +39,12 @@
  * up headless — a size, no canvas on the page — because nothing here is ever
  * drawn; the project is scratch space for the arithmetic and is emptied again
  * as soon as the answer is out.
+ *
+ * paper is the reason nothing imports this file at the top level. It is ninety
+ * kilobytes that only a session which actually combines something ever needs,
+ * so this module is reached through `loadCombine` in store/widget/boolean.ts
+ * and the panel asks combinable.ts instead. Adding a static import of this file
+ * anywhere puts paper back in the bundle every design page loads.
  */
 import paper from 'paper/dist/paper-core'
 import type { TdWidgetData } from '@/store/types'
@@ -50,22 +56,7 @@ import { readCorners } from '../wRect/rectRadius'
 import { widgetBorder } from '../widgetBorder'
 import { wSvgSetting } from '../wSvg/wSvgSetting'
 import { SHAPE_DEFAULT_FILL } from './shapeSetting'
-
-/** The four operations, named as paper.js names them and as XD arranges them. */
-export type TBooleanOp = 'unite' | 'subtract' | 'intersect' | 'exclude'
-
-/**
- * The kinds of widget that have an outline to combine. A photograph, a piece of
- * text, a table, a QR code and a group are not shapes — there is no closed
- * curve to hand to a boolean — so a selection holding one of them cannot be
- * combined at all, and the buttons say so by being unavailable.
- */
-const OPERAND_TYPES = ['w-rect', 'w-ellipse', 'w-polygon', 'w-path', 'w-svg']
-
-/** True when this layer can take part in a boolean operation. */
-export function canCombine(widget: Record<string, any> | null | undefined): boolean {
-  return !!widget && OPERAND_TYPES.includes(String(widget.type))
-}
+import { canCombine, type TBooleanOp } from './combinable'
 
 /** Two decimals, the same precision every other shape in the editor is written at. */
 function round(value: number): number {

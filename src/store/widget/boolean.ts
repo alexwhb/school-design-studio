@@ -20,13 +20,32 @@
  */
 import { customAlphabet } from 'nanoid/non-secure'
 import message from '@/components/ui/message'
-import { canCombine, combinedShape, type TBooleanOp } from '@/components/modules/widgets/shape/booleanShapes'
+import { canCombine, type TBooleanOp } from '@/components/modules/widgets/shape/combinable'
 import { widgetState } from '../state'
 import type { TdWidgetData } from '../types'
 import { refuseLocked } from './lock'
 import { selectWidget } from './select'
 
 const nanoid = customAlphabet('1234567890abcdef', 12)
+
+let geometry: typeof import('@/components/modules/widgets/shape/booleanShapes') | null = null
+
+/**
+ * Fetches the geometry, and paper.js along with it.
+ *
+ * paper is ninety kilobytes of bezier arithmetic, and the overwhelming majority
+ * of sessions never combine anything, so it is not in the bundle a design page
+ * loads — it arrives on the first press of one of the four buttons and is held
+ * for the rest of the session.
+ *
+ * It has to be awaited *before* `combineShapes`, not inside it, because
+ * `recordHistory` is synchronous: it snapshots the page, calls, and snapshots
+ * again. An await in the middle would close the undo step before the shapes had
+ * moved, and the operation would not be undoable.
+ */
+export async function loadCombine(): Promise<void> {
+  geometry ??= await import('@/components/modules/widgets/shape/booleanShapes')
+}
 
 /**
  * Replaces the selected shapes with the one they make under `op`.
@@ -37,6 +56,11 @@ const nanoid = customAlphabet('1234567890abcdef', 12)
  * has nothing left. Both say so rather than emptying the page.
  */
 export function combineShapes(op: TBooleanOp): void {
+  // Nothing to combine with yet: loadCombine() has to be awaited first, which
+  // is what every caller does. Returning quietly rather than throwing keeps a
+  // mis-wired caller from taking the editor down with it.
+  if (!geometry) return
+
   const widgets = widgetState.dWidgets
   const chosen = widgetState.dSelectWidgets
   if (chosen.length < 2) return
@@ -55,7 +79,7 @@ export function combineShapes(op: TBooleanOp): void {
   // Out of the valtio proxy before the geometry sees it: booleanShapes reads
   // these several times over and has no business subscribing to the store.
   const operands = depths.map((index) => JSON.parse(JSON.stringify(widgets[index])) as Record<string, any>)
-  const result = combinedShape(op, operands)
+  const result = geometry.combinedShape(op, operands)
   if (!result) {
     message({ message: 'There would be nothing left to draw. Move the shapes so they overlap and try again.', type: 'info', duration: 2600 })
     return

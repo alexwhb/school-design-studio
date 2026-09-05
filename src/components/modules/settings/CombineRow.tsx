@@ -14,8 +14,8 @@
  */
 import { recordHistory } from '@/common/hooks/history'
 import { ExcludeIcon, IntersectIcon, SubtractIcon, UnionIcon } from '@/components/ui/icons'
-import { combineShapes } from '@/store/widget'
-import type { TBooleanOp } from '../widgets/shape/booleanShapes'
+import { combineShapes, loadCombine } from '@/store/widget'
+import type { TBooleanOp } from '../widgets/shape/combinable'
 import IconItemSelect, { type TIconItemSelectData } from './IconItemSelect'
 import './combineRow.less'
 
@@ -48,7 +48,13 @@ export default function CombineRow({ disabled }: Props) {
       // Combining is committed all at once from a button, so it marks its own
       // ends: the press and the release the undo stack is otherwise built from
       // never reach the document while a panel control has the pointer.
-      onFinish={(item) => recordHistory(() => combineShapes(item.value as TBooleanOp))}
+      //
+      // The geometry is fetched first and the history step opened after it
+      // lands, because recordHistory is synchronous — see loadCombine.
+      onFinish={async (item) => {
+        await loadCombine()
+        recordHistory(() => combineShapes(item.value as TBooleanOp))
+      }}
     />
   )
 }
