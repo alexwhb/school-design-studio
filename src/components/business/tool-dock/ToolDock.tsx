@@ -25,12 +25,11 @@ import { setDrawTool, toggleDrawTool } from '@/store/control'
 import { addWidget } from '@/store/widget'
 import { recordHistory } from '@/common/hooks/history'
 import { NOTES_DRAWER_HEIGHT, notesState } from '@/store/notes'
-import setImageData from '@/common/methods/DesignFeatures/setImage'
+import { IMAGE_UPLOAD_LABEL, placeUploadedImage } from '@/common/methods/placeImageFile'
 import eventBus from '@/utils/plugins/eventBus'
 import Popover from '@/components/ui/Popover'
 import Tooltip from '@/components/ui/Tooltip'
 import Uploader, { type TModelData, type TUploadDoneData } from '@/components/common/Uploader/Uploader'
-import wImageSetting from '@/components/modules/widgets/wImage/wImageSetting'
 import { drawToolOrder, drawTools, toolHint } from '@/components/business/draw-shape/drawTools'
 import { ArrowToolIcon, ChevronUpIcon, PictureIcon, QrCodeIcon, SelectToolIcon, ShapesIcon, TableIcon, UploadArrowIcon } from '@/components/ui/icons'
 import { cx } from '@/utils/dom'
@@ -156,17 +155,7 @@ export default function ToolDock() {
    */
   async function placeUpload(res: TUploadDoneData) {
     setOpen(null)
-    // The Photos panel's own uploads section listens for this and reloads.
-    eventBus.emit('refreshUserImages')
-    const setting = JSON.parse(JSON.stringify(wImageSetting))
-    const img = await setImageData({ width: res.width, height: res.height, url: res.url })
-    setting.width = img.width
-    setting.height = img.height
-    setting.imgUrl = res.url
-    const { width: pW, height: pH } = canvasState.dPage
-    setting.left = Math.round(pW / 2 - img.width / 2)
-    setting.top = Math.round(pH / 2 - img.height / 2)
-    recordHistory(() => addWidget(setting))
+    await placeUploadedImage(res)
   }
 
   const PenToolIcon = drawTools.pen.Icon
@@ -233,7 +222,7 @@ export default function ToolDock() {
                       <UploadArrowIcon />
                     </span>
                     <span className="tool-dock__row-label">Upload from device</span>
-                    <span className="tool-dock__row-meta">jpg, png</span>
+                    <span className="tool-dock__row-meta">{IMAGE_UPLOAD_LABEL}</span>
                   </span>
                 </Uploader>
                 <button type="button" className="tool-dock__row" onClick={browsePhotos}>

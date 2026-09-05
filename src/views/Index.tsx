@@ -7,6 +7,7 @@ import DrawShape from '@/components/business/draw-shape/DrawShape'
 import DrawLine from '@/components/business/draw-shape/DrawLine'
 import DrawText from '@/components/business/draw-shape/DrawText'
 import DrawPen from '@/components/business/draw-shape/DrawPen'
+import { useFileDrop } from '@/components/business/file-drop/useFileDrop'
 import DesignBoard from '@/components/modules/layout/designBoard/DesignBoard'
 import ZoomControl, { type ZoomControlHandle } from '@/components/modules/layout/zoomControl/ZoomControl'
 import LineGuides from '@/components/modules/layout/LineGuides'
@@ -290,11 +291,16 @@ export default function Index() {
     fns[fnName]?.(params)
   }
 
+  // A picture dragged in from the desktop. On the screen's own root, so it
+  // counts anywhere in the editor rather than only over the page — and so an
+  // unhandled drop can never navigate the tab away from unsaved work.
+  const { dropHandlers, dropOverlay } = useFileDrop()
+
   const shelterWidth = Math.floor((canvas.dPage.width * canvas.dZoom) / 100) + 'px'
   const shelterHeight = Math.floor((canvas.dPage.height * canvas.dZoom) / 100) + 'px'
 
   return (
-    <div id="page-design-index" ref={rootRef} className="page-design-bg-color">
+    <div id="page-design-index" ref={rootRef} className="page-design-bg-color" {...dropHandlers}>
       <div style={navStyle} className="top-nav">
         <div className="top-nav-wrap">
           <div className="top-left">
@@ -384,6 +390,7 @@ export default function Index() {
       <FindReplace ref={findReplaceRef} />
       <BulkDocuments ref={bulkDocumentsRef} getTitle={getDesignTitle} />
       {presentable ? <PresentMode ref={presentRef} /> : null}
+      {dropOverlay}
     </div>
   )
 }
