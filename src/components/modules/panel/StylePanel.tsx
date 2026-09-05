@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import AlignRow from '../settings/AlignRow'
+import CombineRow from '../settings/CombineRow'
 import SelectionHeader from '../settings/SelectionHeader'
 import { type TIconItemSelectData } from '../settings/IconItemSelect'
 import AnimateWrap from '../settings/AnimateSelect/AnimateWrap'
@@ -15,6 +16,7 @@ import { setUpdateRect } from '@/store/force'
 import { getCombined, realCombined } from '@/store/group'
 import { distributeGeometry, setDWidgets, updateAlign } from '@/store/widget'
 import type { TdWidgetData } from '@/store/types'
+import { canCombine } from '../widgets/shape/booleanShapes'
 import LayerList from './components/LayerList'
 import { styleComponents } from './styleRegistry'
 import './stylePanel.less'
@@ -31,6 +33,8 @@ export default function StylePanel() {
   const activeType = active?.type
   const activeUuid = active?.uuid
   const selectCount = snap.dSelectWidgets.length
+  /** Boolean operations need outlines, so every layer chosen has to be a shape. */
+  const combinable = selectCount > 1 && snap.dSelectWidgets.every((widget) => canCombine(widget))
   /** The page has no entrance of its own; everything drawn on it does. */
   const animatable = !!activeType && activeType !== 'page'
 
@@ -115,6 +119,7 @@ export default function StylePanel() {
             <Button plain type="primary" className="gounp__btn" onClick={handleCombine}>
               Group
             </Button>
+            <CombineRow disabled={!combinable} />
             <AlignRow distribute distributeDisabled={selectCount < DISTRIBUTE_MINIMUM} onFinish={alignSelection} />
             <span className="panel-rule" />
           </div>

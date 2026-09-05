@@ -558,3 +558,47 @@ export function SparkleIcon({ className, width = '1em', height = '1em' }: IconPr
     </svg>
   )
 }
+
+/*
+ * The four boolean operations, drawn the way every design tool draws them:
+ * two overlapping squares, the part the operation keeps filled in and the rest
+ * left as a faint outline, so the four read as one set at a glance.
+ */
+
+/** Add: both squares kept, as one outline. */
+export function UnionIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M2 2h9v3h3v9H5v-3H2Z" fill="currentColor" />
+    </svg>
+  )
+}
+
+/** Subtract: the top square taken out of the bottom one. */
+export function SubtractIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M2 2h9v3H5v6H2Z" fill="currentColor" />
+      <path d="M5.5 5.5h8v8h-8Z" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+    </svg>
+  )
+}
+
+/** Intersect: only the part both squares cover. */
+export function IntersectIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M5 5h6v6H5Z" fill="currentColor" />
+      <path d="M2.5 2.5h8v8h-8ZM5.5 5.5h8v8h-8Z" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+    </svg>
+  )
+}
+
+/** Exclude overlap: everything except the part both squares cover. */
+export function ExcludeIcon({ className, width = '1em', height = '1em' }: IconProps) {
+  return (
+    <svg className={className} width={width} height={height} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M2 2h9v3h3v9H5v-3H2Z M5 5h6v6H5Z" fill="currentColor" fillRule="evenodd" />
+    </svg>
+  )
+}
