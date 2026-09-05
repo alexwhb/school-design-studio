@@ -1,6 +1,5 @@
 import { useRef, type ReactNode } from 'react'
-import { saveUpload } from '@/common/methods/localUploads'
-import useNotification from '@/common/methods/notification'
+import { IMAGE_UPLOAD_ACCEPT, uploadImageFile, type TUploadDoneData } from '@/common/methods/placeImageFile'
 import './uploader.less'
 
 export type TModelData = {
@@ -8,13 +7,9 @@ export type TModelData = {
   ratio?: string
 }
 
-export type TUploadDoneData = {
-  width: number
-  height: number
-  url: string
-  id?: string
-  title?: string
-}
+// Defined beside the uploading itself, and re-exported here because half the
+// editor imports it from this file.
+export type { TUploadDoneData }
 
 type Props = {
   value?: TModelData
@@ -56,19 +51,12 @@ export default function Uploader({ value = {}, hold = false, accept = 'image/*',
     uploading.current = true
     const file = uploadList.current[0]
     if (file) {
-      if (file.size > 40 * 1024 * 1024) {
-        useNotification('That image is too big', 'Please use a picture under 40MB.', { type: 'error', position: 'bottom-left' })
-      } else {
-        updatePercent(0)
-        try {
-          const saved = await saveUpload(file)
-          useNotification('Uploaded', saved.title, { position: 'bottom-left' })
-          onDone?.({ id: saved.id, width: saved.width, height: saved.height, url: saved.url, title: saved.title })
-        } catch (error) {
-          const quota = error instanceof DOMException && (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
-          useNotification(quota ? 'No room left for uploads' : 'That image could not be added', quota ? 'Delete some uploads and try again.' : (error as Error)?.message || 'The file could not be read.', { type: 'error', position: 'bottom-left' })
-        }
-      }
+      updatePercent(0)
+      // The size cap, the type allowlist and every failure notice live in
+      // `uploadImageFile`, which is also what a file dropped on the canvas goes
+      // through. This queue's job is the progress readout and nothing else.
+      const saved = await uploadImageFile(file)
+      if (saved) onDone?.(saved)
       uploading.current = false
       handleRemove()
       index.current++
