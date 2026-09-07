@@ -14,6 +14,7 @@
  */
 import type { DesignDocument, DesignOp, RejectedOp } from './types'
 import { applyBrand, fieldFiller } from './brand'
+import { applyMotion } from './motion'
 import { composeSlide, blankSlide, DECK_PAGE_KINDS } from './deck'
 import { composeSign, blankSign, SIGN_PAGE_KINDS } from './poster'
 import { slideTheme, posterPack } from './themes'
@@ -232,6 +233,10 @@ export function applyOps(doc: DesignDocument, ops: DesignOp[], options: { brand?
         break
       }
 
+      case 'setMotion': {
+        next = applyMotion(next, op.on !== false)
+        break
+      }
       case 'applyBrand': {
         if (!options.brand) {
           rejected.push({ op, reason: 'No brand kit was given to apply.' })

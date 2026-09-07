@@ -22,6 +22,8 @@ import type { TdLayout, TdWidgetData } from '@/store/types'
 import { readTable } from '@/components/modules/widgets/wTable/tableModel'
 import { htmlToText, imageToDataUrl, isInvisible, pxToInches, pxToPoints, readRotation, safeFileName, toPptxColor } from './utils'
 import { htmlToPptxRuns } from './textRuns'
+import { applyPptxMotion, motionName, type MotionTarget, type SlideMotion } from './pptxAnimation'
+import { readTransition } from '@/common/animations/transitions'
 
 export type PptxMode = 'editable' | 'picture'
 
@@ -114,6 +116,7 @@ function addTextWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: numb
   // date or a link comes out as one in the deck — see textRuns.ts.
   slide.addText(htmlToPptxRuns((widget as any).text, (widget as any).listStyle), {
     ...frame(widget, scale),
+    objectName: motionName(widget.uuid),
     fontFace: (widget as any).fontClass?.value || 'Inter',
     fontSize,
     color,
@@ -181,6 +184,7 @@ function addTableWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: num
   )
 
   slide.addTable(rows, {
+    objectName: motionName(widget.uuid),
     x: box.x,
     y: box.y,
     w: box.w,
@@ -230,6 +234,7 @@ async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scal
   slide.addImage({
     data,
     ...frame(widget, scale),
+    objectName: motionName(widget.uuid),
     rotate: readRotation(widget) || undefined,
     transparency: toPptxColor(
       `#000000${Math.round(Number((widget as any).opacity ?? 1) * 255)
@@ -248,7 +253,7 @@ async function addRasterWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, pag
   if (!data) return
   // The picture is drawn without the element's shadow — see `capture` — so the
   // shadow is put back here, where PowerPoint can cast it outside the frame.
-  slide.addImage({ data, ...frame(widget, scale), shadow: pptxShadow(widget, scale) })
+  slide.addImage({ data, ...frame(widget, scale), objectName: motionName(widget.uuid), shadow: pptxShadow(widget, scale) })
 }
 
 /** Paints the page background onto the slide: a colour, a gradient's base, or an image. */
@@ -299,10 +304,19 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
   pptx.defineLayout({ name: 'DESIGN', width: deckWidth, height: deckHeight })
   pptx.layout = 'DESIGN'
 
+  // Collected as the deck is built and written in afterwards — pptxgenjs has no
+  // API for either a transition or a build, so both are edited into the file it
+  // produces. See pptxAnimation.ts.
+  const motion: SlideMotion[] = []
+
   for (let i = 0; i < pages.length; i++) {
     const page = pages[i].global as Record<string, any>
     const layers = (pages[i].layers || []) as TdWidgetData[]
     const slide = pptx.addSlide()
+    // A transition belongs to the page, so it survives 'picture' mode too: a
+    // deck of flat images still gives way one slide to the next.
+    const slideMotion: SlideMotion = { transition: readTransition(pages[i].global as any), builds: [] }
+    motion.push(slideMotion)
 
     onProgress?.(Math.round(((i + 0.1) / pages.length) * 90), `Building slide ${i + 1} of ${pages.length}`)
 
@@ -317,6 +331,8 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
       } else {
         await applyBackground(slide, page)
       }
+      // Nothing on the slide but one picture of the whole page, so there is
+      // nothing left for an element entrance to point at.
       continue
     }
 
@@ -330,6 +346,16 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
       if (String(widget.type) === 'w-group') continue
       if (widget.hidden || (widget.parent && hiddenGroups.has(widget.parent))) continue
       if ((widget as any).opacity === 0) continue
+
+      // Recorded for every visible element, whether or not it ends up in the
+      // file. The start modes are RELATIVE — `with` means "as the one before
+      // it" — so an element left out here silently re-times the ones that are
+      // left: a page of bullets whose markers failed to rasterise came out with
+      // all three arriving at once instead of one after the next. The schedule
+      // is worked out over the whole page and the missing shapes are dropped at
+      // the end, where they cost nothing. The layer order is the running order,
+      // which is what buildSchedule reads in the presenter too.
+      slideMotion.builds.push({ uuid: widget.uuid, animation: (widget as any).animation, objectName: motionName(widget.uuid) } as MotionTarget)
 
       try {
         if (needsRaster(widget)) {
@@ -352,10 +378,11 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
   }
 
   onProgress?.(95, 'Writing the file')
-  const blob = (await pptx.write({ outputType: 'blob' })) as Blob
+  const written = (await pptx.write({ outputType: 'blob' })) as Blob
   // pptxgenjs hands back `application/zip`, which a .pptx technically is and
   // which some readers then refuse to open as a presentation. Say what it is.
-  return blob.type === PPTX_TYPE ? blob : new Blob([blob], { type: PPTX_TYPE })
+  const blob = written.type === PPTX_TYPE ? written : new Blob([written], { type: PPTX_TYPE })
+  return applyPptxMotion(blob, motion)
 }
 
 const PPTX_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
