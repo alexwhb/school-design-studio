@@ -24,6 +24,10 @@ export { sanitizeFields } from './fields'
 export type { FieldReport } from './fields'
 export type { TWidgetType } from '@/components/modules/widgets/widgetTypes'
 export { applyBrand } from './brand'
+// Opening someone else's file. The caller unzips and hosts the media; this
+// turns the XML into a design. See `pptx/import.ts`.
+export { importPptx, pptxMediaPaths, MAX_PPTX_SLIDES, PPTX_MEDIA_PREFIX } from './pptx/import'
+export type { PptxImportOptions, PptxImportReport, PptxImportResult, PptxMedia, PptxParts, PptxSkip } from './pptx/import'
 export { SLIDE_THEME_KEYS, POSTER_PACK_KEYS, slideTheme, posterPack } from './themes'
 export type { Theme, SlideThemeKey, PosterPackKey } from './themes'
 export { ICON_KEYS } from './icons'
