@@ -1,6 +1,6 @@
 {
   "name": "design-studio",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "author": "ShawnPhang",
   "scripts": {
@@ -40,6 +40,7 @@
     "fontfaceobserver": "^2.1.0",
     "html2canvas-pro": "^2.4.1",
     "immer": "^10.0.4",
+    "jszip": "^3.10.1",
     "microdiff": "^1.4.0",
     "mitt": "^3.0.1",
     "moveable": "^0.26.0",
