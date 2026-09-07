@@ -13,8 +13,10 @@
  * half-finished fades. Nothing fills forwards: when an animation ends the
  * slot simply reverts to its own CSS, which is already where it was heading.
  *
- * PowerPoint export cannot carry any of this — pptxgenjs has no slide
- * transition API — so a transition lives in the presenter only.
+ * A .pptx carries this too, though pptxgenjs has no API for it: the exporter
+ * writes the `<p:transition>` element into the finished file itself. That is
+ * what makes a transition survive into Google Slides, which is where most of
+ * these decks are actually opened. See `export/pptxAnimation.ts`.
  */
 import type { TPageState } from '@/store/types'
 

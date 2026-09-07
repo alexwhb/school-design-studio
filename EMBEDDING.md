@@ -248,7 +248,7 @@ answer in all three. That is what lets a planner compose a deck from a model's
 outline on the server, store it, and open the same JSON in the editor later.
 
 ```ts
-import { composeDeck, describeDocument, applyOps, applyBrand, SLIDE_THEME_KEYS } from 'design-studio/compose'
+import { composeDeck, describeDocument, applyOps, applyBrand, applyMotion, SLIDE_THEME_KEYS } from 'design-studio/compose'
 
 const doc = composeDeck(outline, { theme: 'editorial', brand: school.brandKit })
 const view = describeDocument(doc) // what an LLM is shown
@@ -260,8 +260,10 @@ const { doc: next, rejected } = applyOps(doc, ops) // what it is allowed to send
 | `composeDeck(outline, opts)`    | Five slide layouts: `title`, `statement`, `content`, `two-column`, `media`.                  |
 | `composePoster(outline, opts)`  | Five sign layouts: `direction`, `icon`, `statement`, `number`, `notice`.                     |
 | `describeDocument(doc)`         | Every text box with its id, its words and its role. Never a data URL or a byte of a picture. |
-| `applyOps(doc, ops, { brand })` | The six operations, applied or refused with a reason.                                        |
+| `applyOps(doc, ops, { brand })` | The seven operations, applied or refused with a reason.                                      |
 | `applyBrand(doc, kit)`          | What the Brand panel's Apply brand does, on a copy.                                          |
+| `applyMotion(doc, on)`          | Turns a deck's animation on or off across every page. A poster is returned untouched.        |
+| `hasMotion(doc)`                | Whether a deck already carries any — what a toggle reads to know which way it is.            |
 | `pageKinds(kind)`               | The `kind` values `addPage` will take.                                                       |
 | `SLIDE_THEME_KEYS`              | `editorial`, `swiss`, `academic`, `dark`, `pastel`.                                          |
 | `POSTER_PACK_KEYS`              | `navy`, `crimson`, `forest`.                                                                 |
@@ -327,7 +329,7 @@ bullet on a slide, they read the mess at the bottom of the page.
 **The six operations.**
 
 ```ts
-type DesignOp = { op: 'setText'; id: string; text: string } | { op: 'setImage'; id: string; url: string; width: number; height: number } | { op: 'addPage'; after: number; kind: string; fields: Record<string, string> } | { op: 'removePage'; index: number } | { op: 'movePage'; from: number; to: number } | { op: 'applyBrand' }
+type DesignOp = { op: 'setText'; id: string; text: string } | { op: 'setImage'; id: string; url: string; width: number; height: number } | { op: 'addPage'; after: number; kind: string; fields: Record<string, string> } | { op: 'removePage'; index: number } | { op: 'movePage'; from: number; to: number } | { op: 'applyBrand' } | { op: 'setMotion'; on: boolean }
 ```
 
 `applyOps` never throws. An op naming an id that is not on the page, or an index

@@ -111,6 +111,12 @@ export type DesignOp =
   | { op: 'removePage'; index: number }
   | { op: 'movePage'; from: number; to: number }
   | { op: 'applyBrand' }
+  /**
+   * Motion across the whole deck, on or off. Deck-wide on purpose: a deck with
+   * a transition on four pages out of nine reads as a mistake, and the thing
+   * anybody actually asks for is "give it some movement" or "take it off".
+   */
+  | { op: 'setMotion'; on: boolean }
 
 export type RejectedOp = { op: DesignOp; reason: string }
 

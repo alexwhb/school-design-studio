@@ -1518,11 +1518,23 @@ CSS, which is where it was heading anyway.
 presenter checks `prefers-reduced-motion` before playing anything, and the
 stylesheet drops the cross-fade under the same query.
 
-A `.pptx` file carries none of this. pptxgenjs has no slide transition API, so a
-transition lives in the presenter only, and the panel says so rather than
-letting you set one and find out in front of a room.
+**A `.pptx` carries it.** pptxgenjs has no API for a transition, so the exporter
+writes the `<p:transition>` element into the finished file itself, along with a
+`<p:timing>` tree for any element entrances on the page. Both survive Drive's
+importer, so a deck uploaded as Google Slides arrives with its motion intact and
+editable in the Motion panel. PowerPoint's vocabulary is coarser than the
+presenter's — it has no spring, blur or spin — so anything outside the fades and
+the four wipes exports as a fade. What always survives is the beat: when each
+element arrives, how long it takes, and what waits for a click.
 
-Code: `src/common/animations/transitions.ts`.
+Per-paragraph builds, where the bullets of one box appear a line at a time, are
+deliberately not exported. The file format does it, but a widget is the smallest
+thing that can carry an animation here, so there is no way to author one and no
+way for the presenter to play it. Exporting one would put a beat in the school's
+copy that neither the editor nor the presenter agrees with.
+
+Code: `src/common/animations/transitions.ts`,
+`src/common/methods/export/pptxAnimation.ts`.
 
 ## Speaker notes and presenter view
 

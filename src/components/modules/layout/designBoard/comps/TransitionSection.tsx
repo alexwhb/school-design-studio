@@ -84,7 +84,7 @@ export default function TransitionSection({ page }: { page: TPageState }) {
             </Button>
           </div>
         ) : null}
-        <p className="ds-transition__note">Plays in the presenter. PowerPoint files do not carry transitions.</p>
+        <p className="ds-transition__note">Plays in the presenter, and comes across in PowerPoint and Google Slides.</p>
       </div>
     </PanelSection>
   )

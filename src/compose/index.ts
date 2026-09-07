@@ -14,6 +14,7 @@ export { composeDeck, composeSlide, blankSlide, DECK_PAGE_KINDS } from './deck'
 export { composePoster, composeSign, blankSign, pageSize, SIGN_PAGE_KINDS } from './poster'
 export { describeDocument, kindOf } from './describe'
 export { applyOps, pageKinds } from './ops'
+export { applyMotion, hasMotion } from './motion'
 export { sanitizeMarkup, markupToText, parseMarkup } from './markup'
 // What a design may be made of, for a host validating one before it stores it.
 // Derived from the widget registry rather than typed out again — see the

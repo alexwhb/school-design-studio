@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import JSZip from 'jszip'
-import { addPage, addText, collapsePageStrip, expandPageStrip, goToPage, openEditor } from './helpers'
+import { addPage, addText, collapsePageStrip, downloadFrom, expandPageStrip, goToPage, openEditor } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
@@ -132,17 +132,6 @@ async function typeNotes(page: Page, text: string) {
   await page.waitForTimeout(500)
 }
 
-/** The bytes of whatever the next click downloads. */
-async function downloadFrom(page: Page, click: () => Promise<void>) {
-  const download = page.waitForEvent('download', { timeout: 90000 })
-  await click()
-  const file = await download
-  const stream = await file.createReadStream()
-  const chunks: Buffer[] = []
-  for await (const chunk of stream!) chunks.push(chunk as Buffer)
-  return { name: file.suggestedFilename(), bytes: Buffer.concat(chunks) }
-}
-
 test('notes are typed under the canvas and survive a reload', async ({ page }) => {
   await addText(page, 'Heading')
   await typeNotes(page, 'Welcome everyone, and thank the choir.')
@@ -206,6 +195,25 @@ test('the PowerPoint export carries the notes into the notes pane', async ({ pag
   const notes = zip.file('ppt/notesSlides/notesSlide1.xml')
   expect(notes, 'the deck has a notes slide').toBeTruthy()
   expect(await notes!.async('string')).toContain('Hand out the letters before the bell.')
+})
+
+test('the PowerPoint export carries the transition, which is what Google Slides reads', async ({ page }) => {
+  await deckWithTransition(page, 'Fade')
+
+  await page.locator('.export-caret').click()
+  await page.waitForTimeout(400)
+  const { bytes } = await downloadFrom(page, () => page.locator('.export-menu__list').getByText('PowerPoint', { exact: true }).click())
+
+  const zip = await JSZip.loadAsync(bytes)
+  // The transition belongs to the page being arrived at, so it is on slide 2.
+  const second = await zip.file('ppt/slides/slide2.xml')!.async('string')
+  expect(second).toContain('<p:transition')
+  expect(second).toContain('<p:fade/>')
+  // The editor's default duration has to read as the middle speed.
+  expect(second).toContain('spd="med"')
+
+  const first = await zip.file('ppt/slides/slide1.xml')!.async('string')
+  expect(first).not.toContain('<p:transition')
 })
 
 test('the presenter view opens in a second window and stays in step both ways', async ({ page, context }) => {
