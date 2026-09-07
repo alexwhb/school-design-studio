@@ -74,6 +74,7 @@
     "cross-env": "^7.0.3",
     "eslint": "^8.56.0",
     "eslint-config-alloy": "~4.1.0",
+    "jszip": "^3.10.1",
     "less": "^4.1.1",
     "terser": "^5.28.1",
     "typescript": "^5.2.2",
