@@ -1,0 +1,13 @@
+export declare const RGB2Hex: (r: number, g: number, b: number) => string;
+export declare const RGBA2HexA: (r: number, g: number, b: number, a?: number) => string;
+export declare const change2Hex: (color: string) => string;
+export declare const RGB2HSL: (r: number, g: number, b: number) => number[];
+export declare const RGBA2HSLA: (r: number, g: number, b: number, a?: number) => number[];
+export declare function HSL2RGB(h: number, s: number, l: number): number[];
+export declare const HSLA2RGBA: (h: number, s: number, l: number, a?: number) => number[];
+export declare const HSL2Hex: (h: number, s: number, l: number) => string;
+export declare const HSLA2HexA: (h: number, s: number, l: number, a?: number) => string;
+export declare const hex2RGB: (hex: string) => number[];
+export declare const hexA2RGBA: (hexA: string) => number[];
+export declare const hex2HSL: (hex: string) => number[];
+export declare const hexA2HSLA: (hexA: string) => number[];

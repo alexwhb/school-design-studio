@@ -1,0 +1,56 @@
+export type TWSvgSetting = {
+    name: string;
+    type: string;
+    uuid: string;
+    width: number;
+    height: number;
+    colors: [];
+    left: number;
+    top: number;
+    transform: string;
+    radius: number;
+    opacity: number;
+    borderWidth: number;
+    borderColor: string;
+    borderStyle: string;
+    parent: string;
+    svgUrl: string;
+    setting: [];
+    record: {
+        width: number;
+        height: number;
+        minWidth: number;
+        minHeight: number;
+    };
+    zoom?: number;
+    cropEdit?: boolean;
+    imgUrl?: string;
+    rotate?: number;
+    x?: number;
+    y?: number;
+};
+export declare const wSvgSetting: {
+    name: string;
+    type: string;
+    uuid: string;
+    width: number;
+    height: number;
+    colors: never[];
+    left: number;
+    top: number;
+    transform: string;
+    radius: number;
+    opacity: number;
+    borderWidth: number;
+    borderColor: string;
+    borderStyle: string;
+    parent: string;
+    svgUrl: string;
+    setting: never[];
+    record: {
+        width: number;
+        height: number;
+        minWidth: number;
+        minHeight: number;
+    };
+};
