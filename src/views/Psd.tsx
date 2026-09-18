@@ -51,7 +51,7 @@ export default function Psd() {
     zoomControlRef.current?.screenChange()
     setIsDone(false)
 
-    const instanceFn = { save: () => {}, zoomAdd: () => zoomControlRef.current?.add(), zoomSub: () => zoomControlRef.current?.sub() }
+    const instanceFn = { save: () => {}, zoomAdd: () => zoomControlRef.current?.add(), zoomSub: () => zoomControlRef.current?.sub(), zoomFit: () => zoomControlRef.current?.fit() }
     const onKeyDown = handleKeydowm(instanceFn)
     const onKeyUp = handleKeyup()
     const unwatchOverlayEscape = watchOverlayEscape()

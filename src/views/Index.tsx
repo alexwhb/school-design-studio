@@ -214,6 +214,7 @@ export default function Index() {
       save: saveNow,
       zoomAdd: () => zoomControlRef.current?.add(),
       zoomSub: () => zoomControlRef.current?.sub(),
+      zoomFit: () => zoomControlRef.current?.fit(),
       present: () => presentRef.current?.open(),
       findReplace: () => findReplaceRef.current?.open(),
     }

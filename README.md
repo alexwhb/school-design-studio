@@ -339,6 +339,49 @@ and, at "Fit to screen", grows into the room it has just been given. Which
 panels you had hidden is remembered between sessions: it belongs to you rather
 than to the design, so it is kept in the browser and never saved into a file.
 
+## Zooming
+
+The zoom pill in the bottom right steps through 25, 50, 75, 100, 125, 150 and
+200%, then 250 up to 500 on the way out, with **Fit** beside it for the zoom
+that puts the whole page in the well. That is the coarse control. Everything
+else works the way it does in Photoshop or Figma:
+
+| Gesture                   | What it does              |
+| ------------------------- | ------------------------- |
+| Mouse wheel               | Zoom in and out           |
+| Pinch on a trackpad       | Zoom in and out           |
+| Ctrl/⌘ + wheel            | Zoom in and out           |
+| Ctrl/⌘ + = and Ctrl/⌘ + - | Step the presets          |
+| Ctrl/⌘ + 0                | Fit the page to the well  |
+| Two fingers on a trackpad | Scroll the board          |
+| Shift + wheel             | Scroll the board sideways |
+| Hold space and drag       | Pan the board             |
+
+A wheel and a trackpad both arrive as `wheel` events, so the two are told apart
+before anything happens: a wheel notch is exactly 120 of the legacy
+`wheelDelta` and a trackpad sends whatever the fingers did, except in Firefox,
+which reports a wheel in whole lines and a trackpad in pixels. Get this wrong in
+the other direction and two-finger scrolling zooms, which makes a trackpad
+useless. Safari reports a pinch as its own `gesturechange` rather than a
+Ctrl+wheel, so that is handled too. It is all in
+`src/common/methods/addWheelZoom.ts`.
+
+The wheel and the pinch zoom about the pointer: whatever is under it stays
+under it, so you can aim at a corner and arrive there rather than at the middle
+of the page. The board is laid out rather than transformed as a whole — the
+page container grows, `#page-design` re-centres it, the top padding is
+rewritten — so instead of deriving the new scroll offset from all of that,
+`zoomAnchor.ts` records the design point under the pointer, lets React commit
+the new sizes, and scrolls it back under the pointer in a layout effect before
+the browser paints. While the page still fits the well there is no scroll to
+ride on and the board keeps it centred, which is what you want at that size
+anyway.
+
+The buttons, the preset list and the keyboard hold the middle of the board
+instead. The wheel is continuous, about a fifth per notch, between 10 and 500%;
+it moves the tick in the preset list to the nearest entry without applying it,
+so a wheel that lands on 102% stays at 102%.
+
 ## The Design tab
 
 The panel on the right has two tabs. **Design** is what you have selected;

@@ -1,21 +1,32 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react'
 import { proxy, useSnapshot } from 'valtio'
 import { subscribeKey } from 'valtio/utils'
 import { subscribeSelector } from '@/store/subscribe'
-import addMouseWheel from '@/common/methods/addMouseWheel'
+import addWheelZoom from '@/common/methods/addWheelZoom'
 import { updatePaddingTop, updateScreen, updateZoom } from '@/store/canvas'
 import { canvasState, forceState } from '@/store/state'
 import { notesState } from '@/store/notes'
 import { findClosestNumber } from '@/utils/utils'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
 import { OtherList, ZoomList, type TZoomData } from './data'
+import * as zoomAnchor from './zoomAnchor'
 import './zoomControl.less'
 
 export type ZoomControlHandle = {
   screenChange: () => void
   add: () => void
   sub: () => void
+  fit: () => void
 }
+
+/**
+ * How far the wheel and the pinch may go. The buttons stop at the ends of the
+ * two preset lists; a continuous gesture has no list to stop at, so it stops
+ * here. The floor is under the smallest preset because wheeling out to see a
+ * whole poster at once is the reason to wheel out.
+ */
+const MIN_ZOOM = 10
+const MAX_ZOOM = 500
 
 const local = proxy({
   hideControl: false,
@@ -75,6 +86,7 @@ function setOtherIndex(value: number) {
 }
 
 function screenChange() {
+  zoomAnchor.clear()
   if (local.activezoomIndex === ZoomList.length - 1) {
     updateZoom(calcZoom())
     autoFixTop()
@@ -84,6 +96,7 @@ function screenChange() {
 function add() {
   curAction = 'add'
   local.show = false
+  zoomAnchor.captureCentre()
   if (local.activezoomIndex === ZoomList.length - 2 || local.activezoomIndex === ZoomList.length - 1) {
     setActiveZoomIndex(ZoomList.length)
     if (bestZoom) {
@@ -105,6 +118,7 @@ function add() {
 function sub() {
   curAction = ''
   local.show = false
+  zoomAnchor.captureCentre()
   if (local.otherIndex === 0) {
     setOtherIndex(-1)
     setActiveZoomIndex(ZoomList.length - 2)
@@ -135,25 +149,46 @@ function nearZoom(isAdd?: boolean) {
   bestZoom = 0
 }
 
-function mousewheelZoom(down: boolean) {
-  const value = Number(canvasState.dZoom.toFixed(0))
-  if (down && value <= 1) return
-  const next = down ? value - 2 : value + 2
+/**
+ * Moves the tick in the preset lists to the zoom a gesture landed on, without
+ * applying that preset. Going through setActiveZoomIndex here is what used to
+ * snap the first notch of the wheel to the nearest round number — it re-applies
+ * whatever it selects, so 102% became 100% and the gesture fought back.
+ *
+ * "Fit to screen" is skipped: its value is a sentinel, not a zoom.
+ */
+function syncActiveIndex(zoom: number) {
+  const presets = ZoomList.filter((x) => x.value > 0).map((x) => x.value)
+  const others = OtherList.map((x) => x.value)
+  const closest = findClosestNumber(zoom, presets.concat(others))
+  const inOther = others.indexOf(closest)
+  local.otherIndex = inOther
+  local.activezoomIndex = inOther === -1 ? ZoomList.findIndex((x) => x.value === closest) : ZoomList.length
+}
+
+/** A wheel notch or a pinch: multiply the zoom, and hold the point under the pointer still. */
+function scaleZoom(factor: number, clientX: number, clientY: number) {
+  const current = canvasState.dZoom
+  const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, current * factor))
+  if (Math.abs(next - current) < 0.01) return
+  zoomAnchor.capture(clientX, clientY)
+  curAction = ''
   updateZoom(next)
   autoFixTop()
-  const closest = findClosestNumber(
-    value,
-    ZoomList.map((x) => x.value),
-  )
-  setActiveZoomIndex(ZoomList.findIndex((x) => x.value === closest))
+  syncActiveIndex(next)
 }
 
 const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, ref) {
   const snap = useSnapshot(local)
+  const zoom = useSnapshot(canvasState).dZoom
   const mode = useEditorMode()
   const resizeTimer = useRef<any>(null)
 
-  useImperativeHandle(ref, () => ({ screenChange, add, sub }), [])
+  useImperativeHandle(ref, () => ({ screenChange, add, sub, fit: fitToScreen }), [])
+
+  // After React has written the new sizes and before the browser paints, so the
+  // board does not jump for a frame on the way to the anchored position.
+  useLayoutEffect(zoomAnchor.apply, [zoom])
 
   useEffect(() => {
     const close = () => {
@@ -168,9 +203,7 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
       setActiveZoomIndex(ZoomList.length - 1)
     }
 
-    const removeMouseWheel = addMouseWheel('page-design', (isDown: boolean) => {
-      mousewheelZoom(isDown)
-    })
+    const removeWheelZoom = addWheelZoom('page-design', { scale: scaleZoom })
 
     const changeScreen = () => {
       clearTimeout(resizeTimer.current)
@@ -197,7 +230,7 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
     return () => {
       window.removeEventListener('click', close)
       window.removeEventListener('resize', changeScreen)
-      removeMouseWheel()
+      removeWheelZoom()
       clearTimeout(resizeTimer.current)
       unsubCanvas()
       unsubForce()
@@ -205,6 +238,7 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
   }, [mode])
 
   function selectItem(index: number) {
+    zoomAnchor.captureCentre()
     setActiveZoomIndex(index)
     setOtherIndex(-1)
     local.show = false
@@ -216,6 +250,7 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
    * pill now reads as a number: "Fit to screen" is not one.
    */
   function fitToScreen() {
+    zoomAnchor.clear()
     setOtherIndex(-1)
     setActiveZoomIndex(ZoomList.length - 1)
     // The page may have moved since the last fit, which leaves the index where
@@ -227,7 +262,7 @@ const ZoomControl = forwardRef<ZoomControlHandle>(function ZoomControl(_props, r
   const notesOpen = useSnapshot(notesState).open
   // The pill says what the zoom is, not which preset was picked: the presets
   // are all percentages bar one, and "Fit to screen" has a button of its own.
-  const zoomLabel = Math.round(useSnapshot(canvasState).dZoom) + '%'
+  const zoomLabel = Math.round(zoom) + '%'
 
   return (
     <div id="zoom-control" className={notesOpen ? 'above-notes' : undefined}>
