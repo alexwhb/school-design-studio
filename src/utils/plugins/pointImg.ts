@@ -51,8 +51,7 @@ export default class PointImg {
         color['rgba'] = 'rgba(' + arr.join(',') + ',' + last + ')'
         color['#'] = '#' + first + second + third
       }
-    } catch (error) {
-    }
+    } catch (error) {}
 
     return color
   }

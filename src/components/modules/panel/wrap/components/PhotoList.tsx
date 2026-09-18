@@ -25,16 +25,7 @@ const standardHeight = 280
 /** Every list this renders — uploads, photos, templates — carries an id. */
 const keyOf = (item: IGetTempListData) => String(item.id ?? item.url)
 
-export default function PhotoList({
-  listData = [],
-  edit,
-  isDone,
-  isShort = false,
-  canDrag = true,
-  onLoad,
-  onSelect,
-  onDrag,
-}: Props) {
+export default function PhotoList({ listData = [], edit, isDone, isShort = false, canDrag = true, onLoad, onSelect, onDrag }: Props) {
   const listRef = useRef<HTMLUListElement | null>(null)
   const [loading, setLoading] = useState(true)
   const [list, setList] = useState<IGetTempListData[]>([])
@@ -197,13 +188,7 @@ export default function PhotoList({
               </EditModel>
             ) : (
               <ImageTip detail={item as any}>
-                <Image
-                  className="img"
-                  src={item.thumb || item.url}
-                  style={{ height: getInnerHeight(item) + 'px' }}
-                  lazy
-                  placeholder={<div style={{ backgroundColor: item.color }} className="image-color" />}
-                />
+                <Image className="img" src={item.thumb || item.url} style={{ height: getInnerHeight(item) + 'px' }} lazy placeholder={<div style={{ backgroundColor: item.color }} className="image-color" />} />
               </ImageTip>
             )}
           </div>

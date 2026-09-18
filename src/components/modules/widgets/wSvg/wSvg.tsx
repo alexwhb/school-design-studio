@@ -134,8 +134,7 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
         return
       }
       const parsed = Snap.parse(params.svgUrl)
-      const svgNode: SVGSVGElement | null =
-        parsed.node.nodeType === Node.ELEMENT_NODE ? parsed.node : parsed.node.querySelector('svg')
+      const svgNode: SVGSVGElement | null = parsed.node.nodeType === Node.ELEMENT_NODE ? parsed.node : parsed.node.querySelector('svg')
       if (!svgNode) {
         resolve()
         return

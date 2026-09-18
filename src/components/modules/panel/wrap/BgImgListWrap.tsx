@@ -3,6 +3,7 @@ import api from '@/api'
 import type { TGetImageListResult } from '@/api/material'
 import useInfiniteScroll from '@/common/hooks/useInfiniteScroll'
 import Image from '@/components/ui/Image'
+import { resolveStockImage, type StockImage } from '@/common/methods/stockImage'
 import { updatePageData } from '@/store/canvas'
 import { selectWidget, setSelectItem } from '@/store/widget'
 import ImageTip from './components/ImageTip'
@@ -138,12 +139,16 @@ export default function BgImgListWrap({ model, style }: TProps) {
   }
 
   async function selectItem(item: TGetImageListResult) {
+    api.material.trackImageUse(item.downloadLocation)
+    // A background is a picture like any other, and the one people forget,
+    // because it is not on a layer. See `stockImage.ts`.
+    const picture = await resolveStockImage(item as StockImage)
+    if (!picture) return
     // A new picture starts centred, uncropped-as-far-as-it-can-be. Its shape is
     // kept so the position control can zoom past the size that covers the page.
-    updatePageData({ key: 'backgroundTransform', value: item.width && item.height ? { ratio: item.width / item.height } : {} })
-    updatePageData({ key: 'backgroundImage', value: item.url })
+    updatePageData({ key: 'backgroundTransform', value: picture.width && picture.height ? { ratio: picture.width / picture.height } : {} })
+    updatePageData({ key: 'backgroundImage', value: picture.url || '' })
     selectWidget({ uuid: '-1' })
-    api.material.trackImageUse(item.downloadLocation)
   }
 
   function dragStart() {

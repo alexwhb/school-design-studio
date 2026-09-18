@@ -51,15 +51,7 @@ export default function SearchHeader({ value, placeholder, live, onChange, onSea
   return (
     <div className={cx('search-well', { 'search-well--focus': focused })}>
       <SearchIcon className="search-well__glyph" width={14} height={14} />
-      <input
-        className="search-well__input"
-        value={searchValue}
-        placeholder={placeholder || 'Search'}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        onChange={(e) => update(e.target.value)}
-        onKeyUp={(e) => e.key === 'Enter' && submit()}
-      />
+      <input className="search-well__input" value={searchValue} placeholder={placeholder || 'Search'} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onChange={(e) => update(e.target.value)} onKeyUp={(e) => e.key === 'Enter' && submit()} />
       {/* Clearing runs the search again, so the list comes back rather than
           sitting on the results of a query that is no longer in the box. */}
       {searchValue ? (

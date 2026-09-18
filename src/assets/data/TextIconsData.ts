@@ -8,7 +8,7 @@
 
 import type { ComponentType } from 'react'
 import { BulletListIcon, NumberListIcon } from '@/components/ui/icons'
-import { AlignListData } from "./AlignListData"
+import { AlignListData } from './AlignListData'
 
 export type TStyleIconData = {
   key: string
@@ -16,7 +16,7 @@ export type TStyleIconData = {
   tip: string
   value: string[]
   select: boolean
-  extraIcon?: boolean,
+  extraIcon?: boolean
 }
 
 export const styleIconList1 = [

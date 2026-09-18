@@ -81,26 +81,8 @@ function WTextStatic({ params, parent, className, ...rest }: WidgetProps) {
         fontFamily,
       }}
     >
-      {p.textEffects
-        ? p.textEffects.map((ef: any, efi: number) =>
-            curved ? (
-              <CurvedText key={efi + 'effect'} layout={curved} className="effect-text" style={{ fontFamily, ...effectStyle(ef) }} plain />
-            ) : (
-              <div
-                key={efi + 'effect'}
-                style={{ fontFamily, ...effectStyle(ef) }}
-                className="edit-text effect-text"
-                spellCheck={false}
-                dangerouslySetInnerHTML={{ __html: p.text ?? '' }}
-              />
-            ),
-          )
-        : null}
-      {curved ? (
-        <CurvedText layout={curved} style={{ fontFamily }} />
-      ) : (
-        <div style={{ fontFamily }} className="edit-text" spellCheck={false} dangerouslySetInnerHTML={{ __html: p.text ?? '' }} />
-      )}
+      {p.textEffects ? p.textEffects.map((ef: any, efi: number) => (curved ? <CurvedText key={efi + 'effect'} layout={curved} className="effect-text" style={{ fontFamily, ...effectStyle(ef) }} plain /> : <div key={efi + 'effect'} style={{ fontFamily, ...effectStyle(ef) }} className="edit-text effect-text" spellCheck={false} dangerouslySetInnerHTML={{ __html: p.text ?? '' }} />)) : null}
+      {curved ? <CurvedText layout={curved} style={{ fontFamily }} /> : <div style={{ fontFamily }} className="edit-text" spellCheck={false} dangerouslySetInnerHTML={{ __html: p.text ?? '' }} />}
     </div>
   )
 }

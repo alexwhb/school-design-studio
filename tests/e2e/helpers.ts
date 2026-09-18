@@ -458,3 +458,14 @@ export function imageFilter(page: Page) {
     return img ? getComputedStyle(img).filter : null
   })
 }
+
+/** The bytes of whatever the next click downloads. */
+export async function downloadFrom(page: Page, click: () => Promise<void>) {
+  const download = page.waitForEvent('download', { timeout: 90000 })
+  await click()
+  const file = await download
+  const stream = await file.createReadStream()
+  const chunks: Buffer[] = []
+  for await (const chunk of stream!) chunks.push(chunk as Buffer)
+  return { name: file.suggestedFilename(), bytes: Buffer.concat(chunks) }
+}

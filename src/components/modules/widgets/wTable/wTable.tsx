@@ -232,17 +232,7 @@ function WTable({ params, parent, id, className, child, ...rest }: WidgetProps) 
         opacity: p.opacity,
       }}
     >
-      <TableGrid
-        ref={tableRef}
-        params={p}
-        editing={editing}
-        cellRef={cellRef}
-        spellCheck={spellcheck}
-        onCellDoubleClick={startEditing}
-        onCellContextMenu={onCellContextMenu}
-        onCellKeyDown={onCellKeyDown}
-        onCellBlur={onCellBlur}
-      />
+      <TableGrid ref={tableRef} params={p} editing={editing} cellRef={cellRef} spellCheck={spellcheck} onCellDoubleClick={startEditing} onCellContextMenu={onCellContextMenu} onCellKeyDown={onCellKeyDown} onCellBlur={onCellBlur} />
       {selectedAlone && table.cols > 1 ? <ColumnDividers params={params} /> : null}
       {menu ? <CellMenu at={menu} rows={table.rows} cols={table.cols} onAction={runCellAction} onClose={() => setMenu(null)} /> : null}
     </div>

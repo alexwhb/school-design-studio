@@ -38,7 +38,16 @@ const Tour = forwardRef<TourHandle, Props>(function Tour({ steps }, ref) {
   const [current, setCurrent] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
 
-  useImperativeHandle(ref, () => ({ open: () => { setCurrent(0); setOpen(true) } }), [])
+  useImperativeHandle(
+    ref,
+    () => ({
+      open: () => {
+        setCurrent(0)
+        setOpen(true)
+      },
+    }),
+    [],
+  )
 
   useEffect(() => {
     if (!open) return
@@ -50,9 +59,7 @@ const Tour = forwardRef<TourHandle, Props>(function Tour({ steps }, ref) {
 
   const step = STEPS[current]
   const gap = 6
-  const box = rect
-    ? { left: rect.left - gap, top: rect.top - gap, width: rect.width + gap * 2, height: rect.height + gap * 2 }
-    : { left: 0, top: 0, width: 0, height: 0 }
+  const box = rect ? { left: rect.left - gap, top: rect.top - gap, width: rect.width + gap * 2, height: rect.height + gap * 2 } : { left: 0, top: 0, width: 0, height: 0 }
 
   const contentStyle: React.CSSProperties = { position: 'fixed', zIndex: 2005, width: 300 }
   if (step.placement === 'bottom') {
@@ -108,7 +115,11 @@ const Tour = forwardRef<TourHandle, Props>(function Tour({ steps }, ref) {
             ))}
           </span>
           <div className="ds-tour-buttons">
-            {current > 0 ? <Button size="small" onClick={() => setCurrent(current - 1)}>Previous</Button> : null}
+            {current > 0 ? (
+              <Button size="small" onClick={() => setCurrent(current - 1)}>
+                Previous
+              </Button>
+            ) : null}
             {current < STEPS.length - 1 ? (
               <Button size="small" type="primary" onClick={() => setCurrent(current + 1)}>
                 Next

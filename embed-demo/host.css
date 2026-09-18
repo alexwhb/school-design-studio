@@ -1,0 +1,93 @@
+/*
+ * The host page's own reset and design system.
+ *
+ * Two jobs. It is deliberately opinionated — its own box-sizing, its own list
+ * markers, its own body background — so that anything the editor leaks is
+ * visible in the tests that check for leaks.
+ *
+ * And it is written in CSS Color 4, because that is what a host built on any
+ * current framework looks like: Tailwind 4 emits `oklch()` for every colour and
+ * `color-mix(in oklab, …)` for every opacity modifier. The rasteriser behind
+ * the PDF and PNG exports clones the *whole document*, not just the editor, so
+ * these values end up in front of it whether or not the editor uses them. They
+ * are here so that a test finds out before a school does.
+ */
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: oklch(0.92 0.004 286.32);
+}
+html {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.5;
+}
+body {
+  margin: 0;
+  background: oklch(0.98 0.003 247.86);
+  color: oklch(0.21 0.034 264.67);
+}
+h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: color-mix(in oklab, oklch(0.21 0.034 264.67) 90%, transparent);
+}
+ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  list-style: disc;
+}
+li {
+  list-style: disc;
+  font-size: 14px;
+  color: color-mix(in oklab, currentcolor 70%, transparent);
+}
+button.host {
+  background: oklch(0.21 0.034 264.67);
+  color: oklch(1 0 0);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+button.host:hover {
+  background: color-mix(in oklab, oklch(0.21 0.034 264.67) 85%, white);
+}
+.host-shell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+.host-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid color-mix(in oklab, oklch(0.87 0.01 258.34) 60%, transparent);
+  background: oklch(1 0 0);
+  box-shadow: 0 1px 2px color-mix(in oklab, oklch(0.21 0.034 264.67) 8%, transparent);
+}
+.host-body {
+  min-height: 0;
+  padding: 16px;
+  background: color-mix(in oklab, oklch(0.98 0.003 247.86) 100%, transparent);
+}
+.editor-frame {
+  height: 100%;
+  border: 1px solid oklch(0.87 0.01 258.34);
+  border-radius: 12px;
+  overflow: hidden;
+  background: oklch(1 0 0);
+}
+.assistant {
+  padding: 16px;
+  font-size: 14px;
+  color: oklch(0.21 0.034 264.67);
+}
+.assistant__note {
+  color: color-mix(in oklab, oklch(0.55 0.02 264.36) 90%, transparent);
+  font-size: 12px;
+}

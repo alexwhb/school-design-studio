@@ -54,15 +54,7 @@ export default function PolygonPaint({ params }: { params: Record<string, any> }
   const clipId = useGradientId('clip')
 
   return (
-    <svg
-      className="polygon__paint"
-      width="100%"
-      height="100%"
-      viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="none"
-      style={{ filter: shadowFilter(params.shadow) }}
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <svg className="polygon__paint" width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ filter: shadowFilter(params.shadow) }} xmlns="http://www.w3.org/2000/svg">
       <defs>
         {fill.defs}
         {border ? stroke.defs : null}
@@ -73,17 +65,7 @@ export default function PolygonPaint({ params }: { params: Record<string, any> }
         ) : null}
       </defs>
       <path d={path} fill={fill.paint} />
-      {border ? (
-        <path
-          d={path}
-          fill="none"
-          stroke={stroke.paint}
-          strokeWidth={border.width * 2}
-          strokeDasharray={dashesFor(border)}
-          strokeLinecap={border.style === 'dotted' ? 'round' : undefined}
-          clipPath={`url(#${clipId})`}
-        />
-      ) : null}
+      {border ? <path d={path} fill="none" stroke={stroke.paint} strokeWidth={border.width * 2} strokeDasharray={dashesFor(border)} strokeLinecap={border.style === 'dotted' ? 'round' : undefined} clipPath={`url(#${clipId})`} /> : null}
     </svg>
   )
 }

@@ -44,10 +44,7 @@ export default function ResizePage({ width, height }: { width: number; height: n
   }
 
   return (
-    <div
-      className="page-resize"
-      style={{ display: show ? undefined : 'none', width: Math.floor(width) + 'px', height: Math.floor(height) + 'px' }}
-    >
+    <div className="page-resize" style={{ display: show ? undefined : 'none', width: Math.floor(width) + 'px', height: Math.floor(height) + 'px' }}>
       <div onMouseDown={(e) => handlemousedown(e, 'ns', true)} className="resize__bar resize__bar-top" />
       <div onMouseDown={(e) => handlemousedown(e, 'ew')} className="resize__bar resize__bar-right" />
       <div onMouseDown={(e) => handlemousedown(e, 'ns')} className="resize__bar resize__bar-bottom" />

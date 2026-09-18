@@ -1,15 +1,6 @@
 import { proxy } from 'valtio'
 import pageDefault from './page-default'
-import type {
-  TBaseState,
-  TCanvasState,
-  TControlState,
-  TForceState,
-  TGroupState,
-  THistoryState,
-  TUserState,
-  TWidgetState,
-} from './types'
+import type { TBaseState, TCanvasState, TControlState, TForceState, TGroupState, THistoryState, TUserState, TWidgetState } from './types'
 
 export const canvasState = proxy<TCanvasState>({
   dZoom: 0,

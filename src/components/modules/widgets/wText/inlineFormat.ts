@@ -60,8 +60,7 @@ let saved: Range | null = null
 let lastPress: EventTarget | null = null
 let finish: (() => void) | null = null
 
-const elementOf = (target: EventTarget | Node | null | undefined): Element | null =>
-  target instanceof Element ? target : target instanceof Node ? target.parentElement : null
+const elementOf = (target: EventTarget | Node | null | undefined): Element | null => (target instanceof Element ? target : target instanceof Node ? target.parentElement : null)
 
 /** Whether `target` is one of the caret's own controls. */
 export function isOwnControl(target: EventTarget | null | undefined): boolean {

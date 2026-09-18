@@ -309,8 +309,7 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
       flipTemp.current = params.flip ?? null
       params.flip = null
     } else {
-      widgetRef.current &&
-        (widgetRef.current.style.transform = rotateTemp.current ? `rotate(${rotateTemp.current})` : '')
+      widgetRef.current && (widgetRef.current.style.transform = rotateTemp.current ? `rotate(${rotateTemp.current})` : '')
       params.flip = flipTemp.current
       rotateTemp.current = null
     }

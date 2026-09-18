@@ -258,5 +258,125 @@
     "preview": "",
     "url": "/fonts/jetbrains-mono-400-700.woff2",
     "bold": false
+  },
+  {
+    "id": 27,
+    "oid": 0,
+    "value": "Raleway",
+    "alias": "Raleway",
+    "kind": "sans",
+    "preview": "",
+    "url": "/fonts/raleway-400-700.woff2",
+    "bold": false
+  },
+  {
+    "id": 28,
+    "oid": 0,
+    "value": "Lexend",
+    "alias": "Lexend",
+    "kind": "sans",
+    "preview": "",
+    "url": "/fonts/lexend-400-700.woff2",
+    "bold": false
+  },
+  {
+    "id": 29,
+    "oid": 0,
+    "value": "Atkinson Hyperlegible",
+    "alias": "Atkinson Hyperlegible",
+    "kind": "sans",
+    "preview": "",
+    "url": "/fonts/atkinson-hyperlegible-400.woff2",
+    "bold": true
+  },
+  {
+    "id": 30,
+    "oid": 0,
+    "value": "Archivo Narrow",
+    "alias": "Archivo Narrow",
+    "kind": "sans",
+    "preview": "",
+    "url": "/fonts/archivo-narrow-400-700.woff2",
+    "bold": false
+  },
+  {
+    "id": 31,
+    "oid": 0,
+    "value": "Barlow Condensed",
+    "alias": "Barlow Condensed",
+    "kind": "sans",
+    "preview": "",
+    "url": "/fonts/barlow-condensed-400.woff2",
+    "bold": true
+  },
+  {
+    "id": 32,
+    "oid": 0,
+    "value": "Roboto Slab",
+    "alias": "Roboto Slab",
+    "kind": "serif",
+    "preview": "",
+    "url": "/fonts/roboto-slab-400-700.woff2",
+    "bold": false
+  },
+  {
+    "id": 33,
+    "oid": 0,
+    "value": "EB Garamond",
+    "alias": "EB Garamond",
+    "kind": "serif",
+    "preview": "",
+    "url": "/fonts/eb-garamond-400-700.woff2",
+    "bold": false
+  },
+  {
+    "id": 34,
+    "oid": 0,
+    "value": "Alfa Slab One",
+    "alias": "Alfa Slab One",
+    "kind": "display",
+    "preview": "",
+    "url": "/fonts/alfa-slab-one-400.woff2",
+    "bold": false
+  },
+  {
+    "id": 35,
+    "oid": 0,
+    "value": "Lilita One",
+    "alias": "Lilita One",
+    "kind": "display",
+    "preview": "",
+    "url": "/fonts/lilita-one-400.woff2",
+    "bold": false
+  },
+  {
+    "id": 36,
+    "oid": 0,
+    "value": "Abril Fatface",
+    "alias": "Abril Fatface",
+    "kind": "display",
+    "preview": "",
+    "url": "/fonts/abril-fatface-400.woff2",
+    "bold": false
+  },
+  {
+    "id": 37,
+    "oid": 0,
+    "value": "Patrick Hand",
+    "alias": "Patrick Hand",
+    "kind": "handwriting",
+    "preview": "",
+    "url": "/fonts/patrick-hand-400.woff2",
+    "bold": false
+  },
+  {
+    "id": 38,
+    "oid": 0,
+    "value": "Permanent Marker",
+    "alias": "Permanent Marker",
+    "kind": "handwriting",
+    "preview": "",
+    "url": "/fonts/permanent-marker-400.woff2",
+    "bold": false
   }
 ]

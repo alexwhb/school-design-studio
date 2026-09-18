@@ -1,9 +1,9 @@
 import app_config from '@/config'
 export const config = app_config
 
-type TComObj = Record<string,any>
+type TComObj = Record<string, any>
 
-export const isInArray = (arr: (string | number)[], value: (string | number)) => {
+export const isInArray = (arr: (string | number)[], value: string | number) => {
   const index = arr.indexOf(value)
   if (index >= 0) {
     return index

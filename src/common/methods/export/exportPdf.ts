@@ -32,10 +32,12 @@ import type { TdLayout } from '@/store/types'
  * 1275 × 1650, which is 8.5 × 11 inches at 150 — so reading them back at 150
  * returns exactly the paper size the person picked. Read at the CSS-pixel 96
  * instead, that same Letter page would come out as a 13 × 17 inch sheet.
+ *
+ * It lives in `dpi.ts` and is re-exported here, so that code with no browser
+ * behind it can read the number without loading this file's canvas work.
  */
-export const DESIGN_DPI = 150
-
-const PT_PER_INCH = 72
+export { DESIGN_DPI, pxToPdfPoints } from './dpi'
+import { pxToPdfPoints } from './dpi'
 
 /** Multiplier applied to the render. 1 gives 150 DPI, 2 gives 300, 3 gives 450. */
 export type ExportScale = 1 | 2 | 3
@@ -47,11 +49,6 @@ export type ExportScale = 1 | 2 | 3
  * standard trade every "download as PDF" makes.
  */
 const JPEG_QUALITY = 0.92
-
-/** Design pixels to PDF points, via the paper size the design implies. */
-export function pxToPdfPoints(px: number): number {
-  return ((Number(px) || 0) / DESIGN_DPI) * PT_PER_INCH
-}
 
 type RasterPage = {
   jpeg: Uint8Array
@@ -148,7 +145,7 @@ function pdfDate(date: Date): string {
  * the cross-reference table at the end is a list of where each object starts,
  * and a reader that finds one wrong reports the file as damaged.
  */
-function buildPdf(pages: RasterPage[], title: string): Blob {
+function assemblePdf(pages: RasterPage[], title: string): Blob {
   const encoder = new TextEncoder()
   const parts: Uint8Array[] = []
   let length = 0
@@ -226,7 +223,16 @@ function buildPdf(pages: RasterPage[], title: string): Blob {
   return new Blob(parts as BlobPart[], { type: 'application/pdf' })
 }
 
-export default async function exportPdf(pages: TdLayout[], options: PdfOptions): Promise<void> {
+/**
+ * The file itself, as a Blob.
+ *
+ * Split from the download so that a host embedding the editor can take the
+ * bytes and do something else with them — attach the PDF to a task, put it in
+ * its own object store — without a file landing in the user's Downloads folder
+ * on the way past. The download below is this plus one line, so there is no
+ * second way of building a PDF to keep in step.
+ */
+export async function buildPdf(pages: TdLayout[], options: PdfOptions): Promise<Blob> {
   const { title, scale, renderPage, onProgress } = options
   if (!pages.length) throw new Error('There is nothing to export yet.')
 
@@ -253,5 +259,9 @@ export default async function exportPdf(pages: TdLayout[], options: PdfOptions):
   }
 
   onProgress?.(92, 'Building the PDF')
-  downloadBlob(buildPdf(rendered, title || 'Untitled design'), safeFileName(title, 'pdf'))
+  return assemblePdf(rendered, title || 'Untitled design')
+}
+
+export default async function exportPdf(pages: TdLayout[], options: PdfOptions): Promise<void> {
+  downloadBlob(await buildPdf(pages, options), safeFileName(options.title, 'pdf'))
 }

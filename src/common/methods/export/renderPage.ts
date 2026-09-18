@@ -6,7 +6,13 @@
  * the original page back when we are done. All of that is hidden behind
  * `withPageRenderer` so callers cannot forget the restore step.
  */
-import html2canvas from 'html2canvas'
+// The `-pro` fork rather than html2canvas itself: same API, same renderer, and
+// it can read CSS Color 4. The whole document is cloned to draw a page, so the
+// host's own stylesheet goes past the parser whether or not the editor uses any
+// of it — and every current framework emits `oklch()` for colours and
+// `color-mix(in oklab, …)` for opacity. Upstream threw on the first one it saw,
+// which is why the planner's exports came back empty while its .pptx worked.
+import html2canvas from 'html2canvas-pro'
 import FontFaceObserver from 'fontfaceobserver'
 import { canvasState, widgetState } from '@/store/state'
 import { setPathEditUuid, setShowMoveable } from '@/store/control'
@@ -218,6 +224,50 @@ function shiftOrigin(origin: string, bleed: number): string {
   return shifted.join(' ')
 }
 
+/**
+ * Where a capture gave up, said out loud.
+ *
+ * It used to return null and log one line that named neither the page nor the
+ * reason, so a host whose exports came back empty had nothing to go on. The
+ * cause in the planner was CSS the rasteriser could not parse — from the host's
+ * own stylesheet, not the editor's, because the whole document is cloned — and
+ * that is exactly the kind of thing the caller cannot guess and the message can
+ * say.
+ */
+/**
+ * The four things that actually go wrong, and what a host can do about each.
+ *
+ * The message matters because none of these are the host's fault in a way it
+ * could guess: the failure happens inside a clone of a page it did not know was
+ * being cloned.
+ */
+const HINTS: { match: RegExp; say: string }[] = [
+  {
+    match: /unsupported color function|oklch|oklab|color-mix|\blch\(|\blab\(/i,
+    say: "a stylesheet on this page uses a CSS Color 4 value the renderer cannot read. The whole document is cloned to draw a page, so this can come from the host's own CSS rather than the editor's.",
+  },
+  {
+    match: /tainted|SecurityError|cross-origin|insecure/i,
+    say: 'a picture from another origin is on the page, and a canvas that has drawn one cannot be read back. Serve it from this origin, or as a data URL — `uploads.importUrl` is the seam for that.',
+  },
+  {
+    match: /timed out|timeout/i,
+    say: 'something never finished — usually a picture that is still loading, or a tab that was in the background while the export ran.',
+  },
+  {
+    match: /Content Security Policy|violates|blocked/i,
+    say: "the page's Content-Security-Policy refused something. Drawing a page needs `img-src` to allow `data:` and `blob:`, and `frame-src` to allow `blob:` — the renderer clones into an iframe.",
+  },
+]
+
+function reportFailure(stage: string, error: unknown): null {
+  const detail = error instanceof Error ? error.message : String(error)
+  console.warn(`[export] could not draw the page — ${stage}: ${detail}`)
+  const hint = HINTS.find((entry) => entry.match.test(detail))
+  if (hint) console.warn(`[export] ${hint.say}`)
+  return null
+}
+
 async function capture(el: HTMLElement, scale: number): Promise<string | null> {
   const clone = el.cloneNode(true) as HTMLElement
   clone.setAttribute('id', 'export-clone')
@@ -235,9 +285,15 @@ async function capture(el: HTMLElement, scale: number): Promise<string | null> {
   // clone is a copy nobody is looking at, so it is the right place to do it.
   clone.querySelectorAll('[data-export="off"]').forEach((el) => el.remove())
   document.body.appendChild(clone)
+  // Which part of the work was in flight when it went wrong. Everything below
+  // is awaited, so the last stage set is the one that failed.
+  let stage = 'preparing the page'
   try {
+    stage = 'pre-rendering the widgets the renderer cannot draw'
     await rasterizeUnsupported(clone, scale)
+    stage = 'turning the shapes into images'
     await inlineSvgToImages(clone)
+    stage = 'rendering the page'
     const fonts = document.fonts
     // html2canvas waits on every image it finds, and has internal waits of its
     // own. If one of them never settles the export does not fail, it stops —
@@ -267,10 +323,13 @@ async function capture(el: HTMLElement, scale: number): Promise<string | null> {
       RENDER_TIMEOUT,
       'rendering the page',
     )
+    stage = 'reading the drawn page back'
+    // A canvas that touched a picture from another origin cannot be read back,
+    // and the error says only "tainted" — which is true of the canvas and says
+    // nothing about which picture did it.
     return canvas.toDataURL('image/png')
   } catch (e) {
-    console.warn('[export] could not render', e)
-    return null
+    return reportFailure(stage, e)
   } finally {
     clone.remove()
   }

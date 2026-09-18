@@ -129,26 +129,12 @@ const SlideView = forwardRef<SlideViewHandle, Props>(function SlideView({ page, 
           const Comp = staticWidgetComponents[layer.type]
           if (!Comp) return null
           return (
-            <Comp
-              key={layer.uuid}
-              params={layer}
-              parent={global}
-              data-anim={animated ? layer.uuid : undefined}
-              className={pending(layer.uuid) ? PENDING_CLASS : undefined}
-            >
+            <Comp key={layer.uuid} params={layer} parent={global} data-anim={animated ? layer.uuid : undefined} className={pending(layer.uuid) ? PENDING_CLASS : undefined}>
               {layer.isContainer
                 ? childrenOf(layer.uuid).map((child) => {
                     const ChildComp = staticWidgetComponents[child.type]
                     if (!ChildComp) return null
-                    return (
-                      <ChildComp
-                        key={child.uuid}
-                        params={child}
-                        parent={layer}
-                        data-anim={animated ? child.uuid : undefined}
-                        className={pending(child.uuid) ? PENDING_CLASS : undefined}
-                      />
-                    )
+                    return <ChildComp key={child.uuid} params={child} parent={layer} data-anim={animated ? child.uuid : undefined} className={pending(child.uuid) ? PENDING_CLASS : undefined} />
                   })
                 : null}
             </Comp>

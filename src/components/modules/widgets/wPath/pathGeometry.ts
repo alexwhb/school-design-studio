@@ -285,8 +285,7 @@ function span(low: number, high: number): [number, number] {
  */
 export function refitFrame(points: TPathPoint[], closed: boolean, box: TBox, strokeWidth = 0, pad = 0): { box: TBox; points: TPathPoint[] } | null {
   const fitted = fitFrame(absolutePoints(points, innerBox(box, strokeWidth, pad)), closed, strokeWidth / 2 + pad)
-  const same =
-    fitted.box.left === box.left && fitted.box.top === box.top && fitted.box.width === box.width && fitted.box.height === box.height
+  const same = fitted.box.left === box.left && fitted.box.top === box.top && fitted.box.width === box.width && fitted.box.height === box.height
   return same ? null : fitted
 }
 

@@ -84,13 +84,7 @@ export default function LineEnds({ active }: { active: TdWidgetData }) {
         <ValueSelect label="Start" readonly inputWidth="100%" value={labelOf(ends.start)} data={OPTIONS} onFinish={(value) => applyLineEnds(active, { lineStart: kindOf(value) })} />
         <ValueSelect label="End" readonly inputWidth="100%" value={labelOf(ends.end)} data={OPTIONS} onFinish={(value) => applyLineEnds(active, { lineEnd: kindOf(value) })} />
       </div>
-      <Button
-        className="line-ends__swap"
-        plain
-        size="small"
-        disabled={ends.start === ends.end}
-        onClick={() => applyLineEnds(active, { lineStart: ends.end, lineEnd: ends.start })}
-      >
+      <Button className="line-ends__swap" plain size="small" disabled={ends.start === ends.end} onClick={() => applyLineEnds(active, { lineStart: ends.end, lineEnd: ends.start })}>
         Swap ends
       </Button>
     </PanelSection>

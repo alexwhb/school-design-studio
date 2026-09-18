@@ -206,7 +206,13 @@ function inlineComputedStyles(source: Element, clone: Element, isRoot: boolean):
 /** Pulls every `url(...)` the sandbox could not fetch into the markup itself. */
 async function inlineResources(clone: HTMLElement): Promise<boolean> {
   for (const img of Array.from(clone.querySelectorAll('img'))) {
-    const data = await imageToDataUrl(img.getAttribute('src') || '')
+    // `inlineComputedStyles` has already written the laid-out size onto the
+    // clone, which is what a vector has to be drawn at — an SVG carrying only a
+    // `viewBox` has no size of its own for the canvas to fall back on.
+    const data = await imageToDataUrl(img.getAttribute('src') || '', {
+      width: parseFloat(img.style.width) || 0,
+      height: parseFloat(img.style.height) || 0,
+    })
     if (!data) return false
     img.setAttribute('src', data)
   }
@@ -267,13 +273,7 @@ export async function rasterizeElement(el: HTMLElement, scale: number, bleed = 0
   // match. The root clone had its own position dropped, so it flows here.
   const body = bleed > 0 ? `<div xmlns="http://www.w3.org/1999/xhtml" style="padding:${bleed}px">${markup}</div>` : markup
   const ratio = Math.max(1, scale)
-  const svg = [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${outerWidth * ratio}" height="${outerHeight * ratio}" viewBox="0 0 ${outerWidth} ${outerHeight}">`,
-    `<foreignObject x="0" y="0" width="${outerWidth}" height="${outerHeight}">`,
-    fontCss ? `<style xmlns="http://www.w3.org/1999/xhtml">${fontCss}</style>` : '',
-    body,
-    '</foreignObject></svg>',
-  ].join('')
+  const svg = [`<svg xmlns="http://www.w3.org/2000/svg" width="${outerWidth * ratio}" height="${outerHeight * ratio}" viewBox="0 0 ${outerWidth} ${outerHeight}">`, `<foreignObject x="0" y="0" width="${outerWidth}" height="${outerHeight}">`, fontCss ? `<style xmlns="http://www.w3.org/1999/xhtml">${fontCss}</style>` : '', body, '</foreignObject></svg>'].join('')
 
   const img = new Image()
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`

@@ -1,11 +1,6 @@
 import { useEffect, type RefObject } from 'react'
 
-export default function useInfiniteScroll(
-  ref: RefObject<HTMLElement | null>,
-  load: () => void,
-  distance = 150,
-  enabled = true,
-) {
+export default function useInfiniteScroll(ref: RefObject<HTMLElement | null>, load: () => void, distance = 150, enabled = true) {
   useEffect(() => {
     const el = ref.current
     if (!el || !enabled) return

@@ -282,3 +282,39 @@
     }
   }
 }
+
+/* A kit somebody else looks after. The line says so once; the sections that
+   would change it are either gone or behind a disabled fieldset, and the
+   fieldset itself carries no border or padding of its own. */
+.brand-readonly {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: @surface-2;
+  color: @ink-2;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.brand-locked {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+
+  &:disabled {
+    opacity: 0.55;
+  }
+
+  /* The divider between two sections is drawn by an adjacency rule, and a
+     fieldset round the last two breaks it — the first of them is no longer
+     anybody's next sibling. Put that one back rather than reaching into
+     panelSection.less, which knows nothing about this panel. */
+  > .ds-section:first-child::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: @line;
+    margin: @space-4 -@panel-gutter;
+  }
+}

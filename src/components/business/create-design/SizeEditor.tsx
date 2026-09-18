@@ -67,21 +67,11 @@ export default function SizeEditor({ params, onChange, className, children }: Pr
   return (
     <>
       <div className={cx('position-size', className || '')}>
-        <NumberInput
-          value={fromPx(params.width, unit)}
-          label="W"
-          maxValue={fromPx(MAX_PX, unit)}
-          onChange={(v) => onChange?.({ width: toPx(Number(v), unit), height: params.height })}
-        />
+        <NumberInput value={fromPx(params.width, unit)} label="W" maxValue={fromPx(MAX_PX, unit)} onChange={(v) => onChange?.({ width: toPx(Number(v), unit), height: params.height })} />
         <Tooltip content={lockRatio ? 'Lock aspect ratio' : 'Change freely'} placement="top" showAfter={300}>
           <i onClick={changeRatio} className={cx('icon', lockRatio ? 'sd-db' : 'sd-fdb')} />
         </Tooltip>
-        <NumberInput
-          value={fromPx(params.height, unit)}
-          label="H"
-          maxValue={fromPx(MAX_PX, unit)}
-          onChange={(v) => onChange?.({ width: params.width, height: toPx(Number(v), unit) })}
-        />
+        <NumberInput value={fromPx(params.height, unit)} label="H" maxValue={fromPx(MAX_PX, unit)} onChange={(v) => onChange?.({ width: params.width, height: toPx(Number(v), unit) })} />
         {children}
       </div>
       {/*

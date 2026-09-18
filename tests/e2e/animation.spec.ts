@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
-import { WIDGET, addText, openEditor, selectFirstWidget } from './helpers'
+import JSZip from 'jszip'
+import { WIDGET, addText, downloadFrom, openEditor, selectFirstWidget } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
@@ -96,4 +97,43 @@ test('an element with no entrance is simply there', async ({ page }) => {
   expect(state).toEqual({ animations: 0, pending: false, opacity: '1' })
   await expect(page.locator('.present .slide .edit-text').first()).toBeVisible()
   await page.keyboard.press('Escape')
+})
+
+test('the PowerPoint export carries an entrance, aimed at the right shape', async ({ page }) => {
+  await addText(page, 'Heading')
+  await selectFirstWidget(page)
+  await giveAnimation(page, 'Rise')
+
+  await page.locator('.export-caret').click()
+  await page.waitForTimeout(400)
+  const { bytes } = await downloadFrom(page, () => page.locator('.export-menu__list').getByText('PowerPoint', { exact: true }).click())
+
+  const zip = await JSZip.loadAsync(bytes)
+  const slide = await zip.file('ppt/slides/slide1.xml')!.async('string')
+
+  expect(slide).toContain('<p:timing>')
+  // Rise lifts up from below, and PowerPoint has a wipe that does exactly that.
+  expect(slide).toContain('filter="wipe(up)"')
+
+  // The effect has to name a shape that is actually in the file, or PowerPoint
+  // offers to repair the deck instead of playing it.
+  const spid = slide.match(/<p:spTgt spid="(\d+)"\/>/)?.[1]
+  expect(spid, 'the entrance names a shape').toBeTruthy()
+  const shapeIds = [...slide.matchAll(/<p:cNvPr id="(\d+)"/g)].map((m) => m[1])
+  expect(shapeIds).toContain(spid)
+  // And that id has to be the only one, which is the thing pptxgenjs gets wrong.
+  expect(shapeIds.filter((id) => id === spid)).toHaveLength(1)
+})
+
+test('a deck with nothing animated gets no timing tree at all', async ({ page }) => {
+  await addText(page, 'Heading')
+
+  await page.locator('.export-caret').click()
+  await page.waitForTimeout(400)
+  const { bytes } = await downloadFrom(page, () => page.locator('.export-menu__list').getByText('PowerPoint', { exact: true }).click())
+
+  const zip = await JSZip.loadAsync(bytes)
+  const slide = await zip.file('ppt/slides/slide1.xml')!.async('string')
+  expect(slide).not.toContain('<p:timing>')
+  expect(slide).not.toContain('<p:transition')
 })

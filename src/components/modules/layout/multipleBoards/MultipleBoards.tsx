@@ -13,6 +13,7 @@ import { pageBackgroundStyle } from '@/common/methods/pageBackground'
 import { staticWidgetComponents } from '../../widgets/registry'
 import { NOTES_DRAWER_HEIGHT, notesState } from '@/store/notes'
 import NotesToggle from '@/components/business/notes/NotesToggle'
+import { isPresentable } from '@/store/documentKind'
 import ToolDock from '@/components/business/tool-dock/ToolDock'
 import { PlusIcon } from '@/components/ui/icons'
 import PageTransitionGlyph from './PageTransitionGlyph'
@@ -147,6 +148,8 @@ const Page = memo(function Page({ layout, index, isCurrent, isFirst, isLast, onC
 export default function MultipleBoards() {
   const canvas = useSnapshot(canvasState)
   const dLayouts = useSnapshot(widgetState).dLayouts as readonly TdLayout[]
+  // A poster has nobody to say speaker notes to.
+  const presentable = isPresentable()
   // The notes drawer sits along the very bottom, so the strip stands on top of
   // it rather than under it.
   const notesOpen = useSnapshot(notesState).open
@@ -283,14 +286,7 @@ export default function MultipleBoards() {
         // again, so it is the one that asks — but only when there is artwork to
         // lose.
         if (widgetState.dLayouts[position]?.layers.length) {
-          const ok = await confirm(
-            onlyPage ? 'Empty this page?' : 'Delete this page?',
-            onlyPage
-              ? 'Everything on this page will be removed.'
-              : `“${pageLabel(widgetState.dLayouts[position], position)}” and everything on it will be removed.`,
-            'warning',
-            { confirmButtonText: onlyPage ? 'Empty it' : 'Delete', cancelButtonText: 'Keep it' },
-          )
+          const ok = await confirm(onlyPage ? 'Empty this page?' : 'Delete this page?', onlyPage ? 'Everything on this page will be removed.' : `“${pageLabel(widgetState.dLayouts[position], position)}” and everything on it will be removed.`, 'warning', { confirmButtonText: onlyPage ? 'Empty it' : 'Delete', cancelButtonText: 'Keep it' })
           if (!ok) return
         }
         removePage(position)
@@ -307,19 +303,11 @@ export default function MultipleBoards() {
         rather than from the editor's root.
       */}
       <ToolDock />
-      <div
-        style={{ position: 'absolute', bottom: notesHeight - st + 'px', left: sl + 'px' }}
-        className={cx('artboards', isFold ? 'fold' : 'unfold')}
-      >
+      <div style={{ position: 'absolute', bottom: notesHeight - st + 'px', left: sl + 'px' }} className={cx('artboards', isFold ? 'fold' : 'unfold')}>
         <div ref={listRef} className="wrap">
           {isFold ? (
             <>
-              <div
-                className="btn"
-                title={`${fold.name} ${fold.count} — show every page`}
-                style={{ display: dLayouts.length > 0 ? undefined : 'none' }}
-                onClick={() => setIsFold(!isFold)}
-              >
+              <div className="btn" title={`${fold.name} ${fold.count} — show every page`} style={{ display: dLayouts.length > 0 ? undefined : 'none' }} onClick={() => setIsFold(!isFold)}>
                 <span className="btn__label">{fold.name}</span>
                 <span className="btn__count">{fold.count}</span>
                 <i className="icon sd-zhankai" />
@@ -331,26 +319,18 @@ export default function MultipleBoards() {
                   <span className="chip-add__label">Add page</span>
                 </button>
               </Tooltip>
-              <div className="chip-divider" />
-              <NotesToggle />
+              {presentable ? <div className="chip-divider" /> : null}
+              {presentable ? <NotesToggle /> : null}
             </>
           ) : (
             <div className="list">
               <span onClick={() => setIsFold(!isFold)} className="icon-btn">
                 <i className="icon sd-zhankai" />
               </span>
-              <NotesToggle />
+              {presentable ? <NotesToggle /> : null}
               <div ref={pagesRef} className="pages">
                 {dLayouts.map((l, li) => (
-                  <Page
-                    key={pageKey(li)}
-                    layout={l as TdLayout}
-                    index={li}
-                    isCurrent={index === li}
-                    isFirst={li === 0}
-                    isLast={li === dLayouts.length - 1}
-                    onCommand={runPageCommand}
-                  />
+                  <Page key={pageKey(li)} layout={l as TdLayout} index={li} isCurrent={index === li} isFirst={li === 0} isLast={li === dLayouts.length - 1} onCommand={runPageCommand} />
                 ))}
               </div>
               <Tooltip content={atLimit ? `A design can have ${MAX_PAGES} pages` : 'Add a page'} placement="top" showAfter={400}>

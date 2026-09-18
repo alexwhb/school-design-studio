@@ -1,11 +1,11 @@
-import mitt from 'mitt';
+import mitt from 'mitt'
 
 type Events = {
-  refreshUserImages: any;
+  refreshUserImages: any
   /** Asks the left panel for a tab, by the `component` id in WidgetClassifyList. */
-  'open-panel': string;
-};
+  'open-panel': string
+}
 
-const emitter = mitt<Events>();
+const emitter = mitt<Events>()
 
-export default emitter;
+export default emitter

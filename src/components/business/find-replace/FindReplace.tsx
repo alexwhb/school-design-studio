@@ -7,16 +7,7 @@ import Checkbox from '@/components/ui/Checkbox'
 import message from '@/components/ui/message'
 import { recordHistory } from '@/common/hooks/history'
 import { widgetState } from '@/store/state'
-import {
-  applyReplace,
-  applyReplaceAll,
-  findMatches,
-  pagesTouched,
-  revealMatch,
-  type TFindMatch,
-  type TReplaceOutcome,
-  type TSearchScope,
-} from '@/store/widget/findReplace'
+import { applyReplace, applyReplaceAll, findMatches, pagesTouched, revealMatch, type TFindMatch, type TReplaceOutcome, type TSearchScope } from '@/store/widget/findReplace'
 import { cx } from '@/utils/dom'
 import './findReplace.less'
 
@@ -182,10 +173,12 @@ const FindReplace = forwardRef<FindReplaceHandle, {}>(function FindReplace(_prop
         {pageCount > 1 ? (
           <div className="scopes">
             <span className="scopes__label">Search</span>
-            {([
-              ['all', 'All pages'],
-              ['page', 'This page'],
-            ] as const).map(([value, label]) => (
+            {(
+              [
+                ['all', 'All pages'],
+                ['page', 'This page'],
+              ] as const
+            ).map(([value, label]) => (
               <button
                 key={value}
                 type="button"

@@ -6,6 +6,7 @@ import useConfirm from '@/common/methods/confirm'
 import DragHelper from '@/common/hooks/dragHelper'
 import useInfiniteScroll from '@/common/hooks/useInfiniteScroll'
 import { deleteUpload, listUploads, type LocalUpload } from '@/common/methods/localUploads'
+import { resolveStockImage, type StockImage } from '@/common/methods/stockImage'
 import eventBus from '@/utils/plugins/eventBus'
 import Image from '@/components/ui/Image'
 import { PlusIcon } from '@/components/ui/icons'
@@ -147,18 +148,22 @@ export default function PhotoListWrap() {
     getDataList()
   }
 
-  const placeImage = async (item: { url?: string; width?: number; height?: number; downloadLocation?: string }) => {
+  const placeImage = async (item: StockImage & { downloadLocation?: string }) => {
     setShowMoveable(false)
+    // The photographer is still counted whether or not the host keeps a copy:
+    // Unsplash's terms are about the picture being used, and it is being used.
+    api.material.trackImageUse(item.downloadLocation)
+    const picture = await resolveStockImage(item)
+    if (!picture) return
     const setting = JSON.parse(JSON.stringify(wImageSetting))
-    const img = await setImageData(item as any)
+    const img = await setImageData(picture as any)
     setting.width = img.width
     setting.height = img.height
-    setting.imgUrl = item.url
+    setting.imgUrl = picture.url
     const { width: pW, height: pH } = canvasState.dPage
     setting.left = pW / 2 - img.width / 2
     setting.top = pH / 2 - img.height / 2
     addWidget(setting)
-    api.material.trackImageUse(item.downloadLocation)
   }
 
   /**
@@ -171,7 +176,6 @@ export default function PhotoListWrap() {
     const img = await setImageData({ width: item.width, height: item.height, url: item.thumb || item.url || '' })
     dragHelper.start(e.nativeEvent, img.canvasWidth)
     setSelectItem({ data: { value: item }, type: 'image' })
-    api.material.trackImageUse(item.downloadLocation)
   }
 
   const mousemove = (e: React.MouseEvent) => {
@@ -241,12 +245,7 @@ export default function PhotoListWrap() {
               <span>Upload</span>
             </Uploader>
             {uploads.map((item) => (
-              <Card
-                key={item.id}
-                ratio="1"
-                title={item.title}
-                {...thumbProps(item)}
-              >
+              <Card key={item.id} ratio="1" title={item.title} {...thumbProps(item)}>
                 <EditModel options={[{ name: 'Delete', fn: deleteUploadItem }] as any} data={{ item }}>
                   <Image className="list__img transparent-bg" src={item.url} fit="cover" lazy />
                 </EditModel>
@@ -260,19 +259,9 @@ export default function PhotoListWrap() {
           {notice ? <p className="panel-wrap__note">{notice}</p> : null}
           <CardGrid columns={2} className="photo-list-wrap__library">
             {photos.map((item, i) => (
-              <Card
-                key={String(item.id) + i}
-                meta={item.author}
-                {...thumbProps(item)}
-              >
+              <Card key={String(item.id) + i} meta={item.author} {...thumbProps(item)}>
                 <ImageTip detail={item as any}>
-                  <Image
-                    className="list__img"
-                    src={item.thumb || item.url}
-                    fit="cover"
-                    lazy
-                    placeholder={<div style={{ backgroundColor: item.color }} className="image-color" />}
-                  />
+                  <Image className="list__img" src={item.thumb || item.url} fit="cover" lazy placeholder={<div style={{ backgroundColor: item.color }} className="image-color" />} />
                 </ImageTip>
               </Card>
             ))}

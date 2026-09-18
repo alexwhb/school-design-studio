@@ -77,8 +77,7 @@ export default function RcMenu() {
       // '-1' is the page, which every top-level layer is a child of — asking
       // whether it is in the selection would answer yes for all of them.
       const selected = widgetState.dSelectWidgets
-      const withinSelection =
-        !!uuid && uuid !== '-1' && selected.length > 1 && selected.some((item) => item.uuid === uuid || item.parent === uuid)
+      const withinSelection = !!uuid && uuid !== '-1' && selected.length > 1 && selected.some((item) => item.uuid === uuid || item.parent === uuid)
       if (!withinSelection) selectWidget({ uuid: uuid ?? '-1' })
       menuUuid.current = withinSelection ? '-1' : uuid || '-1'
       showMenu(e)

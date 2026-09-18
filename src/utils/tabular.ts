@@ -127,12 +127,7 @@ const NUMERIC = /^[-+]?\d[\d,.]*%?$|^\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4}$/
  * of these is a header even when the rows under it are the same shape — a
  * column of first names under "Name" looks like four names otherwise.
  */
-const HEADER_WORDS = new Set([
-  'name', 'first', 'last', 'first name', 'last name', 'surname', 'forename', 'full name', 'pupil', 'student', 'child',
-  'grade', 'class', 'form', 'year', 'year group', 'house', 'tutor', 'teacher', 'room', 'group', 'team',
-  'award', 'prize', 'subject', 'reason', 'title', 'date', 'id', 'number', 'no', 'email', 'parent', 'guardian',
-  'address', 'phone', 'school', 'club', 'event', 'role', 'position', 'notes',
-])
+const HEADER_WORDS = new Set(['name', 'first', 'last', 'first name', 'last name', 'surname', 'forename', 'full name', 'pupil', 'student', 'child', 'grade', 'class', 'form', 'year', 'year group', 'house', 'tutor', 'teacher', 'room', 'group', 'team', 'award', 'prize', 'subject', 'reason', 'title', 'date', 'id', 'number', 'no', 'email', 'parent', 'guardian', 'address', 'phone', 'school', 'club', 'event', 'role', 'position', 'notes'])
 
 /**
  * A cell reduced to its shape: runs of letters become `a`, runs of digits `9`,
@@ -163,7 +158,14 @@ export function detectHeader(rows: string[][]): boolean {
 
   const second = rows[1]
   if (first.some((cell, index) => shapeOf(cell) !== shapeOf(second[index] ?? ''))) return true
-  return first.every((cell) => HEADER_WORDS.has(cell.toLowerCase().replace(/[^\p{L} ]/gu, '').trim()))
+  return first.every((cell) =>
+    HEADER_WORDS.has(
+      cell
+        .toLowerCase()
+        .replace(/[^\p{L} ]/gu, '')
+        .trim(),
+    ),
+  )
 }
 
 /**

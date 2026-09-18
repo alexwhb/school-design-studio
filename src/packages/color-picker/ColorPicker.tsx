@@ -52,20 +52,7 @@ const hasEyeDrop = typeof window !== 'undefined' && 'EyeDropper' in window
 /** The two Adobe XD offers a fill, in the order it lists them. */
 const GRADIENT_TYPES: GradientType[] = ['linear', 'radial']
 
-export default function ColorPicker({
-  value = '#ffffffff',
-  modes = ['Solid', 'Gradient'],
-  defaultColor = '#ffffffff',
-  defaultGradient = 'linear-gradient(90deg, #fffae0ff 0%, #ffd1f1ff 100%)',
-  defaultImage = 'https://st0.dancf.com/csc/157/material-2d-textures/0/20190714-174653-ed3c.jpg',
-  onValueChange,
-  onChange,
-  onNativePick,
-  onBlurColor,
-  history,
-  onHistoryChange,
-  presets,
-}: Props) {
+export default function ColorPicker({ value = '#ffffffff', modes = ['Solid', 'Gradient'], defaultColor = '#ffffffff', defaultGradient = 'linear-gradient(90deg, #fffae0ff 0%, #ffd1f1ff 100%)', defaultImage = 'https://st0.dancf.com/csc/157/material-2d-textures/0/20190714-174653-ed3c.jpg', onValueChange, onChange, onNativePick, onBlurColor, history, onHistoryChange, presets }: Props) {
   const [mode, setMode] = useState(() => parseBackgroundValue(value))
   const [angle, setAngle] = useState(90)
   const [gradientType, setGradientType] = useState<GradientType>('linear')
@@ -291,9 +278,7 @@ export default function ColorPicker({
       onChangeHSLA()
     }
 
-    const sliderHuxMoveable = elSliderHux.current
-      ? registerMoveableElement(elSliderHux.current, { onmousemove: onChangeHux, onmouseup: onChangeHux })
-      : null
+    const sliderHuxMoveable = elSliderHux.current ? registerMoveableElement(elSliderHux.current, { onmousemove: onChangeHux, onmouseup: onChangeHux }) : null
 
     function onChangeHux(position: { x: number; y: number }) {
       disableChangeHSLA()
@@ -302,9 +287,7 @@ export default function ColorPicker({
       onChangeHSLA()
     }
 
-    const sliderAlphaMoveable = elSliderAlpha.current
-      ? registerMoveableElement(elSliderAlpha.current, { onmousemove: onChangeAlphaPos, onmouseup: onChangeAlphaPos })
-      : null
+    const sliderAlphaMoveable = elSliderAlpha.current ? registerMoveableElement(elSliderAlpha.current, { onmousemove: onChangeAlphaPos, onmouseup: onChangeAlphaPos }) : null
 
     function onChangeAlphaPos(position: { x: number; y: number }) {
       disableChangeHSLA()
@@ -479,15 +462,7 @@ export default function ColorPicker({
           <div className="cp__gradient-head">
             <div className="cp__gradient-type">
               {GRADIENT_TYPES.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  title={type === 'radial' ? 'Radial gradient' : 'Linear gradient'}
-                  aria-label={type === 'radial' ? 'Radial gradient' : 'Linear gradient'}
-                  aria-pressed={type === gradientType}
-                  className={cx('cpgt__option', { 'cpgt__option--active': type === gradientType })}
-                  onClick={() => changeGradientType(type)}
-                >
+                <button key={type} type="button" title={type === 'radial' ? 'Radial gradient' : 'Linear gradient'} aria-label={type === 'radial' ? 'Radial gradient' : 'Linear gradient'} aria-pressed={type === gradientType} className={cx('cpgt__option', { 'cpgt__option--active': type === gradientType })} onClick={() => changeGradientType(type)}>
                   <span className={`cpgt__swatch cpgt__swatch--${type}`} style={{ background: ramp(type) }} />
                 </button>
               ))}
@@ -497,15 +472,7 @@ export default function ColorPicker({
           <div className="cp__gradient-bar">
             <div ref={elGradientTrack} className="cpgb__track" style={{ width: '100%', background: rampBackground }}>
               {gradients.map((gradient, index) => (
-                <div
-                  key={index}
-                  className={cx('cpgb__pointer', { 'cpgb__pointer--active': gradient === activeGradient })}
-                  data-sort={index}
-                  style={{ left: `${gradient.offset * 100}%`, background: gradient.color }}
-                  tabIndex={-1}
-                  onMouseDown={() => onMousedownGradientPointer(gradient)}
-                  onKeyDown={onKeyupGradientPointer}
-                />
+                <div key={index} className={cx('cpgb__pointer', { 'cpgb__pointer--active': gradient === activeGradient })} data-sort={index} style={{ left: `${gradient.offset * 100}%`, background: gradient.color }} tabIndex={-1} onMouseDown={() => onMousedownGradientPointer(gradient)} onKeyDown={onKeyupGradientPointer} />
               ))}
             </div>
           </div>
@@ -563,11 +530,7 @@ export default function ColorPicker({
             }}
           />
         )}
-        {mode === 'Solid'
-          ? predefine.map((pc) => (
-              <div key={pc} className="item item-color" style={{ background: pc }} onClick={() => onClickStraw(pc)} />
-            ))
-          : null}
+        {mode === 'Solid' ? predefine.map((pc) => <div key={pc} className="item item-color" style={{ background: pc }} onClick={() => onClickStraw(pc)} />) : null}
       </div>
     </div>
   )

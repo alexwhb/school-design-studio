@@ -29,8 +29,7 @@ export const MAX_SCALE = 3
 
 const clampFocus = (value?: number) => (typeof value === 'number' && isFinite(value) ? Math.min(100, Math.max(0, value)) : DEFAULT_FOCUS)
 
-const clampScale = (value?: number) =>
-  typeof value === 'number' && isFinite(value) ? Math.min(MAX_SCALE, Math.max(MIN_SCALE, value)) : MIN_SCALE
+const clampScale = (value?: number) => (typeof value === 'number' && isFinite(value) ? Math.min(MAX_SCALE, Math.max(MIN_SCALE, value)) : MIN_SCALE)
 
 /** The transform with every gap filled in, for a control that has to show a value. */
 export function backgroundTransformOf(page: Pick<TPageState, 'backgroundTransform'>) {

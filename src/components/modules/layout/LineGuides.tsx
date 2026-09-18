@@ -62,9 +62,7 @@ export default function LineGuides({ show }: { show: boolean }) {
   /** Feeds the rulers the object edges a dragged guide should stick to. */
   function updateSnaps() {
     if (!guidesTop.current || !guidesLeft.current) return
-    const positions = controlState.dSnapEnabled
-      ? getSnapPositions(widgetState.dWidgets, canvasState.dPage)
-      : { x: [], y: [] }
+    const positions = controlState.dSnapEnabled ? getSnapPositions(widgetState.dWidgets, canvasState.dPage) : { x: [], y: [] }
     // A guide can only sit on a whole pixel, so offer it whole pixels.
     const x = [...new Set(positions.x.map(Math.round))]
     const y = [...new Set(positions.y.map(Math.round))]
@@ -197,7 +195,15 @@ export default function LineGuides({ show }: { show: boolean }) {
     [],
   )
 
-  useEffect(() => subscribeSelector(controlState, () => controlState.dSnapEnabled, () => updateSnaps()), [])
+  useEffect(
+    () =>
+      subscribeSelector(
+        controlState,
+        () => controlState.dSnapEnabled,
+        () => updateSnaps(),
+      ),
+    [],
+  )
 
   return <div />
 }

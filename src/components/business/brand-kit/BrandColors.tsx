@@ -81,7 +81,7 @@ type TEditing = number | 'new' | null
  * change a colour at all, and neither survives being read through a hole.
  */
 export default function BrandColors() {
-  const { kit } = useSnapshot(brandState)
+  const { kit, readOnly } = useSnapshot(brandState)
   const [editing, setEditing] = useState<TEditing>(null)
   const [draft, setDraft] = useState(FIRST_COLOR)
   const [hexText, setHexText] = useState(shortHex(FIRST_COLOR))
@@ -183,16 +183,7 @@ export default function BrandColors() {
       </div>
       <div className="brand-editor__strip">
         {picks.map((color) => (
-          <button
-            key={color}
-            type="button"
-            className={cx('brand-editor__pick', { 'is-on': color === draft })}
-            style={{ background: color }}
-            title={shortHex(color)}
-            aria-label={shortHex(color)}
-            aria-pressed={color === draft}
-            onClick={() => pickDraft(color)}
-          />
+          <button key={color} type="button" className={cx('brand-editor__pick', { 'is-on': color === draft })} style={{ background: color }} title={shortHex(color)} aria-label={shortHex(color)} aria-pressed={color === draft} onClick={() => pickDraft(color)} />
         ))}
       </div>
       <ColorPicker value={draft} modes={['Solid']} onValueChange={setDraft} />
@@ -217,7 +208,7 @@ export default function BrandColors() {
   return (
     <div className="brand-colours" role="list" aria-label="Brand colours">
       {kit.colors.map((color, index) => {
-        if (editing === index) return editor
+        if (!readOnly && editing === index) return editor
         const hex = shortHex(color)
         const tone = brandColorTone(color)
         const reads = readability(color)
@@ -232,10 +223,7 @@ export default function BrandColors() {
               {/* Two samples rather than two ticks: the pale colour that
                   cannot be read on paper is shown being unreadable on paper,
                   which needs no legend. */}
-              <span
-                className="brand-swatch__reads"
-                title={`As text on white: ${asRatio(reads.asText)}. As a surface: ${reads.onIsPaper ? 'white' : 'ink'} reads on it at ${asRatio(reads.onRatio)}.`}
-              >
+              <span className="brand-swatch__reads" title={`As text on white: ${asRatio(reads.asText)}. As a surface: ${reads.onIsPaper ? 'white' : 'ink'} reads on it at ${asRatio(reads.onRatio)}.`}>
                 <span className="brand-swatch__mark" style={{ background: PAPER, color: reads.flat }}>
                   Aa
                 </span>
@@ -245,14 +233,18 @@ export default function BrandColors() {
               </span>
               <span className="brand-swatch__hex">{hex}</span>
             </button>
-            <button type="button" className="brand-swatch__edit" title="Edit this colour" aria-label={`Edit ${hex}`} onClick={() => openEditor(index)}>
-              <PencilIcon />
-            </button>
+            {/* Painting the selection with a colour changes the design, so it
+                stays; editing the colour changes the kit, so it goes. */}
+            {readOnly ? null : (
+              <button type="button" className="brand-swatch__edit" title="Edit this colour" aria-label={`Edit ${hex}`} onClick={() => openEditor(index)}>
+                <PencilIcon />
+              </button>
+            )}
           </div>
         )
       })}
-      {editing === 'new' ? editor : null}
-      {editing !== 'new' && kit.colors.length < MAX_BRAND_COLORS ? (
+      {!readOnly && editing === 'new' ? editor : null}
+      {!readOnly && editing !== 'new' && kit.colors.length < MAX_BRAND_COLORS ? (
         <button type="button" className="brand-swatch--add" onClick={() => openEditor('new')}>
           <PlusIcon />
           Add a colour

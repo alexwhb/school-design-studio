@@ -33,6 +33,8 @@ export type IGetTempListData = {
   url: string
   model?: string
   color?: string
+  /** Which chip it is filed under — 'poster', 'slide', 'award' and so on. */
+  cate?: string
   /** Only on the inline `data` path; see `TTempDetail.brand`. */
   brand?: TTemplateBrand
 }

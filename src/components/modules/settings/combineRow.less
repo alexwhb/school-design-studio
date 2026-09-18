@@ -1,0 +1,20 @@
+// A flat run of icons, like the align row below it rather than the boxed bar an
+// icon row gets by default: two boxed bars stacked in the same block would read
+// as two controls competing rather than one panel.
+.icon-item-select.combine-row {
+  margin-bottom: @space-3;
+
+  .btn__bar {
+    height: 26px;
+    padding: 0;
+    margin-bottom: 0;
+    background: transparent;
+    border: 0;
+    gap: 1px;
+
+    .list-item {
+      height: 26px;
+      border-radius: @radius-sm - 2px;
+    }
+  }
+}

@@ -141,15 +141,7 @@ export default function LayerList({ data, onChange }: Props) {
   return (
     <ul className="widget-list" ref={listRef}>
       {widgets.map((element, index) => (
-        <li
-          key={element.uuid}
-          data-index={index}
-          className={cx('widget', { active: getIsActive(element.uuid), disable: !showItem(element), 'widget-hidden': !!element.hidden }, 'item-one')}
-          onClick={() => selectWidget({ uuid: element.uuid })}
-          onDoubleClick={() => startRename(element)}
-          onMouseOver={() => updateHoverUuid(element.uuid)}
-          onMouseOut={() => updateHoverUuid('-1')}
-        >
+        <li key={element.uuid} data-index={index} className={cx('widget', { active: getIsActive(element.uuid), disable: !showItem(element), 'widget-hidden': !!element.hidden }, 'item-one')} onClick={() => selectWidget({ uuid: element.uuid })} onDoubleClick={() => startRename(element)} onMouseOver={() => updateHoverUuid(element.uuid)} onMouseOut={() => updateHoverUuid('-1')}>
           {Number(element.parent) !== -1 ? <span className="second-layer" /> : null}
           {layerThumb(element) ? <img className="widget-type widget-type__img" src={layerThumb(element)} alt="" /> : <LayerBadge type={element.type} className="widget-type" />}
           {renamingUuid === element.uuid ? (

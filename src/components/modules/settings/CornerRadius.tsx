@@ -31,28 +31,14 @@ export default function CornerRadius({ corners, unlinked, maxValue, onLinkChange
     <div className="corner-radius">
       <div className="corner-radius__head">
         <span className="corner-radius__hint">Drag a corner on the canvas, or set it here</span>
-        <button
-          type="button"
-          className={cx('corner-radius__link', { 'is-active': !unlinked })}
-          aria-pressed={!unlinked}
-          title={unlinked ? 'Round every corner together' : 'Round each corner on its own'}
-          onClick={() => onLinkChange(!unlinked)}
-        >
+        <button type="button" className={cx('corner-radius__link', { 'is-active': !unlinked })} aria-pressed={!unlinked} title={unlinked ? 'Round every corner together' : 'Round each corner on its own'} onClick={() => onLinkChange(!unlinked)}>
           {unlinked ? <UnlinkedIcon /> : <LinkedIcon />}
         </button>
       </div>
       {unlinked ? (
         <div className="corner-radius__grid">
           {CORNERS.map((corner, index) => (
-            <NumberInput
-              key={corner.key}
-              variant="underline"
-              label={corner.short}
-              value={corners[index]}
-              minValue={0}
-              maxValue={maxValue}
-              onChange={(value) => onChange(index, Number(value))}
-            />
+            <NumberInput key={corner.key} variant="underline" label={corner.short} value={corners[index]} minValue={0} maxValue={maxValue} onChange={(value) => onChange(index, Number(value))} />
           ))}
         </div>
       ) : (

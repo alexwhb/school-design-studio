@@ -40,10 +40,7 @@ function paint(colour: unknown): string | undefined {
   return typeof colour === 'string' && colour && !isInvisible(colour) ? colour : undefined
 }
 
-const TableGrid = forwardRef(function TableGrid(
-  { params, editing, cellRef, onCellDoubleClick, onCellContextMenu, onCellKeyDown, onCellBlur, spellCheck = false }: Props,
-  ref: Ref<HTMLTableElement>,
-) {
+const TableGrid = forwardRef(function TableGrid({ params, editing, cellRef, onCellDoubleClick, onCellContextMenu, onCellKeyDown, onCellBlur, spellCheck = false }: Props, ref: Ref<HTMLTableElement>) {
   const table = readTable(params)
   const borderWidth = Math.max(0, Number(params.borderWidth) || 0)
   const border = borderWidth > 0 ? `${borderWidth}px ${params.borderStyle || 'solid'} ${params.borderColor || '#000000ff'}` : 'none'
@@ -103,17 +100,7 @@ const TableGrid = forwardRef(function TableGrid(
                     onDoubleClick={onCellDoubleClick ? (e) => onCellDoubleClick({ row: r, col: c }, e) : undefined}
                     onContextMenu={onCellContextMenu ? (e) => onCellContextMenu({ row: r, col: c }, e) : undefined}
                   >
-                    <div
-                      ref={cellRef ? (el) => cellRef(r, c, el) : undefined}
-                      className="w-table__cell"
-                      style={{ minHeight: fontSize * lineHeight + 'px' }}
-                      contentEditable={isEditing ? 'plaintext-only' : undefined}
-                      spellCheck={isEditing ? spellCheck : false}
-                      suppressContentEditableWarning
-                      onKeyDown={isEditing && onCellKeyDown ? (e) => onCellKeyDown({ row: r, col: c }, e) : undefined}
-                      onBlur={isEditing && onCellBlur ? (e) => onCellBlur({ row: r, col: c }, e.currentTarget) : undefined}
-                      dangerouslySetInnerHTML={{ __html: cell || '' }}
-                    />
+                    <div ref={cellRef ? (el) => cellRef(r, c, el) : undefined} className="w-table__cell" style={{ minHeight: fontSize * lineHeight + 'px' }} contentEditable={isEditing ? 'plaintext-only' : undefined} spellCheck={isEditing ? spellCheck : false} suppressContentEditableWarning onKeyDown={isEditing && onCellKeyDown ? (e) => onCellKeyDown({ row: r, col: c }, e) : undefined} onBlur={isEditing && onCellBlur ? (e) => onCellBlur({ row: r, col: c }, e.currentTarget) : undefined} dangerouslySetInnerHTML={{ __html: cell || '' }} />
                   </td>
                 )
               })}

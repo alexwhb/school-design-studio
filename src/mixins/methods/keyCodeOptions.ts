@@ -9,8 +9,6 @@ import type { TdWidgetData } from '@/store/types'
 import { getAppRoot } from '@/common/hooks/appRoot'
 import { setUpdateRect } from '@/store/force'
 
-
-
 export default function keyCodeOptions(e: any, params: any) {
   const { range } = params
   switch (e.keyCode) {

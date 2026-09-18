@@ -1,4 +1,5 @@
 import handlePaste from './handlePaste'
+import zoomKey from './zoomKey'
 import { widgetState } from '@/store/state'
 import { realCombined } from '@/store/group'
 import { handleHistory } from '@/store/history'
@@ -11,11 +12,21 @@ export type ShortcutInstance = {
   save: () => void
   zoomAdd: () => void
   zoomSub: () => void
+  zoomFit?: () => void
   present?: () => void
   findReplace?: () => void
 }
 
 export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) {
+  const zoom = zoomKey(e)
+  if (zoom) {
+    // Cancelling is what keeps the browser from zooming the page instead.
+    e.preventDefault()
+    if (zoom === 'in') _this.zoomAdd()
+    else if (zoom === 'out') _this.zoomSub()
+    else _this.zoomFit?.()
+    return
+  }
   switch (e.keyCode) {
     case 65:
       selectAll(e)
@@ -48,14 +59,6 @@ export default function dealWithCtrl(e: KeyboardEvent, _this: ShortcutInstance) 
     case 83:
       e.preventDefault()
       _this.save()
-      break
-    case 187:
-      e.preventDefault()
-      _this.zoomAdd()
-      break
-    case 189:
-      e.preventDefault()
-      _this.zoomSub()
       break
     // ] and [ step a layer through the stack; with Shift they take it all the way
     case 221:

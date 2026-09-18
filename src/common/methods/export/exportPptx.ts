@@ -16,11 +16,14 @@
  *    editable, but it is guaranteed to look exactly like the editor.
  */
 import PptxGenJS from 'pptxgenjs'
+import downloadBlob from '@/common/methods/download/downloadBlob'
 import { imageFilterCss } from '../imageFilters'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 import { readTable } from '@/components/modules/widgets/wTable/tableModel'
 import { htmlToText, imageToDataUrl, isInvisible, pxToInches, pxToPoints, readRotation, safeFileName, toPptxColor } from './utils'
 import { htmlToPptxRuns } from './textRuns'
+import { applyPptxMotion, motionName, type MotionTarget, type SlideMotion } from './pptxAnimation'
+import { readTransition } from '@/common/animations/transitions'
 
 export type PptxMode = 'editable' | 'picture'
 
@@ -113,6 +116,7 @@ function addTextWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: numb
   // date or a link comes out as one in the deck — see textRuns.ts.
   slide.addText(htmlToPptxRuns((widget as any).text, (widget as any).listStyle), {
     ...frame(widget, scale),
+    objectName: motionName(widget.uuid),
     fontFace: (widget as any).fontClass?.value || 'Inter',
     fontSize,
     color,
@@ -153,10 +157,7 @@ function addTableWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: num
   const textColor = toPptxColor(w.color, '000000').color
   const headerColor = toPptxColor(w.headerColor || w.color, 'FFFFFF').color
   const borderWidth = Number(w.borderWidth) || 0
-  const border: PptxGenJS.BorderProps =
-    borderWidth > 0 && !isInvisible(w.borderColor)
-      ? { type: w.borderStyle === 'dashed' || w.borderStyle === 'dotted' ? 'dash' : 'solid', pt: Math.max(0.25, pxToPoints(borderWidth) * scale), color: toPptxColor(w.borderColor, '000000').color }
-      : { type: 'none' }
+  const border: PptxGenJS.BorderProps = borderWidth > 0 && !isInvisible(w.borderColor) ? { type: w.borderStyle === 'dashed' || w.borderStyle === 'dotted' ? 'dash' : 'solid', pt: Math.max(0.25, pxToPoints(borderWidth) * scale), color: toPptxColor(w.borderColor, '000000').color } : { type: 'none' }
   const align = (['left', 'center', 'right'].includes(w.textAlign) ? w.textAlign : 'left') as 'left' | 'center' | 'right'
   const margin = pxToInches(Number(w.cellPadding) || 0) * scale
 
@@ -183,6 +184,7 @@ function addTableWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: num
   )
 
   slide.addTable(rows, {
+    objectName: motionName(widget.uuid),
     x: box.x,
     y: box.y,
     w: box.w,
@@ -224,12 +226,15 @@ function pptxShadow(widget: TdWidgetData, scale: number): PptxGenJS.ShadowProps 
 async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: number) {
   const url = (widget as any).imgUrl
   if (!url) return
-  const data = await imageToDataUrl(url)
+  // The size it is laid out at, so a vector is rasterised for this frame rather
+  // than at whatever intrinsic size it happens to declare.
+  const data = await imageToDataUrl(url, { width: Number(widget.width) || 0, height: Number(widget.height) || 0 })
   if (!data) return false
 
   slide.addImage({
     data,
     ...frame(widget, scale),
+    objectName: motionName(widget.uuid),
     rotate: readRotation(widget) || undefined,
     transparency: toPptxColor(
       `#000000${Math.round(Number((widget as any).opacity ?? 1) * 255)
@@ -248,14 +253,14 @@ async function addRasterWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, pag
   if (!data) return
   // The picture is drawn without the element's shadow — see `capture` — so the
   // shadow is put back here, where PowerPoint can cast it outside the frame.
-  slide.addImage({ data, ...frame(widget, scale), shadow: pptxShadow(widget, scale) })
+  slide.addImage({ data, ...frame(widget, scale), objectName: motionName(widget.uuid), shadow: pptxShadow(widget, scale) })
 }
 
 /** Paints the page background onto the slide: a colour, a gradient's base, or an image. */
 async function applyBackground(slide: PptxGenJS.Slide, page: Record<string, any>) {
   const image = page.backgroundImage
   if (image) {
-    const data = await imageToDataUrl(image)
+    const data = await imageToDataUrl(image, { width: Number(page.width) || 0, height: Number(page.height) || 0 })
     if (data) {
       slide.background = { data }
       return
@@ -273,7 +278,15 @@ async function applyBackground(slide: PptxGenJS.Slide, page: Record<string, any>
   slide.background = { color: 'FFFFFF' }
 }
 
-export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Promise<void> {
+/**
+ * The deck itself, as a Blob.
+ *
+ * Split from the download for the same reason the PDF is: a host that embeds
+ * the editor wants the bytes to POST somewhere, not a file in the user's
+ * Downloads folder. pptxgenjs will hand back either, so the two paths differ
+ * only in what they ask it for.
+ */
+export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Promise<Blob> {
   const { title, mode, onProgress, renderPage, renderWidget } = options
   const pages = layouts.filter(Boolean)
   if (pages.length === 0) throw new Error('There is nothing to export.')
@@ -291,10 +304,19 @@ export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Pro
   pptx.defineLayout({ name: 'DESIGN', width: deckWidth, height: deckHeight })
   pptx.layout = 'DESIGN'
 
+  // Collected as the deck is built and written in afterwards — pptxgenjs has no
+  // API for either a transition or a build, so both are edited into the file it
+  // produces. See pptxAnimation.ts.
+  const motion: SlideMotion[] = []
+
   for (let i = 0; i < pages.length; i++) {
     const page = pages[i].global as Record<string, any>
     const layers = (pages[i].layers || []) as TdWidgetData[]
     const slide = pptx.addSlide()
+    // A transition belongs to the page, so it survives 'picture' mode too: a
+    // deck of flat images still gives way one slide to the next.
+    const slideMotion: SlideMotion = { transition: readTransition(pages[i].global as any), builds: [] }
+    motion.push(slideMotion)
 
     onProgress?.(Math.round(((i + 0.1) / pages.length) * 90), `Building slide ${i + 1} of ${pages.length}`)
 
@@ -309,6 +331,8 @@ export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Pro
       } else {
         await applyBackground(slide, page)
       }
+      // Nothing on the slide but one picture of the whole page, so there is
+      // nothing left for an element entrance to point at.
       continue
     }
 
@@ -322,6 +346,16 @@ export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Pro
       if (String(widget.type) === 'w-group') continue
       if (widget.hidden || (widget.parent && hiddenGroups.has(widget.parent))) continue
       if ((widget as any).opacity === 0) continue
+
+      // Recorded for every visible element, whether or not it ends up in the
+      // file. The start modes are RELATIVE — `with` means "as the one before
+      // it" — so an element left out here silently re-times the ones that are
+      // left: a page of bullets whose markers failed to rasterise came out with
+      // all three arriving at once instead of one after the next. The schedule
+      // is worked out over the whole page and the missing shapes are dropped at
+      // the end, where they cost nothing. The layer order is the running order,
+      // which is what buildSchedule reads in the presenter too.
+      slideMotion.builds.push({ uuid: widget.uuid, animation: (widget as any).animation, objectName: motionName(widget.uuid) } as MotionTarget)
 
       try {
         if (needsRaster(widget)) {
@@ -344,8 +378,19 @@ export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Pro
   }
 
   onProgress?.(95, 'Writing the file')
-  await pptx.writeFile({ fileName: safeFileName(title, 'pptx') })
-  onProgress?.(100, 'Your PowerPoint file has been downloaded')
+  const written = (await pptx.write({ outputType: 'blob' })) as Blob
+  // pptxgenjs hands back `application/zip`, which a .pptx technically is and
+  // which some readers then refuse to open as a presentation. Say what it is.
+  const blob = written.type === PPTX_TYPE ? written : new Blob([written], { type: PPTX_TYPE })
+  return applyPptxMotion(blob, motion)
+}
+
+const PPTX_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+
+export async function exportPptx(layouts: TdLayout[], options: PptxOptions): Promise<void> {
+  const blob = await buildPptx(layouts, options)
+  downloadBlob(blob, safeFileName(options.title, 'pptx'))
+  options.onProgress?.(100, 'Your PowerPoint file has been downloaded')
 }
 
 export default exportPptx

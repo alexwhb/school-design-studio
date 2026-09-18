@@ -203,9 +203,7 @@ export default function WTextStyle() {
     // toggle falls through to the whole box only if the selection has gone.
     const kind = inlineKindOf(item)
     if (kind && hasInlineSelection(uuid) && toggleInline(kind)) return
-    let value: any = ['textAlign', 'textAlignLast'].includes(item.key || '')
-      ? item.value
-      : (item.value as any[])[item.select ? 1 : 0]
+    let value: any = ['textAlign', 'textAlignLast'].includes(item.key || '') ? item.value : (item.value as any[])[item.select ? 1 : 0]
     if (item.key === 'textAlignLast' && target[item.key] === value) value = undefined
     item.key && (target[item.key] = value)
     if (item.key === 'writingMode') relationChange()
@@ -318,13 +316,7 @@ export default function WTextStyle() {
         <TextWrap value={active.textEffects} data={active} degree={active.degree} onValueChange={(value) => finish('textEffects', value as any)} onSelect={selectTextEffect} />
         {/* How far the line sweeps, in degrees: half a turn each way is as far
             as a badge or a crest ever goes, and past it the text meets itself. */}
-        <ToggleRow
-          className="curve-row"
-          label="Curve text"
-          checked={Boolean(active.curve)}
-          checker
-          onCheckedChange={(on) => recordHistory(() => finish('curve', on ? 30 : 0))}
-        >
+        <ToggleRow className="curve-row" label="Curve text" checked={Boolean(active.curve)} checker onCheckedChange={(on) => recordHistory(() => finish('curve', on ? 30 : 0))}>
           <NumberSlider value={active.curve || 0} label="Curve" field suffix="°" step={1} minValue={-180} maxValue={180} onChange={curveChange} onFinish={curveDone} />
         </ToggleRow>
       </PanelSection>
@@ -346,15 +338,7 @@ function inlineKindOf(item: TIconItemSelectData): TInlineKind | undefined {
  * opened on. It remembers what it last painted and aims the next change there
  * — otherwise a drag would move the artwork once and then paint nothing.
  */
-function EffectSwatch({
-  colour,
-  onOpenChange,
-  onChange,
-}: {
-  colour: TEffectColor
-  onOpenChange: (open: boolean) => void
-  onChange: (from: TColorParts, value: string) => TColorParts | null
-}) {
+function EffectSwatch({ colour, onOpenChange, onChange }: { colour: TEffectColor; onOpenChange: (open: boolean) => void; onChange: (from: TColorParts, value: string) => TColorParts | null }) {
   const painted = useRef<TColorParts>(colour)
   useEffect(() => {
     painted.current = colour

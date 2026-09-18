@@ -423,21 +423,7 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
       onDoubleClick={dblclickText}
       onClick={onClick}
     >
-      {p.textEffects && !editable
-        ? p.textEffects.map((ef: any, efi: number) =>
-            curved ? (
-              <CurvedText key={efi + 'effect'} layout={curved} className="effect-text" style={{ fontFamily, ...effectStyle(ef) }} plain />
-            ) : (
-              <div
-                key={efi + 'effect'}
-                style={{ fontFamily, ...effectStyle(ef) }}
-                className="edit-text effect-text"
-                spellCheck={false}
-                dangerouslySetInnerHTML={{ __html: p.text ?? '' }}
-              />
-            ),
-          )
-        : null}
+      {p.textEffects && !editable ? p.textEffects.map((ef: any, efi: number) => (curved ? <CurvedText key={efi + 'effect'} layout={curved} className="effect-text" style={{ fontFamily, ...effectStyle(ef) }} plain /> : <div key={efi + 'effect'} style={{ fontFamily, ...effectStyle(ef) }} className="edit-text effect-text" spellCheck={false} dangerouslySetInnerHTML={{ __html: p.text ?? '' }} />)) : null}
       {curved ? (
         <CurvedText layout={curved} style={{ fontFamily }} />
       ) : (

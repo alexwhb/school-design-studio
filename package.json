@@ -1,6 +1,6 @@
 {
   "name": "design-studio",
-  "version": "1.0.0",
+  "version": "0.4.0",
   "private": true,
   "author": "ShawnPhang",
   "scripts": {
@@ -14,10 +14,13 @@
     "fetch-fonts": "node tools/fetch-fonts.mjs",
     "fetch-iconfont": "node tools/fetch-iconfont.mjs",
     "dev:servers": "node tools/dev/servers.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test --project=e2e",
     "bench": "node tools/bench/bench.mjs",
     "bench:prod": "node tools/bench/start-prod.mjs && cross-env APP_URL=http://127.0.0.1:4873 node tools/bench/bench.mjs",
-    "build:embed": "cross-env NODE_ENV=production vite build --config vite.embed.config.ts",
+    "build:embed": "cross-env NODE_ENV=production vite build --config vite.embed.config.ts && cross-env NODE_ENV=production vite build --config vite.compose.config.ts && node tools/build/emit-types.mjs && node tools/build/copy-content.mjs",
+    "release:embed": "node tools/release-embed.mjs",
     "dev:embed-demo": "cross-env NODE_ENV=development vite --config vite.embed-demo.config.ts"
   },
   "dependencies": {
@@ -35,14 +38,16 @@
     "dayjs": "^1.10.7",
     "element-plus": "^2.6.3",
     "fontfaceobserver": "^2.1.0",
-    "html2canvas": "^1.0.0",
+    "html2canvas-pro": "^2.4.1",
     "immer": "^10.0.4",
+    "jszip": "^3.10.1",
     "microdiff": "^1.4.0",
     "mitt": "^3.0.1",
     "moveable": "^0.26.0",
     "moveable-helper": "^0.4.0",
     "nanoid": "^3.1.23",
     "normalize.css": "^8.0.1",
+    "paper": "^0.12.18",
     "pptxgenjs": "^4.0.1",
     "psd.js": "^3.9.0",
     "qr-code-styling": "^1.6.0-rc.1",
@@ -72,7 +77,8 @@
     "less": "^4.1.1",
     "terser": "^5.28.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.4"
+    "vite": "^5.1.4",
+    "vitest": "^3.2.7"
   },
   "browserslist": [
     "Chrome >= 90"

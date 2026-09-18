@@ -314,15 +314,7 @@ export default function DrawPen() {
                 </>
               ) : null}
               {points.map((point, index) => (
-                <rect
-                  key={index}
-                  className={cx('draw-pen__point', { 'draw-pen__point--close': closing && index === 0 })}
-                  x={point.x - (closing && index === 0 ? 6 : 4) * scale}
-                  y={point.y - (closing && index === 0 ? 6 : 4) * scale}
-                  width={(closing && index === 0 ? 12 : 8) * scale}
-                  height={(closing && index === 0 ? 12 : 8) * scale}
-                  strokeWidth={scale}
-                />
+                <rect key={index} className={cx('draw-pen__point', { 'draw-pen__point--close': closing && index === 0 })} x={point.x - (closing && index === 0 ? 6 : 4) * scale} y={point.y - (closing && index === 0 ? 6 : 4) * scale} width={(closing && index === 0 ? 12 : 8) * scale} height={(closing && index === 0 ? 12 : 8) * scale} strokeWidth={scale} />
               ))}
             </svg>,
             canvasEl,

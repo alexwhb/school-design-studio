@@ -11,10 +11,13 @@ import { readQuery, replaceQuery } from '@/common/hooks/useRouteQuery'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { autosaveState } from '@/common/hooks/autosave'
+import { autosaveState, type SaveStatus } from '@/common/hooks/autosave'
+import { useHostApi, type DesignDocument } from '@/common/hooks/hostApi'
+import { sanitizeFields } from '@/compose/fields'
 import { canvasState, userState, widgetState } from '@/store/state'
-import type { TdWidgetData } from '@/store/types'
+import type { TdLayout, TdWidgetData } from '@/store/types'
 import { setShowMoveable } from '@/store/control'
+import { setLayoutsChange } from '@/store/force'
 import { managerEdit } from '@/store/base'
 import { setDPage, getDPage } from '@/store/canvas'
 import { addGroup, addWidget, fillTemplateLayouts, getWidgets, setDWidgets, setTemplate } from '@/store/widget'
@@ -28,6 +31,8 @@ export type HeaderOptionsHandle = {
   getTitle: () => string
   /** Puts a name back in the box — used when a saved design is restored. */
   setTitle: (title: string) => void
+  /** Replaces the canvas with a whole document. See `showDocument`. */
+  showDocument: (doc: DesignDocument) => void
   download: (scale?: number) => Promise<void>
   save: (hasCover?: boolean) => Promise<void>
   saveTemp: () => Promise<void>
@@ -35,13 +40,16 @@ export type HeaderOptionsHandle = {
   load: (cb: () => void) => Promise<void>
 }
 
-const SAVE_LABEL: Record<'saved' | 'unsaved' | 'saving', string> = {
+const SAVE_LABEL: Record<Exclude<SaveStatus, 'idle'>, string> = {
   saved: 'Saved',
   unsaved: 'Unsaved changes',
   saving: 'Saving\u2026',
+  error: 'Couldn\u2019t save',
 }
 
 type Props = {
+  /** Saves through the host. Absent when the editor keeps its own design. */
+  onHostSave?: () => Promise<void>
   isContinue: boolean
   onContinueChange: (value: boolean) => void
   onChange: (data: { downloadPercent: number; downloadText: string; downloadMsg?: string }) => void
@@ -50,11 +58,9 @@ type Props = {
   children?: ReactNode
 }
 
-const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOptions(
-  { isContinue, onContinueChange, onChange, onTitleChange, children },
-  ref,
-) {
+const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOptions({ onHostSave, isContinue, onContinueChange, onChange, onTitleChange, children }, ref) {
   const mode = useEditorMode()
+  const host = useHostApi()
   const { tempEditing } = useSnapshot(userState)
   const saveStatus = useSnapshot(autosaveState).status
   const [title, setTitle] = useState('')
@@ -62,12 +68,27 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
   titleRef.current = title
   const loadingRef = useRef(false)
 
+  /**
+   * Renames the design, and says so at once.
+   *
+   * `setTitle` alone is not enough for anything that reads the name back in the
+   * same tick: the ref is written during render, so a caller that renames and
+   * then asks for the name gets the old one. That is how the save pill came up
+   * reading "Unsaved changes" over a design nobody had touched — the baseline
+   * was taken with the name still empty, and the render that filled it in
+   * looked like an edit.
+   */
+  function applyTitle(next: string) {
+    titleRef.current = next || ''
+    setTitle(next || '')
+  }
+
   // Gallery selection replaces the whole canvas in place, so unlike a deep
   // link it has no load response that would otherwise populate the title.
   useEffect(() => {
     const setTemplateTitle = (event: Event) => {
       const next = (event as CustomEvent<string>).detail
-      setTitle(next || '')
+      applyTitle(next)
       onTitleChange?.()
     }
     window.addEventListener('design-title', setTemplateTitle)
@@ -181,6 +202,14 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
     if (mode !== 'draw') {
       await useFontStore.init()
     }
+    // A design the host handed in wins over anything in the URL. The planner
+    // opened this editor on a particular artefact; a ?tempid left over from a
+    // previous visit is not a reason to show a different one.
+    if (host.document) {
+      showDocument(host.document)
+      cb()
+      return
+    }
     const apiName = tempId && !id ? 'getTempDetail' : 'getWorks'
     if (w_h && !id && !tempId) {
       const wh: any = w_h.toString().split('*')
@@ -216,7 +245,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
       cb()
       return
     }
-    setTitle(loadedTitle)
+    applyTitle(loadedTitle)
     setShowMoveable(false)
     if (Number(type) == 1) {
       canvasState.dPage.width = width
@@ -243,6 +272,36 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
     cb()
   }
 
+  /**
+   * Puts a whole document on the canvas: the host's, or one it hands in later
+   * through the component's ref.
+   *
+   * The layouts are copied on the way in. What arrives is the host's own
+   * object, and the store mutates deeply — writing straight through would edit
+   * the host's copy of a design it thinks it is holding unchanged.
+   */
+  function showDocument(doc: DesignDocument) {
+    // Every document reaching the canvas comes through here — the `document`
+    // prop and the ref's `setDocument` both — so this is where the fields that
+    // are interpolated somewhere get checked. `sanitizeFields` copies, which is
+    // also the copy this function needs: the store mutates deeply, and writing
+    // straight through would edit the host's own object.
+    const { doc: safe, report } = sanitizeFields(doc)
+    if (report.dropped.length) console.warn('[design] dropped fields a design may not carry', report.dropped)
+    const layouts = Array.isArray(safe?.layouts) && safe.layouts.length ? (safe.layouts as TdLayout[]) : null
+    applyTitle(safe?.title || '')
+    if (!layouts) {
+      initBoard()
+      return
+    }
+    setShowMoveable(false)
+    canvasState.dCurrentPage = 0
+    widgetState.dLayouts = layouts
+    setDWidgets(getWidgets())
+    setLayoutsChange()
+    setDPage(getDPage())
+  }
+
   function initBoard() {
     setDWidgets(getWidgets())
     setDPage(getDPage())
@@ -250,8 +309,9 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
 
   useImperativeHandle(
     ref,
-    () => ({ getTitle: () => titleRef.current, setTitle: (next: string) => setTitle(next || ''), download, save, saveTemp, stateChange, load }),
-    [mode],
+    () => ({ getTitle: () => titleRef.current, setTitle: applyTitle, showDocument, download, save, saveTemp, stateChange, load }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mode, host.document],
   )
 
   return (
@@ -262,7 +322,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
           placeholder="Untitled design"
           wrapperClassName="input-wrap"
           onChange={(next: string) => {
-            setTitle(next)
+            applyTitle(next)
             onTitleChange?.()
           }}
         />
@@ -284,6 +344,11 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
           </>
         ) : null}
         <ThemeToggle />
+        {host.onSave ? (
+          <Button className="host-save-btn" type="primary" plain onClick={() => void onHostSave?.()}>
+            {host.saveLabel}
+          </Button>
+        ) : null}
         <div className="top-nav-divider" />
         {children}
       </div>

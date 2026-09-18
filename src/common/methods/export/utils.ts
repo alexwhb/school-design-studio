@@ -118,6 +118,15 @@ export function readRotation(widget: Record<string, any>): number {
 
 const IMAGE_TIMEOUT = 15000
 
+/** How many device pixels to rasterise a vector at, per design pixel. */
+const VECTOR_OVERSAMPLE = 2
+/** And a ceiling, because a full-bleed background at 2x is already enormous. */
+const VECTOR_MAX_EDGE = 4000
+
+function isSvgType(type: string): boolean {
+  return /^image\/svg\+xml/i.test(type)
+}
+
 /**
  * PowerPoint needs image bytes, not a URL. Fetch the image and base64 it.
  *
@@ -126,23 +135,49 @@ const IMAGE_TIMEOUT = 15000
  * cannot be read at all (a cross-origin host with no CORS headers), or when a
  * host simply never answers, so the caller can skip it rather than produce a
  * corrupt file or wait forever.
+ *
+ * An SVG is the one thing that is NOT passed through. OOXML has carried SVG
+ * since 2016 and PowerPoint draws it, but Keynote's importer, Google Slides and
+ * every copy of Office older than that show a gap instead — and a school opens
+ * a deck on whatever is in the building. It is exactly the reason WebP is not
+ * an upload format here. So a vector is drawn onto a canvas at twice the size
+ * it is laid out at and embedded as PNG: it prints as sharply as the slide can
+ * show it, and it arrives everywhere.
+ *
+ * `at` is the size it is drawn at. Worth passing for a vector and ignored for
+ * everything else — an SVG with only a `viewBox` has no intrinsic size, and a
+ * browser asked to draw one anyway invents 300x150.
  */
-export async function imageToDataUrl(url: string): Promise<string | null> {
+export async function imageToDataUrl(url: string, at?: { width: number; height: number }): Promise<string | null> {
   if (!url) return null
-  if (url.startsWith('data:')) return url
+  if (url.startsWith('data:')) {
+    if (!isSvgType(url.slice(5))) return url
+    try {
+      return await withTimeout(drawImageToDataUrl(url, at), IMAGE_TIMEOUT, `drawing ${url.slice(0, 40)}`)
+    } catch {
+      return null
+    }
+  }
 
   try {
     const res = await withTimeout(fetch(url, { mode: 'cors', signal: AbortSignal.timeout(IMAGE_TIMEOUT) }), IMAGE_TIMEOUT, `fetching ${url}`)
     if (res.ok) {
       const blob = await res.blob()
-      return await blobToDataUrl(blob)
+      const dataUrl = await blobToDataUrl(blob)
+      // Drawn from the data URL rather than the original address: it is already
+      // in hand, and a canvas fed a `data:` source is never tainted, whatever
+      // the response's own origin was.
+      if (isSvgType(blob.type)) {
+        return await withTimeout(drawImageToDataUrl(dataUrl, at), IMAGE_TIMEOUT, `drawing ${url}`)
+      }
+      return dataUrl
     }
   } catch {
     // fall through to the canvas attempt
   }
 
   try {
-    return await withTimeout(drawImageToDataUrl(url), IMAGE_TIMEOUT, `loading ${url}`)
+    return await withTimeout(drawImageToDataUrl(url, at), IMAGE_TIMEOUT, `loading ${url}`)
   } catch {
     return null
   }
@@ -164,6 +199,12 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([buffer], { type })
 }
 
+/** The oversampled size, brought back under the ceiling on its long edge. */
+function fitVector({ width, height }: { width: number; height: number }) {
+  const scale = Math.min(VECTOR_OVERSAMPLE, VECTOR_MAX_EDGE / Math.max(width, height))
+  return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) }
+}
+
 export function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -173,17 +214,20 @@ export function blobToDataUrl(blob: Blob): Promise<string> {
   })
 }
 
-function drawImageToDataUrl(url: string): Promise<string> {
+function drawImageToDataUrl(url: string, at?: { width: number; height: number }): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      canvas.width = img.naturalWidth
-      canvas.height = img.naturalHeight
+      // The laid-out size when the caller knows it, oversampled so a vector is
+      // not embedded at the resolution it happens to be shown at on screen.
+      const target = at?.width && at?.height ? fitVector(at) : null
+      canvas.width = target?.width || img.naturalWidth || 1
+      canvas.height = target?.height || img.naturalHeight || 1
       const ctx = canvas.getContext('2d')
       if (!ctx) return reject(new Error('no 2d context'))
-      ctx.drawImage(img, 0, 0)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       resolve(canvas.toDataURL('image/png'))
     }
     img.onerror = () => reject(new Error(`could not load ${url}`))

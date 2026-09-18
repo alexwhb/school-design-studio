@@ -20,13 +20,17 @@
  * is what pptxgenjs wants for an embedded picture. The cost is roughly a third
  * more bytes, which `downscale` more than pays back.
  *
- * When the editor is embedded in an app that does have a file store, this is
- * the seam: keep saveUpload/listUploads/deleteUpload and swap their bodies for
- * calls to that app's endpoints. Nothing outside this module knows where the
- * bytes live.
+ * When the editor is embedded in an app that does have a file store, that app
+ * hands one in through the `uploads` prop and `setHostUploads` below routes the
+ * three calls to it. IndexedDB is then neither read nor written: a picture a
+ * teacher uploaded on the staffroom machine is on their laptop too, which is
+ * the whole reason to hand it over. Nothing outside this module — not the
+ * Photos panel, not the paste handler, not the picture picker — knows which of
+ * the two it is talking to.
  */
 
 import { run, STORES } from './localDb'
+import type { HostImportMeta, HostUploads } from '@/common/hooks/hostApi'
 
 export type LocalUpload = {
   id: string
@@ -117,8 +121,52 @@ export async function downscale(file: File): Promise<{ url: string; width: numbe
   return { url, width, height }
 }
 
+/**
+ * The host's file store, when there is one. Set once as the editor mounts and
+ * cleared when it goes, so a second editor on the same page without the prop
+ * gets the browser's own store back.
+ */
+let host: HostUploads | null = null
+
+export function setHostUploads(uploads: HostUploads | null) {
+  host = uploads
+}
+
+export function hostKeepsUploads(): boolean {
+  return host !== null
+}
+
+/** Whether the host will take a copy of a picture that lives somewhere else. */
+export function hostImportsUrls(): boolean {
+  return typeof host?.importUrl === 'function'
+}
+
+/**
+ * Asks the host to take a copy of a remote picture and hands back its own.
+ *
+ * Rejects when it cannot, rather than answering with the address it was given:
+ * a caller that fell back would put the very URL the host refuses into the
+ * design the host is about to store.
+ */
+export async function importRemoteImage(url: string, meta: HostImportMeta): Promise<LocalUpload> {
+  if (!host?.importUrl) throw new Error('This app cannot save pictures from the web.')
+  return fromHost(await host.importUrl(url, meta))
+}
+
+/**
+ * The host speaks of a picture's `name`; the panels have always read `title`,
+ * and a widget reads `url`. Translating here rather than at every reader is
+ * what keeps the swap invisible.
+ */
+function fromHost(item: { id: string; url: string; width: number; height: number; name: string }): LocalUpload {
+  return { id: String(item.id), url: item.url, width: Number(item.width) || 0, height: Number(item.height) || 0, title: item.name || 'Upload', created_time: new Date().toISOString() }
+}
+
 /** Stores one file and returns the record the panel should show. */
 export async function saveUpload(file: File): Promise<LocalUpload> {
+  // Straight to the host, original bytes and all: it has a store with room, and
+  // `downscale` exists to fit a photograph into a browser's quota.
+  if (host) return fromHost(await host.upload(file))
   const { url, width, height } = await downscale(file)
   const record: LocalUpload = {
     id: `up_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
@@ -134,10 +182,17 @@ export async function saveUpload(file: File): Promise<LocalUpload> {
 
 /** Newest first, which is the order someone expects after an upload. */
 export async function listUploads(): Promise<LocalUpload[]> {
+  // The host's order is the host's business — it knows when each was uploaded
+  // and this side only ever knew when it read them.
+  if (host) return (await host.list()).map(fromHost)
   const all = (await run(STORES.uploads, 'readonly', (store) => store.getAll() as IDBRequest<LocalUpload[]>)) || []
   return all.sort((a, b) => (a.created_time < b.created_time ? 1 : -1))
 }
 
 export async function deleteUpload(id: string): Promise<void> {
+  if (host) {
+    await host.remove(id)
+    return
+  }
   await run(STORES.uploads, 'readwrite', (store) => store.delete(id) as IDBRequest<any>)
 }

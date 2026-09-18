@@ -67,10 +67,7 @@ let ringSupported: boolean | null = null
 
 export function supportsMaskRing(): boolean {
   if (ringSupported === null) {
-    ringSupported =
-      typeof CSS !== 'undefined' &&
-      typeof CSS.supports === 'function' &&
-      (CSS.supports('mask-composite', 'exclude') || CSS.supports('-webkit-mask-composite', 'xor'))
+    ringSupported = typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && (CSS.supports('mask-composite', 'exclude') || CSS.supports('-webkit-mask-composite', 'xor'))
   }
   return ringSupported
 }

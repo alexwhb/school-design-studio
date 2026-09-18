@@ -119,13 +119,7 @@ const PictureSelector = forwardRef<PictureSelectorHandle, Props>(function Pictur
         </div>
         <div style={{ display: tab === 'library' ? undefined : 'none' }}>
           <div className="pic__box">
-            <PhotoList
-              canDrag={false}
-              isDone={isPicsDone}
-              listData={recommendImgList as any}
-              onLoad={() => loadPic()}
-              onSelect={(i) => selectImg(i, recommendRef.current)}
-            />
+            <PhotoList canDrag={false} isDone={isPicsDone} listData={recommendImgList as any} onLoad={() => loadPic()} onSelect={(i) => selectImg(i, recommendRef.current)} />
           </div>
         </div>
       </Tabs>

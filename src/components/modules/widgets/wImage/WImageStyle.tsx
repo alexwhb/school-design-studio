@@ -153,15 +153,7 @@ export default function WImageStyle() {
             <span className="image-zoom__icon" aria-hidden="true">
               <ZoomIcon />
             </span>
-            <NumberSlider
-              className="image-zoom__slider"
-              value={Math.min(Number(active.zoom) || 1, Number(active.zoomY ?? active.zoom) || 1)}
-              label="Zoom"
-              step={0.01}
-              minValue={1}
-              maxValue={3}
-              onChange={changeScale}
-            />
+            <NumberSlider className="image-zoom__slider" value={Math.min(Number(active.zoom) || 1, Number(active.zoomY ?? active.zoom) || 1)} label="Zoom" step={0.01} minValue={1} maxValue={3} onChange={changeScale} />
           </div>
         ) : null}
         <ContainerWrap value={active.mask} onChange={changeContainer} />
@@ -206,15 +198,7 @@ export default function WImageStyle() {
       <ImageBackground key={uuid} uuid={uuid} imgUrl={active.imgUrl} originalImgUrl={active.originalImgUrl} />
       {cropping ? (
         <InnerToolBar style={toolBarStyle}>
-          <NumberSlider
-            value={Math.min(Number(active.zoom) || 1, Number(active.zoomY ?? active.zoom) || 1)}
-            className="inner-bar"
-            label="Scale"
-            step={0.01}
-            minValue={1}
-            maxValue={3}
-            onChange={changeScale}
-          />
+          <NumberSlider value={Math.min(Number(active.zoom) || 1, Number(active.zoomY ?? active.zoom) || 1)} className="inner-bar" label="Scale" step={0.01} minValue={1} maxValue={3} onChange={changeScale} />
           <i style={{ padding: '0 8px', cursor: 'pointer' }} className="icon sd-queren" onClick={() => imgCrop(false)} />
         </InnerToolBar>
       ) : null}

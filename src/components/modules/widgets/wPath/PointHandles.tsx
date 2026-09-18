@@ -36,17 +36,7 @@ import { updateWidgetData } from '@/store/widget/widget'
 import type { TdWidgetData } from '@/store/types'
 import { widgetBorder } from '../widgetBorder'
 import { endsPad } from './lineEnds'
-import {
-  clonePoints,
-  isClosed,
-  paintBox,
-  pathD,
-  readPoints,
-  refitFrame,
-  smoothHandles,
-  type TPathHandle,
-  type TPathPoint,
-} from './pathGeometry'
+import { clonePoints, isClosed, paintBox, pathD, readPoints, refitFrame, smoothHandles, type TPathHandle, type TPathPoint } from './pathGeometry'
 
 /** Screen pixels: the point itself, and the smaller dot on the end of a stalk. */
 const POINT_SIZE = 10
@@ -207,11 +197,7 @@ export default function PointHandles({ params }: { params: TdWidgetData }) {
     return { left: `${box.x + point.x * box.width}px`, top: `${box.y + point.y * box.height}px` }
   }
 
-  const stalks = points.flatMap((point, index) =>
-    (['in', 'out'] as const)
-      .filter((side) => point[side])
-      .map((side) => ({ index, side, handle: point[side]! })),
-  )
+  const stalks = points.flatMap((point, index) => (['in', 'out'] as const).filter((side) => point[side]).map((side) => ({ index, side, handle: point[side]! })))
 
   return (
     <div className="path__points" ref={containerRef}>
@@ -225,27 +211,11 @@ export default function PointHandles({ params }: { params: TdWidgetData }) {
         <path className="path__points-outline" d={pathD(points, closed, box)} fill="none" strokeWidth={scale} />
         {stalks.map(({ index, side, handle }) => {
           const point = points[index]
-          return (
-            <line
-              key={`${index}-${side}`}
-              className="path__points-stalk"
-              x1={box.x + point.x * box.width}
-              y1={box.y + point.y * box.height}
-              x2={box.x + (point.x + handle.x) * box.width}
-              y2={box.y + (point.y + handle.y) * box.height}
-              strokeWidth={scale}
-            />
-          )
+          return <line key={`${index}-${side}`} className="path__points-stalk" x1={box.x + point.x * box.width} y1={box.y + point.y * box.height} x2={box.x + (point.x + handle.x) * box.width} y2={box.y + (point.y + handle.y) * box.height} strokeWidth={scale} />
         })}
       </svg>
       {points.map((point, index) => (
-        <div
-          key={`point-${index}`}
-          className="path__point"
-          data-point={index}
-          title="Drag to move this point, Alt-click to curve or square it off"
-          style={{ ...at(point), width: `${POINT_SIZE * scale}px`, height: `${POINT_SIZE * scale}px`, borderWidth: `${Math.max(1, Math.round(scale))}px` }}
-        />
+        <div key={`point-${index}`} className="path__point" data-point={index} title="Drag to move this point, Alt-click to curve or square it off" style={{ ...at(point), width: `${POINT_SIZE * scale}px`, height: `${POINT_SIZE * scale}px`, borderWidth: `${Math.max(1, Math.round(scale))}px` }} />
       ))}
       {stalks.map(({ index, side, handle }) => {
         const point = points[index]

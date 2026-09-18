@@ -242,15 +242,7 @@ export default function GraphListWrap() {
                 <PanelEyebrow label="Ready-made groups" />
                 <CardRows>
                   {groups.map((item) => (
-                    <Card
-                      key={item.id}
-                      className="panel-card--row group-card"
-                      ratio="74 / 38"
-                      name={item.title}
-                      meta={`${item.width} × ${item.height}`}
-                      thumbClassName="panel-card__thumb--art"
-                      {...groupProps(item)}
-                    >
+                    <Card key={item.id} className="panel-card--row group-card" ratio="74 / 38" name={item.title} meta={`${item.width} × ${item.height}`} thumbClassName="panel-card__thumb--art" {...groupProps(item)}>
                       <Image className="list__img" src={item.cover} fit="contain" lazy />
                     </Card>
                   ))}

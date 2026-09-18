@@ -89,10 +89,7 @@ export default function ImageBackground({ uuid, imgUrl, originalImgUrl }: Props)
         <div className="image-background__progress" role="progressbar">
           {/* A download has an end to show; the cutting out itself does not, so
               it gets a bar that sweeps rather than one that lies about a share. */}
-          <div
-            className={progress.fraction < 0 ? 'image-background__bar is-waiting' : 'image-background__bar'}
-            style={progress.fraction < 0 ? undefined : { width: `${Math.round(progress.fraction * 100)}%` }}
-          />
+          <div className={progress.fraction < 0 ? 'image-background__bar is-waiting' : 'image-background__bar'} style={progress.fraction < 0 ? undefined : { width: `${Math.round(progress.fraction * 100)}%` }} />
         </div>
       ) : null}
     </PanelSection>

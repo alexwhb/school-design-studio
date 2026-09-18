@@ -74,24 +74,17 @@ export default function NotesDrawer() {
     <div className="notes-drawer" style={{ bottom: -1 * st + 'px', left: sl + 'px', height: NOTES_DRAWER_HEIGHT + 'px' }}>
       <div className="notes-drawer__head">
         <span className="notes-drawer__title">
-          Speaker notes <span className="notes-drawer__page">· page {canvas.dCurrentPage + 1} of {total}</span>
+          Speaker notes{' '}
+          <span className="notes-drawer__page">
+            · page {canvas.dCurrentPage + 1} of {total}
+          </span>
         </span>
         <span className="notes-drawer__hint">Shown to you in the presenter and in PowerPoint's notes pane, never on the page.</span>
         <button type="button" className="notes-drawer__close" title="Hide notes" onClick={() => setNotesOpen(false)}>
           <CloseIcon />
         </button>
       </div>
-      <textarea
-        ref={textareaRef}
-        id="page-notes"
-        className="notes-drawer__text"
-        placeholder="What to say while this page is on screen…"
-        value={notes}
-        spellCheck
-        onChange={(e) => setPageNotes(e.target.value)}
-        onFocus={onFocus}
-        onBlur={onBlur}
-      />
+      <textarea ref={textareaRef} id="page-notes" className="notes-drawer__text" placeholder="What to say while this page is on screen…" value={notes} spellCheck onChange={(e) => setPageNotes(e.target.value)} onFocus={onFocus} onBlur={onBlur} />
     </div>
   )
 }

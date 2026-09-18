@@ -41,9 +41,7 @@ export default function ExportMenu({ getTitle, onSelect, onProgress }: Props) {
 
   /** What the export will actually produce, in both the units people think in. */
   const inches = (px: number) => Math.round((px / DESIGN_DPI) * 10) / 10
-  const sizeHint = `${Math.round((dPage?.width || 0) * scale)} × ${Math.round((dPage?.height || 0) * scale)} px · ${inches(
-    dPage?.width || 0,
-  )} × ${inches(dPage?.height || 0)} in`
+  const sizeHint = `${Math.round((dPage?.width || 0) * scale)} × ${Math.round((dPage?.height || 0) * scale)} px · ${inches(dPage?.width || 0)} × ${inches(dPage?.height || 0)} in`
 
   const pdfHint = dLayouts.length > 1 ? `All ${dLayouts.length} pages, ready to print or email` : 'Ready to print or email'
 
@@ -136,14 +134,8 @@ export default function ExportMenu({ getTitle, onSelect, onProgress }: Props) {
               <div className="quality__label">Quality — for image and PDF</div>
               <div className="quality__choices">
                 {SCALES.map((option) => (
-                  <button
-                    key={option.scale}
-                    type="button"
-                    className={cx('quality__btn', { 'is-on': scale === option.scale })}
-                    onClick={() => setScale(option.scale)}
-                  >
-                    {option.name}{' '}
-                    <span className="quality__dpi">{option.scale * DESIGN_DPI} DPI</span>
+                  <button key={option.scale} type="button" className={cx('quality__btn', { 'is-on': scale === option.scale })} onClick={() => setScale(option.scale)}>
+                    {option.name} <span className="quality__dpi">{option.scale * DESIGN_DPI} DPI</span>
                   </button>
                 ))}
               </div>

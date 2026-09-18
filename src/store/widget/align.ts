@@ -99,15 +99,13 @@ export function updateAlign({ align, uuid, group }: TUpdateAlignData) {
  */
 export function distributeGeometry({ distribute, uuids }: TDistributeGeometryData) {
   const widgets = widgetState.dWidgets
-  const targets = uuids
-    .map((uuid) => widgets.find((item) => item.uuid === uuid))
-    .filter((item): item is TdWidgetData => !!item)
+  const targets = uuids.map((uuid) => widgets.find((item) => item.uuid === uuid)).filter((item): item is TdWidgetData => !!item)
 
   if (targets.length < 3) return
 
   const horizontal = distribute === 'horizontal'
   const startOf = (widget: TdWidgetData) => (horizontal ? widget.left : widget.top)
-  const sizeOf = (widget: TdWidgetData) => (horizontal ? widget.record?.width ?? widget.width : widget.record?.height ?? widget.height)
+  const sizeOf = (widget: TdWidgetData) => (horizontal ? (widget.record?.width ?? widget.width) : (widget.record?.height ?? widget.height))
 
   const ordered = targets.slice().sort((a, b) => startOf(a) - startOf(b) || sizeOf(a) - sizeOf(b))
   const from = startOf(ordered[0])

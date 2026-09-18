@@ -9,6 +9,12 @@
 import type { ComponentType, CSSProperties } from 'react'
 import { BrandIcon, GraphicsIcon, PhotosIcon, TemplatesIcon, TextIcon } from '@/components/ui/icons'
 
+/**
+ * The tab a host's own panel is shown behind. Not in the list below: it only
+ * exists when the `assistant` prop does, and WidgetPanel puts it in front.
+ */
+export const ASSISTANT_PANEL = 'assistant-wrap'
+
 export type TWidgetClassifyData = {
   name: string
   /** A glyph from the icon font, or '' when `Icon` draws the tab instead. */

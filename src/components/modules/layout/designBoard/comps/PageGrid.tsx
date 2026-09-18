@@ -49,11 +49,7 @@ export default function PageGrid({ width, height, zoom }: Props) {
   const stroke = 100 / (zoom || 100)
 
   return (
-    <div
-      className="page-grid"
-      data-export="off"
-      style={{ '--ds-grid-step': `${dGridSize}px`, '--ds-grid-stroke': `${stroke}px` } as React.CSSProperties}
-    >
+    <div className="page-grid" data-export="off" style={{ '--ds-grid-step': `${dGridSize}px`, '--ds-grid-stroke': `${stroke}px` } as React.CSSProperties}>
       {lines.x.map((at) => (
         <i key={'v' + at} className="grid-snap grid-snap-v" style={{ left: at + 'px' }} />
       ))}

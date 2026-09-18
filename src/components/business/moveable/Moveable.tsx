@@ -110,7 +110,6 @@ type TElementGuideline = {
   bottom?: boolean
 }
 
-
 export default function Moveable() {
   useEffect(() => {
     let moveable: any = null
@@ -279,11 +278,7 @@ export default function Moveable() {
         guides: canvasState.guidelines,
         grid: controlState.dShowGrid ? controlState.dGridSize : 0,
       })
-      return snapBox(
-        { left: position.left, top: position.top, width: Number(widget.width), height: Number(widget.height) },
-        positions,
-        SNAP_TIDY_PX / zoom,
-      )
+      return snapBox({ left: position.left, top: position.top, width: Number(widget.width), height: Number(widget.height) }, positions, SNAP_TIDY_PX / zoom)
     }
 
     /**

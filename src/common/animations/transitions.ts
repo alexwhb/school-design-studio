@@ -13,8 +13,10 @@
  * half-finished fades. Nothing fills forwards: when an animation ends the
  * slot simply reverts to its own CSS, which is already where it was heading.
  *
- * PowerPoint export cannot carry any of this — pptxgenjs has no slide
- * transition API — so a transition lives in the presenter only.
+ * A .pptx carries this too, though pptxgenjs has no API for it: the exporter
+ * writes the `<p:transition>` element into the finished file itself. That is
+ * what makes a transition survive into Google Slides, which is where most of
+ * these decks are actually opened. See `export/pptxAnimation.ts`.
  */
 import type { TPageState } from '@/store/types'
 
@@ -96,20 +98,35 @@ export function transitionTracks(type: TTransitionType, forwards: boolean): TTra
       return { in: [{ opacity: 0 }, { opacity: 1 }], out: [{ opacity: 1 }, { opacity: 0 }], easing: EASE_IN_OUT }
     case 'slide':
       return {
-        in: [{ transform: `translateX(${from})`, opacity: 1 }, { transform: 'translateX(0)', opacity: 1 }],
+        in: [
+          { transform: `translateX(${from})`, opacity: 1 },
+          { transform: 'translateX(0)', opacity: 1 },
+        ],
         out: [{ opacity: 1 }, { opacity: 1 }],
         easing: GLIDE,
       }
     case 'push':
       return {
-        in: [{ transform: `translateX(${from})`, opacity: 1 }, { transform: 'translateX(0)', opacity: 1 }],
-        out: [{ transform: 'translateX(0)', opacity: 1 }, { transform: `translateX(${to})`, opacity: 1 }],
+        in: [
+          { transform: `translateX(${from})`, opacity: 1 },
+          { transform: 'translateX(0)', opacity: 1 },
+        ],
+        out: [
+          { transform: 'translateX(0)', opacity: 1 },
+          { transform: `translateX(${to})`, opacity: 1 },
+        ],
         easing: EASE_IN_OUT,
       }
     case 'zoom':
       return {
-        in: [{ transform: 'scale(0.86)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }],
-        out: [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.06)', opacity: 0 }],
+        in: [
+          { transform: 'scale(0.86)', opacity: 0 },
+          { transform: 'scale(1)', opacity: 1 },
+        ],
+        out: [
+          { transform: 'scale(1)', opacity: 1 },
+          { transform: 'scale(1.06)', opacity: 0 },
+        ],
         easing: GLIDE,
       }
     case 'wipe':

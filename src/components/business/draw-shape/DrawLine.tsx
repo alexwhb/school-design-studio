@@ -157,9 +157,7 @@ export default function DrawLine() {
       document.removeEventListener('mousemove', hover, true)
       const ground = started ? started.ground : survey(canvas)
       const origin = ground.point(e)
-      const from = started
-        ? started.from
-        : { x: snap(origin.x, ground.positions.x, ground.tolerance), y: snap(origin.y, ground.positions.y, ground.tolerance) }
+      const from = started ? started.from : { x: snap(origin.x, ground.positions.x, ground.tolerance), y: snap(origin.y, ground.positions.y, ground.tolerance) }
       let dragged = !!started
       if (started) show(track(e, from, ground))
 
@@ -233,12 +231,7 @@ export default function DrawLine() {
               {draft.guides.y !== null ? <line className="draw-line__guide" x1={0} y1={draft.guides.y} x2={page.width} y2={draft.guides.y} strokeWidth={scale} /> : null}
               <line className="draw-line__line" x1={draft.from.x} y1={draft.from.y} x2={draft.to.x} y2={draft.to.y} strokeWidth={2 * scale} strokeLinecap="round" />
               {empty ? null : (
-                <text
-                  className="draw-line__readout"
-                  x={draft.to.x + 12 * scale}
-                  y={draft.to.y + 18 * scale}
-                  fontSize={11 * scale}
-                >
+                <text className="draw-line__readout" x={draft.to.x + 12 * scale} y={draft.to.y + 18 * scale} fontSize={11 * scale}>
                   {Math.round(length(draft))}
                 </text>
               )}

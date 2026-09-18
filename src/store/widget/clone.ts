@@ -111,9 +111,7 @@ export function duplicateOne() {
 
   // Select the copies as they now live in the store, not the plain objects that
   // were pushed: editing the selection has to reach the widget on the canvas.
-  const added = copies
-    .filter((copy) => topLevel.has(copy.uuid))
-    .map((copy) => widgetState.dWidgets.find((item) => item.uuid === copy.uuid) as TdWidgetData)
+  const added = copies.filter((copy) => topLevel.has(copy.uuid)).map((copy) => widgetState.dWidgets.find((item) => item.uuid === copy.uuid) as TdWidgetData)
   widgetState.dActiveElement = added[0]
   // A group is one thing on the canvas, so it is the active element on its own
   // rather than a multiple selection of itself and its children.

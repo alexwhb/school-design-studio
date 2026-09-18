@@ -57,8 +57,38 @@ function downloadProgress(onProgress?: (progress: TRemovalProgress) => void) {
   }
 }
 
+/**
+ * Transformers.js, if the host installed it.
+ *
+ * The specifier is held in a variable on purpose, and both bundlers are told to
+ * leave the call alone. Written literally, this is a static dependency as far
+ * as every bundler downstream is concerned: the embed build leaves it external,
+ * so the published chunk carries `import("@huggingface/transformers")`, and the
+ * host's own build then tries to resolve a package the host has no reason to
+ * have installed. esbuild fails the dev pre-bundle and Rollup fails the
+ * production build, and the app that does not use background removal is the one
+ * that will not start. A specifier a bundler cannot read is one it hands to the
+ * browser untouched, which is the whole point — this import is meant to be
+ * answered at run time or not at all.
+ *
+ * See vite.embed.config.ts, and "Building it" in EMBEDDING.md.
+ */
+const TRANSFORMERS = '@huggingface/transformers'
+
+async function loadTransformers() {
+  try {
+    return (await import(/* @vite-ignore */ /* webpackIgnore: true */ TRANSFORMERS)) as typeof import('@huggingface/transformers')
+  } catch (error) {
+    console.warn(`[background removal] ${TRANSFORMERS} is not installed`, error)
+    throw new Error(MISSING_LIBRARY)
+  }
+}
+
+/** Said when the library was never installed, which is not a network problem. */
+export const MISSING_LIBRARY = 'Cutting a background out in the browser needs the @huggingface/transformers package, which this app does not have installed. Ask for it, or pick the photo out another way.'
+
 async function load(onProgress?: (progress: TRemovalProgress) => void): Promise<Segmenter> {
-  const { pipeline, env } = await import('@huggingface/transformers')
+  const { pipeline, env } = await loadTransformers()
   // There is no model folder on this origin to look in, and the library's
   // default under a bundler can be to try one first and 404 on every file it
   // wants. The browser's own cache keeps the weights after the first download.
@@ -82,7 +112,9 @@ export async function removeInBrowser(image: Blob, onProgress?: (progress: TRemo
   } catch (e) {
     loading = null
     console.warn('[background removal] could not load the model', e)
-    throw new Error(REMOVAL_FAILED_DETAIL)
+    // A missing library and a missing network are two different problems with
+    // two different fixes, so they are not reported as one.
+    throw new Error(e instanceof Error && e.message === MISSING_LIBRARY ? MISSING_LIBRARY : REMOVAL_FAILED_DETAIL)
   }
 
   onProgress?.({ fraction: -1, message: 'Removing the background…' })

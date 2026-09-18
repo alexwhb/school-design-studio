@@ -59,10 +59,7 @@ export default function WPathStyle() {
               <span className="path-style__label">Edit points</span>
               <Switch className="path-style__edit" value={editing} onChange={(value) => setPathEditUuid(value ? active.uuid : '-1')} />
             </div>
-            <p className="path-style__hint">
-              {points.length} points. Double-click the path to open it up, then drag a point to move it or Alt-click one to curve or
-              square it off.
-            </p>
+            <p className="path-style__hint">{points.length} points. Double-click the path to open it up, then drag a point to move it or Alt-click one to curve or square it off.</p>
           </PanelSection>
           {/* Only a line has ends to put anything on; a closed path keeps its
               setting out of sight in case it is opened again. */}

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import JSZip from 'jszip'
-import { WIDGET, openEditor, openFindReplace } from './helpers'
+import { WIDGET, downloadFrom, openEditor, openFindReplace } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await openEditor(page)
@@ -23,17 +23,6 @@ async function cellTexts(page: Page) {
 async function editCell(page: Page, index: number) {
   await page.locator(CELL).nth(index).dblclick()
   await page.waitForTimeout(300)
-}
-
-/** The bytes of whatever the next click downloads. */
-async function downloadFrom(page: Page, click: () => Promise<void>) {
-  const download = page.waitForEvent('download', { timeout: 90000 })
-  await click()
-  const file = await download
-  const stream = await file.createReadStream()
-  const chunks: Buffer[] = []
-  for await (const chunk of stream!) chunks.push(chunk as Buffer)
-  return { name: file.suggestedFilename(), bytes: Buffer.concat(chunks) }
 }
 
 test('the dock places a three by three table', async ({ page }) => {

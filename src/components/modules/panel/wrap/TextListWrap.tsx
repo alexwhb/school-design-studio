@@ -35,10 +35,7 @@ export default function TextListWrap() {
   // screen rather than another trip to the library.
   const query = keyword.trim().toLowerCase()
   const styles = useMemo(() => basicTextList.filter((item) => !query || item.text.toLowerCase().includes(query)), [query])
-  const effectList = useMemo(
-    () => effects.filter((item) => !query || (item.title || '').toLowerCase().includes(query)),
-    [effects, query],
-  )
+  const effectList = useMemo(() => effects.filter((item) => !query || (item.title || '').toLowerCase().includes(query)), [effects, query])
 
   const selectBasicText = (item: TBasicTextData) => {
     setShowMoveable(false)
@@ -78,12 +75,7 @@ export default function TextListWrap() {
             <PanelEyebrow label="Text styles" />
             <CardRows className="basic-text-wrap">
               {styles.map((item) => (
-                <div
-                  key={item.text}
-                  className="panel-card panel-card--row basic-text-item"
-                  draggable
-                  onClick={() => selectBasicText(item)}
-                >
+                <div key={item.text} className="panel-card panel-card--row basic-text-item" draggable onClick={() => selectBasicText(item)}>
                   {/* Drawn at the weight and the relative size it will land on
                       the page at, so the three rows are a picture of the choice
                       rather than three labels. */}
