@@ -42,10 +42,16 @@ export default defineConfig({
     emptyOutDir: true,
     cssCodeSplit: false,
     lib: {
-      entry: resolve('src/index.ts'),
-      name: 'DesignStudio',
+      // Two entries over one set of chunks. `viewer` is the read-only
+      // DesignViewer on its own, so a phone that only looks at a design does
+      // not download the editor; the main entry exports it too, from the same
+      // chunk. See src/viewer.ts.
+      entry: {
+        'design-studio': resolve('src/index.ts'),
+        viewer: resolve('src/viewer.ts'),
+      },
       formats: ['es'],
-      fileName: () => 'design-studio.js',
+      fileName: (_format, name) => `${name}.js`,
     },
     rollupOptions: {
       /**

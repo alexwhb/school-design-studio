@@ -282,6 +282,28 @@ of the rail. The studio passes it nothing and knows nothing about it: everything
 it wants to do to the design it does through the ref. Without the prop there is
 no tab, which is what the standalone editor should show.
 
+## A design on a phone
+
+```tsx
+import { DesignViewer } from 'design-studio/viewer'
+import 'design-studio/style.css'
+
+<DesignViewer document={doc} onPageChange={(index) => …} className="…" />
+```
+
+The editor is no use on a phone. `DesignViewer` draws the pages read-only, one
+under another, each as wide as its container, with a Present button that opens
+the same presenter the editor uses, starting on the page in view. The words are
+real text you can select and search, each page is a region labelled "Page 2 of
+6", and each picture carries its alt text. `onPageChange` gets the 0-based page
+nearest the middle of the screen as the reader scrolls.
+
+It is exported from the main entry too, but import it from
+`design-studio/viewer` on a phone. That entry loads only the viewer's chunk
+(about 211 kB, 55 kB gzipped) and not the editor's (2.4 MB, 600 kB gzipped).
+The stylesheet is the same one. The document goes through `sanitizeFields`
+and every run of text through `sanitizeMarkup` before it is drawn.
+
 ## Composing a design without a browser
 
 `design-studio/compose` is the editor's layout knowledge as pure functions over

@@ -451,3 +451,25 @@
     }
   }
 }
+
+// On a phone — the viewer's Present — the bar has to fit across the screen.
+// The presenter window is for a second screen, which a phone does not have,
+// and the clock is for the person at the front of a room.
+@media (max-width: 520px) {
+  .present__bar {
+    gap: 0;
+    padding: 4px;
+    max-width: calc(100vw - 16px);
+  }
+
+  .present__btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .present__btn--window,
+  .present__divider,
+  .present__timer {
+    display: none;
+  }
+}

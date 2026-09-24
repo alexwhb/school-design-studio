@@ -1,4 +1,7 @@
 export { default as DesignStudio } from './DesignStudio'
+// Read-only, for phones. `design-studio/viewer` has it without the editor.
+export { default as DesignViewer } from './viewer/DesignViewer'
+export type { DesignViewerProps } from './viewer/DesignViewer'
 export type { DesignStudioProps } from './DesignStudio'
 export { configure } from './config'
 export type { DesignStudioConfig } from './config'
