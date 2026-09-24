@@ -17,9 +17,24 @@ export type TUpdateWidgetPayload = {
   value: number | string | boolean | number[] | Record<string, any> | null
 }
 
+/**
+ * The page on screen, brought back inside the design if it has fallen off the
+ * end.
+ *
+ * Stepping back one page was enough while pages were only ever removed one at
+ * a time. An undo that puts back a design from before three pages were added,
+ * or a host handing in a shorter one, can leave the index several pages past
+ * the last, and one step back still lands on nothing.
+ */
+export function clampCurrentPage(count = widgetState.dLayouts.length): number {
+  const last = Math.max(0, count - 1)
+  const page = Math.max(0, Math.min(Math.floor(Number(canvasState.dCurrentPage) || 0), last))
+  if (page !== canvasState.dCurrentPage) canvasState.dCurrentPage = page
+  return page
+}
+
 export function getWidgets() {
-  !widgetState.dLayouts[canvasState.dCurrentPage] && (canvasState.dCurrentPage = canvasState.dCurrentPage - 1)
-  return widgetState.dLayouts[canvasState.dCurrentPage].layers
+  return widgetState.dLayouts[clampCurrentPage()].layers
 }
 
 export function updateWidgetData({ uuid, key, value }: TUpdateWidgetPayload) {
@@ -222,17 +237,20 @@ export function setDWidgets(e: TdWidgetData[]) {
 }
 
 export function setDLayouts(data: TdLayout[]) {
+  // Clamped before anything is written, so the page index and the layouts are
+  // never out of step with each other even for a moment.
+  const page = clampCurrentPage(data.length)
   widgetState.dLayouts = data
   widgetState.dWidgets = getWidgets()
   setLayoutsChange()
-  setDPage(data[canvasState.dCurrentPage].global)
+  setDPage(data[page].global)
   setTimeout(() => {
     widgetState.dActiveElement = canvasState.dPage
   }, 150)
 }
 
 export function updateDWidgets() {
-  const { dCurrentPage } = canvasState
+  const dCurrentPage = clampCurrentPage()
   widgetState.dLayouts[dCurrentPage].layers = widgetState.dWidgets
   widgetState.dWidgets = getWidgets()
 }

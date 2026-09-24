@@ -1,38 +1,66 @@
 import { applyPatches, enablePatches } from 'immer'
 import { historyState, widgetState } from './state'
 import { setDLayouts } from './widget/widget'
+import type { TdLayout } from './types'
 
 enablePatches()
 
 export function changeHistory({ patches, inversePatches }: { patches: any; inversePatches: any }) {
-  const pointer = ++historyState.dHistoryParams.stackPointer
-  historyState.dHistoryStack.changes.length = pointer
-  historyState.dHistoryStack.inverseChanges.length = pointer
-  historyState.dHistoryStack.changes[pointer] = patches
-  historyState.dHistoryStack.inverseChanges[pointer] = inversePatches
+  const { dHistoryParams: params, dHistoryStack: stack } = historyState
+  const pointer = ++params.stackPointer
+  stack.changes.length = pointer
+  stack.inverseChanges.length = pointer
+  stack.changes[pointer] = patches
+  stack.inverseChanges[pointer] = inversePatches
 }
 
+/**
+ * Forgets every step.
+ *
+ * The stack is a list of patches, and a patch is only meaningful against the
+ * document it was taken from — undoing one of them onto a different design
+ * either writes one design's changes into another or throws halfway. So the
+ * stack goes whenever the design underneath it is replaced wholesale, and when
+ * the editor that built it goes away: the store is a module, and outlives any
+ * one mount of the editor.
+ */
+export function clearHistory() {
+  historyState.dHistoryParams.stackPointer = -1
+  historyState.dHistoryStack.changes = []
+  historyState.dHistoryStack.inverseChanges = []
+}
+
+/**
+ * One step back or forward, or nothing at all.
+ *
+ * The new layouts are worked out on a plain copy before the store is touched,
+ * and the pointer moves only once they are on the canvas. A step that cannot be
+ * applied — a patch naming a page that is no longer there — used to throw
+ * between the two, which left the design swapped and the pointer where it was,
+ * so the next Ctrl+Z tried the same patch again and undo was dead from then on.
+ * A step like that means the stack no longer describes the design, so it is
+ * dropped whole rather than retried.
+ */
 export function handleHistory(action: 'undo' | 'redo') {
-  const historyParams = historyState.dHistoryParams
+  const params = historyState.dHistoryParams
   const { changes, inverseChanges } = historyState.dHistoryStack
-  const index = historyParams.stackPointer
-  const curLayouts = JSON.parse(JSON.stringify(widgetState.dLayouts))
-  switch (action) {
-    case 'undo':
-      if (inverseChanges.length > 0 && index >= 0) {
-        const newLayouts = applyPatches(curLayouts, inverseChanges[index])
-        setDLayouts(JSON.parse(JSON.stringify(newLayouts)))
-        historyParams.stackPointer--
-      }
-      break
-    case 'redo':
-      if (changes.length > 0 && index !== changes.length - 1) {
-        historyParams.stackPointer++
-        const newLayouts = applyPatches(curLayouts, changes[index + 1])
-        setDLayouts(JSON.parse(JSON.stringify(newLayouts)))
-      }
-      break
+  const index = params.stackPointer
+  const patches = action === 'undo' ? (index >= 0 ? inverseChanges[index] : undefined) : index < changes.length - 1 ? changes[index + 1] : undefined
+  if (!patches) return
+
+  let next: TdLayout[]
+  try {
+    const current = JSON.parse(JSON.stringify(widgetState.dLayouts))
+    next = JSON.parse(JSON.stringify(applyPatches(current, patches)))
+    if (!Array.isArray(next) || next.length === 0) throw new Error('a step left the design with no pages')
+  } catch (error) {
+    console.warn('[design] an undo step no longer fits this design; the history has been cleared', error)
+    clearHistory()
+    return
   }
+
+  setDLayouts(next)
+  params.stackPointer = action === 'undo' ? index - 1 : index + 1
 }
 
 export function pushColorToHistory(color: string) {
