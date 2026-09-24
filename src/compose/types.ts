@@ -91,10 +91,71 @@ export type PosterOutline = {
   signs: PosterSign[]
 }
 
+/**
+ * The most pages a design holds. The editor stops adding pages here, and the
+ * composer stops here too: a deck it made that the editor would refuse to add
+ * one more slide to is a deck nobody can finish. A host with a lower ceiling
+ * passes it as `maxPages`.
+ */
+export const MAX_PAGES = 50
+
 export type ComposeOptions = {
   /** A slide theme key, or a poster pack key. Anything else falls back. */
   theme?: string
   brand?: TBrandKit
+  /**
+   * The most pages the document may come back with, continuation pages
+   * included. Capped at `MAX_PAGES`, which is also the default.
+   */
+  maxPages?: number
+}
+
+/**
+ * Words from the outline that are not on the page as the outline had them.
+ *
+ * - `shortened`: set at the smallest size the box allows and still too long,
+ *   so the end was cut and an ellipsis put in its place.
+ * - `no-room`: nowhere to put them at all, even on a page of their own.
+ * - `page-limit`: they would have needed a page past `maxPages`.
+ */
+export type DroppedText = {
+  /**
+   * 0-based index of the page in the returned document the words were meant
+   * for. For `page-limit`, the index the page would have had.
+   */
+  page: number
+  /** Which item of the outline they came from: an index into `slides` or `signs`. */
+  source: number
+  /**
+   * Where in that item, in the outline's own names: `title`, `sub`, `kicker`,
+   * `callout`, `notes`, `columnHeads[1]`, `bullets[3]`, `bullets[3].sub[0]`,
+   * `bulletsRight[2]`, `head`, `eyebrow`, `badge`, `foot`, and `footer` for
+   * the school's line along the bottom of a slide.
+   */
+  field: string
+  /** The words, whole, as the outline had them. */
+  text: string
+  reason: 'shortened' | 'no-room' | 'page-limit'
+}
+
+/**
+ * What composing had to do to make the outline fit. Plain JSON, so a host can
+ * store it beside the design or hand it back to the model that wrote the
+ * outline.
+ */
+export type ComposeReport = {
+  /**
+   * Pages added because one slide's bullets ran past the bottom of it. Each is
+   * the same layout with the same heading and "(continued)" after it.
+   */
+  continuedPages: number
+  /** Empty when every word of the outline is on a page, whole. */
+  dropped: DroppedText[]
+}
+
+export type ComposeResult = {
+  document: DesignDocument
+  report: ComposeReport
 }
 
 export type DesignOp =

@@ -12,7 +12,7 @@
  * it needs and behaves the way it always did when there is none.
  */
 import { createContext, useContext, type MutableRefObject, type ReactNode } from 'react'
-import type { DesignDocument, DesignKind, DesignOp, RejectedOp } from '@/compose/types'
+import type { ComposeReport, DesignDocument, DesignKind, DesignOp, RejectedOp } from '@/compose/types'
 
 export type { DesignDocument, DesignKind, DesignOp }
 
@@ -93,7 +93,11 @@ export type DesignStudioHandle = {
    * as unsaved until it is saved.
    */
   setDocument(doc: DesignDocument, opts?: { resetHistory?: boolean }): void
-  applyOps(ops: DesignOp[]): { applied: number; rejected: RejectedOp[] }
+  /**
+   * `report` says what an `addPage` had to give up to fit, and how many
+   * continuation pages its bullets needed. See `applyOps` in the compose entry.
+   */
+  applyOps(ops: DesignOp[]): { applied: number; rejected: RejectedOp[]; report: ComposeReport }
   exportPdf(): Promise<Blob>
   exportPptx(): Promise<Blob>
   /** `scale` 1 is the page's own pixel size. */

@@ -12,11 +12,13 @@
  * exception learns nothing, and a half-applied batch is worse than a refused
  * one. Everything an op does not name is left exactly as it was.
  */
-import type { DesignDocument, DesignOp, RejectedOp } from './types'
+import type { ComposeReport, DesignDocument, DesignOp, RejectedOp } from './types'
+import { MAX_PAGES } from './types'
 import { applyBrand, brandTheme, fieldFiller } from './brand'
 import { applyMotion } from './motion'
-import { composeSlide, blankSlide, DECK_PAGE_KINDS } from './deck'
-import { composeSign, blankSign, SIGN_PAGE_KINDS } from './poster'
+import { composeSlidePages, blankSlide, DECK_PAGE_KINDS } from './deck'
+import { composeSignPage, blankSign, SIGN_PAGE_KINDS } from './poster'
+import { recorder, type Recorder } from './report'
 import { slideTheme, posterPack } from './themes'
 import { kindOf } from './describe'
 import { markup } from './widgets'
@@ -29,9 +31,6 @@ import type { TdLayout, TdWidgetData } from '@/store/types'
 export function pageKinds(kind: 'slides' | 'poster'): string[] {
   return kind === 'poster' ? [...SIGN_PAGE_KINDS] : [...DECK_PAGE_KINDS]
 }
-
-/** The editor's own ceiling, so a design composed here is one it will open. */
-const MAX_PAGES = 50
 
 /**
  * A working copy, with the fields that get interpolated somewhere checked.
@@ -56,20 +55,25 @@ function findWidget(doc: DesignDocument, id: string): TdWidgetData | null {
   return null
 }
 
-/**
- * Builds the page `addPage` asks for.
- *
- * `fields` is a flat map because that is what survives a model's JSON schema
- * without nesting: `title`, `sub`, `kicker`, `callout`, `notes`, `head`,
- * `eyebrow`, `badge`, `foot`, `icon`, and `bullets` as one string a line each.
- */
 /** A freshly composed page carries `{{school.*}}`; a branded design fills them. */
 function brandPage(layout: TdLayout, brand?: TBrandKit): TdLayout {
   if (!brand) return layout
   return applyBrand({ format: 'design-studio/v1', title: '', layouts: [layout] }, brand).layouts[0]
 }
 
-function buildPage(doc: DesignDocument, kind: string, fields: Record<string, string>, brand?: TBrandKit) {
+/**
+ * Builds the page `addPage` asks for, and any continuation pages its bullets
+ * need, up to `room` pages in all.
+ *
+ * `fields` is a flat map because that is what survives a model's JSON schema
+ * without nesting: `title`, `sub`, `kicker`, `callout`, `notes`, `head`,
+ * `eyebrow`, `badge`, `foot`, `icon`, and `bullets` as one string a line each.
+ *
+ * Laid out by the same code as a composed deck, in the kit's fonts, so a slide
+ * an AI refine adds is measured in the face it will be read in and carries on
+ * onto another page rather than losing its last points.
+ */
+function buildPages(doc: DesignDocument, kind: string, fields: Record<string, string>, rec: Recorder, at: number, room: number, brand?: TBrandKit): TdLayout[] | null {
   const bullets = String(fields.bullets || '')
     .split('\n')
     .map((line) => line.trim())
@@ -89,7 +93,8 @@ function buildPage(doc: DesignDocument, kind: string, fields: Record<string, str
       sub: fields.sub || null,
       foot: fields.foot || null,
     }
-    return brandPage(composeSign(sign, brandTheme(posterPack(fields.theme), brand), size, fieldFiller(brand)), brand)
+    rec.page = at
+    return [brandPage(composeSignPage(sign, brandTheme(posterPack(fields.theme), brand), size, fieldFiller(brand), rec), brand)]
   }
 
   if (!DECK_PAGE_KINDS.includes(kind as never)) return null
@@ -108,15 +113,27 @@ function buildPage(doc: DesignDocument, kind: string, fields: Record<string, str
       .filter(Boolean)
       .map((text) => ({ text, sub: [] as string[] })),
   }
-  return brandPage(composeSlide(slide, brandTheme(slideTheme(fields.theme), brand), fieldFiller(brand)), brand)
+  return composeSlidePages(slide, brandTheme(slideTheme(fields.theme), brand), fieldFiller(brand), rec, at, room).map((layout) => brandPage(layout, brand))
 }
 
-export function applyOps(doc: DesignDocument, ops: DesignOp[], options: { brand?: TBrandKit } = {}): { doc: DesignDocument; rejected: RejectedOp[] } {
+/**
+ * The ops, applied to a copy.
+ *
+ * `report` is what the pages `addPage` built had to give up to fit: its
+ * `source` is the index of the op in `ops`, and its `page` the index in the
+ * returned document. An `addPage` with more bullets than a slide holds adds
+ * continuation pages after it, counted in `continuedPages`, while the design
+ * has room for them. Nothing else here lays anything out, so nothing else
+ * reports.
+ */
+export function applyOps(doc: DesignDocument, ops: DesignOp[], options: { brand?: TBrandKit } = {}): { doc: DesignDocument; rejected: RejectedOp[]; report: ComposeReport } {
   let next = clone(doc)
   const rejected: RejectedOp[] = []
   const list = Array.isArray(ops) ? ops : []
+  const rec = recorder()
 
-  for (const op of list) {
+  for (const [index, op] of list.entries()) {
+    rec.source = index
     if (!op || typeof op !== 'object') {
       rejected.push({ op: op as DesignOp, reason: 'That is not an operation.' })
       continue
@@ -194,12 +211,12 @@ export function applyOps(doc: DesignDocument, ops: DesignOp[], options: { brand?
           rejected.push({ op, reason: `There is no page ${op.after} to add after.` })
           break
         }
-        const built = buildPage(next, String(op.kind), op.fields || {}, options.brand)
+        const built = buildPages(next, String(op.kind), op.fields || {}, rec, at + 1, MAX_PAGES - next.layouts.length, options.brand)
         if (!built) {
           rejected.push({ op, reason: `“${op.kind}” is not a page this design can hold. Try one of: ${pageKinds(kindOf(next) === 'poster' ? 'poster' : 'slides').join(', ')}.` })
           break
         }
-        next.layouts.splice(at + 1, 0, built)
+        next.layouts.splice(at + 1, 0, ...built)
         break
       }
 
@@ -251,5 +268,5 @@ export function applyOps(doc: DesignDocument, ops: DesignOp[], options: { brand?
     }
   }
 
-  return { doc: next, rejected }
+  return { doc: next, rejected, report: rec.report }
 }

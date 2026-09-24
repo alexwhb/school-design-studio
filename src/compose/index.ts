@@ -10,8 +10,8 @@
  *
  * See EMBEDDING.md for how the two halves fit together.
  */
-export { composeDeck, composeSlide, blankSlide, DECK_PAGE_KINDS } from './deck'
-export { composePoster, composeSign, blankSign, pageSize, SIGN_PAGE_KINDS } from './poster'
+export { composeDeck, composeDeckWithReport, composeSlide, blankSlide, DECK_PAGE_KINDS } from './deck'
+export { composePoster, composePosterWithReport, composeSign, blankSign, pageSize, SIGN_PAGE_KINDS } from './poster'
 export { describeDocument, kindOf } from './describe'
 export { applyOps, pageKinds } from './ops'
 export { applyMotion, hasMotion } from './motion'
@@ -30,5 +30,5 @@ export { applyBrand } from './brand'
 export { SLIDE_THEME_KEYS, POSTER_PACK_KEYS, slideTheme, posterPack } from './themes'
 export type { Theme, SlideThemeKey, PosterPackKey } from './themes'
 export { ICON_KEYS } from './icons'
-export { SLIDE_PAGE, POSTER_PAGE, pageSizeFor } from './types'
-export type { ComposeOptions, DeckOutline, DeckSlide, DeckSlideLayout, DesignDocument, DesignKind, DesignOp, DocumentView, ImageRef, OutlineBullet, PosterOutline, PosterSign, PosterSignLayout, PosterSize, RejectedOp, TBrandKit, TdLayout } from './types'
+export { SLIDE_PAGE, POSTER_PAGE, MAX_PAGES, pageSizeFor } from './types'
+export type { ComposeOptions, ComposeReport, ComposeResult, DroppedText, DeckOutline, DeckSlide, DeckSlideLayout, DesignDocument, DesignKind, DesignOp, DocumentView, ImageRef, OutlineBullet, PosterOutline, PosterSign, PosterSignLayout, PosterSize, RejectedOp, TBrandKit, TdLayout } from './types'

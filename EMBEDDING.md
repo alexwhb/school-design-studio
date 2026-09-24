@@ -214,7 +214,7 @@ const pdf = await studio.current.exportPdf()   // a Blob, not a download
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | `getDocument()`                      | Plain JSON, safe to structured-clone or stringify. Includes words still being typed.                                        |
 | `setDocument(doc, { resetHistory })` | Replaces the canvas and starts undo again. With `resetHistory: false`, the swap is one undo step and the design is unsaved. |
-| `applyOps(ops)`                      | `{ applied, rejected }`. See below.                                                                                         |
+| `applyOps(ops)`                      | `{ applied, rejected, report }`. See below.                                                                                 |
 | `exportPdf()` / `exportPptx()`       | A `Blob` — `application/pdf`, or the OOXML presentation type.                                                               |
 | `exportPng(pageIndex, { scale })`    | One page. `scale: 1` is the page's own pixel size.                                                                          |
 | `goToPage(index)`                    | 0-based. Rounded, and clamped to the design; `NaN` is the first page.                                                       |
@@ -273,6 +273,8 @@ const { doc: next, rejected } = applyOps(doc, ops) // what it is allowed to send
 | ------------------------------- | -------------------------------------------------------------------------------------------- |
 | `composeDeck(outline, opts)`    | Five slide layouts: `title`, `statement`, `content`, `two-column`, `media`.                  |
 | `composePoster(outline, opts)`  | Five sign layouts: `direction`, `icon`, `statement`, `number`, `notice`.                     |
+| `composeDeckWithReport(…)`      | `{ document, report }`: the same deck, and what had to give to fit it. See below.            |
+| `composePosterWithReport(…)`    | The same for signs.                                                                          |
 | `describeDocument(doc)`         | Every text box with its id, its words and its role. Never a data URL or a byte of a picture. |
 | `applyOps(doc, ops, { brand })` | The seven operations, applied or refused with a reason.                                      |
 | `applyBrand(doc, kit)`          | What the Brand panel's Apply brand does, on a copy.                                          |
@@ -337,8 +339,29 @@ from the shape of the letters and a factor per family, deliberately a few per
 cent pessimistic: guessing a line wider than it turns out to be costs a slightly
 smaller heading, and guessing narrower costs a heading off the edge of a printed
 page. A heading shrinks a point at a time to a floor and is only then cut with
-an ellipsis. Bullets past what fits are dropped — nobody reads the seventh
-bullet on a slide, they read the mess at the bottom of the page.
+an ellipsis. Text is measured in the brand kit's fonts when one is given, not
+in the theme's, since those are the fonts the kit will put there.
+
+**Nothing is dropped without saying so.** Bullets that run past the bottom of a
+slide go onto the next page: same layout, same heading with "(continued)" after
+it. A media slide continues as a content slide without the photo. The slides
+the outline asked for always come first. A continuation page is only added
+while there is still room for every slide after it, and past `maxPages`
+(default and ceiling `MAX_PAGES`, 50, the most the editor holds) whole slides
+are left out. `composeDeckWithReport` and `composePosterWithReport` return the
+same document as `composeDeck` and `composePoster`, plus a report of anything
+that is not on the page as the outline wrote it:
+
+```ts
+const { document, report } = composeDeckWithReport(outline, { theme, brand, maxPages: 50 })
+// report: { continuedPages: 1, dropped: [{ page: 3, source: 2, field: 'bullets[7].sub[1]', text: '…', reason: 'page-limit' }] }
+```
+
+`source` is the index of the slide or sign in the outline, `field` is the
+outline's own name for the words, and `reason` is `shortened` (cut with an
+ellipsis at the smallest size allowed), `no-room` (would not fit even on a page
+of its own) or `page-limit`. `applyOps` returns the same report for the pages
+`addPage` built, with `source` the index of the op.
 
 **The six operations.**
 

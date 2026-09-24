@@ -133,11 +133,11 @@ export default function Index() {
         // included, and the edit ends because the page is about to be redrawn.
         commitOpenEdit({ end: true })
         const current = readDocument(optionsRef.current?.getTitle() || '')
-        const { doc, rejected } = applyDocumentOps(current, ops)
+        const { doc, rejected, report } = applyDocumentOps(current, ops)
         // Through recordHistory so that a run of ops from the host's own panel
         // is one press of Ctrl+Z, not one per operation.
         if (rejected.length < ops.length) recordHistory(() => optionsRef.current?.showDocument(doc))
-        return { applied: ops.length - rejected.length, rejected }
+        return { applied: ops.length - rejected.length, rejected, report }
       },
       exportPdf: () =>
         withPageRenderer((renderer) =>
