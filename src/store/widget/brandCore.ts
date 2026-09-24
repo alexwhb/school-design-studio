@@ -77,6 +77,19 @@ function fontClassOf(font: TFontItem) {
   return { id, oid, value, url, alias, preview }
 }
 
+/**
+ * The kit's font for a box that asks for a heading or for body text, as Apply
+ * brand picks it: the one the kit names for that role, or the other one when
+ * it named only one. Exported so the composer can set type in the font Apply
+ * brand is going to put there, before it measures the words — see
+ * `compose/brand.ts`.
+ */
+export function brandFontFor(role: 'heading' | 'body', kit: Pick<TBrandKit, 'fonts'>): TFontItem | undefined {
+  const heading = brandFont(kit.fonts.heading)
+  const body = brandFont(kit.fonts.body)
+  return role === 'heading' ? heading || body : body || heading
+}
+
 function setFont(widget: TdWidgetData, font: TFontItem): boolean {
   if (widget.fontClass?.value === font.value) return false
   widget.fontClass = fontClassOf(font)
@@ -672,15 +685,20 @@ export function applyBrandToLayouts(layouts: TdLayout[], kit: TBrandKit, options
     outcome.unresolved = fieldsInLayers(layouts.flatMap((layout) => layout.layers)).filter(isBrandField).length
   }
 
-  const heading = brandFont(kit.fonts.heading)
-  const body = brandFont(kit.fonts.body)
-  if (options.fonts && (heading || body)) {
+  if (options.fonts && (kit.fonts.heading || kit.fonts.body)) {
     for (const layout of layouts) {
       const threshold = headingThreshold(layout.global)
       for (const layer of layout.layers) {
         if (!carriesText(layer)) continue
-        const isHeading = isBold(layer) || Number((layer as any).fontSize) >= threshold
-        const font = isHeading ? heading || body : body || heading
+        // A box that says what it is gets what it asked for. The composer marks
+        // its eyebrows and footers `keep`: they are set in the theme's small
+        // tracked face on purpose, and the size-and-weight guess below took a
+        // bold footer for a heading and set it in the display face. Only a box
+        // that says nothing — anything drawn by hand — is guessed at.
+        const role = layer.brandRole
+        if (role === 'keep') continue
+        const isHeading = role ? role === 'heading' : isBold(layer) || Number((layer as any).fontSize) >= threshold
+        const font = brandFontFor(isHeading ? 'heading' : 'body', kit)
         if (font && setFont(layer, font)) outcome.fonts++
       }
     }
