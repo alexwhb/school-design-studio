@@ -12,6 +12,7 @@
  * new one, so the widget, its panel and the cell menu can all describe a change
  * as "this grid becomes that grid" and let one place write it.
  */
+import { parseInert } from '@/utils/dom'
 
 export type TTableData = {
   rows: number
@@ -181,7 +182,7 @@ export function moveCell(row: number, col: number, rows: number, cols: number, m
 /** What a cell reads as, markup taken off — for the layer list and anything else that wants words. */
 export function cellText(html: string | undefined): string {
   if (!html) return ''
-  const el = document.createElement('div')
-  el.innerHTML = String(html).replace(/<br\s*\/?>/gi, '\n')
-  return el.textContent || ''
+  // Parsed inert: a cell is markup from a stored design, and a detached
+  // element would fetch any <img> in it — see parseInert.
+  return parseInert(String(html).replace(/<br\s*\/?>/gi, '\n')).textContent || ''
 }

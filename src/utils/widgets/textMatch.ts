@@ -21,6 +21,7 @@
  * the Find box holds one line, a hit can never straddle one — which is what
  * stops "Sports<br>Day" from matching "sD".
  */
+import { parseInert } from '@/utils/dom'
 
 /** Elements whose edges are a line break in the rendered text. */
 const BLOCK = /^(ADDRESS|BLOCKQUOTE|DIV|DL|DD|DT|H[1-6]|LI|OL|P|PRE|TABLE|TD|TH|TR|UL)$/
@@ -46,8 +47,9 @@ export type TTextHit = {
 }
 
 function read(html: string | undefined): TReading {
-  const root = document.createElement('div')
-  root.innerHTML = html ?? ''
+  // Parsed inert rather than into a detached <div>, which would fetch any
+  // <img> in the markup and so run its onerror. See parseInert.
+  const root = parseInert(html ?? '')
   const segments: TSegment[] = []
   let text = ''
 
