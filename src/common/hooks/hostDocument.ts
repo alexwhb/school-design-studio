@@ -23,6 +23,8 @@ import { widgetState } from '@/store/state'
 import { autosaveState } from './autosave'
 import type { DesignDocument } from '@/compose/types'
 import type { TdLayout } from '@/store/types'
+import { plainLayouts, TRANSIENT_FIELDS } from '@/store/transient'
+import { commitOpenEdit } from '@/common/methods/openEdit'
 
 /** Quiet time before the host is told, in ms. */
 const DEBOUNCE = 1000
@@ -46,12 +48,19 @@ type Options = {
   onSave: ((doc: DesignDocument) => Promise<void>) | null
 }
 
-/** A plain copy of what is on the canvas, free of the store's proxies. */
+/**
+ * A plain copy of what is on the canvas, free of the store's proxies and of
+ * the flags that only mean something while a box is being edited.
+ *
+ * Words still being typed are stored first, so what comes out is what is on
+ * the screen rather than what was there when the caret went in.
+ */
 export function readDocument(title: string): DesignDocument {
+  commitOpenEdit()
   return {
     format: 'design-studio/v1',
     title,
-    layouts: JSON.parse(JSON.stringify(widgetState.dLayouts)) as TdLayout[],
+    layouts: plainLayouts(widgetState.dLayouts) as TdLayout[],
   }
 }
 
@@ -69,14 +78,15 @@ export default function useHostDocument({ getTitle, onChange, onSave }: Options)
     /**
      * What "the design changed" is measured against.
      *
-     * Two keys are left out of it. `record` is a widget's measured box, written
+     * Two keys, and the editing flags, are left out of it. `record` is a widget's measured box, written
      * back by the widget itself the first time it draws — so a design that has
      * merely been *shown* differs from the one that was handed in, and the pill
      * read "Unsaved changes" over an untouched page. `tag` is the counter that
      * forces a redraw. Neither is anything a person changed, and neither is
-     * worth telling the host about.
+     * worth telling the host about. The editing flags go for the same reason:
+     * double-clicking into a box and out again changes nothing.
      */
-    const IGNORED = new Set(['record', 'tag'])
+    const IGNORED = new Set(['record', 'tag', ...TRANSIENT_FIELDS])
     const snapshot = () => JSON.stringify([options.current.getTitle(), widgetState.dLayouts], (key, value) => (IGNORED.has(key) ? undefined : value))
 
     function isDirty(): boolean {
@@ -105,6 +115,9 @@ export default function useHostDocument({ getTitle, onChange, onSave }: Options)
       const save = options.current.onSave
       if (!save) return
       clearTimeout(timer)
+      // Before the snapshot as well as the document, so the baseline this
+      // save sets includes the words it sent.
+      commitOpenEdit()
       const title = options.current.getTitle()
       const doc = readDocument(title)
       // Taken the same way the dirty check takes it, or the two never agree and

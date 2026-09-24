@@ -8,6 +8,7 @@ import { cx } from '@/utils/dom'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
 import useSpellcheck from '@/common/hooks/useSpellcheck'
 import { recordHistory } from '@/common/hooks/history'
+import { registerOpenEdit } from '@/common/methods/openEdit'
 import { escapeHitOverlay } from '@/mixins/overlayEscape'
 import { htmlToLines, linesToHtml, sanitiseText } from '@/utils/widgets/richText'
 import CurvedText from './CurvedText'
@@ -347,6 +348,23 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
 
   const editing = useRef(false)
   editing.current = editable
+
+  // While the caret is in the box, anything about to read the design — a
+  // save, an export, the host's getDocument — can ask for the words first.
+  // Through a ref, so the registered calls always reach this render's
+  // functions rather than the ones from when the edit began.
+  const latest = useRef({ updateText, finishEdit })
+  latest.current = { updateText, finishEdit }
+  useEffect(() => {
+    if (!editable) return
+    return registerOpenEdit({
+      commit: () => {
+        const el = editWrapRef.current
+        if (el) recordHistory(() => latest.current.updateText({ target: el }))
+      },
+      finish: () => recordHistory(() => latest.current.finishEdit()),
+    })
+  }, [editable])
 
   /** Ends the edit and stores what was typed. Safe to call more than once. */
   function finishEdit() {

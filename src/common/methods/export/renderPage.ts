@@ -22,6 +22,7 @@ import { selectWidget } from '@/store/widget/select'
 import { setLayoutsChange } from '@/store/force'
 import { rasterBleed, rasterizeElement, subtreeNeedsRasterizing } from './rasterizeElement'
 import { withTimeout } from './utils'
+import { commitOpenEdit } from '@/common/methods/openEdit'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
 const CANVAS_ID = 'page-design-canvas'
@@ -353,6 +354,10 @@ export type PageRenderer = {
  * the editor back exactly as it was — same page, same selection, same zoom.
  */
 export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Promise<T>): Promise<T> {
+  // An export reads the words from the store, and the words being typed are
+  // not there until the edit ends. The edit ends rather than only being stored
+  // because the pages are about to be swapped out from under the box.
+  commitOpenEdit({ end: true })
   const originalPage = canvasState.dCurrentPage
   const originalZoom = canvasState.dZoom
 

@@ -38,6 +38,7 @@ import { buildPptx } from '@/common/methods/export/exportPptx'
 import { withPageRenderer } from '@/common/methods/export/renderPage'
 import { dataUrlToBlob } from '@/common/methods/export/utils'
 import { applyOps as applyDocumentOps } from '@/compose/ops'
+import { commitOpenEdit } from '@/common/methods/openEdit'
 import { exportQuality } from '@/common/methods/export/quality'
 import { isPresentable } from '@/store/documentKind'
 import { showPage } from '@/store/widget/pages'
@@ -110,6 +111,9 @@ export default function Index() {
     (): DesignStudioHandle => ({
       getDocument: () => readDocument(optionsRef.current?.getTitle() || ''),
       setDocument: (doc, opts) => {
+        // A box still being typed into would write its words over the new
+        // design when it finally lost the caret.
+        commitOpenEdit({ end: true })
         // One undo takes the whole swap back, unless the host says this is the
         // new starting point — which is what it means to open a different
         // design rather than to change the one that is open. Then the old
@@ -125,6 +129,9 @@ export default function Index() {
         setZoomScreenChange()
       },
       applyOps: (ops) => {
+        // The ops are applied to what is on the screen, words being typed
+        // included, and the edit ends because the page is about to be redrawn.
+        commitOpenEdit({ end: true })
         const current = readDocument(optionsRef.current?.getTitle() || '')
         const { doc, rejected } = applyDocumentOps(current, ops)
         // Through recordHistory so that a run of ops from the host's own panel

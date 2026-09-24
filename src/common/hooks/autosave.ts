@@ -18,6 +18,8 @@
  */
 import { useEffect, useMemo, useRef } from 'react'
 import { proxy, subscribe } from 'valtio'
+import { stripTransient, withoutTransient } from '@/store/transient'
+import { commitOpenEdit } from '@/common/methods/openEdit'
 import { widgetState } from '@/store/state'
 import { setDPage, getDPage } from '@/store/canvas'
 import { getWidgets, setDLayouts, setDWidgets } from '@/store/widget/widget'
@@ -77,8 +79,10 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
     let watching = false
     let unsubscribe: (() => void) | undefined
 
+    // Without the editing flags, so a box saved while it had the caret does
+    // not reopen believing it still has it. See store/transient.ts.
     function pageJson(): string[] {
-      return widgetState.dLayouts.map((layout) => JSON.stringify(layout))
+      return widgetState.dLayouts.map((layout) => JSON.stringify(layout, withoutTransient))
     }
 
     function snapshot(pages: string[]): string {
@@ -127,6 +131,8 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
     /** Writes immediately: File → Save, and Ctrl/Cmd-S. */
     async function saveNow() {
       clearTimeout(timer)
+      // The sentence still being typed is part of what Save means.
+      commitOpenEdit()
       const ok = await write()
       message({
         message: ok ? 'Saved on this computer.' : 'This design could not be saved. It may be too large for the browser to store.',
@@ -156,6 +162,8 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
       }
       const answer = await confirmChoice('Pick up where you left off?', `You were working on “${draft.title || 'Untitled design'}” ${describeAge(draft.savedAt)}.`, 'info', { confirmButtonText: 'Restore it', cancelButtonText: 'Start fresh' })
       if (answer === 'confirm') {
+        // A draft written before the flags were left out may still carry one.
+        stripTransient(draft.layouts)
         setDLayouts(draft.layouts)
         setDWidgets(getWidgets())
         setDPage(getDPage())

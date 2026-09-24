@@ -22,6 +22,7 @@
  */
 import { SAFE_FONT_FAMILY, SANITISED_FIELDS } from '@/components/modules/widgets/widgetTypes'
 import type { DesignDocument } from './types'
+import { stripTransient } from '@/store/transient'
 import type { TdWidgetData } from '@/store/types'
 
 export { SAFE_FONT_FAMILY, SANITISED_FIELDS }
@@ -60,6 +61,10 @@ function holderOf(layer: TdWidgetData, path: string): { holder: Record<string, u
 export function sanitizeFields(doc: DesignDocument): { doc: DesignDocument; report: FieldReport } {
   const next = JSON.parse(JSON.stringify(doc)) as DesignDocument
   const report: FieldReport = { dropped: [] }
+  // The editing flags are not fields anybody could misuse, but they are not
+  // part of a design either, and a document that arrives still carrying one
+  // opens with a box that believes it has the caret. See store/transient.ts.
+  stripTransient(next.layouts)
 
   for (const layout of next.layouts || []) {
     for (const layer of layout.layers || []) {

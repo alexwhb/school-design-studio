@@ -16,6 +16,7 @@ import { useHostApi, type DesignDocument } from '@/common/hooks/hostApi'
 import { sanitizeFields } from '@/compose/fields'
 import { canvasState, userState, widgetState } from '@/store/state'
 import type { TdLayout, TdWidgetData } from '@/store/types'
+import { plainLayouts, stripTransient, withoutTransient } from '@/store/transient'
 import { setShowMoveable } from '@/store/control'
 import { setLayoutsChange } from '@/store/force'
 import { managerEdit } from '@/store/base'
@@ -109,7 +110,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
       // That is a fact about the payload, not about the canvas, so it happens
       // to a plain copy — reordering the live store moved the element the
       // author had selected out from under them every time they pressed Save.
-      const widgets: TdWidgetData[] = JSON.parse(JSON.stringify(widgetState.dWidgets))
+      const widgets: TdWidgetData[] = plainLayouts(widgetState.dWidgets)
       if (widgets[0]?.type === 'w-group') {
         const group = widgets.shift()
         if (!group) return
@@ -135,7 +136,7 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
       res = await api.home.saveTemp({
         id: tempid,
         title: titleRef.current || 'Untitled template',
-        data: JSON.stringify(data),
+        data: JSON.stringify(data, withoutTransient),
         width: canvasState.dPage.width,
         height: canvasState.dPage.height,
       })
@@ -261,6 +262,9 @@ const HeaderOptions = forwardRef<HeaderOptionsHandle, Props>(function HeaderOpti
         // A template of several pages arrives whole. A saved design does not
         // get the fill, nor the kit's colours: what it says was settled when
         // it was saved.
+        // A saved design may carry the flags a box had while it was being
+        // edited; they are not part of it. See store/transient.ts.
+        stripTransient(data)
         widgetState.dLayouts = id ? data : fillTemplateLayouts(data, response.brand)
         setDWidgets(getWidgets())
       } else {
