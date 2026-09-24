@@ -19,8 +19,11 @@ export { sanitizeMarkup, markupToText, parseMarkup } from './markup'
 // What a design may be made of, for a host validating one before it stores it.
 // Derived from the widget registry rather than typed out again — see the
 // `satisfies` in `components/modules/widgets/registry.ts`.
-export { WIDGET_TYPES, URL_FIELDS, NESTED_URL_PATHS, SANITISED_FIELDS, SAFE_FONT_FAMILY, PAGE_TYPE } from '@/components/modules/widgets/widgetTypes'
+export { WIDGET_TYPES, URL_FIELDS, NESTED_URL_PATHS, SANITISED_FIELDS, SAFE_FONT_FAMILY, PAGE_TYPE, PAINT_FIELDS, PAINT_NUMBER_FIELDS } from '@/components/modules/widgets/widgetTypes'
 export { sanitizeFields } from './fields'
+// Whether a colour field holds a colour, for a host checking a design before
+// it stores one. See PAINT_FIELDS for where they are.
+export { isSafePaint } from './paint'
 export type { FieldReport } from './fields'
 export type { TWidgetType } from '@/components/modules/widgets/widgetTypes'
 export { applyBrand } from './brand'

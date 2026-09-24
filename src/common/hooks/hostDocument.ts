@@ -25,7 +25,7 @@ import type { DesignDocument } from '@/compose/types'
 import type { TdLayout } from '@/store/types'
 import { plainLayouts, TRANSIENT_FIELDS } from '@/store/transient'
 import { commitOpenEdit } from '@/common/methods/openEdit'
-import { sanitizeFields } from '@/compose/fields'
+import { sanitizeFields, sanitizeFieldsInPlace } from '@/compose/fields'
 
 /** Quiet time before the host is told, in ms. */
 const DEBOUNCE = 1000
@@ -66,11 +66,17 @@ type Options = {
  */
 export function readDocument(title: string): DesignDocument {
   commitOpenEdit()
-  return {
+  const doc: DesignDocument = {
     format: 'design-studio/v1',
     title,
     layouts: plainLayouts(widgetState.dLayouts) as TdLayout[],
   }
+  // Checked on the way out as well as on the way in. Whatever reached the
+  // store by a route that skipped the way in — a template, a restored draft —
+  // does not reach the host unchecked.
+  const report = sanitizeFieldsInPlace(doc)
+  if (report.dropped.length) console.warn('[design] dropped fields a design may not carry', report.dropped)
+  return doc
 }
 
 export default function useHostDocument({ getTitle, onChange, onSave }: Options): HostDocument {

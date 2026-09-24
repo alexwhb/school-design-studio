@@ -99,3 +99,61 @@ export const SANITISED_FIELDS: Record<string, readonly string[]> = {
   'w-text': ['fontClass.value'],
   'w-table': ['fontClass.value'],
 }
+
+/**
+ * Per type, every field whose value is painted: written into CSS or SVG as a
+ * colour, or as a gradient of colours.
+ *
+ * A second channel for pictures, and the one nobody was checking. CSS takes an
+ * image anywhere it takes a paint, so a shape whose `color` is `url(/x)` drew
+ * a picture, and none of these are in `URL_FIELDS`, which is where a host looks
+ * for addresses to hold to its own origin. Every value here must pass
+ * `isSafePaint` in `design-studio/compose`: a colour, or a gradient built only
+ * from colours, angles and stops. `sanitizeFields` resets one that does not.
+ *
+ * Found by reading every renderer — the canvas widget, its static twin, the
+ * shared paint helpers, the page background — not by guessing from names. The
+ * page is `page`, as in `URL_FIELDS`. Paths are dotted, with `[]` for "every
+ * element of this array", as in `NESTED_URL_PATHS`.
+ */
+export const PAINT_FIELDS: Record<string, readonly string[]> = {
+  // `backgroundColor` is the page's colour; `backgroundGradient` is written
+  // whole into `background-image`, and is a full CSS gradient string.
+  page: ['backgroundColor', 'backgroundGradient'],
+  'w-text': [
+    'color',
+    'backgroundColor',
+    // A text effect is a stack of layers, each with a fill, an outline and a
+    // shadow. A fill is a colour, a gradient held as stops, or a tile whose
+    // palette is written into the tile's SVG.
+    'textEffects[].filling.color',
+    'textEffects[].filling.gradient.stops[].color',
+    'textEffects[].filling.imageContent.pattern.colors[]',
+    'textEffects[].stroke.color',
+    'textEffects[].shadow.color',
+  ],
+  'w-image': ['borderColor', 'shadow.color'],
+  // `colors` fills the `{{colors[n]}}` slots in the shape's own markup.
+  'w-svg': ['colors[]', 'borderColor', 'shadow.color'],
+  'w-rect': ['color', 'borderColor', 'shadow.color'],
+  'w-ellipse': ['color', 'borderColor', 'shadow.color'],
+  'w-polygon': ['color', 'borderColor', 'shadow.color'],
+  'w-path': ['color', 'borderColor', 'shadow.color'],
+  'w-group': [],
+  'w-qrcode': ['dotColor', 'dotColor2'],
+  'w-table': ['color', 'headerColor', 'borderColor', 'headerFill', 'bodyFill', 'altFill'],
+  // Every type named, even with nothing to list, so that a widget added to
+  // WIDGET_TYPES and not here fails the build rather than going unchecked.
+} satisfies Record<TWidgetType | typeof PAGE_TYPE, readonly string[]>
+
+/**
+ * Numbers that are written into a paint, so have to be numbers.
+ *
+ * A text effect's gradient keeps its angle apart from its stops and is
+ * assembled as `linear-gradient(${angle}deg, …)`, so an angle that is a string
+ * — `0deg, url(/x)` — is a paint of its own. `sanitizeFields` resets one that
+ * is not a finite number.
+ */
+export const PAINT_NUMBER_FIELDS: Record<string, readonly string[]> = {
+  'w-text': ['textEffects[].filling.gradient.angle', 'textEffects[].filling.gradient.stops[].offset'],
+}
