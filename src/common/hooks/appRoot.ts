@@ -14,6 +14,15 @@ export function getAppRoot(): HTMLElement | null {
 }
 
 /**
+ * Whether the editor is inside somebody else's page — mounted by the
+ * `DesignStudio` component — rather than being the whole tab. Embedded, the
+ * address bar, the history and the page around the editor are the host's.
+ */
+export function isEmbedded(): boolean {
+  return !!(root && root.isConnected)
+}
+
+/**
  * Where menus, tooltips and toasts are rendered. Standalone that is the body,
  * which is where they have always gone. Embedded it has to be the editor's own
  * root, because the embed build scopes every rule under it — anything portalled
