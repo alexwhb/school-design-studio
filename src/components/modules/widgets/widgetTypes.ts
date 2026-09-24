@@ -116,6 +116,22 @@ export const SANITISED_FIELDS: Record<string, readonly string[]> = {
  * page is `page`, as in `URL_FIELDS`. Paths are dotted, with `[]` for "every
  * element of this array", as in `NESTED_URL_PATHS`.
  */
+/**
+ * Words a person wrote about a widget rather than on it: plain text, never
+ * markup, and never fetched. Today that is a picture's alt text. It reaches a
+ * React attribute, a PowerPoint's XML and a PDF string, each of which escapes
+ * it, so the check on the way in is only that it is a string of a sensible
+ * length; see `sanitizeFields`. `decorative` beside it must be a boolean.
+ */
+export const TEXT_FIELDS: Record<string, readonly string[]> = {
+  'w-image': ['alt'],
+  'w-svg': ['alt'],
+  'w-qrcode': ['alt'],
+}
+
+/** The longest alt text a design keeps. Anything past it is cut on the way in. */
+export const MAX_ALT_LENGTH = 500
+
 export const PAINT_FIELDS: Record<string, readonly string[]> = {
   // `backgroundColor` is the page's colour; `backgroundGradient` is written
   // whole into `background-image`, and is a full CSS gradient string.

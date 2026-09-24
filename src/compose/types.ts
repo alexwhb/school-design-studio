@@ -36,8 +36,11 @@ export function pageSizeFor(kind: DesignKind): { width: number; height: number }
   return kind === 'poster' ? { ...POSTER_PAGE } : { ...SLIDE_PAGE }
 }
 
-/** A picture the host has already resolved. Never an id, never bytes to fetch. */
-export type ImageRef = { url: string; width: number; height: number }
+/**
+ * A picture the host has already resolved. Never an id, never bytes to fetch.
+ * `alt` is what it shows, in words, for a screen reader and the exports.
+ */
+export type ImageRef = { url: string; width: number; height: number; alt?: string }
 
 /** A bullet, and the points made under it. */
 export type OutlineBullet = { text: string; sub: string[] }
@@ -167,7 +170,11 @@ export type DesignOp =
    * was sent. Anything that came from a person or a model wants `setText`.
    */
   | { op: 'setMarkup'; id: string; html: string }
-  | { op: 'setImage'; id: string; url: string; width: number; height: number }
+  /**
+   * A different picture in the same frame. `alt` describes the new one; left
+   * out, the old description goes, because it was about the old picture.
+   */
+  | { op: 'setImage'; id: string; url: string; width: number; height: number; alt?: string }
   | { op: 'addPage'; after: number; kind: string; fields: Record<string, string> }
   | { op: 'removePage'; index: number }
   | { op: 'movePage'; from: number; to: number }

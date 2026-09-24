@@ -23,6 +23,8 @@ import { readTable } from '@/components/modules/widgets/wTable/tableModel'
 import { htmlToText, imageToDataUrl, isInvisible, pxToInches, pxToPoints, readRotation, safeFileName, toPptxColor } from './utils'
 import { htmlToPptxRuns } from './textRuns'
 import { applyPptxMotion, motionName, type MotionTarget, type SlideMotion } from './pptxAnimation'
+import { pptxAltFor, type PptxAlt } from './pptxAlt'
+import { readingOrder, textOf } from '@/common/methods/accessibility/structure'
 import { readTransition } from '@/common/animations/transitions'
 
 export type PptxMode = 'editable' | 'picture'
@@ -223,7 +225,7 @@ function pptxShadow(widget: TdWidgetData, scale: number): PptxGenJS.ShadowProps 
   }
 }
 
-async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: number) {
+async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scale: number, alts: Map<string, PptxAlt>) {
   const url = (widget as any).imgUrl
   if (!url) return
   // The size it is laid out at, so a vector is rasterised for this frame rather
@@ -231,10 +233,13 @@ async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scal
   const data = await imageToDataUrl(url, { width: Number(widget.width) || 0, height: Number(widget.height) || 0 })
   if (!data) return false
 
+  const alt = pptxAltFor(widget)
+  alts.set(motionName(widget.uuid), alt)
   slide.addImage({
     data,
     ...frame(widget, scale),
     objectName: motionName(widget.uuid),
+    altText: alt.text,
     rotate: readRotation(widget) || undefined,
     transparency: toPptxColor(
       `#000000${Math.round(Number((widget as any).opacity ?? 1) * 255)
@@ -247,13 +252,17 @@ async function addImageWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, scal
   return true
 }
 
-async function addRasterWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, pageIndex: number, scale: number, render?: PptxOptions['renderWidget']) {
+async function addRasterWidget(slide: PptxGenJS.Slide, widget: TdWidgetData, pageIndex: number, scale: number, alts: Map<string, PptxAlt>, render?: PptxOptions['renderWidget']) {
   if (!render) return
   const data = await render(pageIndex, widget)
   if (!data) return
+  // A picture on the slide whatever it started as, so it needs describing as
+  // much as a photograph does.
+  const alt = pptxAltFor(widget)
+  alts.set(motionName(widget.uuid), alt)
   // The picture is drawn without the element's shadow — see `capture` — so the
   // shadow is put back here, where PowerPoint can cast it outside the frame.
-  slide.addImage({ data, ...frame(widget, scale), objectName: motionName(widget.uuid), shadow: pptxShadow(widget, scale) })
+  slide.addImage({ data, ...frame(widget, scale), objectName: motionName(widget.uuid), altText: alt.text, shadow: pptxShadow(widget, scale) })
 }
 
 /** Paints the page background onto the slide: a colour, a gradient's base, or an image. */
@@ -308,6 +317,8 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
   // API for either a transition or a build, so both are edited into the file it
   // produces. See pptxAnimation.ts.
   const motion: SlideMotion[] = []
+  // Each picture's alt text, by the name it was given on its slide. See pptxAlt.ts.
+  const alts: Map<string, PptxAlt>[] = []
 
   for (let i = 0; i < pages.length; i++) {
     const page = pages[i].global as Record<string, any>
@@ -317,6 +328,8 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
     // deck of flat images still gives way one slide to the next.
     const slideMotion: SlideMotion = { transition: readTransition(pages[i].global as any), builds: [] }
     motion.push(slideMotion)
+    const slideAlts = new Map<string, PptxAlt>()
+    alts.push(slideAlts)
 
     onProgress?.(Math.round(((i + 0.1) / pages.length) * 90), `Building slide ${i + 1} of ${pages.length}`)
 
@@ -327,7 +340,17 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
     if (mode === 'picture') {
       const data = renderPage ? await renderPage(i) : null
       if (data) {
-        slide.addImage({ data, x: 0, y: 0, w: deckWidth, h: deckHeight })
+        // The whole slide is one picture, so its alt text is the words on it,
+        // in the order they are read. PowerPoint caps nothing, but a screen
+        // reader reading a whole slide as one description wants it short.
+        const words = readingOrder(layers.filter((widget) => widget.type === 'w-text' && !widget.hidden))
+          .map(textOf)
+          .filter(Boolean)
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .slice(0, 1000)
+        slideAlts.set('ds:page', { text: words, decorative: !words })
+        slide.addImage({ data, x: 0, y: 0, w: deckWidth, h: deckHeight, objectName: 'ds:page', altText: words })
       } else {
         await applyBackground(slide, page)
       }
@@ -359,16 +382,16 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
 
       try {
         if (needsRaster(widget)) {
-          await addRasterWidget(slide, widget, i, scale, renderWidget)
+          await addRasterWidget(slide, widget, i, scale, slideAlts, renderWidget)
         } else if (widget.type === 'w-text') {
           addTextWidget(slide, widget, scale)
         } else if (widget.type === 'w-table') {
           addTableWidget(slide, widget, scale)
         } else if (widget.type === 'w-image') {
-          const placed = await addImageWidget(slide, widget, scale)
+          const placed = await addImageWidget(slide, widget, scale, slideAlts)
           // A cross-origin image we could not read still has to appear, so
           // fall back to a picture of the element as drawn on screen.
-          if (placed === false) await addRasterWidget(slide, widget, i, scale, renderWidget)
+          if (placed === false) await addRasterWidget(slide, widget, i, scale, slideAlts, renderWidget)
         }
       } catch (e) {
         // One bad element must not cost the whole deck.
@@ -382,7 +405,7 @@ export async function buildPptx(layouts: TdLayout[], options: PptxOptions): Prom
   // pptxgenjs hands back `application/zip`, which a .pptx technically is and
   // which some readers then refuse to open as a presentation. Say what it is.
   const blob = written.type === PPTX_TYPE ? written : new Blob([written], { type: PPTX_TYPE })
-  return applyPptxMotion(blob, motion)
+  return applyPptxMotion(blob, motion, alts)
 }
 
 const PPTX_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'

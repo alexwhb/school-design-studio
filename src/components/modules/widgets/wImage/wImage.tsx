@@ -360,7 +360,7 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
         <div id={params.uuid + '_ebox'} ref={editBoxRef} className="svg__edit__wrap" style={{ transformOrigin: 'center' }}>
           {/* The faded whole picture behind the crop frame, adjusted the same way
               so the part being kept does not look like a different photograph. */}
-          <img className="edit__model" style={{ filter: imageFilterCss(p.filters) }} src={p.imgUrl} />
+          <img className="edit__model" style={{ filter: imageFilterCss(p.filters) }} src={p.imgUrl} alt="" />
         </div>
       ) : null}
       {cropEdit ? (
@@ -408,6 +408,9 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
             // a shadow keeps its colour whatever is done to the photo inside them.
             style={{ transformOrigin: 'center', filter: imageFilterCss(p.filters) }}
             src={p.imgUrl}
+            // A React attribute, so the description is escaped whatever it says.
+            // Decorative is an empty alt, which is how HTML says "skip this".
+            alt={p.decorative ? '' : String(p.alt || '')}
           />
         )}
       </div>

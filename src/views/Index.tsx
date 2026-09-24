@@ -145,6 +145,8 @@ export default function Index() {
             title: getDesignTitle(),
             scale: exportQuality.scale,
             renderPage: renderer.renderPage,
+            contentFor: renderer.pageContent,
+            language: document.documentElement.lang,
           }),
         ),
       exportPptx: () =>

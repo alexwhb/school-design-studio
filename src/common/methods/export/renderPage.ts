@@ -21,6 +21,9 @@ import { getWidgets, setDWidgets } from '@/store/widget/widget'
 import { setLayoutsChange } from '@/store/force'
 import { rasterBleed, rasterizeElement, subtreeNeedsRasterizing } from './rasterizeElement'
 import { withTimeout } from './utils'
+import { measureTextOnCanvas } from './measureText'
+import { buildPageContent, type PageContent } from './pageContent'
+import { isTextWidget } from '@/common/methods/accessibility/structure'
 import { commitOpenEdit } from '@/common/methods/openEdit'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
@@ -335,6 +338,19 @@ async function capture(el: HTMLElement, scale: number): Promise<string | null> {
   }
 }
 
+/**
+ * The page on the canvas, read for its words. The live page rather than a
+ * clone: the measurement is of the layout the browser has already done, and a
+ * clone would make it do that work again only to get the same answer.
+ */
+function contentOfShown(layers: TdWidgetData[]): PageContent {
+  const measured = measureTextOnCanvas(
+    CANVAS_ID,
+    layers.filter(isTextWidget).map((widget) => String(widget.uuid)),
+  )
+  return buildPageContent(layers, measured)
+}
+
 export type PageRenderer = {
   /** `scale` multiplies the output resolution; 1 is the design's true pixel size. */
   renderPage: (pageIndex: number, scale?: number) => Promise<string | null>
@@ -346,6 +362,14 @@ export type PageRenderer = {
    * does not fill with copies.
    */
   renderLayout: (layout: TdLayout, scale?: number) => Promise<string | null>
+  /**
+   * What the page says, as opposed to how it looks: its text in reading order,
+   * its headings, and its pictures' alt text, with every line placed where the
+   * browser laid it out. The PDF's text layer is built from this.
+   */
+  pageContent: (pageIndex: number) => Promise<PageContent>
+  /** The same for a page that is not part of the design. See `renderLayout`. */
+  layoutContent: (layout: TdLayout) => Promise<PageContent>
 }
 
 /**
@@ -477,6 +501,14 @@ async function renderAlone<T>(work: (renderer: PageRenderer) => Promise<T>): Pro
       await showLayout(layout)
       const el = document.getElementById(CANVAS_ID)
       return el ? capture(el, scaleForZoom() * scale) : null
+    },
+    async pageContent(pageIndex) {
+      await goTo(pageIndex)
+      return contentOfShown((widgetState.dLayouts[pageIndex]?.layers || []) as TdWidgetData[])
+    },
+    async layoutContent(layout) {
+      await showLayout(layout)
+      return contentOfShown(layout.layers as TdWidgetData[])
     },
   }
 

@@ -14,6 +14,7 @@
  */
 import type { ComposeReport, DesignDocument, DesignOp, RejectedOp } from './types'
 import { MAX_PAGES } from './types'
+import { MAX_ALT_LENGTH } from '@/components/modules/widgets/widgetTypes'
 import { applyBrand, brandTheme, fieldFiller } from './brand'
 import { applyMotion } from './motion'
 import { composeSlidePages, blankSlide, DECK_PAGE_KINDS } from './deck'
@@ -198,6 +199,10 @@ export function applyOps(doc: DesignDocument, ops: DesignOp[], options: { brand?
         ;(widget as any).zoom = zoom
         ;(widget as any).zoomY = zoomY
         widget.transform = ` scale(${zoom}, ${zoomY}) translate(0px, 0px)`
+        // The description was of the picture that has gone. A new one comes in
+        // with the op, or the check before a download asks for one.
+        if (typeof op.alt === 'string' && op.alt.trim()) widget.alt = op.alt.trim().slice(0, MAX_ALT_LENGTH)
+        else delete widget.alt
         break
       }
 

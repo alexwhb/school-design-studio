@@ -401,6 +401,32 @@ and the report says where. The editor runs it on every document it is handed and
 every one it hands back, but a host that stores designs should check them itself
 before they reach the database, the same way it checks `URL_FIELDS`.
 
+### Alt text
+
+A picture (`w-image`, `w-svg`, `w-qrcode`) may carry `alt`, a plain string
+saying what it shows, and `decorative: true` when it shows nothing a reader
+would miss. Both are edited under Alt text in the picture's panel. `alt` is
+written into a PowerPoint's `descr`, which is what Edit Alt Text shows, and a
+decorative picture gets PowerPoint's own decorative mark rather than a made-up
+file name. In the PDF each picture is a tagged `Figure` with the text as its
+`/Alt`.
+
+`TEXT_FIELDS` lists where `alt` lives. It is never markup and never fetched:
+every place it lands escapes it. `sanitizeFields` drops an `alt` that is not a
+string and a `decorative` that is not a boolean, takes out control characters,
+and cuts `alt` at `MAX_ALT_LENGTH` (500). `ImageRef` takes an `alt`, so an
+outline can describe the photo it asks for. `setImage` takes one too. Without
+one, the old description is removed, since it described a different picture.
+
+**What the PDF can and cannot do.** Each page is still one picture, drawn by
+the browser. Over it goes the real text in reading order, invisible, the way a
+scanner leaves a page after OCR. Headings are tagged H1 to H3 by size, pictures
+are Figures with their alt text, and the file has a title, a language (the
+host page's `lang`, or `en-US`) and says to show the title rather than the file
+name. `pdfinfo` reports it as tagged. What stays picture only: words inside a
+photo, a table's cells, and text drawn as part of an SVG. A picture with no
+alt text is announced as "Image with no description" rather than skipped.
+
 ## The content library
 
 `design-studio/server` is the six read-only `/design/*` endpoints the panels ask

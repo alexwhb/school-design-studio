@@ -92,6 +92,10 @@ export default function ExportMenu({ getTitle, onSelect, onProgress }: Props) {
           title,
           scale,
           renderPage: renderer.renderPage,
+          // What turns a stack of pictures into a document a screen reader can
+          // read. See exportPdf.ts.
+          contentFor: renderer.pageContent,
+          language: document.documentElement.lang,
           onProgress: (percent: number, msg: string) => onProgress({ downloadPercent: percent, downloadText: msg }),
         }),
       )

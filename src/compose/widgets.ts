@@ -121,7 +121,7 @@ export function rectWidget(left: number, top: number, width: number, height: num
  * one division: whichever way round the picture is, scale that axis until the
  * short side of the slot is covered and let the long side run past the edge.
  */
-export function imageWidget(left: number, top: number, width: number, height: number, image: { url: string; width: number; height: number }): TdWidgetData {
+export function imageWidget(left: number, top: number, width: number, height: number, image: { url: string; width: number; height: number; alt?: string }): TdWidgetData {
   const slot = width / height
   const picture = image.width && image.height ? image.width / image.height : slot
   const zoom = picture > slot ? picture / slot : 1
@@ -152,6 +152,7 @@ export function imageWidget(left: number, top: number, width: number, height: nu
     isNinePatch: false,
     flip: '',
     sliceData: { ratio: 0, left: 0 },
+    ...(typeof image.alt === 'string' && image.alt.trim() ? { alt: image.alt.trim() } : null),
   } as unknown as TdWidgetData
 }
 
