@@ -18,7 +18,6 @@ import { canvasState, widgetState } from '@/store/state'
 import { setPathEditUuid, setShowMoveable } from '@/store/control'
 import { setDPage, updateZoom } from '@/store/canvas'
 import { getWidgets, setDWidgets } from '@/store/widget/widget'
-import { selectWidget } from '@/store/widget/select'
 import { setLayoutsChange } from '@/store/force'
 import { rasterBleed, rasterizeElement, subtreeNeedsRasterizing } from './rasterizeElement'
 import { withTimeout } from './utils'
@@ -350,31 +349,96 @@ export type PageRenderer = {
 }
 
 /**
+ * The exports waiting their turn. Every export runs through here, one at a
+ * time — see `withPageRenderer`.
+ */
+let queue: Promise<unknown> = Promise.resolve()
+
+/**
  * Runs `work` with a renderer that can draw any page of the design, then puts
  * the editor back exactly as it was — same page, same selection, same zoom.
+ *
+ * One export at a time. Drawing a page means putting it on the canvas, and
+ * there is one canvas: a download started while the host was drawing its
+ * thumbnail used to move the canvas to its own pages in the middle of the
+ * other's, so each file came out with some of the other's pages in it, and
+ * whichever finished second put the canvas back on the page the first had
+ * left it on. So each export waits for the one before it to finish, whether
+ * that one worked or not, and the editor is put back only once, by each, as
+ * it found it.
  */
-export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Promise<T>): Promise<T> {
+export function withPageRenderer<T>(work: (renderer: PageRenderer) => Promise<T>): Promise<T> {
+  const run = queue.then(() => renderAlone(work))
+  // The next export waits for this one to settle, not to succeed.
+  queue = run.catch(() => undefined)
+  return run
+}
+
+/** What was selected, by id, so it can be chosen again once the pages are back. */
+type TSelection = { active: string; several: string[] }
+
+function readSelection(): TSelection {
+  return {
+    active: String(widgetState.dActiveElement?.uuid ?? '-1'),
+    several: widgetState.dSelectWidgets.map((item) => String(item.uuid)),
+  }
+}
+
+/**
+ * Chooses again what was chosen before the export, on the page it was on.
+ *
+ * Written straight to the store rather than through `selectWidget`, which sets
+ * the active element on a timer and reads whether a modifier key is held — an
+ * export restoring a selection is not somebody clicking.
+ */
+function restoreSelection(selection: TSelection) {
+  const find = (uuid: string) => widgetState.dWidgets.find((item) => String(item.uuid) === uuid && !item.hidden)
+  const several = selection.several.map(find).filter((item): item is TdWidgetData => !!item)
+  if (several.length > 1) {
+    widgetState.dActiveElement = canvasState.dPage
+    widgetState.dSelectWidgets = several
+    return
+  }
+  const one = selection.active !== '-1' ? find(selection.active) : several[0]
+  widgetState.dSelectWidgets = []
+  widgetState.dActiveElement = one ?? canvasState.dPage
+}
+
+/**
+ * Nothing selected, at once. `selectWidget` does the same on a ten-millisecond
+ * timer, which could land after `restoreSelection` and take it away again.
+ */
+function deselect() {
+  widgetState.dSelectWidgets = []
+  widgetState.dActiveElement = canvasState.dPage
+}
+
+async function renderAlone<T>(work: (renderer: PageRenderer) => Promise<T>): Promise<T> {
   // An export reads the words from the store, and the words being typed are
   // not there until the edit ends. The edit ends rather than only being stored
   // because the pages are about to be swapped out from under the box.
   commitOpenEdit({ end: true })
   const originalPage = canvasState.dCurrentPage
   const originalZoom = canvasState.dZoom
+  const originalSelection = readSelection()
 
   // Deselect first: the selection outline would otherwise be baked into the
   // exported image, and so would a path's points. Editing goes first because
   // leaving it puts the selection box back, which the next line then takes away.
   setPathEditUuid('-1')
   setShowMoveable(false)
-  selectWidget({ uuid: '-1' })
+  deselect()
   await waitForFonts()
 
   const goTo = async (pageIndex: number) => {
+    // Asked about when the export was queued, but the design can change while
+    // it waits its turn.
+    if (!widgetState.dLayouts[pageIndex]) throw new Error(`There is no page ${pageIndex + 1} to draw.`)
     if (canvasState.dCurrentPage !== pageIndex) {
       canvasState.dCurrentPage = pageIndex
       setDWidgets(getWidgets())
       setDPage(widgetState.dLayouts[pageIndex].global)
-      selectWidget({ uuid: '-1' })
+      deselect()
       await nextTick()
       await afterPaint()
     }
@@ -389,7 +453,7 @@ export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Prom
     widgetState.dWidgets = layout.layers
     canvasState.dPage = layout.global
     setLayoutsChange()
-    selectWidget({ uuid: '-1' })
+    deselect()
     await nextTick()
     await afterPaint()
   }
@@ -419,15 +483,21 @@ export async function withPageRenderer<T>(work: (renderer: PageRenderer) => Prom
   try {
     return await work(renderer)
   } finally {
-    canvasState.dCurrentPage = originalPage
+    // Clamped, because the host can change the design while an export runs:
+    // an applyOps that removed pages leaves nothing at the old index.
+    const page = Math.max(0, Math.min(originalPage, widgetState.dLayouts.length - 1))
+    canvasState.dCurrentPage = page
     setDWidgets(getWidgets())
     // Say the list is a different one, or the board keeps drawing whatever was
     // rendered last: a page whose layers look the same as this one's — a copy
     // of it, say — compares equal to valtio's snapshot. See showPage.
     setLayoutsChange()
-    setDPage(widgetState.dLayouts[originalPage].global)
+    setDPage(widgetState.dLayouts[page].global)
     updateZoom(originalZoom)
-    selectWidget({ uuid: '-1' })
+    deselect()
+    // A frame for the board to draw the page again before the selection box
+    // is asked to find the widget on it.
     await nextTick()
+    restoreSelection(originalSelection)
   }
 }
