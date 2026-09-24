@@ -21,6 +21,7 @@ import InlineToolbar from './InlineToolbar'
 import type { WidgetProps } from '../types'
 import './wText.less'
 import { cssUrl } from '@/utils/cssUrl'
+import { DEFAULT_FONT } from './wTextSetting'
 
 /**
  * Marks a copy made inside one of this editor's text boxes, so a paste can tell
@@ -47,12 +48,16 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
 
   const [loading, setLoading] = useState(false)
   const [editable, setEditable] = useState(false)
-  const fontTick = useFontTick(p.fontClass.value)
+  // A text box can arrive with no font at all, from a host's document or from
+  // one that had an unsafe family taken out (compose/fields.ts). It draws in
+  // the font a new box starts with rather than taking the editor down.
+  const fontValue = p.fontClass?.value || DEFAULT_FONT
+  const fontTick = useFontTick(fontValue)
   const widgetRef = useRef<HTMLDivElement | null>(null)
   const editWrapRef = useRef<HTMLDivElement | null>(null)
   const loadFontDone = useRef('')
 
-  const fontFamily = `'${p.fontClass.value}'`
+  const fontFamily = `'${fontValue}'`
   const listStyle = (p.listStyle ?? 'none') as TListStyle
 
   /**
@@ -150,7 +155,7 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     return () => {
       cancelled = true
     }
-  }, [params, p.fontClass.value, p.fontClass.url, isDraw])
+  }, [params, p.fontClass?.value, p.fontClass?.url, isDraw])
 
   /**
    * The width the line had before it bent, so it can be given back.

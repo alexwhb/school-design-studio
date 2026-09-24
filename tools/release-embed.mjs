@@ -70,6 +70,7 @@ function slimPackage() {
       '.': { types: './dist-embed/index.d.ts', import: './dist-embed/design-studio.js' },
       './style.css': './dist-embed/design-studio.css',
       './compose': { types: './dist-embed/compose.d.ts', import: './dist-embed/compose.js' },
+      './viewer': { types: './dist-embed/viewer.d.ts', import: './dist-embed/viewer.js' },
       './server': { types: './server/index.d.ts', import: './server/index.mjs' },
       './package.json': './package.json',
     },
@@ -99,7 +100,7 @@ function build() {
   emitTypes()
   copyContent()
 
-  for (const required of ['dist-embed/design-studio.js', 'dist-embed/design-studio.css', 'dist-embed/index.d.ts', 'dist-embed/compose.js', 'dist-embed/compose.d.ts', 'server/index.mjs', 'server/index.d.ts']) {
+  for (const required of ['dist-embed/design-studio.js', 'dist-embed/design-studio.css', 'dist-embed/index.d.ts', 'dist-embed/compose.js', 'dist-embed/compose.d.ts', 'dist-embed/viewer.js', 'dist-embed/viewer.d.ts', 'server/index.mjs', 'server/index.d.ts']) {
     if (!fs.existsSync(path.join(ROOT, required))) throw new Error(`the build did not produce ${required}`)
   }
 }

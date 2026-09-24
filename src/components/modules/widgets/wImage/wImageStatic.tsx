@@ -61,6 +61,9 @@ function WImageStatic({ params, parent, className, ...rest }: WidgetProps) {
             // a shadow keeps its colour whatever is done to the photo inside them.
             style={{ transformOrigin: 'center', filter: imageFilterCss(p.filters) }}
             src={p.imgUrl}
+            // A React attribute, so the description is escaped whatever it says.
+            // Decorative is an empty alt, which is how HTML says "skip this".
+            alt={p.decorative ? '' : String(p.alt || '')}
           />
         )}
       </div>

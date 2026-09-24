@@ -1,7 +1,7 @@
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { PENDING_CLASS, buildSchedule, cancelAll, playWidgetAnimation } from '@/common/animations/play'
 import { pageBackgroundStyle } from '@/common/methods/pageBackground'
-import { staticWidgetComponents } from '@/components/modules/widgets/registry'
+import { staticWidgetComponents } from '@/components/modules/widgets/staticRegistry'
 import { cx } from '@/utils/dom'
 import type { TdLayout, TdWidgetData, TPageState } from '@/store/types'
 import './slideView.less'

@@ -8,6 +8,11 @@ import exportPdf, { DESIGN_DPI, type ExportScale } from '@/common/methods/export
 import { exportQuality, setExportScale } from '@/common/methods/export/quality'
 import { withPageRenderer } from '@/common/methods/export/renderPage'
 import { canvasState, widgetState } from '@/store/state'
+import { checkLayouts, type DesignIssue } from '@/common/methods/accessibility/checkDesign'
+import { isEmbedded } from '@/common/hooks/appRoot'
+import { commitOpenEdit } from '@/common/methods/openEdit'
+import { plainLayouts } from '@/store/transient'
+import CheckBeforeDownload from './CheckBeforeDownload'
 import { cx } from '@/utils/dom'
 import './exportMenu.less'
 
@@ -35,6 +40,8 @@ export default function ExportMenu({ getTitle, onSelect, onProgress }: Props) {
   const { dPage } = useSnapshot(canvasState)
   const [busy, setBusy] = useState(false)
   const [open, setOpen] = useState(false)
+  /** What the check found, and the download waiting on the answer. */
+  const [found, setFound] = useState<{ issues: DesignIssue[]; go: () => void } | null>(null)
   // Shared rather than local, so a bulk-document PDF comes out at the same quality.
   const { scale } = useSnapshot(exportQuality)
   const setScale = setExportScale
@@ -45,8 +52,26 @@ export default function ExportMenu({ getTitle, onSelect, onProgress }: Props) {
 
   const pdfHint = dLayouts.length > 1 ? `All ${dLayouts.length} pages, ready to print or email` : 'Ready to print or email'
 
+  /**
+   * The check first, standalone. Embedded, a host that wants it asks through
+   * the handle, at the moment that suits its own flow. A PNG carries no alt
+   * text, so it is not asked for one.
+   */
+  function checkThen(go: () => void, skipAlt: boolean) {
+    if (busy) return
+    if (isEmbedded()) return go()
+    commitOpenEdit()
+    const issues = checkLayouts(plainLayouts(widgetState.dLayouts) as any, { skipAlt })
+    if (!issues.length) return go()
+    setFound({ issues, go })
+  }
+
   function run(command: string) {
     setOpen(false)
+    checkThen(() => runNow(command), command === 'png')
+  }
+
+  function runNow(command: string) {
     if (command === 'png') return toImage()
     if (command === 'pdf') return toPdf()
     if (command === 'pptx-editable') return toPowerPoint('editable')
@@ -92,6 +117,10 @@ export default function ExportMenu({ getTitle, onSelect, onProgress }: Props) {
           title,
           scale,
           renderPage: renderer.renderPage,
+          // What turns a stack of pictures into a document a screen reader can
+          // read. See exportPdf.ts.
+          contentFor: renderer.pageContent,
+          language: document.documentElement.lang,
           onProgress: (percent: number, msg: string) => onProgress({ downloadPercent: percent, downloadText: msg }),
         }),
       )
@@ -119,7 +148,16 @@ export default function ExportMenu({ getTitle, onSelect, onProgress }: Props) {
 
   return (
     <div className="export-menu">
-      <Button className="export-btn" type="primary" disabled={busy} onClick={toImage}>
+      <CheckBeforeDownload
+        issues={found?.issues ?? null}
+        onClose={() => setFound(null)}
+        onDownload={() => {
+          const go = found?.go
+          setFound(null)
+          go?.()
+        }}
+      />
+      <Button className="export-btn" type="primary" disabled={busy} onClick={() => checkThen(toImage, true)}>
         {!busy ? <i className="iconfont icon-download export-btn__icon" /> : null}
         Export
       </Button>

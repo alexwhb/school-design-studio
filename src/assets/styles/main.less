@@ -183,6 +183,11 @@ p {
   z-index: 99999;
   pointer-events: none;
   opacity: 0.9;
+  transition: opacity 0.12s;
+}
+// Over a photo it is about to replace. See dropTarget.less.
+.ds-drop-into .flutter {
+  opacity: 0.3;
 }
 .hide {
   opacity: 0 !important;

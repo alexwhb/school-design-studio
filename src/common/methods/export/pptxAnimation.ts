@@ -29,6 +29,7 @@
 import { buildSchedule, type AnimatableWidget } from '@/common/animations/play'
 import { getPreset } from '@/common/animations/presets'
 import { readTransition, type TPageTransition, type TTransitionType } from '@/common/animations/transitions'
+import { applySlideAlt, type PptxAlt } from './pptxAlt'
 
 /** What one slide should be given. */
 export type SlideMotion = {
@@ -302,10 +303,11 @@ export function applySlideMotion(xml: string, motion: SlideMotion): string {
 }
 
 /**
- * Reopens a finished .pptx and writes the motion for every slide into it.
+ * Reopens a finished .pptx and writes the motion for every slide into it, and
+ * the pictures' alt text (see pptxAlt.ts).
  *
- * JSZip is imported here rather than at the top of the file so a deck with no
- * motion in it never pays for the library. pptxgenjs already carries a copy for
+ * JSZip is imported here rather than at the top of the file so that opening the
+ * editor never pays for the library; only an export does. pptxgenjs already carries a copy for
  * its own writing but does not re-export it, so this is the same code twice in
  * the bundle — which is why it is worth keeping behind a dynamic import and out
  * of the main chunk.
@@ -314,9 +316,11 @@ export function applySlideMotion(xml: string, motion: SlideMotion): string {
  * without its transitions beats no file at all, and the caller has no better
  * answer to offer than the deck it already had.
  */
-export async function applyPptxMotion(blob: Blob, motion: SlideMotion[]): Promise<Blob> {
+export async function applyPptxMotion(blob: Blob, motion: SlideMotion[], alts?: ReadonlyArray<ReadonlyMap<string, PptxAlt>>): Promise<Blob> {
   const wanted = motion.some((slide) => slide.transition || slide.builds.some((target) => getPreset(target.animation?.preset)))
-  if (!wanted) return blob
+  // The alt text pass rides on the same unzip, since it edits the same files.
+  // See pptxAlt.ts.
+  if (!wanted && !alts?.length) return blob
 
   try {
     const { default: JSZip } = await import('jszip')
@@ -326,8 +330,10 @@ export async function applyPptxMotion(blob: Blob, motion: SlideMotion[]): Promis
       const path = `ppt/slides/slide${i + 1}.xml`
       const file = zip.file(path)
       if (!file) continue
-      const xml = await file.async('string')
-      zip.file(path, applySlideMotion(xml, motion[i]))
+      let xml = await file.async('string')
+      if (wanted) xml = applySlideMotion(xml, motion[i])
+      if (alts?.[i]) xml = applySlideAlt(xml, alts[i])
+      zip.file(path, xml)
     }
 
     const out = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', mimeType: blob.type })

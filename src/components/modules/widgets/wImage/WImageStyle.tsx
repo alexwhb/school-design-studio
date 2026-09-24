@@ -18,6 +18,7 @@ import OpacityRow from '../../settings/OpacityRow'
 import ShadowSelect from '../../settings/ShadowSelect'
 import TransformGrid from '../../settings/TransformGrid'
 import ContainerWrap from '../../settings/EffectSelect/ContainerWrap'
+import AltTextField from '../../settings/AltTextField'
 import ImageAdjust from './components/ImageAdjust'
 import ImageBackground from './components/ImageBackground'
 import InnerToolBar from './components/InnerToolBar'
@@ -93,8 +94,10 @@ export default function WImageStyle() {
   async function selectDone(img: TGetImageListResult) {
     finish('imgUrl', img.url)
     // A different picture has no earlier version of itself, so Restore original
-    // must not offer to put back the one this replaced.
+    // must not offer to put back the one this replaced, and the alt text was
+    // about the one that has gone.
     finish('originalImgUrl', null)
+    finish('alt', '')
     const loadImg = await getImage(img.url)
     finish('width', (loadImg.width * canvasState.dZoom) / 100)
     finish('height', (loadImg.height * canvasState.dZoom) / 100)
@@ -167,6 +170,10 @@ export default function WImageStyle() {
           <NumberInput variant="underline" value={Math.round(Number(active.radius) || 0)} suffix="px" minValue={0} maxValue={Math.round(radiusMax)} onChange={(value) => finish('radius', Number(value))} />
         </div>
         <p className="image-corners__hint">Drag the round handle inside the photo&rsquo;s corner. All the way in gives you a pill — or a circle when the photo is square.</p>
+      </PanelSection>
+
+      <PanelSection title="Alt text">
+        <AltTextField uuid={uuid} alt={active.alt} decorative={active.decorative} hint="Read out by screen readers, and saved into PowerPoint and PDF downloads." />
       </PanelSection>
 
       <PanelSection title="Transform">

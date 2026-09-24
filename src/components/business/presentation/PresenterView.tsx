@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { useSnapshot } from 'valtio'
-import { widgetState } from '@/store/state'
 import { openPresenterChannel, type TPresenterMessage, type TPresenterState } from './presenterLink'
 import Elapsed from './Elapsed'
 import SlideView from './SlideView'
@@ -13,8 +11,8 @@ import type { TdLayout } from '@/store/types'
  * how far through the deck you are. Drawn into a second window, so it can be
  * dragged onto a laptop screen while the presenter fills the projector.
  *
- * It reads the design straight out of the store — it is rendered by the editor's
- * own React tree through a portal, so the artwork is the same components the
+ * It is handed the pages the presenter is showing — it is rendered by the same
+ * React tree through a portal, so the artwork is the same components the
  * presenter draws, live, with no copy to keep in step. What it does not read is
  * where the talk has got to: that belongs to the presenter, and arrives over the
  * channel. Presses go back the same way, because a key pressed in this window is
@@ -45,8 +43,7 @@ function useBox(ref: RefObject<HTMLElement | null>) {
 const STEP_FORWARD = ['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Spacebar', 'Enter']
 const STEP_BACK = ['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace']
 
-export default function PresenterView() {
-  const pages = useSnapshot(widgetState).dLayouts as readonly TdLayout[]
+export default function PresenterView({ pages }: { pages: readonly TdLayout[] }) {
   const [talk, setTalk] = useState<TPresenterState>({ index: 0, startedAt: Date.now(), live: true })
 
   const rootRef = useRef<HTMLDivElement | null>(null)

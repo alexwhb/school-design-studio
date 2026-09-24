@@ -716,6 +716,32 @@ test.describe('the host’s page stays the host’s', () => {
     await page.waitForTimeout(400)
   }
 
+  test('picking a template leaves the host’s address and its router’s state alone', async ({ page }) => {
+    await page.goto(embedUrl('doc=1&tab=design'))
+    await page.waitForSelector('.ds-root #page-design-canvas')
+    // What a router keeps in the entry, and a hash, which the editor used to
+    // replace with `?tempid=…` and null.
+    await page.evaluate(() => window.history.replaceState({ router: 'kept', idx: 4 }, '', location.pathname + location.search + '#section'))
+    const before = await page.evaluate(() => location.href)
+
+    // Templates is the panel the editor opens on; a second click would close it.
+    const cards = page.locator('.ds-root .temp-list-wrap .panel-card')
+    // The list loads after the panel does, so give it a moment before deciding.
+    const open = await cards
+      .first()
+      .waitFor({ state: 'visible', timeout: 3000 })
+      .then(() => true)
+      .catch(() => false)
+    if (!open) await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Templates' }).click()
+    await cards.first().click()
+    // The design has a heading on it, so the editor asks first.
+    await page.locator('.ds-root .temp-list-wrap__ask').getByRole('button', { name: 'Replace this page' }).click()
+    await expect.poll(() => layers(page).count(), { timeout: 10000 }).toBeGreaterThan(2)
+
+    expect(await page.evaluate(() => location.href)).toBe(before)
+    expect(await page.evaluate(() => window.history.state)).toEqual({ router: 'kept', idx: 4 })
+  })
+
   test('Backspace and the arrows on the host’s button leave the selection alone', async ({ page }) => {
     await openEditor(page, 'doc=1')
     const before = await layers(page).count()
@@ -868,6 +894,22 @@ test.describe('the handle, driven', () => {
     await expect(pill(page)).toHaveText('Unsaved changes')
   })
 
+  test('a text box with no font draws in the default instead of taking the editor down', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    await page.evaluate(() => {
+      const studio = (window as any).__studio.current
+      const doc = studio.getDocument()
+      const words = doc.layouts[0].layers.find((layer: any) => layer.type === 'w-text')
+      delete words.fontClass
+      delete words.fontFamily
+      words.text = 'No font given'
+      studio.setDocument(doc)
+    })
+    await expect(page.locator('.ds-root #page-design-canvas')).toContainText('No font given')
+    await expect(page.locator('.ds-root #widget-panel')).toBeVisible()
+  })
+
   test('setDocument starts the undo history again', async ({ page }) => {
     await openEditor(page, 'doc=1&ai=1')
     await handle(page)
@@ -880,6 +922,33 @@ test.describe('the handle, driven', () => {
       studio.setDocument(studio.getDocument())
     })
     await expect(undo).toHaveClass(/disable/)
+  })
+
+  test('checkDesign says what is wrong, page and widget, and the studio’s own Download does not ask', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const found = await page.evaluate(async () => {
+      const studio = (window as any).__studio.current
+      const clean = await studio.checkDesign()
+      const doc = studio.getDocument()
+      const first = doc.layouts[0]
+      // Whole widgets, shaped like what the editor makes.
+      const words = first.layers.find((layer: any) => layer.type === 'w-text')
+      first.layers.push({ ...words, uuid: 'tiny', left: 100, top: 900, width: 600, height: 20, fontSize: 12, text: 'Small print' }, { uuid: 'photo', name: 'Image', type: 'w-image', parent: '-1', left: 1200, top: 100, width: 400, height: 300, zoom: 1, zoomY: 1, transform: ' scale(1, 1) translate(0px, 0px)', radius: 0, opacity: 1, borderWidth: 0, borderColor: '#000000ff', borderStyle: 'solid', imgUrl: '/covers/template-101.png', mask: '', setting: [], rotate: 0, record: { width: 0, height: 0, minWidth: 10, minHeight: 10, dir: 'all' }, lock: false, isNinePatch: false, flip: '', sliceData: { ratio: 0, left: 0 } })
+      studio.setDocument(doc)
+      const issues = await studio.checkDesign()
+      return { clean, issues: issues.map((issue: any) => [issue.page, issue.widgetId, issue.kind]) }
+    })
+    expect(found.clean).toEqual([])
+    expect(found.issues).toEqual([
+      [0, 'tiny', 'tiny-text'],
+      [0, 'photo', 'missing-alt'],
+    ])
+    // Embedded, the host decides when to ask; the Export button just exports.
+    const download = page.waitForEvent('download', { timeout: 90000 })
+    await page.locator('.ds-root .export-btn').click({ timeout: 5000 })
+    await expect(page.locator('.ds-root .check-before-download')).toHaveCount(0)
+    await download
   })
 
   test('goToPage takes any number, and getCurrentPage says where it went', async ({ page }) => {

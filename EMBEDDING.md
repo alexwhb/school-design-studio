@@ -214,13 +214,14 @@ const pdf = await studio.current.exportPdf()   // a Blob, not a download
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | `getDocument()`                      | Plain JSON, safe to structured-clone or stringify. Includes words still being typed.                                        |
 | `setDocument(doc, { resetHistory })` | Replaces the canvas and starts undo again. With `resetHistory: false`, the swap is one undo step and the design is unsaved. |
-| `applyOps(ops)`                      | `{ applied, rejected }`. See below.                                                                                         |
+| `applyOps(ops)`                      | `{ applied, rejected, report }`. See below.                                                                                 |
 | `exportPdf()` / `exportPptx()`       | A `Blob` — `application/pdf`, or the OOXML presentation type.                                                               |
 | `exportPng(pageIndex, { scale })`    | One page. `scale: 1` is the page's own pixel size.                                                                          |
 | `goToPage(index)`                    | 0-based. Rounded, and clamped to the design; `NaN` is the first page.                                                       |
 | `getCurrentPage()`                   | The 0-based index of the page on the canvas.                                                                                |
 | `isDirty()`                          | Whether the canvas has moved on from the last save.                                                                         |
 | `markSaved(doc?)`                    | You saved the design yourself. `doc`, or the canvas, becomes what "unsaved" is measured against. Undo and canvas untouched. |
+| `checkDesign()`                      | `Promise<DesignIssue[]>`: what to look at before a download. See below.                                                     |
 
 Everything on it is a whole-document operation on purpose. A host that could
 move one widget by ten pixels would, and a layout drawn for a school would
@@ -238,6 +239,34 @@ restoring an old version. Without it the pill goes on saying "Unsaved changes"
 over a design you have just stored. `setDocument` would clear that too, but it
 redraws the canvas and throws the undo history away.
 
+`checkDesign()` lists what will not come out the way it looks, or will not
+reach somebody who cannot see it:
+
+```ts
+type DesignIssue = { page: number; widgetId: string; kind: 'overflow' | 'tiny-text' | 'low-contrast' | 'missing-alt'; message: string }
+```
+
+`page` is 0-based, so `goToPage(issue.page)` shows it. `message` is a sentence
+for the person, such as "This picture has no alt text. Describe it, or mark it
+decorative." The checks:
+
+- `overflow`: text off the page, a word wider than its box, or more text than
+  its box holds.
+- `tiny-text`: under 12pt on a page the shape of paper (25px at 150 DPI, the
+  RNIB Clear Print floor), and under 20px on a 1080-high slide (scaled with
+  the page). Presentation guides ask for 36px. The studio's own themes set
+  bullets at 26 to 32px, so this looks for text nobody can read at all.
+- `low-contrast`: WCAG's ratio for the text against what is behind it: 4.5:1,
+  or 3:1 for large text. Over a photo or a gradient there is no one colour to
+  measure against, so nothing is said. Text with an effect on it is skipped
+  too.
+- `missing-alt`: a photo with no alt text that is not marked decorative.
+
+The standalone editor runs the same check before its own Download and offers
+"Download anyway" and "Show me". Embedded it does not: you decide when to ask.
+`checkDocument(doc)` in the compose entry is the same check on a stored
+design, on the server.
+
 If your `uploads.remove(id)` rejects, the photo stays in the list and the
 rejection's message is shown to the person as it is. So write it for them:
 "This photo is used in “Open House”. Take it out of that design first."
@@ -252,6 +281,28 @@ The node is rendered in the panel column at panel width, behind a tab at the top
 of the rail. The studio passes it nothing and knows nothing about it: everything
 it wants to do to the design it does through the ref. Without the prop there is
 no tab, which is what the standalone editor should show.
+
+## A design on a phone
+
+```tsx
+import { DesignViewer } from 'design-studio/viewer'
+import 'design-studio/style.css'
+
+<DesignViewer document={doc} onPageChange={(index) => …} className="…" />
+```
+
+The editor is no use on a phone. `DesignViewer` draws the pages read-only, one
+under another, each as wide as its container, with a Present button that opens
+the same presenter the editor uses, starting on the page in view. The words are
+real text you can select and search, each page is a region labelled "Page 2 of
+6", and each picture carries its alt text. `onPageChange` gets the 0-based page
+nearest the middle of the screen as the reader scrolls.
+
+It is exported from the main entry too, but import it from
+`design-studio/viewer` on a phone. That entry loads only the viewer's chunk
+(about 211 kB, 55 kB gzipped) and not the editor's (2.4 MB, 600 kB gzipped).
+The stylesheet is the same one. The document goes through `sanitizeFields`
+and every run of text through `sanitizeMarkup` before it is drawn.
 
 ## Composing a design without a browser
 
@@ -273,6 +324,8 @@ const { doc: next, rejected } = applyOps(doc, ops) // what it is allowed to send
 | ------------------------------- | -------------------------------------------------------------------------------------------- |
 | `composeDeck(outline, opts)`    | Five slide layouts: `title`, `statement`, `content`, `two-column`, `media`.                  |
 | `composePoster(outline, opts)`  | Five sign layouts: `direction`, `icon`, `statement`, `number`, `notice`.                     |
+| `composeDeckWithReport(…)`      | `{ document, report }`: the same deck, and what had to give to fit it. See below.            |
+| `composePosterWithReport(…)`    | The same for signs.                                                                          |
 | `describeDocument(doc)`         | Every text box with its id, its words and its role. Never a data URL or a byte of a picture. |
 | `applyOps(doc, ops, { brand })` | The seven operations, applied or refused with a reason.                                      |
 | `applyBrand(doc, kit)`          | What the Brand panel's Apply brand does, on a copy.                                          |
@@ -337,8 +390,29 @@ from the shape of the letters and a factor per family, deliberately a few per
 cent pessimistic: guessing a line wider than it turns out to be costs a slightly
 smaller heading, and guessing narrower costs a heading off the edge of a printed
 page. A heading shrinks a point at a time to a floor and is only then cut with
-an ellipsis. Bullets past what fits are dropped — nobody reads the seventh
-bullet on a slide, they read the mess at the bottom of the page.
+an ellipsis. Text is measured in the brand kit's fonts when one is given, not
+in the theme's, since those are the fonts the kit will put there.
+
+**Nothing is dropped without saying so.** Bullets that run past the bottom of a
+slide go onto the next page: same layout, same heading with "(continued)" after
+it. A media slide continues as a content slide without the photo. The slides
+the outline asked for always come first. A continuation page is only added
+while there is still room for every slide after it, and past `maxPages`
+(default and ceiling `MAX_PAGES`, 50, the most the editor holds) whole slides
+are left out. `composeDeckWithReport` and `composePosterWithReport` return the
+same document as `composeDeck` and `composePoster`, plus a report of anything
+that is not on the page as the outline wrote it:
+
+```ts
+const { document, report } = composeDeckWithReport(outline, { theme, brand, maxPages: 50 })
+// report: { continuedPages: 1, dropped: [{ page: 3, source: 2, field: 'bullets[7].sub[1]', text: '…', reason: 'page-limit' }] }
+```
+
+`source` is the index of the slide or sign in the outline, `field` is the
+outline's own name for the words, and `reason` is `shortened` (cut with an
+ellipsis at the smallest size allowed), `no-room` (would not fit even on a page
+of its own) or `page-limit`. `applyOps` returns the same report for the pages
+`addPage` built, with `source` the index of the op.
 
 **The six operations.**
 
@@ -377,6 +451,32 @@ effect's gradient angle, and should be finite numbers.
 and the report says where. The editor runs it on every document it is handed and
 every one it hands back, but a host that stores designs should check them itself
 before they reach the database, the same way it checks `URL_FIELDS`.
+
+### Alt text
+
+A picture (`w-image`, `w-svg`, `w-qrcode`) may carry `alt`, a plain string
+saying what it shows, and `decorative: true` when it shows nothing a reader
+would miss. Both are edited under Alt text in the picture's panel. `alt` is
+written into a PowerPoint's `descr`, which is what Edit Alt Text shows, and a
+decorative picture gets PowerPoint's own decorative mark rather than a made-up
+file name. In the PDF each picture is a tagged `Figure` with the text as its
+`/Alt`.
+
+`TEXT_FIELDS` lists where `alt` lives. It is never markup and never fetched:
+every place it lands escapes it. `sanitizeFields` drops an `alt` that is not a
+string and a `decorative` that is not a boolean, takes out control characters,
+and cuts `alt` at `MAX_ALT_LENGTH` (500). `ImageRef` takes an `alt`, so an
+outline can describe the photo it asks for. `setImage` takes one too. Without
+one, the old description is removed, since it described a different picture.
+
+**What the PDF can and cannot do.** Each page is still one picture, drawn by
+the browser. Over it goes the real text in reading order, invisible, the way a
+scanner leaves a page after OCR. Headings are tagged H1 to H3 by size, pictures
+are Figures with their alt text, and the file has a title, a language (the
+host page's `lang`, or `en-US`) and says to show the title rather than the file
+name. `pdfinfo` reports it as tagged. What stays picture only: words inside a
+photo, a table's cells, and text drawn as part of an SVG. A picture with no
+alt text is announced as "Image with no description" rather than skipped.
 
 ## The content library
 

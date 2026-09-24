@@ -3,9 +3,11 @@ import { useSnapshot } from 'valtio'
 import { imageFilterCss } from '@/common/methods/imageFilters'
 import { shadowFilter } from '@/common/methods/shadow'
 import { canvasState, controlState, widgetState } from '@/store/state'
-import { setShowMoveable } from '@/store/control'
+import { setCropUuid, setShowMoveable, setShowRotatable } from '@/store/control'
 import { setUpdateRect } from '@/store/force'
 import { lockWidgets, updateWidgetData, updateWidgetMultiple } from '@/store/widget/widget'
+import { takesPicture } from '@/store/widget/fillPicture'
+import '../dropTarget.less'
 import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
 import ImageKeyline from './ImageKeyline'
@@ -64,7 +66,18 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
   const flipTemp = useRef<string | null>(null)
 
   const cropEdit = params.uuid === control.dCropUuid
-  const isMask = !!p.mask && dropOverUuid === params.uuid
+  // A picture being dragged over this one will go into it. See fillPicture.ts.
+  const dropTarget = dropOverUuid === params.uuid && takesPicture(p)
+
+  // A different picture in the frame, from a drop, Replace image or an undo,
+  // starts from where its own transform says rather than from where the last
+  // one had been dragged to — the render below writes the held position back
+  // out, and would put the old crop onto the new photo.
+  const heldFor = useRef(p.imgUrl)
+  if (heldFor.current !== p.imgUrl) {
+    heldFor.current = p.imgUrl
+    holdPosition.current = readHeldPosition(params.transform, params.zoom, params.zoomY ?? params.zoom)
+  }
 
   useEffect(() => {
     updateRecord()
@@ -325,6 +338,13 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
     }
   }
 
+  /** Double-click to crop, as in every other editor that has one. */
+  function startCrop() {
+    if (params.lock || params.isNinePatch || cropEdit) return
+    setShowRotatable(false)
+    setCropUuid(params.uuid)
+  }
+
   function lockOthers(isCrop: boolean) {
     lockWidgets()
     if (!isCrop) return
@@ -341,8 +361,10 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
       {...rest}
       id={id ?? params.uuid}
       ref={widgetRef}
-      className={cx('w-image', { 'layer-lock': !!p.lock }, className || '')}
+      className={cx('w-image', { 'layer-lock': !!p.lock, 'is-drop-target': dropTarget }, className || '')}
+      onDoubleClick={startCrop}
       style={{
+        ...(dropTarget ? { ['--ds-unzoom' as string]: 100 / (canvas.dZoom || 100) } : null),
         position: 'absolute',
         left: p.left - parent.left + 'px',
         top: p.top - parent.top + 'px',
@@ -360,7 +382,7 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
         <div id={params.uuid + '_ebox'} ref={editBoxRef} className="svg__edit__wrap" style={{ transformOrigin: 'center' }}>
           {/* The faded whole picture behind the crop frame, adjusted the same way
               so the part being kept does not look like a different photograph. */}
-          <img className="edit__model" style={{ filter: imageFilterCss(p.filters) }} src={p.imgUrl} />
+          <img className="edit__model" style={{ filter: imageFilterCss(p.filters) }} src={p.imgUrl} alt="" />
         </div>
       ) : null}
       {cropEdit ? (
@@ -408,17 +430,13 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
             // a shadow keeps its colour whatever is done to the photo inside them.
             style={{ transformOrigin: 'center', filter: imageFilterCss(p.filters) }}
             src={p.imgUrl}
+            // A React attribute, so the description is escaped whatever it says.
+            // Decorative is an empty alt, which is how HTML says "skip this".
+            alt={p.decorative ? '' : String(p.alt || '')}
           />
         )}
       </div>
       <ImageKeyline params={p} />
-      {isMask ? (
-        <div className="drop__mask">
-          <div {...({ putIn: 'true' } as any)} style={{ fontSize: p.width / 12 + 'px' }} className="drop__btn">
-            Drop here
-          </div>
-        </div>
-      ) : null}
     </div>
   )
 }

@@ -20,13 +20,13 @@
  * that is not on the list is not a font, and the text falls back to the
  * editor's default, which is visible and obvious rather than silently wrong.
  */
-import { PAGE_TYPE, PAINT_FIELDS, PAINT_NUMBER_FIELDS, SAFE_FONT_FAMILY, SANITISED_FIELDS } from '@/components/modules/widgets/widgetTypes'
+import { MAX_ALT_LENGTH, PAGE_TYPE, PAINT_FIELDS, PAINT_NUMBER_FIELDS, SAFE_FONT_FAMILY, SANITISED_FIELDS, TEXT_FIELDS } from '@/components/modules/widgets/widgetTypes'
 import type { DesignDocument } from './types'
 import { isSafePaint } from './paint'
 import { stripTransient } from '@/store/transient'
 import type { TdWidgetData } from '@/store/types'
 
-export { PAINT_FIELDS, PAINT_NUMBER_FIELDS, SAFE_FONT_FAMILY, SANITISED_FIELDS }
+export { PAINT_FIELDS, PAINT_NUMBER_FIELDS, SAFE_FONT_FAMILY, SANITISED_FIELDS, TEXT_FIELDS }
 
 /** What was taken out, so a caller can say so rather than wonder. */
 export type FieldReport = { dropped: { type: string; path: string; value: string }[] }
@@ -123,6 +123,31 @@ function checkPaints(target: Record<string, unknown>, type: string, report: Fiel
 }
 
 /**
+ * A picture's alt text as a design keeps it: a string, with the control
+ * characters a PDF or a PowerPoint's XML cannot carry taken out, and no longer
+ * than `MAX_ALT_LENGTH`. Anything that is not a string is not alt text and is
+ * dropped. So is a `decorative` that is not a boolean.
+ */
+function checkTextFields(layer: Record<string, unknown>, type: string, report: FieldReport) {
+  for (const key of TEXT_FIELDS[type] || []) {
+    if (!(key in layer) || layer[key] === undefined) continue
+    const value = layer[key]
+    if (typeof value !== 'string') {
+      report.dropped.push({ type, path: key, value: String(value).slice(0, 80) })
+      delete layer[key]
+      continue
+    }
+    // eslint-disable-next-line no-control-regex
+    const clean = value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').slice(0, MAX_ALT_LENGTH)
+    if (clean !== value) layer[key] = clean
+  }
+  if ('decorative' in layer && layer.decorative !== undefined && typeof layer.decorative !== 'boolean') {
+    report.dropped.push({ type, path: 'decorative', value: String(layer.decorative).slice(0, 80) })
+    delete layer.decorative
+  }
+}
+
+/**
  * The document with every interpolated field that does not pass taken out.
  *
  * Works on a copy, so a host can hand in a document it is still holding. Every
@@ -151,6 +176,7 @@ export function sanitizeFieldsInPlace(next: DesignDocument): FieldReport {
     for (const layer of layout.layers || []) {
       if (!layer || typeof layer !== 'object') continue
       checkPaints(layer as unknown as Record<string, unknown>, String(layer.type), report)
+      checkTextFields(layer as unknown as Record<string, unknown>, String(layer.type), report)
       for (const path of SANITISED_FIELDS[String(layer.type)] || []) {
         const found = holderOf(layer, path)
         if (!found) continue

@@ -12,7 +12,8 @@
  * it needs and behaves the way it always did when there is none.
  */
 import { createContext, useContext, type MutableRefObject, type ReactNode } from 'react'
-import type { DesignDocument, DesignKind, DesignOp, RejectedOp } from '@/compose/types'
+import type { ComposeReport, DesignDocument, DesignKind, DesignOp, RejectedOp } from '@/compose/types'
+import type { DesignIssue } from '@/common/methods/accessibility/checkDesign'
 
 export type { DesignDocument, DesignKind, DesignOp }
 
@@ -93,7 +94,11 @@ export type DesignStudioHandle = {
    * as unsaved until it is saved.
    */
   setDocument(doc: DesignDocument, opts?: { resetHistory?: boolean }): void
-  applyOps(ops: DesignOp[]): { applied: number; rejected: RejectedOp[] }
+  /**
+   * `report` says what an `addPage` had to give up to fit, and how many
+   * continuation pages its bullets needed. See `applyOps` in the compose entry.
+   */
+  applyOps(ops: DesignOp[]): { applied: number; rejected: RejectedOp[]; report: ComposeReport }
   exportPdf(): Promise<Blob>
   exportPptx(): Promise<Blob>
   /** `scale` 1 is the page's own pixel size. */
@@ -123,6 +128,15 @@ export type DesignStudioHandle = {
    * `document` was handed in.
    */
   markSaved(doc?: DesignDocument): void
+  /**
+   * What in the design will not come out the way it looks, or will not reach
+   * somebody who cannot see it: text off the page or too big for its box, text
+   * too small to read, text too faint against what is behind it, and photos
+   * with no alt text. Each issue names its page (0-based) and widget, and says
+   * what is wrong in a sentence meant for the person. Empty when there is
+   * nothing to say. Words being typed are checked as they are.
+   */
+  checkDesign(): Promise<DesignIssue[]>
 }
 
 export type HostApi = {

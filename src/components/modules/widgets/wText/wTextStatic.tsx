@@ -5,6 +5,7 @@ import useFontTick from './useFontTick'
 import effectStyle from './effectStyle'
 import type { WidgetProps } from '../types'
 import './wText.less'
+import { DEFAULT_FONT } from './wTextSetting'
 
 function WTextStatic({ params, parent, className, ...rest }: WidgetProps) {
   const p = params as any
@@ -17,7 +18,8 @@ function WTextStatic({ params, parent, className, ...rest }: WidgetProps) {
     p.rotate && (el.style.transform += `translate(0px, 0px) rotate(${p.rotate}) scale(1, 1)`)
   }, [p.transform, p.rotate])
 
-  const fontFamily = `'${p.fontClass.value}'`
+  // No font at all draws in the default rather than throwing; see wText.tsx.
+  const fontFamily = `'${p.fontClass?.value || DEFAULT_FONT}'`
   const fontTick = useFontTick(fontFamily)
 
   /**

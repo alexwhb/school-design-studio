@@ -9,16 +9,6 @@ import WPath from './wPath/wPath'
 import WGroup from './wGroup/wGroup'
 import WQrcode from './wQrcode/wQrcode'
 import WTable from './wTable/wTable'
-import WTextStatic from './wText/wTextStatic'
-import WImageStatic from './wImage/wImageStatic'
-import WSvgStatic from './wSvg/wSvgStatic'
-import WRectStatic from './wRect/wRectStatic'
-import WEllipseStatic from './wEllipse/wEllipseStatic'
-import WPolygonStatic from './wPolygon/wPolygonStatic'
-import WPathStatic from './wPath/wPathStatic'
-import WGroupStatic from './wGroup/wGroupStatic'
-import WQrcodeStatic from './wQrcode/wQrcodeStatic'
-import WTableStatic from './wTable/wTableStatic'
 import type { WidgetProps } from './types'
 import type { TWidgetType } from './widgetTypes'
 
@@ -48,17 +38,6 @@ const components = {
 
 export const widgetComponents: Record<string, ComponentType<WidgetProps>> = components
 
-const staticComponents = {
-  'w-text': WTextStatic,
-  'w-image': WImageStatic,
-  'w-svg': WSvgStatic,
-  'w-rect': WRectStatic,
-  'w-ellipse': WEllipseStatic,
-  'w-polygon': WPolygonStatic,
-  'w-path': WPathStatic,
-  'w-group': WGroupStatic,
-  'w-qrcode': WQrcodeStatic,
-  'w-table': WTableStatic,
-} satisfies Record<TWidgetType, ComponentType<WidgetProps>>
-
-export const staticWidgetComponents: Record<string, ComponentType<WidgetProps>> = staticComponents
+// The read-only half lives on its own, so the viewer can have it without the
+// editing widgets. See staticRegistry.ts.
+export { staticWidgetComponents } from './staticRegistry'
