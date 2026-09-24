@@ -5,7 +5,8 @@ import setImageData from '@/common/methods/DesignFeatures/setImage'
 import useConfirm from '@/common/methods/confirm'
 import DragHelper from '@/common/hooks/dragHelper'
 import useInfiniteScroll from '@/common/hooks/useInfiniteScroll'
-import { deleteUpload, listUploads, type LocalUpload } from '@/common/methods/localUploads'
+import { deleteUpload, explainUploadError, listUploads, type LocalUpload } from '@/common/methods/localUploads'
+import useNotification from '@/common/methods/notification'
 import { resolveStockImage, type StockImage } from '@/common/methods/stockImage'
 import eventBus from '@/utils/plugins/eventBus'
 import Image from '@/components/ui/Image'
@@ -103,11 +104,25 @@ export default function PhotoListWrap() {
     getDataList()
   }
 
-  /** The visitor's own uploads, which live in this browser and nowhere else. */
+  /**
+   * The visitor's own uploads: in this browser, or in the host's store.
+   *
+   * A list that could not be read is said to be one. It used to come out as an
+   * empty library, which reads as "you have no photos" to somebody who has
+   * dozens, and invites them to upload them all again. What was already shown
+   * stays shown.
+   */
+  const [uploadsError, setUploadsError] = useState('')
   const loadUploads = useCallback(() => {
     listUploads()
-      .then(setUploads)
-      .catch(() => setUploads([]))
+      .then((list) => {
+        setUploads(list)
+        setUploadsError('')
+      })
+      .catch((error) => {
+        console.warn('[uploads] could not list uploads', error)
+        setUploadsError(explainUploadError(error, 'Your uploads could not be loaded.'))
+      })
   }, [])
 
   useEffect(() => {
@@ -223,9 +238,17 @@ export default function PhotoListWrap() {
     if (!isPass) {
       return
     }
-    await deleteUpload(String(item.id))
-    // The record is gone from IndexedDB for good, so the tile goes with it —
-    // there is nothing left for a greyed-out "Deleted" tile to stand for.
+    try {
+      await deleteUpload(String(item.id))
+    } catch (error) {
+      // The store kept it, so the tile stays, and the person is told why in
+      // the store's own words — a planner refuses to remove a photo a design
+      // still uses, and says which.
+      useNotification('This photo was not removed', explainUploadError(error, 'Something went wrong removing it. Please try again.'), { type: 'error' })
+      return
+    }
+    // The record is gone for good, so the tile goes with it — there is nothing
+    // left for a greyed-out "Deleted" tile to stand for.
     setUploads((prev) => prev.filter((entry) => String(entry.id) !== String(item.id)))
   }
 
@@ -239,6 +262,14 @@ export default function PhotoListWrap() {
       <PanelBody ref={listRef}>
         <PanelSectionBlock className="photo-list-wrap__uploads">
           <PanelEyebrow label="My uploads" note="only you" />
+          {uploadsError ? (
+            <p className="panel-wrap__note photo-list-wrap__uploads-error" role="alert">
+              {uploadsError}{' '}
+              <button type="button" className="photo-list-wrap__retry" onClick={loadUploads}>
+                Try again
+              </button>
+            </p>
+          ) : null}
           <CardGrid columns={3}>
             <Uploader value={percent} className="upload-tile" onChange={setPercent} onDone={uploadDone}>
               <PlusIcon width={16} height={16} />

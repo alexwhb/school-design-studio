@@ -28,6 +28,18 @@
     background: @surface;
   }
 
+  // Said in words rather than shown as an empty grid: a library that could
+  // not be read is not a library with nothing in it.
+  &__retry {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: @accent;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
   .image-color {
     width: 100%;
     height: 100%;

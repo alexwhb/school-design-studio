@@ -196,3 +196,19 @@ export async function deleteUpload(id: string): Promise<void> {
   }
   await run(STORES.uploads, 'readwrite', (store) => store.delete(id) as IDBRequest<any>)
 }
+
+/**
+ * What to tell somebody when the store said no.
+ *
+ * The host is the one that knows why — a photo still used by a design, a file
+ * store that is down — and it says so in the rejection's message, written for
+ * a person. That is shown as it is. A rejection with nothing readable in it
+ * gets the caller's own sentence instead, and a message longer than anybody
+ * would read in a notice is cut short rather than shown whole.
+ */
+export function explainUploadError(error: unknown, fallback: string): string {
+  const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : (error as { message?: unknown } | null)?.message
+  const text = typeof raw === 'string' ? raw.trim() : ''
+  if (!text) return fallback
+  return text.length > 280 ? `${text.slice(0, 279)}…` : text
+}
