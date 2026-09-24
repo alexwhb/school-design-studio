@@ -14,7 +14,7 @@
  */
 import type { TdWidgetData, TPageState } from '@/store/types'
 import type { FontChoice } from './themes'
-import { escapeMarkup } from '@/utils/mergeFieldsCore'
+import { escapeText } from '@/utils/mergeFieldsCore'
 
 /**
  * Ids the same shape the editor's own `nanoid` makes — twelve hex characters.
@@ -178,5 +178,5 @@ export function page(name: string, width: number, height: number, background: st
 
 /** Plain words into the markup a text widget holds. Line breaks become `<br/>`. */
 export function markup(text: string): string {
-  return escapeMarkup(text).split('\n').join('<br/>')
+  return escapeText(text).split('\n').join('<br/>')
 }
