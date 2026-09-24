@@ -210,15 +210,17 @@ const studio = useRef<DesignStudioHandle>(null)
 const pdf = await studio.current.exportPdf()   // a Blob, not a download
 ```
 
-|                                      |                                                                   |
-| ------------------------------------ | ----------------------------------------------------------------- |
-| `getDocument()`                      | Plain JSON, safe to structured-clone or stringify.                |
-| `setDocument(doc, { resetHistory })` | Replaces the canvas. Resets the undo baseline unless told not to. |
-| `applyOps(ops)`                      | `{ applied, rejected }`. See below.                               |
-| `exportPdf()` / `exportPptx()`       | A `Blob` — `application/pdf`, or the OOXML presentation type.     |
-| `exportPng(pageIndex, { scale })`    | One page. `scale: 1` is the page's own pixel size.                |
-| `goToPage(index)`                    |                                                                   |
-| `isDirty()`                          | Whether the canvas has moved on from the last save.               |
+|                                      |                                                                                                                             |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `getDocument()`                      | Plain JSON, safe to structured-clone or stringify. Includes words still being typed.                                        |
+| `setDocument(doc, { resetHistory })` | Replaces the canvas and starts undo again. With `resetHistory: false`, the swap is one undo step and the design is unsaved. |
+| `applyOps(ops)`                      | `{ applied, rejected }`. See below.                                                                                         |
+| `exportPdf()` / `exportPptx()`       | A `Blob` — `application/pdf`, or the OOXML presentation type.                                                               |
+| `exportPng(pageIndex, { scale })`    | One page. `scale: 1` is the page's own pixel size.                                                                          |
+| `goToPage(index)`                    | 0-based. Rounded, and clamped to the design; `NaN` is the first page.                                                       |
+| `getCurrentPage()`                   | The 0-based index of the page on the canvas.                                                                                |
+| `isDirty()`                          | Whether the canvas has moved on from the last save.                                                                         |
+| `markSaved(doc?)`                    | You saved the design yourself. `doc`, or the canvas, becomes what "unsaved" is measured against. Undo and canvas untouched. |
 
 Everything on it is a whole-document operation on purpose. A host that could
 move one widget by ten pixels would, and a layout drawn for a school would
@@ -226,7 +228,19 @@ slowly stop being one.
 
 The exports are the same code the Export menu runs; the only difference is that
 these hand back the bytes instead of writing a file. The host is the one that
-knows whether they should be downloaded, attached to a task, or POSTed.
+knows whether they should be downloaded, attached to a task, or POSTed. They run
+one at a time, whoever asked: a download and a thumbnail started together each
+come out whole, and the canvas is left on the page and the selection it had.
+
+Call `markSaved` whenever you store the design without going through the
+studio's Save: filling a blank, turning motion on, saving before an AI refine,
+restoring an old version. Without it the pill goes on saying "Unsaved changes"
+over a design you have just stored. `setDocument` would clear that too, but it
+redraws the canvas and throws the undo history away.
+
+If your `uploads.remove(id)` rejects, the photo stays in the list and the
+rejection's message is shown to the person as it is. So write it for them:
+"This photo is used in “Open House”. Take it out of that design first."
 
 ## The AI tab
 
@@ -341,6 +355,28 @@ portrait for a landscape leaves no hole and pushes nothing sideways.
 
 The same six go through the component's `ref`, against the design on screen, as
 one entry in the undo stack.
+
+### What colours a design may hold
+
+```ts
+import { PAINT_FIELDS, PAINT_NUMBER_FIELDS, isSafePaint } from 'design-studio/compose'
+```
+
+A design's colours go straight into CSS, and CSS takes a picture anywhere it
+takes a colour: a shape whose `color` is `url(/x)` draws an image, from wherever
+that is. None of those fields are in `URL_FIELDS`. `PAINT_FIELDS` lists them
+instead, per widget type and `page`, in the same dotted form with `[]` for each
+element of an array. Every value found at one of those paths should pass
+`isSafePaint`: a hex colour, `rgb()`/`hsl()` of numbers, a named colour or
+`transparent`, or a linear or radial gradient made only of those, angles and
+stops. `PAINT_NUMBER_FIELDS` are the numbers written into a paint, such as a text
+effect's gradient angle, and should be finite numbers.
+
+`sanitizeFields` already does this, on a copy. A paint that fails is reset
+(a page's gradient to none, its colour to white, anything else to transparent),
+and the report says where. The editor runs it on every document it is handed and
+every one it hands back, but a host that stores designs should check them itself
+before they reach the database, the same way it checks `URL_FIELDS`.
 
 ## The content library
 
