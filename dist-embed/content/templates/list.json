@@ -1,0 +1,522 @@
+[
+  {
+    "id": 101,
+    "cover": "/covers/template-101.png",
+    "title": "Field Day poster",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "poster",
+    "pack": "school-events"
+  },
+  {
+    "id": 102,
+    "cover": "/covers/template-102.png",
+    "title": "Open House flyer",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "flyer",
+    "pack": "school-events"
+  },
+  {
+    "id": 103,
+    "cover": "/covers/template-103.png",
+    "title": "Parent–teacher conferences",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "flyer",
+    "pack": "school-events"
+  },
+  {
+    "id": 104,
+    "cover": "/covers/template-104.png",
+    "title": "Book Fair poster",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "poster",
+    "pack": "school-events"
+  },
+  {
+    "id": 105,
+    "cover": "/covers/template-105.png",
+    "title": "Picture Day notice",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "flyer",
+    "pack": "school-events"
+  },
+  {
+    "id": 106,
+    "cover": "/covers/template-106.png",
+    "title": "Spring Concert programme",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "poster",
+    "pack": "school-events"
+  },
+  {
+    "id": 107,
+    "cover": "/covers/template-107.png",
+    "title": "Science Fair poster",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "poster",
+    "pack": "school-events"
+  },
+  {
+    "id": 108,
+    "cover": "/covers/template-108.png",
+    "title": "Bake sale fundraiser",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "flyer",
+    "pack": "school-events"
+  },
+  {
+    "id": 109,
+    "cover": "/covers/template-109.png",
+    "title": "Certificate of achievement",
+    "width": 1650,
+    "height": 1275,
+    "state": 1,
+    "cate": "award",
+    "pack": "school-events"
+  },
+  {
+    "id": 110,
+    "cover": "/covers/template-110.png",
+    "title": "Classroom door sign",
+    "width": 1650,
+    "height": 1275,
+    "state": 1,
+    "cate": "sign",
+    "pack": "school-events"
+  },
+  {
+    "id": 111,
+    "cover": "/covers/template-111.png",
+    "title": "Slide — title",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 112,
+    "cover": "/covers/template-112.png",
+    "title": "Slide — three points",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 113,
+    "cover": "/covers/template-113.png",
+    "title": "Slide — section divider",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 114,
+    "cover": "/covers/template-114.png",
+    "title": "Slide — agenda",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 115,
+    "cover": "/covers/template-115.png",
+    "title": "Slide — one number",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 116,
+    "cover": "/covers/template-116.png",
+    "title": "Slide — quote",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 117,
+    "cover": "/covers/template-117.png",
+    "title": "Slide — two columns",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 118,
+    "cover": "/covers/template-118.png",
+    "title": "Slide — timeline",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 119,
+    "cover": "/covers/template-119.png",
+    "title": "Slide — photo and caption",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 120,
+    "cover": "/covers/template-120.png",
+    "title": "Slide — three numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 121,
+    "cover": "/covers/template-121.png",
+    "title": "Slide — next steps",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 122,
+    "cover": "/covers/template-122.png",
+    "title": "Slide — the team",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 123,
+    "cover": "/covers/template-123.png",
+    "title": "Slide — key dates",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 124,
+    "cover": "/covers/template-124.png",
+    "title": "Slide — thank you",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "school-events"
+  },
+  {
+    "id": 125,
+    "cover": "/covers/template-125.png",
+    "title": "Volunteer sign-up",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "flyer",
+    "pack": "school-events"
+  },
+  {
+    "id": 126,
+    "cover": "/covers/template-126.png",
+    "title": "Spirit Week schedule",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "poster",
+    "pack": "school-events"
+  },
+  {
+    "id": 127,
+    "cover": "/covers/template-127.png",
+    "title": "Field trip permission notice",
+    "width": 1275,
+    "height": 1650,
+    "state": 1,
+    "cate": "flyer",
+    "pack": "school-events"
+  },
+  {
+    "id": 201,
+    "cover": "/covers/template-201.png",
+    "title": "Editorial slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 202,
+    "cover": "/covers/template-202.png",
+    "title": "Editorial slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 203,
+    "cover": "/covers/template-203.png",
+    "title": "Editorial slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 204,
+    "cover": "/covers/template-204.png",
+    "title": "Editorial slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 205,
+    "cover": "/covers/template-205.png",
+    "title": "Editorial slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 206,
+    "cover": "/covers/template-206.png",
+    "title": "Swiss slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 207,
+    "cover": "/covers/template-207.png",
+    "title": "Swiss slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 208,
+    "cover": "/covers/template-208.png",
+    "title": "Swiss slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 209,
+    "cover": "/covers/template-209.png",
+    "title": "Swiss slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 210,
+    "cover": "/covers/template-210.png",
+    "title": "Swiss slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 211,
+    "cover": "/covers/template-211.png",
+    "title": "Academic slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 212,
+    "cover": "/covers/template-212.png",
+    "title": "Academic slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 213,
+    "cover": "/covers/template-213.png",
+    "title": "Academic slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 214,
+    "cover": "/covers/template-214.png",
+    "title": "Academic slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 215,
+    "cover": "/covers/template-215.png",
+    "title": "Academic slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 216,
+    "cover": "/covers/template-216.png",
+    "title": "Dark slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 217,
+    "cover": "/covers/template-217.png",
+    "title": "Dark slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 218,
+    "cover": "/covers/template-218.png",
+    "title": "Dark slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 219,
+    "cover": "/covers/template-219.png",
+    "title": "Dark slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 220,
+    "cover": "/covers/template-220.png",
+    "title": "Dark slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 221,
+    "cover": "/covers/template-221.png",
+    "title": "Pastel slide — cover",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 222,
+    "cover": "/covers/template-222.png",
+    "title": "Pastel slide — the year in numbers",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 223,
+    "cover": "/covers/template-223.png",
+    "title": "Pastel slide — results",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 224,
+    "cover": "/covers/template-224.png",
+    "title": "Pastel slide — facilities",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  },
+  {
+    "id": 225,
+    "cover": "/covers/template-225.png",
+    "title": "Pastel slide — the year ahead",
+    "width": 1920,
+    "height": 1080,
+    "state": 1,
+    "cate": "slide",
+    "pack": "slide-themes"
+  }
+]

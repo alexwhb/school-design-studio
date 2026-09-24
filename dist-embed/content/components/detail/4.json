@@ -1,0 +1,10 @@
+{
+  "id": 4,
+  "cover": "/covers/sample-4.png",
+  "data": "[{\"name\": \"Shape\", \"type\": \"w-svg\", \"uuid\": \"724ce001fb82\", \"width\": 900, \"height\": 160, \"colors\": [\"#1E3A5Fff\"], \"left\": 0, \"top\": 70, \"transform\": \"\", \"radius\": 0, \"opacity\": 1, \"parent\": \"a93e3e553cb8\", \"svgUrl\": \"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" viewBox=\\\"0 0 260 100\\\" preserveAspectRatio=\\\"none\\\"><polygon points=\\\"0,0 260,0 260,100 0,100 26,50\\\" fill=\\\"{{colors[0]}}\\\"/></svg>\", \"setting\": [], \"record\": {\"width\": 0, \"height\": 0, \"minWidth\": 10, \"minHeight\": 10}}, {\"name\": \"Text\", \"type\": \"w-text\", \"uuid\": \"3ca10d7cc473\", \"editable\": false, \"left\": 60, \"top\": 98, \"transform\": \"\", \"lineHeight\": 1.15, \"letterSpacing\": 4, \"fontSize\": 104, \"fontClass\": {\"alias\": \"Bebas Neue\", \"id\": 0, \"value\": \"Bebas Neue\", \"url\": \"/fonts/bebas-neue-400.woff2\"}, \"fontFamily\": \"Bebas Neue\", \"fontWeight\": 400, \"fontStyle\": \"normal\", \"writingMode\": \"horizontal-tb\", \"textDecoration\": \"none\", \"color\": \"#FFFFFFff\", \"textAlign\": \"center\", \"text\": \"SPORTS%20DAY\", \"opacity\": 1, \"backgroundColor\": \"\", \"parent\": \"a93e3e553cb8\", \"record\": {\"width\": 0, \"height\": 0, \"minWidth\": 0, \"minHeight\": 0, \"dir\": \"horizontal\"}, \"width\": 780, \"height\": 110, \"rotate\": 0}, {\"name\": \"Group\", \"type\": \"w-group\", \"uuid\": \"a93e3e553cb8\", \"width\": 900, \"height\": 230, \"left\": 0, \"top\": 0, \"transform\": \"\", \"opacity\": 1, \"parent\": \"-1\", \"isContainer\": true, \"record\": {\"width\": 0, \"height\": 0, \"minWidth\": 0, \"minHeight\": 0, \"dir\": \"none\"}}]",
+  "title": "Ribbon banner",
+  "width": 900,
+  "height": 230,
+  "state": 1,
+  "tag": ""
+}
