@@ -5,13 +5,18 @@ import type { IGetTempListData, TGetCategoriesData } from '@/api/home'
 import useConfirm from '@/common/methods/confirm'
 import useInfiniteScroll from '@/common/hooks/useInfiniteScroll'
 import { readQuery, replaceQuery } from '@/common/hooks/useRouteQuery'
+import { isEmbedded } from '@/common/hooks/appRoot'
+import message from '@/components/ui/message'
+import Button from '@/components/ui/Button'
+import Dialog from '@/components/ui/Dialog'
 import Image from '@/components/ui/Image'
 import { setShowMoveable } from '@/store/control'
 import { setZoomScreenChange } from '@/store/force'
 import { managerEdit } from '@/store/base'
-import { setDPage } from '@/store/canvas'
-import { historyState } from '@/store/state'
-import { selectWidget, setDWidgets, setTemplate } from '@/store/widget'
+import { widgetState } from '@/store/state'
+import { selectWidget } from '@/store/widget'
+import { applyTemplate, pageHasContent, roomFor, templatePages, type LoadedTemplate, type TemplateMode } from '@/store/widget/applyTemplate'
+import { MAX_PAGES } from '@/compose/types'
 import { KIND_CATEGORIES, documentKindState } from '@/store/documentKind'
 import SearchHeader from './components/SearchHeader'
 import FilterChips from './components/FilterChips'
@@ -67,6 +72,8 @@ export default function TempListWrap() {
 
   if (!initialised.current) {
     initialised.current = true
+    // Embedded, this is the editor's own query, which starts empty: the host's
+    // `?edit=` or `?cate=` are about the host's page. See useRouteQuery.ts.
     const { cate: fromQuery, edit } = readQuery()
     if (fromQuery) {
       pageOptions.current.cate = fromQuery
@@ -193,46 +200,66 @@ export default function TempListWrap() {
     return cate && found ? found.name : 'All templates'
   }
 
-  let hideReplacePrompt: any = localStorage.getItem('hide_replace_prompt')
+  /** A template picked over a page that has something on it, waiting for an answer. */
+  const [asking, setAsking] = useState<{ item: IGetTempListData; loading: Promise<LoadedTemplate | null> } | null>(null)
+
+  /**
+   * The template's file, or null when it could not be had. Fetched before the
+   * page is touched: see applyTemplate.ts for what used to go wrong.
+   */
+  async function loadTemplate(item: IGetTempListData): Promise<LoadedTemplate | null> {
+    try {
+      // Which of the template's colours is the school's primary, if it says.
+      // It travels beside the data on both ways a template arrives here.
+      const detail = item.data ? { data: item.data, brand: item.brand } : await api.home.getTempDetail({ id: item.id })
+      const pages = templatePages(JSON.parse(detail.data))
+      return pages.length ? { pages, brand: detail.brand, title: item.title || '' } : null
+    } catch (error) {
+      console.warn('[design] a template could not be read', error)
+      return null
+    }
+  }
+
   async function selectItem(item: IGetTempListData) {
     setShowMoveable(false)
-    if (!hideReplacePrompt && historyState.dHistoryParams.length > 0) {
-      const doNotPrompt = await useConfirm('Add to my designs', 'This template will replace everything on the page.', 'warning', { confirmButtonText: 'Got it', cancelButtonText: 'Do not show again' })
-      if (!doNotPrompt) {
-        localStorage.setItem('hide_replace_prompt', '1')
-        hideReplacePrompt = true
-      }
+    const loading = loadTemplate(item)
+    // Somebody who once said never to ask is not asked. An empty page has
+    // nothing to lose, so it just takes the template.
+    if (pageHasContent() && !localStorage.getItem('hide_replace_prompt')) {
+      setAsking({ item, loading })
+      return
     }
-    managerEdit(false)
-    setDWidgets([])
-    setTempId(item.id)
+    await finish(item, loading, 'replace')
+  }
 
-    let result = null
-    // Which of the template's colours is the school's primary, if it says. It
-    // travels beside the data on both ways a template arrives here.
-    let brand
-    if (!item.data) {
-      const res = await api.home.getTempDetail({ id: item.id })
-      result = JSON.parse(res.data)
-      brand = res.brand
-    } else {
-      result = JSON.parse(item.data)
-      brand = item.brand
+  async function finish(item: IGetTempListData, loading: Promise<LoadedTemplate | null>, mode: TemplateMode) {
+    const template = await loading
+    if (!template) {
+      message({ message: 'That template could not be opened. Try again.', type: 'error' })
+      return
     }
-    if (Array.isArray(result)) {
-      const { global, layers } = result[0]
-      setDPage(global)
-      setTemplate(layers, brand)
-    } else {
-      const { page, widgets } = result
-      setDPage(page)
-      setTemplate(widgets, brand)
+    if (mode === 'add' && !roomFor(template.pages.length)) {
+      message({ message: `A design can have up to ${MAX_PAGES} pages.`, type: 'warning' })
+      return
     }
+    // A design of one page that is being replaced is, in effect, a new design,
+    // so it takes the template's name. Replacing one page of a deck, or adding
+    // one, leaves the deck's name alone.
+    const renames = mode === 'replace' && widgetState.dLayouts.length === 1
+    managerEdit(false)
+    if (!applyTemplate(template, mode)) return
+    setTempId(item.id)
     setTimeout(() => {
       setZoomScreenChange()
     }, 300)
-    window.dispatchEvent(new CustomEvent('design-title', { detail: item.title || '' }))
+    if (renames) window.dispatchEvent(new CustomEvent('design-title', { detail: item.title || '' }))
     selectWidget({ uuid: '-1' })
+  }
+
+  function answer(mode: TemplateMode | null) {
+    const pending = asking
+    setAsking(null)
+    if (pending && mode) void finish(pending.item, pending.loading, mode)
   }
 
   function setTempId(tempId: number | string) {
@@ -241,6 +268,9 @@ export default function TempListWrap() {
   }
 
   const openDesign = (item: IGetTempListData) => {
+    // Standalone only: this is the editor's own page, and embedded there is
+    // no such page to open.
+    if (isEmbedded()) return
     window.open(`${window.location.protocol + '//' + window.location.host}/home?id=${item.id}`)
   }
 
@@ -301,6 +331,24 @@ export default function TempListWrap() {
           {loadDone && !list.length ? <div className="panel-wrap__status">{emptyMessage()}</div> : null}
         </PanelSectionBlock>
       </PanelBody>
+      <Dialog
+        open={!!asking}
+        onOpenChange={(open) => !open && answer(null)}
+        title="Use this template?"
+        width={420}
+        className="temp-list-wrap__ask"
+        footer={
+          <>
+            <Button onClick={() => answer(null)}>Cancel</Button>
+            <Button onClick={() => answer('add')}>Add as new page</Button>
+            <Button type="primary" onClick={() => answer('replace')}>
+              Replace this page
+            </Button>
+          </>
+        }
+      >
+        <p>This page already has things on it. Replacing it swaps them for the template. You can undo either choice.</p>
+      </Dialog>
     </PanelWrap>
   )
 }

@@ -716,6 +716,32 @@ test.describe('the host’s page stays the host’s', () => {
     await page.waitForTimeout(400)
   }
 
+  test('picking a template leaves the host’s address and its router’s state alone', async ({ page }) => {
+    await page.goto(embedUrl('doc=1&tab=design'))
+    await page.waitForSelector('.ds-root #page-design-canvas')
+    // What a router keeps in the entry, and a hash, which the editor used to
+    // replace with `?tempid=…` and null.
+    await page.evaluate(() => window.history.replaceState({ router: 'kept', idx: 4 }, '', location.pathname + location.search + '#section'))
+    const before = await page.evaluate(() => location.href)
+
+    // Templates is the panel the editor opens on; a second click would close it.
+    const cards = page.locator('.ds-root .temp-list-wrap .panel-card')
+    // The list loads after the panel does, so give it a moment before deciding.
+    const open = await cards
+      .first()
+      .waitFor({ state: 'visible', timeout: 3000 })
+      .then(() => true)
+      .catch(() => false)
+    if (!open) await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Templates' }).click()
+    await cards.first().click()
+    // The design has a heading on it, so the editor asks first.
+    await page.locator('.ds-root .temp-list-wrap__ask').getByRole('button', { name: 'Replace this page' }).click()
+    await expect.poll(() => layers(page).count(), { timeout: 10000 }).toBeGreaterThan(2)
+
+    expect(await page.evaluate(() => location.href)).toBe(before)
+    expect(await page.evaluate(() => window.history.state)).toEqual({ router: 'kept', idx: 4 })
+  })
+
   test('Backspace and the arrows on the host’s button leave the selection alone', async ({ page }) => {
     await openEditor(page, 'doc=1')
     const before = await layers(page).count()
