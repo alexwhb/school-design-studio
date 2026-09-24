@@ -796,6 +796,10 @@ test.describe('the host’s page stays the host’s', () => {
     const saved = await page.evaluate(() => JSON.stringify((window as any).__lastSaved))
     expect(saved).toContain('tonight')
     expect(saved).not.toContain('"editable":true')
+
+    // And the caret is still where it was, so the sentence carries on.
+    await page.keyboard.type(' at six')
+    await expect(canvas(page).locator('.w-text.editing .edit-text')).toContainText('Open House tonight at six')
   })
 
   test('a host re-rendering does not re-render the editor', async ({ page }) => {

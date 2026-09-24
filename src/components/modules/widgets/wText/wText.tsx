@@ -84,9 +84,19 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   // mounts a fresh empty one — so this has to run when the arc goes as well as
   // when the words or the caret change, or the box comes back blank.
   const straight = !curved
+  // Which element was last filled from the store. While the caret is in the
+  // box, the box is where the words are: a save stores them mid-edit, and the
+  // store's copy comes back in canonical form, which is not always the markup
+  // the browser is holding — writing it back would throw the caret to the
+  // start of the box in the middle of a sentence. So an edit in progress is
+  // left alone, unless the element is a new one that has nothing in it yet.
+  const filled = useRef<HTMLElement | null>(null)
   useLayoutEffect(() => {
     const el = editWrapRef.current
-    if (el && el.innerHTML !== p.text) {
+    if (!el) return
+    if (editing.current && filled.current === el) return
+    filled.current = el
+    if (el.innerHTML !== p.text) {
       el.innerHTML = p.text ?? ''
     }
   }, [p.text, editable, straight])

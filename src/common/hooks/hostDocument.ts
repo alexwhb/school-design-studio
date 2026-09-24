@@ -62,10 +62,11 @@ type Options = {
  * the flags that only mean something while a box is being edited.
  *
  * Words still being typed are stored first, so what comes out is what is on
- * the screen rather than what was there when the caret went in.
+ * the screen rather than what was there when the caret went in — unless the
+ * caller says not to, which only the quiet-time report does.
  */
-export function readDocument(title: string): DesignDocument {
-  commitOpenEdit()
+export function readDocument(title: string, { commit = true }: { commit?: boolean } = {}): DesignDocument {
+  if (commit) commitOpenEdit()
   const doc: DesignDocument = {
     format: 'design-studio/v1',
     title,
@@ -153,7 +154,11 @@ export function createHostDocument(options: { current: Options }): HostDocument 
     if (!change) return
     const dirty = isDirty()
     reportedDirty = dirty
-    change(readDocument(options.current.getTitle()), { dirty })
+    // Not committed first. This runs on its own after a second of quiet, and
+    // a pause in the middle of a sentence is not the end of an edit: storing
+    // the words here would make an undo step of every pause. The host hears
+    // about them when the edit ends, which is itself a change.
+    change(readDocument(options.current.getTitle(), { commit: false }), { dirty })
   }
 
   /**
