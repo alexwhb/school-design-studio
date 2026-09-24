@@ -18,8 +18,8 @@
  * host's promise resolved rather than that IndexedDB took it.
  */
 import { useEffect, useMemo, useRef } from 'react'
-import { subscribe } from 'valtio'
 import { widgetState } from '@/store/state'
+import { layoutsRevision, onLayoutsChange } from '@/store/revision'
 import { autosaveState } from './autosave'
 import type { DesignDocument } from '@/compose/types'
 import type { TdLayout } from '@/store/types'
@@ -28,6 +28,8 @@ import { commitOpenEdit } from '@/common/methods/openEdit'
 
 /** Quiet time before the host is told, in ms. */
 const DEBOUNCE = 1000
+/** Quiet time before the pill is brought up to date, in ms. Part of DEBOUNCE, not added to it. */
+const CHECK_DELAY = 250
 
 export type HostDocument = {
   /** True when the canvas has moved on from the last save. */
@@ -68,109 +70,166 @@ export default function useHostDocument({ getTitle, onChange, onSave }: Options)
   const options = useRef({ getTitle, onChange, onSave })
   options.current = { getTitle, onChange, onSave }
 
-  const host = useMemo<HostDocument & { dispose: () => void }>(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined
-    /** The design as of the last save — what "unsaved" measures against. */
-    let baseline = ''
-    let watching = false
-    let unsubscribe: (() => void) | undefined
-
-    /**
-     * What "the design changed" is measured against.
-     *
-     * Two keys, and the editing flags, are left out of it. `record` is a widget's measured box, written
-     * back by the widget itself the first time it draws — so a design that has
-     * merely been *shown* differs from the one that was handed in, and the pill
-     * read "Unsaved changes" over an untouched page. `tag` is the counter that
-     * forces a redraw. Neither is anything a person changed, and neither is
-     * worth telling the host about. The editing flags go for the same reason:
-     * double-clicking into a box and out again changes nothing.
-     */
-    const IGNORED = new Set(['record', 'tag', ...TRANSIENT_FIELDS])
-    const snapshot = () => JSON.stringify([options.current.getTitle(), widgetState.dLayouts], (key, value) => (IGNORED.has(key) ? undefined : value))
-
-    function isDirty(): boolean {
-      return watching && snapshot() !== baseline
-    }
-
-    function report() {
-      const change = options.current.onChange
-      if (!change) return
-      change(readDocument(options.current.getTitle()), { dirty: isDirty() })
-    }
-
-    function schedule() {
-      if (!watching) return
-      // A change of selection reaches the store as readily as a change of
-      // artwork, and a selection is not a change to the design.
-      if (!isDirty()) return
-      if (autosaveState.status !== 'saving') autosaveState.status = 'unsaved'
-      clearTimeout(timer)
-      timer = setTimeout(() => {
-        if (isDirty()) report()
-      }, DEBOUNCE)
-    }
-
-    async function saveNow() {
-      const save = options.current.onSave
-      if (!save) return
-      clearTimeout(timer)
-      // Before the snapshot as well as the document, so the baseline this
-      // save sets includes the words it sent.
-      commitOpenEdit()
-      const title = options.current.getTitle()
-      const doc = readDocument(title)
-      // Taken the same way the dirty check takes it, or the two never agree and
-      // a save that worked still reads as unsaved.
-      const attempt = snapshot()
-      autosaveState.status = 'saving'
-      try {
-        await save(doc)
-        // The baseline is what was sent, not what is on the canvas now: an edit
-        // made while the request was in flight is still unsaved, and saying
-        // "Saved" over it would be a lie the next reload would expose.
-        baseline = attempt
-        autosaveState.status = isDirty() ? 'unsaved' : 'saved'
-      } catch (error) {
-        console.error('[design] the host could not save this design', error)
-        autosaveState.status = 'error'
-      }
-    }
-
-    function rebase() {
-      baseline = snapshot()
-      autosaveState.status = 'saved'
-    }
-
-    function start() {
-      if (watching) return
-      rebase()
-      watching = true
-      unsubscribe = subscribe(widgetState, schedule)
-    }
-
-    // The last reliable moment to tell the host: on mobile a hidden tab is
-    // often the only warning before the browser discards the page.
-    const onHide = () => {
-      if (document.visibilityState === 'hidden' && isDirty()) report()
-    }
-    document.addEventListener('visibilitychange', onHide)
-
-    return {
-      isDirty,
-      saveNow,
-      schedule,
-      start,
-      rebase,
-      dispose() {
-        document.removeEventListener('visibilitychange', onHide)
-        unsubscribe?.()
-        clearTimeout(timer)
-      },
-    }
-  }, [])
+  const host = useMemo(() => createHostDocument(options), [])
 
   useEffect(() => host.dispose, [host])
 
   return host
+}
+
+/**
+ * The keeper itself, outside React so it can be driven on its own. The hook
+ * above holds one per editor and hands it the latest options through a ref.
+ */
+export function createHostDocument(options: { current: Options }): HostDocument & { dispose: () => void } {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let checkTimer: ReturnType<typeof setTimeout> | undefined
+  /** The design as of the last save — what "unsaved" measures against. */
+  let baseline = ''
+  let watching = false
+  let unsubscribe: (() => void) | undefined
+
+  /**
+   * What "the design changed" is measured against.
+   *
+   * Two keys, and the editing flags, are left out of it. `record` is a widget's measured box, written
+   * back by the widget itself the first time it draws — so a design that has
+   * merely been *shown* differs from the one that was handed in, and the pill
+   * read "Unsaved changes" over an untouched page. `tag` is the counter that
+   * forces a redraw. Neither is anything a person changed, and neither is
+   * worth telling the host about. The editing flags go for the same reason:
+   * double-clicking into a box and out again changes nothing.
+   */
+  const IGNORED = new Set(['record', 'tag', ...TRANSIENT_FIELDS])
+  const snapshot = () => JSON.stringify([options.current.getTitle(), widgetState.dLayouts], (key, value) => (IGNORED.has(key) ? undefined : value))
+
+  /**
+   * The last answer, and what it was an answer about.
+   *
+   * The comparison itself writes the whole design out as JSON, and it used
+   * to run on every change to the widget store — a selection, the widget
+   * under the pointer. Now it runs only when asked, and only when the
+   * design, its name or the baseline has moved since the last time; asking
+   * twice about the same design is free.
+   */
+  let checked = { revision: -1, title: '', base: -1, dirty: false }
+  /** Moves whenever `baseline` does, so the cache can tell without comparing strings. */
+  let baseVersion = 0
+
+  function isDirty(): boolean {
+    if (!watching) return false
+    const revision = layoutsRevision()
+    const title = options.current.getTitle()
+    if (checked.revision === revision && checked.title === title && checked.base === baseVersion) return checked.dirty
+    const dirty = snapshot() !== baseline
+    checked = { revision, title, base: baseVersion, dirty }
+    return dirty
+  }
+
+  function setBaseline(next: string) {
+    baseline = next
+    baseVersion++
+  }
+
+  /** Whether the host has last been told the design is dirty. */
+  let reportedDirty = false
+
+  function report() {
+    const change = options.current.onChange
+    if (!change) return
+    const dirty = isDirty()
+    reportedDirty = dirty
+    change(readDocument(options.current.getTitle()), { dirty })
+  }
+
+  /**
+   * Brings the pill up to date and, after a quiet second, tells the host.
+   *
+   * Once per burst rather than once per change: a drag writes on every
+   * pointer move, and the answer is only wanted once it stops. The host hears
+   * about a design that has changed, and also about one that has gone back
+   * to what was saved — an undo all the way back is a design that no longer
+   * needs saving, and a host keeping a draft wants to know that too.
+   */
+  function check() {
+    if (!watching) return
+    const dirty = isDirty()
+    if (autosaveState.status !== 'saving') {
+      if (dirty) autosaveState.status = 'unsaved'
+      else if (autosaveState.status === 'unsaved') autosaveState.status = 'saved'
+    }
+    if (!dirty && !reportedDirty) return
+    clearTimeout(timer)
+    timer = setTimeout(report, DEBOUNCE - CHECK_DELAY)
+  }
+
+  function schedule() {
+    if (!watching) return
+    clearTimeout(checkTimer)
+    checkTimer = setTimeout(check, CHECK_DELAY)
+  }
+
+  async function saveNow() {
+    const save = options.current.onSave
+    if (!save) return
+    clearTimeout(timer)
+    // Before the snapshot as well as the document, so the baseline this
+    // save sets includes the words it sent.
+    commitOpenEdit()
+    const title = options.current.getTitle()
+    const doc = readDocument(title)
+    // Taken the same way the dirty check takes it, or the two never agree and
+    // a save that worked still reads as unsaved.
+    const attempt = snapshot()
+    autosaveState.status = 'saving'
+    try {
+      await save(doc)
+      // The baseline is what was sent, not what is on the canvas now: an edit
+      // made while the request was in flight is still unsaved, and saying
+      // "Saved" over it would be a lie the next reload would expose.
+      setBaseline(attempt)
+      reportedDirty = false
+      autosaveState.status = isDirty() ? 'unsaved' : 'saved'
+    } catch (error) {
+      console.error('[design] the host could not save this design', error)
+      autosaveState.status = 'error'
+    }
+  }
+
+  function rebase() {
+    setBaseline(snapshot())
+    reportedDirty = false
+    clearTimeout(timer)
+    autosaveState.status = 'saved'
+  }
+
+  function start() {
+    if (watching) return
+    rebase()
+    watching = true
+    // The design only, not the whole widget store: a selection or a hover
+    // is not a change to the design and should cost nothing.
+    unsubscribe = onLayoutsChange(schedule)
+  }
+
+  // The last reliable moment to tell the host: on mobile a hidden tab is
+  // often the only warning before the browser discards the page.
+  const onHide = () => {
+    if (document.visibilityState === 'hidden' && isDirty()) report()
+  }
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onHide)
+
+  return {
+    isDirty,
+    saveNow,
+    schedule,
+    start,
+    rebase,
+    dispose() {
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onHide)
+      unsubscribe?.()
+      clearTimeout(timer)
+      clearTimeout(checkTimer)
+    },
+  }
 }

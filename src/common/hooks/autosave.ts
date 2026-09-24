@@ -17,7 +17,8 @@
  * bytes then go is localDesigns.ts's business, not this file's.
  */
 import { useEffect, useMemo, useRef } from 'react'
-import { proxy, subscribe } from 'valtio'
+import { proxy } from 'valtio'
+import { layoutsRevision, onLayoutsChange } from '@/store/revision'
 import { stripTransient, withoutTransient } from '@/store/transient'
 import { commitOpenEdit } from '@/common/methods/openEdit'
 import { widgetState } from '@/store/state'
@@ -69,6 +70,8 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
     let timer: ReturnType<typeof setTimeout> | undefined
     /** The design as of the last write, or as first seen — what "unsaved" measures against. */
     let baseline = ''
+    /** Moves whenever `baseline` does, so the cache can tell without comparing strings. */
+    let baseVersion = 0
     /**
      * Each page as JSON as it now stands in the database, or null when the
      * database holds some other design — the draft the last session left, or
@@ -89,9 +92,21 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
       return JSON.stringify([options.current.getTitle(), ...pages])
     }
 
+    /**
+     * The last answer, and the design, name and baseline it was about. Asking
+     * again about the same design is free — see store/revision.ts.
+     */
+    let checked = { revision: -1, title: '', base: -1, dirty: false }
+
     /** True when the canvas has moved on from the last write. */
     function isDirty(): boolean {
-      return watching && snapshot(pageJson()) !== baseline
+      if (!watching) return false
+      const revision = layoutsRevision()
+      const title = options.current.getTitle()
+      if (checked.revision === revision && checked.title === title && checked.base === baseVersion) return checked.dirty
+      const dirty = snapshot(pageJson()) !== baseline
+      checked = { revision, title, base: baseVersion, dirty }
+      return dirty
     }
 
     async function write(): Promise<boolean> {
@@ -111,6 +126,7 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
         return false
       }
       baseline = snapshot(pages)
+      baseVersion++
       stored = pages
       autosaveState.status = 'saved'
       return true
@@ -142,9 +158,11 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
 
     function start() {
       baseline = snapshot(pageJson())
+      baseVersion++
       watching = true
       autosaveState.status = 'saved'
-      unsubscribe = subscribe(widgetState, schedule)
+      // The design only: a selection or a hover is not a change worth a write.
+      unsubscribe = onLayoutsChange(schedule)
     }
 
     /**
