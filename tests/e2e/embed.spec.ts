@@ -894,6 +894,22 @@ test.describe('the handle, driven', () => {
     await expect(pill(page)).toHaveText('Unsaved changes')
   })
 
+  test('a text box with no font draws in the default instead of taking the editor down', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    await page.evaluate(() => {
+      const studio = (window as any).__studio.current
+      const doc = studio.getDocument()
+      const words = doc.layouts[0].layers.find((layer: any) => layer.type === 'w-text')
+      delete words.fontClass
+      delete words.fontFamily
+      words.text = 'No font given'
+      studio.setDocument(doc)
+    })
+    await expect(page.locator('.ds-root #page-design-canvas')).toContainText('No font given')
+    await expect(page.locator('.ds-root #widget-panel')).toBeVisible()
+  })
+
   test('setDocument starts the undo history again', async ({ page }) => {
     await openEditor(page, 'doc=1&ai=1')
     await handle(page)
@@ -916,8 +932,7 @@ test.describe('the handle, driven', () => {
       const clean = await studio.checkDesign()
       const doc = studio.getDocument()
       const first = doc.layouts[0]
-      // Whole widgets, shaped like what the editor makes: a text layer with no
-      // font crashes the editor, which is a different bug.
+      // Whole widgets, shaped like what the editor makes.
       const words = first.layers.find((layer: any) => layer.type === 'w-text')
       first.layers.push({ ...words, uuid: 'tiny', left: 100, top: 900, width: 600, height: 20, fontSize: 12, text: 'Small print' }, { uuid: 'photo', name: 'Image', type: 'w-image', parent: '-1', left: 1200, top: 100, width: 400, height: 300, zoom: 1, zoomY: 1, transform: ' scale(1, 1) translate(0px, 0px)', radius: 0, opacity: 1, borderWidth: 0, borderColor: '#000000ff', borderStyle: 'solid', imgUrl: '/covers/template-101.png', mask: '', setting: [], rotate: 0, record: { width: 0, height: 0, minWidth: 10, minHeight: 10, dir: 'all' }, lock: false, isNinePatch: false, flip: '', sliceData: { ratio: 0, left: 0 } })
       studio.setDocument(doc)

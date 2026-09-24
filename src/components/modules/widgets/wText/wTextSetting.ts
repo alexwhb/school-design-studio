@@ -70,6 +70,9 @@ export type TwTextData = {
   degree?: number
 }
 
+/** The family a text box draws in when it has none of its own. */
+export const DEFAULT_FONT = 'Inter'
+
 export const wTextSetting: TwTextData = {
   name: 'Text',
   type: 'w-text',
