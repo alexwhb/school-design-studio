@@ -264,7 +264,6 @@ export default function Index() {
       unwatchOverlayEscape()
       document.removeEventListener('keydown', onKeyDown, false)
       document.removeEventListener('keyup', onKeyUp, false)
-      document.oncontextmenu = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keeper])

@@ -8,6 +8,7 @@ import { recordHistory } from '@/common/hooks/history'
 import { arrangeLayer } from '@/components/modules/settings/ArrangeRow'
 import { menuList as menu, multiMenu, pageMenu, widgetMenu, type TMenuItemData, type TWidgetItemData } from './rcMenuData'
 import { cx } from '@/utils/dom'
+import { isEditorPointerTarget, isFieldTarget } from '@/common/hooks/appRoot'
 import './rcMenu.less'
 
 export default function RcMenu() {
@@ -23,17 +24,36 @@ export default function RcMenu() {
   const menuUuid = useRef('-1')
   const { dCopyElement } = useSnapshot(widgetState)
 
+  const menuOpen = useRef(showMenuBg)
+  menuOpen.current = showMenuBg
+  const rightClick = useRef(mouseRightClick)
+  rightClick.current = mouseRightClick
+
+  /*
+   * A listener, not `document.oncontextmenu`. The property is one slot on the
+   * host's document: setting it replaced whatever the host had put there, and
+   * clearing it on the way out cleared the host's too.
+   *
+   * On the document rather than on the editor's root, and bubbling, so that it
+   * hears a right-click after React has: a table cell opens its own menu and
+   * stops the event in a React handler, and React handles events at the root
+   * it was mounted on, which embedded is above the editor. A listener on the
+   * editor's root would run first and open this menu over the cell's.
+   */
   useEffect(() => {
-    document.oncontextmenu = mouseRightClick
-    return () => {
-      document.oncontextmenu = null
-    }
-  })
+    const listener = (e: MouseEvent) => void rightClick.current(e)
+    document.addEventListener('contextmenu', listener)
+    return () => document.removeEventListener('contextmenu', listener)
+  }, [])
 
   async function mouseRightClick(e: MouseEvent) {
-    e.stopPropagation()
+    // The rest of the page is the host's, and so is its right-click.
+    if (!isEditorPointerTarget(e.target)) return
+    // Words being typed, and the editor's own fields, keep the browser's
+    // menu: it is where spelling suggestions and paste live.
+    if (isFieldTarget(e.target)) return
     e.preventDefault()
-    if (showMenuBg) {
+    if (menuOpen.current) {
       setShowMenuBg(false)
       return
     }

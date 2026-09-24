@@ -205,7 +205,7 @@ function WTable({ params, parent, id, className, child, ...rest }: WidgetProps) 
   function onCellContextMenu(cell: TCellRef, e: MouseEvent<HTMLTableCellElement>) {
     if (p.lock || child) return
     e.preventDefault()
-    // The document's own right-click menu lives on `oncontextmenu`, which a
+    // The editor's own right-click menu listens on the document, which a
     // stopped event never reaches.
     e.stopPropagation()
     setMenu({ x: e.clientX, y: e.clientY, ...cell })

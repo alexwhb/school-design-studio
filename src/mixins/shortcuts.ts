@@ -3,15 +3,25 @@ import dealWithCtrl, { type ShortcutInstance } from './methods/dealWithCtrl'
 import { controlState, widgetState } from '@/store/state'
 import { setSpaceDown, updateAltDown } from '@/store/control'
 import { lockWidgets } from '@/store/widget/widget'
-import { getAppRoot } from '@/common/hooks/appRoot'
+import { getAppRoot, isEditorKeyTarget } from '@/common/hooks/appRoot'
 
-const ignoreNode = ['INPUT', 'TEXTAREA']
+const ignoreNode = ['INPUT', 'TEXTAREA', 'SELECT']
 
 let hadDown = false
 let checkCtrl: any
 
+/** Cmd/Ctrl+S, however the layout spells the letter. */
+function isSaveKey(e: KeyboardEvent): boolean {
+  return (e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 's' || e.key === 'S' || e.keyCode === 83)
+}
+
 export function handleKeydowm(instance: ShortcutInstance) {
   return (e: any) => {
+    // Only keys pressed in the editor, or with focus on nothing in particular,
+    // which is where it is left after a click on the canvas. Embedded, the
+    // rest of the page is the host's, and a Backspace on one of its buttons is
+    // not a request to delete the selected widget. See isEditorKeyTarget.
+    if (!isEditorKeyTarget(e.target)) return
     const nodeName = e.target.nodeName
     // A field is a field and takes every key. Text being edited in the artwork
     // is not: the shortcuts that are still wanted there — Ctrl+S, the zoom, the
@@ -22,6 +32,12 @@ export function handleKeydowm(instance: ShortcutInstance) {
     // used to be `plaintext-only` rather than `true`, and every case was
     // written round its absence.
     if (ignoreNode.indexOf(nodeName) !== -1) {
+      // Save is the one exception. In the design's name or the speaker notes
+      // the browser would otherwise offer to save the page as HTML.
+      if (isSaveKey(e)) {
+        e.preventDefault()
+        instance.save()
+      }
       return
     }
     const ctrl = e.key === 'Control' || e.key === 'Meta'
