@@ -111,8 +111,11 @@ export type HostApi = {
   saveLabel: string
   onSave: ((doc: DesignDocument) => Promise<void>) | null
   onDocumentChange: ((doc: DesignDocument, meta: { dirty: boolean }) => void) | null
-  /** The host's own panel, shown behind an "AI" tab in the rail. */
-  assistant: ReactNode | null
+  /**
+   * Whether the host brought a panel of its own, shown behind an "AI" tab in
+   * the rail. The panel itself is in `AssistantContext`, not here: see there.
+   */
+  hasAssistant: boolean
   /** Whether the Brand panel may change the kit, or only show and use it. */
   brandReadOnly: boolean
   brandReadOnlyNote: string
@@ -132,7 +135,7 @@ const NONE: HostApi = {
   saveLabel: 'Save',
   onSave: null,
   onDocumentChange: null,
-  assistant: null,
+  hasAssistant: false,
   brandReadOnly: false,
   brandReadOnlyNote: BRAND_READ_ONLY_NOTE,
   handleRef: { current: null },
@@ -141,4 +144,18 @@ const NONE: HostApi = {
 /** The host's answers, or the standalone editor's, which is what NONE is. */
 export function useHostApi(): HostApi {
   return useContext(HostApiContext) ?? NONE
+}
+
+/**
+ * The host's own panel, in a context of its own.
+ *
+ * A host passes it as inline JSX, which is a new object on every one of the
+ * host's renders. Held in `HostApi`, it rebuilt the value every component in
+ * the editor reads, so each keystroke in the planner's own fields re-rendered
+ * the whole editor. Here only the slot that draws it is told.
+ */
+export const AssistantContext = createContext<ReactNode | null>(null)
+
+export function useAssistant(): ReactNode | null {
+  return useContext(AssistantContext)
 }

@@ -1,7 +1,7 @@
 import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { EditorModeContext, type EditorMode } from '@/common/hooks/useEditorMode'
 import { setAppRoot } from '@/common/hooks/appRoot'
-import { BRAND_READ_ONLY_NOTE, HostApiContext, type DesignStudioHandle, type HostApi, type HostUploads } from '@/common/hooks/hostApi'
+import { AssistantContext, BRAND_READ_ONLY_NOTE, HostApiContext, type DesignStudioHandle, type HostApi, type HostUploads } from '@/common/hooks/hostApi'
 import { clearThemeTarget, setThemePreference, setThemeTarget, type ThemePreference } from '@/common/hooks/useTheme'
 import { adoptBrandKit, loadBrandKit, setBrandReadOnly, type TBrandKit } from '@/common/methods/brandKit'
 import { setHostUploads } from '@/common/methods/localUploads'
@@ -184,7 +184,7 @@ export default function DesignStudio({ mode = 'home', apiUrl, homeUrl, appName, 
       saveLabel,
       onSave: onSave ? (doc) => (callbacks.current.onSave as (d: DesignDocument) => Promise<void>)(doc) : null,
       onDocumentChange: onDocumentChange ? (doc, meta) => callbacks.current.onDocumentChange?.(doc, meta) : null,
-      assistant: assistant ?? null,
+      hasAssistant: !!assistant,
       brandReadOnly,
       brandReadOnlyNote,
       handleRef,
@@ -192,7 +192,9 @@ export default function DesignStudio({ mode = 'home', apiUrl, homeUrl, appName, 
     // Whether a callback was given matters; which function it is does not, and
     // is read through `callbacks` at the moment of the call.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [documentKind, saveLabel, !!onSave, !!onDocumentChange, assistant, brandReadOnly, brandReadOnlyNote],
+    // The same goes for the assistant: whether there is one is part of this,
+    // and the node itself travels in AssistantContext below.
+    [documentKind, saveLabel, !!onSave, !!onDocumentChange, !!assistant, brandReadOnly, brandReadOnlyNote],
   )
 
   // Forwarded rather than held: the editor screen fills `handleRef` in as it
@@ -245,15 +247,27 @@ export default function DesignStudio({ mode = 'home', apiUrl, homeUrl, appName, 
     document.head.appendChild(script)
   }, [])
 
+  // The editor itself, built once per screen. A host re-renders this
+  // component whenever it re-renders itself, and a freshly created <Screen />
+  // would take the whole editor with it; the same element object is one React
+  // knows it can skip. What does change reaches the editor through the two
+  // contexts, which only re-render what reads them.
+  const screen = useMemo(
+    () => (
+      <EditorModeContext.Provider value={mode}>
+        <TooltipProvider>
+          <Screen />
+        </TooltipProvider>
+      </EditorModeContext.Provider>
+    ),
+    [mode, Screen],
+  )
+
   return (
     <div ref={rootRef} className={className ? `ds-root ${className}` : 'ds-root'} style={style}>
       {ready ? (
         <HostApiContext.Provider value={hostApi}>
-          <EditorModeContext.Provider value={mode}>
-            <TooltipProvider>
-              <Screen />
-            </TooltipProvider>
-          </EditorModeContext.Provider>
+          <AssistantContext.Provider value={assistant ?? null}>{screen}</AssistantContext.Provider>
         </HostApiContext.Provider>
       ) : null}
     </div>
