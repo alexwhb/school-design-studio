@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import type { WidgetProps } from '../types'
-import { ShapeStatic } from '../shape/ShapeWidget'
+import { ShapeStatic } from '../shape/ShapeStatic'
 import PolygonPaint from './PolygonPaint'
 import './wPolygon.less'
 

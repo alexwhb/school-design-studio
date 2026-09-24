@@ -8,7 +8,7 @@
  * path, which it cannot. Anything belonging to one shape alone, such as the rectangle's
  * corner grips or a path's points, comes in as a child.
  */
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSnapshot } from 'valtio'
 import { widgetState } from '@/store/state'
 import { setUpdateRect } from '@/store/force'
@@ -17,11 +17,7 @@ import type { WidgetProps } from '../types'
 import ShapePaint from './ShapePaint'
 import './shape.less'
 
-/**
- * How the shape is drawn, and only ever one of the two: a corner radius for
- * `ShapePaint` to round a box into, or a drawing that paints itself.
- */
-type ShapeFill = { radius: string; paint?: never } | { paint: ReactNode; radius?: never }
+import type { ShapeFill } from './ShapeStatic'
 
 /** The widget's own class, `w-rect`, `w-ellipse`, `w-polygon` or `w-path`. */
 type Props = WidgetProps & ShapeFill & { kind: string }
@@ -72,40 +68,6 @@ export function ShapeWidget({ params, parent, id, className, kind, radius, paint
     >
       {paint ?? <ShapePaint params={p} radius={radius!} />}
       {children}
-    </div>
-  )
-}
-
-/**
- * The same shape with nothing that answers the mouse, for page thumbnails,
- * slides and exports. It reads its widget straight rather than through a
- * snapshot, because nothing here is going to change under it.
- */
-export function ShapeStatic({ params, parent, className, radius, paint, child, children, ...rest }: WidgetProps & ShapeFill) {
-  const p = params as any
-  const widgetRef = useRef<HTMLDivElement | null>(null)
-
-  // A turned shape has to look the same here as it does on the canvas, or
-  // thumbnails, slides and exports quietly straighten it out.
-  useEffect(() => {
-    if (p.rotate && widgetRef.current) widgetRef.current.style.transform = `rotate(${p.rotate})`
-  }, [p.rotate])
-
-  return (
-    <div
-      {...rest}
-      ref={widgetRef}
-      className={className}
-      style={{
-        position: 'absolute',
-        left: p.left - parent.left + 'px',
-        top: p.top - parent.top + 'px',
-        width: p.width + 'px',
-        height: p.height + 'px',
-        opacity: p.opacity,
-      }}
-    >
-      {paint ?? <ShapePaint params={p} radius={radius!} />}
     </div>
   )
 }
