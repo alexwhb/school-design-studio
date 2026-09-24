@@ -20,6 +20,7 @@ import { blurStaysInSession, endInlineSession, startInlineSession, toggleInline,
 import InlineToolbar from './InlineToolbar'
 import type { WidgetProps } from '../types'
 import './wText.less'
+import { cssUrl } from '@/utils/cssUrl'
 
 /**
  * Marks a copy made inside one of this editor's text boxes, so a paste can tell
@@ -113,7 +114,11 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     if (font.url && !isDone) {
       if (fontMinWithDraw) return
       setLoading(!isDraw)
-      const loadFont = new window.FontFace(font.value, `url(${font.url})`)
+      // Quoted and escaped, so a font's address cannot say more than where the
+      // font is. See utils/cssUrl.ts.
+      const source = cssUrl(font.url)
+      if (!source) return
+      const loadFont = new window.FontFace(font.value, source)
       loadFont
         .load()
         .then(() => {

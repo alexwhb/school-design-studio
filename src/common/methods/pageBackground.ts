@@ -6,6 +6,7 @@
  */
 import type { CSSProperties } from 'react'
 import type { TPageState } from '@/store/types'
+import { cssUrl } from '@/utils/cssUrl'
 
 export type TBackgroundTransform = {
   /** Horizontal focal point: 0 shows the picture's left edge, 100 its right. */
@@ -59,7 +60,7 @@ export function pageBackgroundStyle(page: TPageState): CSSProperties {
 
   return {
     backgroundColor: page.backgroundGradient ? undefined : page.backgroundColor,
-    backgroundImage: page.backgroundImage ? `url(${page.backgroundImage})` : page.backgroundGradient || undefined,
+    backgroundImage: (page.backgroundImage && cssUrl(page.backgroundImage)) || page.backgroundGradient || undefined,
     // Landscape picture on a portrait page: its height is what fills, so the
     // height carries the zoom and the width follows the picture's shape.
     backgroundSize: zoomed ? ((ratio as number) > page.width / page.height ? `auto ${zoom}` : `${zoom} auto`) : 'cover',

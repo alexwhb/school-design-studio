@@ -10,6 +10,7 @@ import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
 import ImageKeyline from './ImageKeyline'
 import './wImage.less'
+import { cssUrl } from '@/utils/cssUrl'
 
 // A crop already made lives in the widget's own transform. It has to be read
 // back when the widget mounts again — a page switch, a design reopened — since
@@ -385,7 +386,7 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
         style={{
           transform: p.flip ? `rotate${p.flip}(180deg)` : undefined,
           borderRadius: p.radius + 'px',
-          WebkitMaskImage: `${p.mask ? `url('${p.mask}')` : 'initial'}`,
+          WebkitMaskImage: (p.mask && cssUrl(p.mask)) || 'initial',
         }}
         className={cx('img__box', { mask: !!p.mask })}
       >
@@ -395,7 +396,7 @@ function WImage({ params, parent, id, className, child, ...rest }: WidgetProps) 
             className="target"
             style={{
               border: `${(p.height * p.sliceData.ratio) / 2}px solid transparent`,
-              borderImage: `url('${p.imgUrl}') ${p.sliceData.left} round`,
+              borderImage: `${cssUrl(p.imgUrl) ?? 'none'} ${Number(p.sliceData.left) || 0} round`,
               filter: imageFilterCss(p.filters),
             }}
           />

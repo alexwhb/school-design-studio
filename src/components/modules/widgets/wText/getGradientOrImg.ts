@@ -6,6 +6,7 @@
  */
 import { toGradientString } from '@/packages/color-picker/utils/gradient'
 import patternUri from './patternFill'
+import { cssUrl } from '@/utils/cssUrl'
 
 export default (effect: any) => {
   let result = ''
@@ -21,7 +22,7 @@ export default (effect: any) => {
         // A design saved before tiles were kept as markup carries a finished
         // image and no palette; it still paints, it just cannot be recoloured.
         const { pattern, image } = effect.filling.imageContent || {}
-        result = `url("${pattern ? patternUri(pattern) : image}")`
+        result = cssUrl(pattern ? patternUri(pattern) : image) ?? 'none'
       }
       break
     default:

@@ -4,6 +4,7 @@ import { shadowFilter } from '@/common/methods/shadow'
 import { cx } from '@/utils/dom'
 import type { WidgetProps } from '../types'
 import ImageKeyline from './ImageKeyline'
+import { cssUrl } from '@/utils/cssUrl'
 
 function WImageStatic({ params, parent, className, ...rest }: WidgetProps) {
   const p = params as any
@@ -38,7 +39,7 @@ function WImageStatic({ params, parent, className, ...rest }: WidgetProps) {
         style={{
           transform: p.flip ? `rotate${p.flip}(180deg)` : undefined,
           borderRadius: p.radius + 'px',
-          WebkitMaskImage: `${p.mask ? `url('${p.mask}')` : 'initial'}`,
+          WebkitMaskImage: (p.mask && cssUrl(p.mask)) || 'initial',
         }}
         className={cx('img__box', { mask: !!p.mask })}
       >
@@ -48,7 +49,7 @@ function WImageStatic({ params, parent, className, ...rest }: WidgetProps) {
             className="target"
             style={{
               border: `${(p.height * p.sliceData.ratio) / 2}px solid transparent`,
-              borderImage: `url('${p.imgUrl}') ${p.sliceData.left} round`,
+              borderImage: `${cssUrl(p.imgUrl) ?? 'none'} ${Number(p.sliceData.left) || 0} round`,
               filter: imageFilterCss(p.filters),
             }}
           />

@@ -1,3 +1,5 @@
+import { cssUrl } from '@/utils/cssUrl'
+
 interface TextItem {
   text: string
   [porpname: string]: any
@@ -64,7 +66,7 @@ export function generateFontStyle(name: string, url: string): HTMLStyleElement {
   const el = document.createElement('style')
   el.id = name
   // el.classList.add('font-face');
-  el.innerHTML = `@font-face { font-family: "${name}"; src: local("${name}"), url("${url}"); }`
+  el.innerHTML = `@font-face { font-family: "${name}"; src: local("${name}"), ${cssUrl(url) ?? 'none'}; }`
   return el
 }
 
