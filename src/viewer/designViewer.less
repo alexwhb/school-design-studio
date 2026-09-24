@@ -1,0 +1,70 @@
+// The viewer's own root carries `ds-root`, so the editor's scoped CSS and its
+// theme variables reach the pages. What `.ds-root` means for the editor — the
+// whole box, no scrolling, a minimum height — is taken back off here: the
+// viewer is as tall as its pages and scrolls with the page it is in.
+.ds-root.ds-viewer {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  background: transparent;
+}
+
+.ds-viewer {
+  &__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: @space-3;
+    padding: @space-2 0;
+    color: @ink-2;
+    font: 500 @text-base / 1.4 @font-ui;
+  }
+
+  &__present {
+    min-height: 40px;
+    padding: 0 @space-4;
+    border: none;
+    border-radius: @radius;
+    background: @accent;
+    color: #fff;
+    font: 600 14px / 1 @font-ui;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid @accent;
+      outline-offset: 2px;
+    }
+  }
+
+  &__pages {
+    display: flex;
+    flex-direction: column;
+    gap: @space-4;
+  }
+
+  &__page {
+    // Each page is only laid out once it is near the screen, so a sixty-page
+    // deck opens as fast as a one-page sign.
+    content-visibility: auto;
+    contain-intrinsic-size: auto 60vw;
+    box-shadow: 0 1px 3px fade(#000, 18%);
+
+    // The widgets are the editor's, which switches selection off so that a drag
+    // moves a box rather than highlighting its words. Here there is nothing to
+    // drag, and the words are for reading and copying.
+    .slide,
+    .slide * {
+      user-select: text !important;
+      -webkit-user-select: text !important;
+    }
+
+    .slide {
+      background: #fff;
+    }
+
+    // The checkerboard is the editor's cue for a transparent text box.
+    .edit-text {
+      background: none;
+    }
+  }
+}

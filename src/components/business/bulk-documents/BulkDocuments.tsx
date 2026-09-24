@@ -234,6 +234,8 @@ const BulkDocuments = forwardRef<BulkDocumentsHandle, Props>(function BulkDocume
             setProgress({ done: index + 1, total: layouts.length })
             return renderer.renderLayout(layouts[index], renderScale)
           },
+          contentFor: (index) => renderer.layoutContent(layouts[index]),
+          language: document.documentElement.lang,
         }),
       )
       setVisible(false)

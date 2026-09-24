@@ -1,0 +1,63 @@
+.check-before-download {
+  &__lead {
+    margin: 0 0 @space-3;
+    color: @ink-2;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: @space-2;
+    max-height: 320px;
+    overflow: auto;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: @space-3;
+    padding: @space-2 0;
+    border-bottom: 1px solid @line;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__page {
+    color: @ink-3;
+    font-size: @text-sm;
+    white-space: nowrap;
+  }
+
+  &__message {
+    color: @ink;
+    font-size: @text-base;
+    line-height: 1.4;
+  }
+
+  &__show {
+    border: none;
+    background: none;
+    padding: 0;
+    color: @accent;
+    font: inherit;
+    font-size: @text-sm;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__more {
+    margin: @space-3 0 0;
+    color: @ink-3;
+    font-size: @text-sm;
+  }
+}

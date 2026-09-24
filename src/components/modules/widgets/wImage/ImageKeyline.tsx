@@ -30,10 +30,12 @@
 import type { CSSProperties } from 'react'
 import { isGradient } from '@/packages/color-picker/utils/gradient'
 import { gradientRingStyle, supportsMaskRing, widgetBorder } from '../widgetBorder'
+import { cssUrl } from '@/utils/cssUrl'
 
 function ringStyle(mask: string, width: number, color: string): CSSProperties {
   const inner = `calc(100% - ${width * 2}px)`
-  const layers = `url('${mask}'), url('${mask}')`
+  const url = cssUrl(mask) ?? 'none'
+  const layers = `${url}, ${url}`
   return {
     background: color,
     WebkitMaskImage: layers,

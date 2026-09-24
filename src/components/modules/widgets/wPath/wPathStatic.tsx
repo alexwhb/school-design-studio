@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import type { WidgetProps } from '../types'
-import { ShapeStatic } from '../shape/ShapeWidget'
+import { ShapeStatic } from '../shape/ShapeStatic'
 import PathPaint from './PathPaint'
 
 function WPathStatic(props: WidgetProps) {

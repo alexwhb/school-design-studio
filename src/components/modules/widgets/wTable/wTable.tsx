@@ -22,6 +22,7 @@
 import { memo, useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { useSnapshot } from 'valtio'
 import { recordHistory } from '@/common/hooks/history'
+import { registerOpenEdit } from '@/common/methods/openEdit'
 import useSpellcheck from '@/common/hooks/useSpellcheck'
 import { setUpdateRect } from '@/store/force'
 import { controlState, widgetState } from '@/store/state'
@@ -136,6 +137,21 @@ function WTable({ params, parent, id, className, child, ...rest }: WidgetProps) 
     return next
   }
 
+  // A cell being typed into stores its words on the way out, the same as a
+  // text box, so a save or an export in the meantime asks for them first.
+  const latestCommit = useRef(commit)
+  latestCommit.current = commit
+  useEffect(() => {
+    if (!editing) return
+    return registerOpenEdit({
+      commit: () => void latestCommit.current(editing),
+      finish: () => {
+        latestCommit.current(editing)
+        setEditing(null)
+      },
+    })
+  }, [editing])
+
   function startEditing(cell: TCellRef) {
     if (p.lock || child) return
     setEditing(cell)
@@ -189,7 +205,7 @@ function WTable({ params, parent, id, className, child, ...rest }: WidgetProps) 
   function onCellContextMenu(cell: TCellRef, e: MouseEvent<HTMLTableCellElement>) {
     if (p.lock || child) return
     e.preventDefault()
-    // The document's own right-click menu lives on `oncontextmenu`, which a
+    // The editor's own right-click menu listens on the document, which a
     // stopped event never reaches.
     e.stopPropagation()
     setMenu({ x: e.clientX, y: e.clientY, ...cell })

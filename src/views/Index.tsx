@@ -29,15 +29,17 @@ import Helper from './components/Helper'
 import Tooltip from '@/components/ui/Tooltip'
 import Button from '@/components/ui/Button'
 import { RedoIcon, UndoIcon } from '@/components/ui/icons'
-import useHistory, { recordHistory } from '@/common/hooks/history'
+import useHistory, { recordHistory, resetHistory } from '@/common/hooks/history'
 import useAutosave from '@/common/hooks/autosave'
 import useHostDocument, { readDocument } from '@/common/hooks/hostDocument'
 import { useHostApi, type DesignStudioHandle } from '@/common/hooks/hostApi'
 import { buildPdf } from '@/common/methods/export/exportPdf'
+import { checkLayouts } from '@/common/methods/accessibility/checkDesign'
 import { buildPptx } from '@/common/methods/export/exportPptx'
 import { withPageRenderer } from '@/common/methods/export/renderPage'
 import { dataUrlToBlob } from '@/common/methods/export/utils'
 import { applyOps as applyDocumentOps } from '@/compose/ops'
+import { commitOpenEdit } from '@/common/methods/openEdit'
 import { exportQuality } from '@/common/methods/export/quality'
 import { isPresentable } from '@/store/documentKind'
 import { showPage } from '@/store/widget/pages'
@@ -110,20 +112,33 @@ export default function Index() {
     (): DesignStudioHandle => ({
       getDocument: () => readDocument(optionsRef.current?.getTitle() || ''),
       setDocument: (doc, opts) => {
-        optionsRef.current?.showDocument(doc)
+        // A box still being typed into would write its words over the new
+        // design when it finally lost the caret.
+        commitOpenEdit({ end: true })
         // One undo takes the whole swap back, unless the host says this is the
         // new starting point — which is what it means to open a different
-        // design rather than to change the one that is open.
-        if (opts?.resetHistory !== false) hostDocument.rebase()
+        // design rather than to change the one that is open. Then the old
+        // steps go too: they are patches against a design that is no longer
+        // on the canvas.
+        if (opts?.resetHistory === false) {
+          recordHistory(() => optionsRef.current?.showDocument(doc))
+        } else {
+          optionsRef.current?.showDocument(doc)
+          resetHistory()
+          hostDocument.rebase()
+        }
         setZoomScreenChange()
       },
       applyOps: (ops) => {
+        // The ops are applied to what is on the screen, words being typed
+        // included, and the edit ends because the page is about to be redrawn.
+        commitOpenEdit({ end: true })
         const current = readDocument(optionsRef.current?.getTitle() || '')
-        const { doc, rejected } = applyDocumentOps(current, ops)
+        const { doc, rejected, report } = applyDocumentOps(current, ops)
         // Through recordHistory so that a run of ops from the host's own panel
         // is one press of Ctrl+Z, not one per operation.
         if (rejected.length < ops.length) recordHistory(() => optionsRef.current?.showDocument(doc))
-        return { applied: ops.length - rejected.length, rejected }
+        return { applied: ops.length - rejected.length, rejected, report }
       },
       exportPdf: () =>
         withPageRenderer((renderer) =>
@@ -131,6 +146,8 @@ export default function Index() {
             title: getDesignTitle(),
             scale: exportQuality.scale,
             renderPage: renderer.renderPage,
+            contentFor: renderer.pageContent,
+            language: document.documentElement.lang,
           }),
         ),
       exportPptx: () =>
@@ -149,7 +166,12 @@ export default function Index() {
         return dataUrlToBlob(dataUrl)
       },
       goToPage: (index) => showPage(index),
+      getCurrentPage: () => canvasState.dCurrentPage,
       isDirty: () => keeper.isDirty(),
+      markSaved: (doc) => {
+        if (host.hostsDocument) hostDocument.markSaved(doc)
+      },
+      checkDesign: async () => checkLayouts(readDocument(optionsRef.current?.getTitle() || '').layouts),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [host.handleRef, keeper],
@@ -250,7 +272,6 @@ export default function Index() {
       unwatchOverlayEscape()
       document.removeEventListener('keydown', onKeyDown, false)
       document.removeEventListener('keyup', onKeyUp, false)
-      document.oncontextmenu = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keeper])
@@ -336,7 +357,7 @@ export default function Index() {
               </Tooltip>
             </div>
           </div>
-          <HeaderOptions ref={optionsRef} onHostSave={host.onSave ? () => hostDocument.saveNow() : undefined} isContinue={isContinue} onContinueChange={setIsContinue} onChange={optionsChange} onTitleChange={autosave.schedule}>
+          <HeaderOptions ref={optionsRef} onHostSave={host.onSave ? () => hostDocument.saveNow() : undefined} isContinue={isContinue} onContinueChange={setIsContinue} onChange={optionsChange} onTitleChange={keeper.schedule}>
             {/* A poster is read, not presented, and it has nobody to say
                 speaker notes to. */}
             {presentable ? (

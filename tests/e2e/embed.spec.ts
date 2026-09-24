@@ -698,3 +698,300 @@ test.describe('inside a host with a policy and modern colours', () => {
     expect(refused).toContain('no page 99')
   })
 })
+
+/**
+ * Embedded, the page round the editor is the host's. Its keys, its
+ * right-click and its re-renders are its own business.
+ */
+test.describe('the host’s page stays the host’s', () => {
+  const canvas = (page: import('@playwright/test').Page) => page.locator('.ds-root #page-design-canvas')
+  const layers = (page: import('@playwright/test').Page) => canvas(page).locator('[data-uuid]:not([data-uuid="-1"])')
+  const save = process.platform === 'darwin' ? 'Meta+s' : 'Control+s'
+
+  async function selectHeading(page: import('@playwright/test').Page) {
+    await canvas(page)
+      .locator('.w-text', { hasText: 'Open House' })
+      .first()
+      .click({ position: { x: 20, y: 20 } })
+    await page.waitForTimeout(400)
+  }
+
+  test('picking a template leaves the host’s address and its router’s state alone', async ({ page }) => {
+    await page.goto(embedUrl('doc=1&tab=design'))
+    await page.waitForSelector('.ds-root #page-design-canvas')
+    // What a router keeps in the entry, and a hash, which the editor used to
+    // replace with `?tempid=…` and null.
+    await page.evaluate(() => window.history.replaceState({ router: 'kept', idx: 4 }, '', location.pathname + location.search + '#section'))
+    const before = await page.evaluate(() => location.href)
+
+    // Templates is the panel the editor opens on; a second click would close it.
+    const cards = page.locator('.ds-root .temp-list-wrap .panel-card')
+    // The list loads after the panel does, so give it a moment before deciding.
+    const open = await cards
+      .first()
+      .waitFor({ state: 'visible', timeout: 3000 })
+      .then(() => true)
+      .catch(() => false)
+    if (!open) await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Templates' }).click()
+    await cards.first().click()
+    // The design has a heading on it, so the editor asks first.
+    await page.locator('.ds-root .temp-list-wrap__ask').getByRole('button', { name: 'Replace this page' }).click()
+    await expect.poll(() => layers(page).count(), { timeout: 10000 }).toBeGreaterThan(2)
+
+    expect(await page.evaluate(() => location.href)).toBe(before)
+    expect(await page.evaluate(() => window.history.state)).toEqual({ router: 'kept', idx: 4 })
+  })
+
+  test('Backspace and the arrows on the host’s button leave the selection alone', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    const before = await layers(page).count()
+    await selectHeading(page)
+    const left = await canvas(page)
+      .locator('.w-text', { hasText: 'Open House' })
+      .first()
+      .evaluate((el) => (el as HTMLElement).style.left)
+
+    await page.locator('#host-tick').focus()
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('Backspace')
+    await page.waitForTimeout(400)
+
+    expect(await layers(page).count()).toBe(before)
+    expect(
+      await canvas(page)
+        .locator('.w-text', { hasText: 'Open House' })
+        .first()
+        .evaluate((el) => (el as HTMLElement).style.left),
+    ).toBe(left)
+  })
+
+  test('a right-click on the host is the host’s, and so is one in text being typed', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    const cancelled = (selector: string) =>
+      page.evaluate((target) => {
+        const el = document.querySelector(target) as HTMLElement
+        const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 10, clientY: 10 })
+        el.dispatchEvent(event)
+        return event.defaultPrevented
+      }, selector)
+
+    expect(await cancelled('.host-bar h1')).toBe(false)
+    expect(await cancelled('.ds-root #page-design-canvas')).toBe(true)
+    // Close the menu that just opened before going on.
+    await page.keyboard.press('Escape')
+    await page
+      .locator('.ds-root #menu-bg')
+      .click({ force: true })
+      .catch(() => undefined)
+
+    await canvas(page)
+      .locator('.w-text', { hasText: 'Open House' })
+      .first()
+      .dblclick({ position: { x: 20, y: 20 } })
+    await page.waitForTimeout(400)
+    expect(await cancelled('.ds-root .w-text.editing .edit-text')).toBe(false)
+  })
+
+  test('Cmd/Ctrl-S in the design’s name saves the design', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const title = page.locator('.ds-root .top-title input')
+    await title.click()
+    await title.press('End')
+    await title.type(' (draft)')
+    // A rename is an unsaved change, and the host hears about it.
+    await expect(pill(page)).toHaveText('Unsaved changes')
+    await expect(page.locator('#host-changes')).not.toHaveText('Changes seen: 0', { timeout: 5000 })
+    await title.press(save)
+    await expect(pill(page)).toHaveText('Saved')
+    expect(await page.evaluate(() => (window as any).__lastSaved.title)).toBe('Open House 2026 (draft)')
+  })
+
+  test('Cmd/Ctrl-S while typing saves the words being typed, and no caret', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    await canvas(page)
+      .locator('.w-text', { hasText: 'Open House' })
+      .first()
+      .dblclick({ position: { x: 20, y: 20 } })
+    await page.waitForTimeout(400)
+    await page.keyboard.press('End')
+    await page.keyboard.type(' tonight')
+    await page.keyboard.press(save)
+    await expect(pill(page)).toHaveText('Saved')
+    const saved = await page.evaluate(() => JSON.stringify((window as any).__lastSaved))
+    expect(saved).toContain('tonight')
+    expect(saved).not.toContain('"editable":true')
+
+    // And the caret is still where it was, so the sentence carries on.
+    await page.keyboard.type(' at six')
+    await expect(canvas(page).locator('.w-text.editing .edit-text')).toContainText('Open House tonight at six')
+  })
+
+  test('a host re-rendering does not re-render the editor', async ({ page }) => {
+    // Counts the components React rendered in each commit, the way React's own
+    // devtools do: a fiber that did work, under a parent whose children were
+    // rebuilt. A subtree React skipped is not walked at all.
+    await page.addInitScript(() => {
+      const w = window as any
+      w.__rendered = []
+      w.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+        supportsFiber: true,
+        isDisabled: false,
+        renderers: new Map(),
+        inject: () => 1,
+        onCommitFiberUnmount: () => undefined,
+        onPostCommitFiberRoot: () => undefined,
+        checkDCE: () => undefined,
+        onCommitFiberRoot: (_id: number, root: any) => {
+          let count = 0
+          const walk = (fiber: any) => {
+            for (let child = fiber?.child; child; child = child.sibling) {
+              const component = typeof child.type === 'function' || (child.type && typeof child.type === 'object')
+              if (component && child.alternate && (child.flags & 1) === 1) count++
+              if (!child.alternate || child.child !== child.alternate.child) walk(child)
+            }
+          }
+          walk(root.current)
+          w.__rendered.push(count)
+        },
+      }
+    })
+    await openEditor(page, 'doc=1&ai=1')
+    await page.evaluate(() => ((window as any).__rendered = []))
+    await page.locator('#host-tick').click()
+    await expect(page.locator('#host-tick')).toHaveText('Host renders: 1')
+    await page.waitForTimeout(300)
+    const rendered: number[] = await page.evaluate(() => (window as any).__rendered)
+    const total = rendered.reduce((sum, count) => sum + count, 0)
+    console.log(`components rendered for one host re-render: ${total}`)
+    // The host, the studio's own component, and the slot that draws the
+    // host's panel. The editor has several hundred.
+    expect(total).toBeLessThan(15)
+  })
+})
+
+test.describe('the handle, driven', () => {
+  test('markSaved makes the pill say Saved without losing undo', async ({ page }) => {
+    await openEditor(page, 'doc=1&ai=1')
+    await handle(page)
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'AI' }).click()
+    await page.locator('#assistant-heading').click()
+    await expect(pill(page)).toHaveText('Unsaved changes')
+
+    await page.evaluate(() => {
+      const studio = (window as any).__studio.current
+      studio.markSaved(studio.getDocument())
+    })
+    await expect(pill(page)).toHaveText('Saved')
+    expect(await page.evaluate(() => (window as any).__studio.current.isDirty())).toBe(false)
+    const undo = page.locator('.ds-root .operation-item--icon').first()
+    await expect(undo).not.toHaveClass(/disable/)
+    await expect(page.locator('.ds-root #page-design-canvas')).toContainText('Spring Open House')
+
+    // Undone past the host's save, it is unsaved again.
+    await undo.click()
+    await expect(pill(page)).toHaveText('Unsaved changes')
+  })
+
+  test('a text box with no font draws in the default instead of taking the editor down', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    await page.evaluate(() => {
+      const studio = (window as any).__studio.current
+      const doc = studio.getDocument()
+      const words = doc.layouts[0].layers.find((layer: any) => layer.type === 'w-text')
+      delete words.fontClass
+      delete words.fontFamily
+      words.text = 'No font given'
+      studio.setDocument(doc)
+    })
+    await expect(page.locator('.ds-root #page-design-canvas')).toContainText('No font given')
+    await expect(page.locator('.ds-root #widget-panel')).toBeVisible()
+  })
+
+  test('setDocument starts the undo history again', async ({ page }) => {
+    await openEditor(page, 'doc=1&ai=1')
+    await handle(page)
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'AI' }).click()
+    await page.locator('#assistant-heading').click()
+    const undo = page.locator('.ds-root .operation-item--icon').first()
+    await expect(undo).not.toHaveClass(/disable/)
+    await page.evaluate(() => {
+      const studio = (window as any).__studio.current
+      studio.setDocument(studio.getDocument())
+    })
+    await expect(undo).toHaveClass(/disable/)
+  })
+
+  test('checkDesign says what is wrong, page and widget, and the studio’s own Download does not ask', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const found = await page.evaluate(async () => {
+      const studio = (window as any).__studio.current
+      const clean = await studio.checkDesign()
+      const doc = studio.getDocument()
+      const first = doc.layouts[0]
+      // Whole widgets, shaped like what the editor makes.
+      const words = first.layers.find((layer: any) => layer.type === 'w-text')
+      first.layers.push({ ...words, uuid: 'tiny', left: 100, top: 900, width: 600, height: 20, fontSize: 12, text: 'Small print' }, { uuid: 'photo', name: 'Image', type: 'w-image', parent: '-1', left: 1200, top: 100, width: 400, height: 300, zoom: 1, zoomY: 1, transform: ' scale(1, 1) translate(0px, 0px)', radius: 0, opacity: 1, borderWidth: 0, borderColor: '#000000ff', borderStyle: 'solid', imgUrl: '/covers/template-101.png', mask: '', setting: [], rotate: 0, record: { width: 0, height: 0, minWidth: 10, minHeight: 10, dir: 'all' }, lock: false, isNinePatch: false, flip: '', sliceData: { ratio: 0, left: 0 } })
+      studio.setDocument(doc)
+      const issues = await studio.checkDesign()
+      return { clean, issues: issues.map((issue: any) => [issue.page, issue.widgetId, issue.kind]) }
+    })
+    expect(found.clean).toEqual([])
+    expect(found.issues).toEqual([
+      [0, 'tiny', 'tiny-text'],
+      [0, 'photo', 'missing-alt'],
+    ])
+    // Embedded, the host decides when to ask; the Export button just exports.
+    const download = page.waitForEvent('download', { timeout: 90000 })
+    await page.locator('.ds-root .export-btn').click({ timeout: 5000 })
+    await expect(page.locator('.ds-root .check-before-download')).toHaveCount(0)
+    await download
+  })
+
+  test('goToPage takes any number, and getCurrentPage says where it went', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const pages = await page.evaluate(() => {
+      const studio = (window as any).__studio.current
+      const seen: number[] = []
+      for (const index of [1.4, 0.6, -2, 99, Number.NaN]) {
+        studio.goToPage(index)
+        seen.push(studio.getCurrentPage())
+      }
+      return seen
+    })
+    expect(pages).toEqual([1, 1, 0, 1, 0])
+  })
+
+  test('exports at once come out whole, and the canvas is left where it was', async ({ page }) => {
+    await openEditor(page, 'doc=1')
+    await handle(page)
+    const result = await page.evaluate(async () => {
+      const studio = (window as any).__studio.current
+      studio.goToPage(1)
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      const [first, pdf, second] = await Promise.all([studio.exportPng(0), studio.exportPdf(), studio.exportPng(1)])
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      return { sizes: [first.size, pdf.size, second.size], page: studio.getCurrentPage() }
+    })
+    expect(result.sizes.every((size: number) => size > 1000)).toBe(true)
+    expect(result.page).toBe(1)
+  })
+
+  test('a photo the host will not remove stays, and the person is told why', async ({ page }) => {
+    await openEditor(page, 'doc=1&refuse=1')
+    await page.locator('.ds-root #widget-panel .classify-item', { hasText: 'Photos' }).click()
+    await page.waitForTimeout(900)
+    const tile = page.locator('.ds-root .photo-list-wrap__uploads .edit-model-wrap').first()
+    await tile.hover()
+    await tile.locator('.icon-more').click()
+    await page.locator('.ds-root [role="menuitem"]', { hasText: 'Delete' }).click()
+    // The confirm, then the refusal.
+    await page.locator('.ds-confirm').click()
+    await expect(page.locator('.el-notification')).toContainText('used in “Open House 2026”')
+    await expect(page.locator('.ds-root .photo-list-wrap img[src="/covers/template-101.png"]').first()).toBeVisible()
+  })
+})

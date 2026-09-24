@@ -15,6 +15,7 @@
  */
 
 import type { TdLayout, TdWidgetData } from '@/store/types'
+import { normaliseHref } from '@/utils/widgets/richText'
 
 /** `{{ name }}` — braces around anything that is not a brace or a line break. */
 export const FIELD_PATTERN = /\{\{\s*([^{}\n]+?)\s*\}\}/g
@@ -51,15 +52,46 @@ const ENTITIES: Record<string, string> = {
   nbsp: ' ',
 }
 
-/** `&#37;` and `&amp;` back into the characters a reader sees. */
+/**
+ * Whether `code` names a character a string can hold on its own.
+ *
+ * `String.fromCodePoint` throws a RangeError above U+10FFFF, and a number
+ * reference can be as long as anybody cares to type — `&#99999999999;` parses
+ * to a finite number that is nothing of the sort. A lone surrogate does not
+ * throw, but it is half a character, and it is what turns a string into one
+ * that JSON and every encoder downstream handle differently. So both are left
+ * standing as the literal text they were, which is what a browser shows for
+ * the first and near enough for the second.
+ */
+function isScalarValue(code: number): boolean {
+  return Number.isInteger(code) && code > 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff)
+}
+
+/**
+ * `&#37;` and `&amp;` back into the characters a reader sees.
+ *
+ * Never throws. Three readers sit on this — `sanitizeMarkup`, the `setMarkup`
+ * op and `describeDocument` — and all three promise not to, and the planner
+ * runs the first inside a validator, where an exception is a 500 for a person
+ * who pasted an odd character. A reference that names no character is left as
+ * it was written.
+ */
 export function decodeEntities(text: string): string {
   return text.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (whole, body: string) => {
     if (body[0] === '#') {
-      const code = body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10)
-      return Number.isFinite(code) && code > 0 ? String.fromCodePoint(code) : whole
+      const hex = body[1] === 'x' || body[1] === 'X'
+      const digits = hex ? body.slice(2) : body.slice(1)
+      // Checked as digits first: `parseInt` reads `&#12ab;` as 12, and a
+      // decimal reference with hex letters in it is not a reference at all.
+      if (!digits || !(hex ? /^[0-9a-f]+$/i : /^[0-9]+$/).test(digits)) return whole
+      const code = parseInt(digits, hex ? 16 : 10)
+      return isScalarValue(code) ? String.fromCodePoint(code) : whole
     }
-    const named = ENTITIES[body.toLowerCase()]
-    return named ?? whole
+    // Own keys only. A plain object answers `constructor`, `toString` and the
+    // rest of Object.prototype too, so `&constructor;` decoded to the source
+    // text of a function.
+    const name = body.toLowerCase()
+    return Object.hasOwn(ENTITIES, name) ? ENTITIES[name] : whole
   })
 }
 
@@ -110,19 +142,87 @@ export function fieldsInText(html: string | undefined): string[] {
  * The braces are matched in the markup itself, allowing tags between them, so a
  * field somebody bolded half of is still found. Fields nothing resolves are
  * left exactly as they were, which is how an author sees what is missing.
+ *
+ * A field inside a tag is the one place this can go wrong, because there the
+ * value lands in an attribute rather than in the words. Two rules cover it.
+ * A link is filled — `https://{{school.website}}` is how the link field says
+ * "the school's own site" — and the finished address then has to pass the same
+ * scheme check any other link does, so a value of `javascript:…` in the kit
+ * takes the link off rather than arming it. Anywhere else inside a tag the
+ * field is left standing: the editor never writes one there, the DOM path in
+ * `mergeFields.ts` never fills one there, and a colour or a style is not a place
+ * for a school's name. The value is escaped for an attribute either way, so a
+ * quote in it cannot end the attribute and start another.
  */
 export function fillMarkup(html: string | undefined, resolve: TFieldResolver): string {
   if (!html || !html.includes('{{')) return html ?? ''
-  return html.replace(/\{\{([^{}]*?)\}\}/g, (whole, body: string) => {
+  let linkFilled = false
+  const filled = html.replace(/\{\{([^{}]*?)\}\}/g, (whole, body: string, offset: number) => {
     const name = decodeEntities(String(body).replace(/<[^>]*>/g, '')).trim()
     if (!name || /\n/.test(name)) return whole
     const value = resolve(name)
-    return value === undefined ? whole : escapeMarkup(value)
+    if (value === undefined) return whole
+    const place = placeOf(html, offset)
+    if (place === 'attribute') return whole
+    if (place === 'href') linkFilled = true
+    return escapeMarkup(value)
   })
+  return linkFilled ? checkLinks(filled) : filled
 }
 
-/** A value going into markup. Field values are words, not HTML. */
+/**
+ * Where in the markup `offset` is: in the words, in a link's address, or in
+ * some other part of a tag.
+ *
+ * A tag is open when the last `<` before the offset comes after the last `>`.
+ * That is not a full tokeniser, and it does not have to be: the markup this is
+ * given is the editor's own canonical form, and misreading one only ever
+ * makes a field be left standing or be escaped, never be let out.
+ */
+function placeOf(html: string, offset: number): 'text' | 'href' | 'attribute' {
+  const open = html.lastIndexOf('<', offset)
+  if (open < 0 || open < html.lastIndexOf('>', offset)) return 'text'
+  const before = html.slice(open, offset)
+  return /\shref\s*=\s*("[^"]*|'[^']*|[^\s"'>]*)$/i.test(before) ? 'href' : 'attribute'
+}
+
+const HREF_ATTRIBUTE = /(\s)href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi
+
+/**
+ * Every link in the markup re-checked, as it stands after filling.
+ *
+ * An address that no longer passes `normaliseHref` loses its `href`, which
+ * leaves the words and takes away the link — the same answer the allowlist
+ * gives a pasted `javascript:` link.
+ */
+function checkLinks(html: string): string {
+  return html.replace(/<a\b[^>]*>/gi, (tag) =>
+    tag.replace(HREF_ATTRIBUTE, (_whole, space: string, double?: string, single?: string, bare?: string) => {
+      const href = normaliseHref(decodeEntities(double ?? single ?? bare ?? ''))
+      return href ? `${space}href="${escapeMarkup(href)}"` : ''
+    }),
+  )
+}
+
+/**
+ * A value going into markup. Field values are words, not HTML.
+ *
+ * Quotes as well as angle brackets, because a value can land inside an
+ * attribute — a link's address — and there a `"` would close the attribute and
+ * let the rest of the value write new ones.
+ */
 export function escapeMarkup(value: string): string {
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
+/**
+ * Words going into the text of an element, where a quote is just a quote.
+ *
+ * `escapeMarkup` is the one to reach for when there is any doubt; this is for
+ * a caller that builds the markup itself and knows the value is never put in
+ * an attribute, so a composed "it's" is stored as it was typed.
+ */
+export function escapeText(value: string): string {
   return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 

@@ -1,0 +1,40 @@
+// The frame a dragged picture is about to go into. Drawn with pseudo-elements
+// so it needs nothing from the widget's own markup: a shape is drawn by Snap
+// into its root imperatively, and a React child there would be fighting it.
+// `--ds-unzoom` undoes the canvas's zoom, so the outline and the label are the
+// same size on screen at any zoom.
+.w-image.is-drop-target,
+.w-svg.is-drop-target {
+  // The outline, and a light wash so the frame reads as one thing.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    box-shadow: inset 0 0 0 calc(3px * var(--ds-unzoom, 1)) @accent;
+    background: fade(#000, 18%);
+    pointer-events: none;
+  }
+
+  // What will happen, on a chip in the middle.
+  &::after {
+    content: 'Drop to replace';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    transform: translate(-50%, -50%) scale(var(--ds-unzoom, 1));
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: @accent;
+    color: #fff;
+    font: 600 13px / 1.2 @font-ui;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px fade(#000, 25%);
+    pointer-events: none;
+  }
+}
+
+.w-svg.is-drop-target::after {
+  content: 'Drop photo here';
+}

@@ -86,6 +86,19 @@ export type TdWidgetData = TPageState &
      * so an untouched name keeps following the artwork.
      */
     label?: string
+    /**
+     * What a picture shows, in words, for somebody who cannot see it: read out
+     * by a screen reader, written into a PowerPoint's alt text and into the
+     * exported PDF's structure. Plain text, never markup. Absent and empty both
+     * mean nobody has described it yet.
+     */
+    alt?: string
+    /**
+     * Somebody decided this picture carries nothing a reader would miss — a
+     * border, a swoosh, a stock texture — and a screen reader should skip it.
+     * The difference from an empty `alt` is that this was a decision.
+     */
+    decorative?: boolean
     editable?: boolean
     /**
      * What a composed page put this box here for — 'heading', 'body',

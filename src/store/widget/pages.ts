@@ -66,7 +66,10 @@ function blankPageLike(page: TPageState): TPageState {
  * text, click away, and switch, and the artwork stayed put.
  */
 export function showPage(index: number) {
-  const target = Math.max(0, Math.min(index, widgetState.dLayouts.length - 1))
+  // Rounded, and a number at all, before it is clamped: `goToPage(1.5)` or
+  // `goToPage(NaN)` from a host used to reach `dLayouts[NaN].global` and throw.
+  const asked = Math.round(Number(index))
+  const target = Math.max(0, Math.min(Number.isFinite(asked) ? asked : 0, widgetState.dLayouts.length - 1))
 
   setShowMoveable(false)
   setDCurrentPage(target)

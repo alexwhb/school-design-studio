@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { useSnapshot } from 'valtio'
 import widgetClassifyListData, { ASSISTANT_PANEL, type TWidgetClassifyData } from '@/assets/data/WidgetClassifyList'
-import { useHostApi } from '@/common/hooks/hostApi'
+import { useAssistant, useHostApi } from '@/common/hooks/hostApi'
 import Tooltip from '@/components/ui/Tooltip'
 import { ChevronLeftIcon, ChevronRightIcon, SparkleIcon } from '@/components/ui/icons'
 import { documentKindState } from '@/store/documentKind'
@@ -28,14 +28,14 @@ const PANEL_HINTS: Record<string, string> = {
 export default function WidgetPanel() {
   const panels = useSnapshot(panelState)
   const kind = useSnapshot(documentKindState).kind
-  const { assistant } = useHostApi()
+  const { hasAssistant } = useHostApi()
   const active = panels.activePanel
 
   // A host that brought its own panel gets the first tab in the rail, because
   // "ask for a draft" is where somebody starts rather than somewhere they go
   // back to. Without one there is no tab at all, which is what the standalone
   // editor should show.
-  const tabs = useMemo<TWidgetClassifyData[]>(() => (assistant ? [{ name: 'AI', icon: '', Icon: SparkleIcon, show: false, component: ASSISTANT_PANEL }, ...widgetClassifyListData] : widgetClassifyListData), [assistant])
+  const tabs = useMemo<TWidgetClassifyData[]>(() => (hasAssistant ? [{ name: 'AI', icon: '', Icon: SparkleIcon, show: false, component: ASSISTANT_PANEL }, ...widgetClassifyListData] : widgetClassifyListData), [hasAssistant])
   // Panels are built the first time they are asked for and then left mounted,
   // so switching back to one you have already used does not fetch its list
   // again. Noted here rather than in an effect because the tab can be changed
@@ -93,7 +93,7 @@ export default function WidgetPanel() {
             if (item.component === ASSISTANT_PANEL) {
               return (
                 <div key={item.component} className="assistant-wrap" style={{ display: item.component === active ? undefined : 'none' }}>
-                  {assistant}
+                  <AssistantSlot />
                 </div>
               )
             }
@@ -121,4 +121,12 @@ export default function WidgetPanel() {
       ) : null}
     </div>
   )
+}
+
+/**
+ * Where the host's panel is drawn. A component of its own so that a new
+ * panel node from the host re-renders this and nothing round it.
+ */
+function AssistantSlot() {
+  return <>{useAssistant()}</>
 }

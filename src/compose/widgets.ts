@@ -14,7 +14,7 @@
  */
 import type { TdWidgetData, TPageState } from '@/store/types'
 import type { FontChoice } from './themes'
-import { escapeMarkup } from '@/utils/mergeFieldsCore'
+import { escapeText } from '@/utils/mergeFieldsCore'
 
 /**
  * Ids the same shape the editor's own `nanoid` makes — twelve hex characters.
@@ -113,6 +113,26 @@ export function rectWidget(left: number, top: number, width: number, height: num
 }
 
 /**
+ * How a picture of one shape fills a frame of another: scaled on whichever
+ * axis it has to be for the frame to be covered, and centred. The widget's box
+ * is the window; the picture behind it is drawn at `width × zoom` by
+ * `height × zoomY`, which is the same crop the grips produce by hand.
+ */
+export function coverCrop(frame: { width: number; height: number }, picture: { width: number; height: number }): { zoom: number; zoomY: number; transform: string } {
+  const slot = Number(frame.width) / Number(frame.height) || 1
+  const ratio = picture.width && picture.height ? picture.width / picture.height : slot
+  const zoom = ratio > slot ? ratio / slot : 1
+  const zoomY = ratio < slot ? slot / ratio : 1
+  return { zoom, zoomY, transform: ` scale(${zoom}, ${zoomY}) translate(0px, 0px)` }
+}
+
+/**
+ * What a composed page draws where a photo will go when it has none yet. A
+ * picture dropped onto it in the editor takes its place. See `fillPicture`.
+ */
+export const IMAGE_SLOT_ROLE = 'image slot'
+
+/**
  * A picture in a slot, cropped to fill it rather than squashed into it.
  *
  * The widget's box is the window; the picture behind it is drawn at
@@ -121,11 +141,8 @@ export function rectWidget(left: number, top: number, width: number, height: num
  * one division: whichever way round the picture is, scale that axis until the
  * short side of the slot is covered and let the long side run past the edge.
  */
-export function imageWidget(left: number, top: number, width: number, height: number, image: { url: string; width: number; height: number }): TdWidgetData {
-  const slot = width / height
-  const picture = image.width && image.height ? image.width / image.height : slot
-  const zoom = picture > slot ? picture / slot : 1
-  const zoomY = picture < slot ? slot / picture : 1
+export function imageWidget(left: number, top: number, width: number, height: number, image: { url: string; width: number; height: number; alt?: string }): TdWidgetData {
+  const { zoom, zoomY, transform } = coverCrop({ width, height }, image)
   return {
     name: 'Image',
     type: 'w-image',
@@ -136,7 +153,7 @@ export function imageWidget(left: number, top: number, width: number, height: nu
     top: Math.round(top),
     zoom,
     zoomY,
-    transform: ` scale(${zoom}, ${zoomY}) translate(0px, 0px)`,
+    transform,
     radius: 0,
     opacity: 1,
     borderWidth: 0,
@@ -152,6 +169,7 @@ export function imageWidget(left: number, top: number, width: number, height: nu
     isNinePatch: false,
     flip: '',
     sliceData: { ratio: 0, left: 0 },
+    ...(typeof image.alt === 'string' && image.alt.trim() ? { alt: image.alt.trim() } : null),
   } as unknown as TdWidgetData
 }
 
@@ -178,5 +196,5 @@ export function page(name: string, width: number, height: number, background: st
 
 /** Plain words into the markup a text widget holds. Line breaks become `<br/>`. */
 export function markup(text: string): string {
-  return escapeMarkup(text).split('\n').join('<br/>')
+  return escapeText(text).split('\n').join('<br/>')
 }

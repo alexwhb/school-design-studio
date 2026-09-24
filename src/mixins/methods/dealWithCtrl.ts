@@ -146,16 +146,29 @@ if (typeof document !== 'undefined') {
   })
 }
 
-async function paste() {
-  setTimeout(() => {
-    handlePaste(pasteImageFile).then(() => {
-      if (widgetState.dCopyElement.length === 0) {
-        return
-      } else if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement?.uuid, 'editable')) {
-        return
-      }
-      !widgetState.dActiveElement?.editable && recordHistory(pasteWidget)
-    })
+/**
+ * Ctrl+V outside a text box: whatever the system clipboard holds, or else a
+ * copy of the widgets copied inside the editor.
+ *
+ * `handlePaste` always settles now and says which it did. It used to resolve
+ * only when it had failed, so the widget branch below ran only when the
+ * clipboard could not be read — and copying a widget leaves an empty string
+ * on the clipboard, which the text branch turned into an empty text box.
+ */
+function paste() {
+  setTimeout(async () => {
+    // Taken, not read: the listener above records a file from any paste on the
+    // page, and a picture pasted somewhere else an hour ago is not this paste.
+    const file = pasteImageFile
+    pasteImageFile = null
+    const result = await handlePaste(file)
+    if (result !== 'none') return
+    if (widgetState.dCopyElement.length === 0) {
+      return
+    } else if (widgetState.dActiveElement?.isContainer && checkGroupChild(widgetState.dActiveElement?.uuid, 'editable')) {
+      return
+    }
+    !widgetState.dActiveElement?.editable && recordHistory(pasteWidget)
   }, 10)
 }
 

@@ -20,6 +20,7 @@ import { composeDeck } from '../dist-embed/compose.js'
  *   ?ai=1        the host supplies the AI panel
  *   ?readonly=1  the brand kit is shown but cannot be changed here
  *   ?kind=poster Letter portrait, poster templates, no presenter
+ *   ?refuse=1    the file store refuses to remove a photo, and says why
  */
 const params = new URLSearchParams(window.location.search)
 const HOSTS_THE_KIT = params.get('brand') === '1'
@@ -27,6 +28,8 @@ const HOSTS_THE_DOC = params.get('doc') === '1'
 const HAS_ASSISTANT = params.get('ai') === '1'
 /** The school's brand, shown but not editable — what a non-administrator sees. */
 const BRAND_LOCKED = params.get('readonly') === '1'
+/** A store that will not let a photo go, the way one still used by a design would not. */
+const REFUSES_REMOVAL = params.get('refuse') === '1'
 /** Left out entirely unless asked for, which is the standalone editor's case. */
 const KIND = params.has('kind') ? (params.get('kind') === 'poster' ? 'poster' : 'slides') : undefined
 
@@ -104,6 +107,7 @@ function makeUploads() {
       return item
     },
     async remove(id: string) {
+      if (REFUSES_REMOVAL) throw new Error('This photo is used in “Open House 2026”. Take it out of that design first.')
       store = store.filter((item) => item.id !== id)
     },
     /**
@@ -147,6 +151,9 @@ export default function Host() {
   const [brand, setBrand] = useState(HOST_KIT)
   const [saved, setSaved] = useState('never')
   const [changes, setChanges] = useState(0)
+  // Re-renders the host and nothing else, the way a keystroke in one of the
+  // planner's own fields would. The editor should not come along with it.
+  const [ticks, setTicks] = useState(0)
   const studio = useRef<any>(null)
   // The e2e suite drives the host API the way the planner will — through the
   // ref, not the editor's DOM — so the ref has to be reachable from a test.
@@ -215,6 +222,9 @@ export default function Host() {
         ) : null}
         <button className="host" onClick={toggle}>
           Host theme: {dark ? 'dark' : 'light'}
+        </button>
+        <button id="host-tick" className="host" onClick={() => setTicks((count) => count + 1)}>
+          Host renders: {ticks}
         </button>
       </div>
       <div className="host-body">

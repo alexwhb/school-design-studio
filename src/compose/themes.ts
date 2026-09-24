@@ -20,7 +20,7 @@
  * would put three quarters of a megabyte of somebody else's artwork into a
  * module whose job is to lay out yours.
  */
-import { contrastRatio } from '@/common/methods/contrast'
+import { adjustForContrast, contrastRatio } from '@/common/methods/contrast'
 import type { TdWidgetData } from '@/store/types'
 import editorial from '../../service/src/mock/templates/201.json'
 import swiss from '../../service/src/mock/templates/206.json'
@@ -112,9 +112,15 @@ function roleColor(file: TemplateFile, role: string): string | null {
  */
 function readTheme(key: string, file: TemplateFile): Theme {
   const { background, layers } = pageOf(file)
-  const paper = opaque(background) || '#ffffffff'
   const accent = roleColor(file, 'primary') || '#1e3a5fff'
   const accentSoft = roleColor(file, 'secondary') || accent
+  // A poster set on its own colour — the crimson pack is white type on
+  // crimson — has the accent for its paper. Every layout here draws marks and
+  // eyebrows in the accent on the paper, which then came out crimson on
+  // crimson: there, and invisible. Composed pages go on white instead, and the
+  // accent is what it is everywhere else, the colour of the marks.
+  const drawn = opaque(background) || '#ffffffff'
+  const paper = contrastRatio(drawn, accent) < 1.5 ? '#ffffffff' : drawn
 
   const texts = layers.filter((layer) => layer.type === 'w-text')
   const against = (color: string) => contrastRatio(color, paper)
@@ -124,8 +130,14 @@ function readTheme(key: string, file: TemplateFile): Theme {
   // naming it. The accent is excluded from both — it is the school's colour,
   // and a brand kit is going to replace it.
   const inks = [...new Set(texts.map((layer) => opaque((layer as any).color)).filter((color): color is string => !!color))].filter((color) => color !== accent && color !== accentSoft).sort((a, b) => against(b) - against(a))
-  const ink = inks[0] || '#111111ff'
-  const muted = inks.find((color) => color !== ink && against(color) >= 3) || inks[1] || ink
+  const ink = against(inks[0] || '') >= 4.5 ? inks[0] : '#111111ff'
+  // Muted is used for small type — a standfirst, a sub-point, the school's
+  // name along the bottom — so it has to read as small type does, at 4.5:1.
+  // A theme's own second grey that falls short is darkened in its own hue
+  // until it does, rather than swapped for the ink, so the page keeps its two
+  // weights of grey.
+  const candidate = inks.find((color) => color !== ink && against(color) >= 3) || inks.find((color) => color !== ink) || ink
+  const muted = adjustForContrast(candidate, paper, 4.5).met ? adjustForContrast(candidate, paper, 4.5).color : ink
 
   // A hairline is the faintest thing on the page that is still visible: the
   // lowest contrast among the shapes' opaque colours that is not the paper.

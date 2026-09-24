@@ -8,6 +8,7 @@ import { cx } from '@/utils/dom'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
 import useSpellcheck from '@/common/hooks/useSpellcheck'
 import { recordHistory } from '@/common/hooks/history'
+import { registerOpenEdit } from '@/common/methods/openEdit'
 import { escapeHitOverlay } from '@/mixins/overlayEscape'
 import { htmlToLines, linesToHtml, sanitiseText } from '@/utils/widgets/richText'
 import CurvedText from './CurvedText'
@@ -19,6 +20,8 @@ import { blurStaysInSession, endInlineSession, startInlineSession, toggleInline,
 import InlineToolbar from './InlineToolbar'
 import type { WidgetProps } from '../types'
 import './wText.less'
+import { cssUrl } from '@/utils/cssUrl'
+import { DEFAULT_FONT } from './wTextSetting'
 
 /**
  * Marks a copy made inside one of this editor's text boxes, so a paste can tell
@@ -45,12 +48,16 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
 
   const [loading, setLoading] = useState(false)
   const [editable, setEditable] = useState(false)
-  const fontTick = useFontTick(p.fontClass.value)
+  // A text box can arrive with no font at all, from a host's document or from
+  // one that had an unsafe family taken out (compose/fields.ts). It draws in
+  // the font a new box starts with rather than taking the editor down.
+  const fontValue = p.fontClass?.value || DEFAULT_FONT
+  const fontTick = useFontTick(fontValue)
   const widgetRef = useRef<HTMLDivElement | null>(null)
   const editWrapRef = useRef<HTMLDivElement | null>(null)
   const loadFontDone = useRef('')
 
-  const fontFamily = `'${p.fontClass.value}'`
+  const fontFamily = `'${fontValue}'`
   const listStyle = (p.listStyle ?? 'none') as TListStyle
 
   /**
@@ -82,9 +89,19 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
   // mounts a fresh empty one — so this has to run when the arc goes as well as
   // when the words or the caret change, or the box comes back blank.
   const straight = !curved
+  // Which element was last filled from the store. While the caret is in the
+  // box, the box is where the words are: a save stores them mid-edit, and the
+  // store's copy comes back in canonical form, which is not always the markup
+  // the browser is holding — writing it back would throw the caret to the
+  // start of the box in the middle of a sentence. So an edit in progress is
+  // left alone, unless the element is a new one that has nothing in it yet.
+  const filled = useRef<HTMLElement | null>(null)
   useLayoutEffect(() => {
     const el = editWrapRef.current
-    if (el && el.innerHTML !== p.text) {
+    if (!el) return
+    if (editing.current && filled.current === el) return
+    filled.current = el
+    if (el.innerHTML !== p.text) {
       el.innerHTML = p.text ?? ''
     }
   }, [p.text, editable, straight])
@@ -112,7 +129,11 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     if (font.url && !isDone) {
       if (fontMinWithDraw) return
       setLoading(!isDraw)
-      const loadFont = new window.FontFace(font.value, `url(${font.url})`)
+      // Quoted and escaped, so a font's address cannot say more than where the
+      // font is. See utils/cssUrl.ts.
+      const source = cssUrl(font.url)
+      if (!source) return
+      const loadFont = new window.FontFace(font.value, source)
       loadFont
         .load()
         .then(() => {
@@ -134,7 +155,7 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
     return () => {
       cancelled = true
     }
-  }, [params, p.fontClass.value, p.fontClass.url, isDraw])
+  }, [params, p.fontClass?.value, p.fontClass?.url, isDraw])
 
   /**
    * The width the line had before it bent, so it can be given back.
@@ -347,6 +368,23 @@ function WText({ params, parent, id, className, child, ...rest }: WidgetProps) {
 
   const editing = useRef(false)
   editing.current = editable
+
+  // While the caret is in the box, anything about to read the design — a
+  // save, an export, the host's getDocument — can ask for the words first.
+  // Through a ref, so the registered calls always reach this render's
+  // functions rather than the ones from when the edit began.
+  const latest = useRef({ updateText, finishEdit })
+  latest.current = { updateText, finishEdit }
+  useEffect(() => {
+    if (!editable) return
+    return registerOpenEdit({
+      commit: () => {
+        const el = editWrapRef.current
+        if (el) recordHistory(() => latest.current.updateText({ target: el }))
+      },
+      finish: () => recordHistory(() => latest.current.finishEdit()),
+    })
+  }, [editable])
 
   /** Ends the edit and stores what was typed. Safe to call more than once. */
   function finishEdit() {

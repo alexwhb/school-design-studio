@@ -23,7 +23,10 @@ export const isGradient = (value: string) => /^(linear|radial)-gradient\(/.test(
 export function toGradientString(type: GradientType, angle: number, stops: GradientStop[]) {
   const list = stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(',')
   if (type === 'radial') return `radial-gradient(${RADIAL_SHAPE}, ${list})`
-  return `linear-gradient(${angle}deg, ${list})`
+  // A number, whatever the design said. The angle arrives from a stored text
+  // effect, and a string there — `0deg, url(/x)` — was written out whole.
+  const degrees = Number(angle)
+  return `linear-gradient(${Number.isFinite(degrees) ? degrees : 180}deg, ${list})`
 }
 
 /**

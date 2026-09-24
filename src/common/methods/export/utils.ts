@@ -6,6 +6,7 @@
  * shapes the editor's data can take (8-digit hex colours, contenteditable
  * HTML, remote image URLs).
  */
+import { parseInert } from '@/utils/dom'
 
 /**
  * Rejects if `work` has not settled in time.
@@ -93,9 +94,9 @@ export function htmlToText(html?: string): string {
   const normalised = String(html)
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(p|div|h[1-6]|li)>/gi, '\n')
-  const el = document.createElement('div')
-  el.innerHTML = normalised
-  return (el.textContent || '')
+  // Parsed inert: see parseInert. An export reads every page's text, and a
+  // detached element would have fetched each <img> in it on the way.
+  return (parseInert(normalised).textContent || '')
     .replace(/ /g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .replace(/\n+$/, '')

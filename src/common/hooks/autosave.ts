@@ -17,7 +17,10 @@
  * bytes then go is localDesigns.ts's business, not this file's.
  */
 import { useEffect, useMemo, useRef } from 'react'
-import { proxy, subscribe } from 'valtio'
+import { proxy } from 'valtio'
+import { layoutsRevision, onLayoutsChange } from '@/store/revision'
+import { stripTransient, withoutTransient } from '@/store/transient'
+import { commitOpenEdit } from '@/common/methods/openEdit'
 import { widgetState } from '@/store/state'
 import { setDPage, getDPage } from '@/store/canvas'
 import { getWidgets, setDLayouts, setDWidgets } from '@/store/widget/widget'
@@ -67,6 +70,8 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
     let timer: ReturnType<typeof setTimeout> | undefined
     /** The design as of the last write, or as first seen — what "unsaved" measures against. */
     let baseline = ''
+    /** Moves whenever `baseline` does, so the cache can tell without comparing strings. */
+    let baseVersion = 0
     /**
      * Each page as JSON as it now stands in the database, or null when the
      * database holds some other design — the draft the last session left, or
@@ -77,17 +82,31 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
     let watching = false
     let unsubscribe: (() => void) | undefined
 
+    // Without the editing flags, so a box saved while it had the caret does
+    // not reopen believing it still has it. See store/transient.ts.
     function pageJson(): string[] {
-      return widgetState.dLayouts.map((layout) => JSON.stringify(layout))
+      return widgetState.dLayouts.map((layout) => JSON.stringify(layout, withoutTransient))
     }
 
     function snapshot(pages: string[]): string {
       return JSON.stringify([options.current.getTitle(), ...pages])
     }
 
+    /**
+     * The last answer, and the design, name and baseline it was about. Asking
+     * again about the same design is free — see store/revision.ts.
+     */
+    let checked = { revision: -1, title: '', base: -1, dirty: false }
+
     /** True when the canvas has moved on from the last write. */
     function isDirty(): boolean {
-      return watching && snapshot(pageJson()) !== baseline
+      if (!watching) return false
+      const revision = layoutsRevision()
+      const title = options.current.getTitle()
+      if (checked.revision === revision && checked.title === title && checked.base === baseVersion) return checked.dirty
+      const dirty = snapshot(pageJson()) !== baseline
+      checked = { revision, title, base: baseVersion, dirty }
+      return dirty
     }
 
     async function write(): Promise<boolean> {
@@ -107,6 +126,7 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
         return false
       }
       baseline = snapshot(pages)
+      baseVersion++
       stored = pages
       autosaveState.status = 'saved'
       return true
@@ -127,6 +147,8 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
     /** Writes immediately: File → Save, and Ctrl/Cmd-S. */
     async function saveNow() {
       clearTimeout(timer)
+      // The sentence still being typed is part of what Save means.
+      commitOpenEdit()
       const ok = await write()
       message({
         message: ok ? 'Saved on this computer.' : 'This design could not be saved. It may be too large for the browser to store.',
@@ -136,9 +158,11 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
 
     function start() {
       baseline = snapshot(pageJson())
+      baseVersion++
       watching = true
       autosaveState.status = 'saved'
-      unsubscribe = subscribe(widgetState, schedule)
+      // The design only: a selection or a hover is not a change worth a write.
+      unsubscribe = onLayoutsChange(schedule)
     }
 
     /**
@@ -156,6 +180,8 @@ export default function useAutosave({ getTitle, setTitle }: TOptions): Autosave 
       }
       const answer = await confirmChoice('Pick up where you left off?', `You were working on “${draft.title || 'Untitled design'}” ${describeAge(draft.savedAt)}.`, 'info', { confirmButtonText: 'Restore it', cancelButtonText: 'Start fresh' })
       if (answer === 'confirm') {
+        // A draft written before the flags were left out may still carry one.
+        stripTransient(draft.layouts)
         setDLayouts(draft.layouts)
         setDWidgets(getWidgets())
         setDPage(getDPage())

@@ -22,6 +22,7 @@
  * draws imperfectly.
  */
 import { imageToDataUrl, withTimeout } from './utils'
+import { cssUrl } from '@/utils/cssUrl'
 
 /** The alpha of a computed colour, which is always serialised as rgb/rgba. */
 function alphaOf(color: string): number {
@@ -176,7 +177,7 @@ async function inlineFontFaces(root: Element): Promise<string | null> {
     if (!wanted.has(face.family)) continue
     const data = await fontAsDataUrl(face.url)
     if (!data) return null
-    rules.push(`@font-face{font-family:'${face.family}';src:url(${data}) format('woff2');}`)
+    rules.push(`@font-face{font-family:'${face.family}';src:${cssUrl(data)} format('woff2');}`)
   }
   return rules.join('')
 }

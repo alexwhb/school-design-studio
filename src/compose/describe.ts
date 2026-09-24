@@ -37,8 +37,9 @@ function roleOf(layer: TdWidgetData): string | null {
 
 /** A picture's own description, when it has one worth showing. Never its bytes. */
 function altOf(layer: TdWidgetData): string | null {
-  // The name a person gave the layer first, then whatever put the picture here.
-  const described = layer.label || layer.role || (layer as any).alt
+  // What it shows first, then the name a person gave the layer, then whatever
+  // put the picture here.
+  const described = (typeof layer.alt === 'string' && layer.alt.trim()) || layer.label || layer.role
   return described ? String(described) : null
 }
 

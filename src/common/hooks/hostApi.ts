@@ -12,7 +12,8 @@
  * it needs and behaves the way it always did when there is none.
  */
 import { createContext, useContext, type MutableRefObject, type ReactNode } from 'react'
-import type { DesignDocument, DesignKind, DesignOp, RejectedOp } from '@/compose/types'
+import type { ComposeReport, DesignDocument, DesignKind, DesignOp, RejectedOp } from '@/compose/types'
+import type { DesignIssue } from '@/common/methods/accessibility/checkDesign'
 
 export type { DesignDocument, DesignKind, DesignOp }
 
@@ -83,14 +84,59 @@ export type HostUploads = {
 export type DesignStudioHandle = {
   /** Plain JSON, safe to structured-clone or stringify. Never the live store. */
   getDocument(): DesignDocument
+  /**
+   * Replaces the design on the canvas.
+   *
+   * By default this is a different design being opened: undo history starts
+   * again from nothing, and the document becomes what "unsaved" is measured
+   * against. With `resetHistory: false` it is a change to the design that is
+   * open — one press of undo takes the whole swap back, and the design reads
+   * as unsaved until it is saved.
+   */
   setDocument(doc: DesignDocument, opts?: { resetHistory?: boolean }): void
-  applyOps(ops: DesignOp[]): { applied: number; rejected: RejectedOp[] }
+  /**
+   * `report` says what an `addPage` had to give up to fit, and how many
+   * continuation pages its bullets needed. See `applyOps` in the compose entry.
+   */
+  applyOps(ops: DesignOp[]): { applied: number; rejected: RejectedOp[]; report: ComposeReport }
   exportPdf(): Promise<Blob>
   exportPptx(): Promise<Blob>
   /** `scale` 1 is the page's own pixel size. */
   exportPng(pageIndex: number, opts?: { scale?: number }): Promise<Blob>
+  /**
+   * Puts a page on the canvas. 0-based. A number off either end goes to the
+   * first or the last page, and one that is not a whole number is rounded;
+   * `NaN` goes to the first.
+   */
   goToPage(index: number): void
+  /** The 0-based index of the page on the canvas. */
+  getCurrentPage(): number
+  /** True when the design differs from the last save, the studio's or the host's. */
   isDirty(): boolean
+  /**
+   * Says the host has saved the design on its own account — outside the
+   * studio's Save button: filling a blank, turning motion on, saving before an
+   * AI refine, restoring an older version.
+   *
+   * `doc` is what the host saved; left out, it is the design on the canvas.
+   * Either becomes what "unsaved" is measured against, so `isDirty()` is false
+   * and the pill says Saved as long as the canvas matches it. Nothing is
+   * redrawn and the undo history is kept, which is the difference from
+   * `setDocument`. Undoing past the save makes the design unsaved again.
+   *
+   * Does nothing when the studio keeps the design itself, that is, when no
+   * `document` was handed in.
+   */
+  markSaved(doc?: DesignDocument): void
+  /**
+   * What in the design will not come out the way it looks, or will not reach
+   * somebody who cannot see it: text off the page or too big for its box, text
+   * too small to read, text too faint against what is behind it, and photos
+   * with no alt text. Each issue names its page (0-based) and widget, and says
+   * what is wrong in a sentence meant for the person. Empty when there is
+   * nothing to say. Words being typed are checked as they are.
+   */
+  checkDesign(): Promise<DesignIssue[]>
 }
 
 export type HostApi = {
@@ -102,8 +148,11 @@ export type HostApi = {
   saveLabel: string
   onSave: ((doc: DesignDocument) => Promise<void>) | null
   onDocumentChange: ((doc: DesignDocument, meta: { dirty: boolean }) => void) | null
-  /** The host's own panel, shown behind an "AI" tab in the rail. */
-  assistant: ReactNode | null
+  /**
+   * Whether the host brought a panel of its own, shown behind an "AI" tab in
+   * the rail. The panel itself is in `AssistantContext`, not here: see there.
+   */
+  hasAssistant: boolean
   /** Whether the Brand panel may change the kit, or only show and use it. */
   brandReadOnly: boolean
   brandReadOnlyNote: string
@@ -123,7 +172,7 @@ const NONE: HostApi = {
   saveLabel: 'Save',
   onSave: null,
   onDocumentChange: null,
-  assistant: null,
+  hasAssistant: false,
   brandReadOnly: false,
   brandReadOnlyNote: BRAND_READ_ONLY_NOTE,
   handleRef: { current: null },
@@ -132,4 +181,18 @@ const NONE: HostApi = {
 /** The host's answers, or the standalone editor's, which is what NONE is. */
 export function useHostApi(): HostApi {
   return useContext(HostApiContext) ?? NONE
+}
+
+/**
+ * The host's own panel, in a context of its own.
+ *
+ * A host passes it as inline JSX, which is a new object on every one of the
+ * host's renders. Held in `HostApi`, it rebuilt the value every component in
+ * the editor reads, so each keystroke in the planner's own fields re-rendered
+ * the whole editor. Here only the slot that draws it is told.
+ */
+export const AssistantContext = createContext<ReactNode | null>(null)
+
+export function useAssistant(): ReactNode | null {
+  return useContext(AssistantContext)
 }

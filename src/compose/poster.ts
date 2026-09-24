@@ -10,13 +10,15 @@
  * Sizes are fractions of the page rather than pixels, so the same five layouts
  * hold on Letter, on tabloid, on a banner and on any of them turned sideways.
  */
-import type { ComposeOptions, DesignDocument, PosterOutline, PosterSign } from './types'
+import type { ComposeOptions, ComposeResult, DesignDocument, PosterOutline, PosterSign } from './types'
+import { MAX_PAGES } from './types'
 import type { Theme } from './themes'
 import { posterPack } from './themes'
 import { fitText, heightOf } from './textFit'
 import { hasIcon, iconWidget } from './icons'
 import { markup, page, rectWidget, textWidget } from './widgets'
-import { applyBrand, fieldFiller } from './brand'
+import { applyBrand, brandTheme, fieldFiller } from './brand'
+import { pageCap, recorder, silent, type Recorder } from './report'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
 /**
@@ -57,6 +59,9 @@ export function pageSize(outline: Pick<PosterOutline, 'orientation' | 'size'>): 
 
 type Frame = { W: number; H: number; M: number; content: number }
 
+/** Fills a `{{school.*}}` line before it is measured. See `fieldFiller`. */
+type Fill = (text: string) => string
+
 function frameOf(width: number, height: number): Frame {
   const M = Math.round(Math.min(width, height) * 0.09)
   return { W: width, H: height, M, content: width - M * 2 }
@@ -76,11 +81,21 @@ type Style = {
   maxLines?: number
 }
 
-function place(text: string | null | undefined, box: { left: number; top: number; width: number; height: number }, style: Style) {
+/** Fills a `{{school.*}}` line before it is measured, and writes down a cut. */
+type Ctx = { fill: Fill; rec: Recorder }
+
+/**
+ * Fits one run of words into its box. A sign has one box per thing and nowhere
+ * to send what does not fit, so the type shrinks to the layout's floor and then
+ * the words are cut with an ellipsis — and the cut is written down against
+ * `field`, so it is in the report rather than only on the paper.
+ */
+function place(ctx: Ctx, field: string, text: string | null | undefined, box: { left: number; top: number; width: number; height: number }, style: Style) {
   const words = String(text || '').trim()
   if (!words) return null
   const fit = fitText(words, { fontFamily: style.font.value, fontSize: style.size, lineHeight: style.lineHeight, letterSpacing: style.tracking, bold: (style.weight || 400) >= 600 }, { width: box.width, height: box.height, minFontSize: style.minSize, maxLines: style.maxLines })
   if (!fit.lines.length) return null
+  if (fit.truncated) ctx.rec.note(field, words, 'shortened')
   const height = heightOf(fit, style.lineHeight)
   return {
     widget: textWidget({
@@ -103,17 +118,16 @@ function place(text: string | null | undefined, box: { left: number; top: number
   }
 }
 
-/** Fills a `{{school.*}}` line before it is measured. See `fieldFiller`. */
-type Fill = (text: string) => string
-
 /** The band across the top, and the school's line along the bottom. */
-function furniture(theme: Theme, frame: Frame, sign: PosterSign, onDark: boolean, fill: Fill): TdWidgetData[] {
+function furniture(ctx: Ctx, theme: Theme, frame: Frame, sign: PosterSign, onDark: boolean): TdWidgetData[] {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
   const soft = onDark ? theme.paper : theme.muted
 
   const browTop = Math.round(H * 0.07)
   const brow = place(
+    ctx,
+    'eyebrow',
     sign.eyebrow ? sign.eyebrow.toUpperCase() : null,
     { left: M, top: browTop, width: content, height: Math.round(H * 0.05) },
     {
@@ -133,7 +147,9 @@ function furniture(theme: Theme, frame: Frame, sign: PosterSign, onDark: boolean
   const footTop = Math.round(H * 0.9)
   layers.push(rectWidget(M, footTop, content, 3, onDark ? theme.paper : theme.rule))
   const foot = place(
-    fill(sign.foot || '{{school.name}} · {{school.phone}}'),
+    ctx,
+    'foot',
+    ctx.fill(sign.foot || '{{school.name}} · {{school.phone}}'),
     { left: M, top: footTop + Math.round(H * 0.018), width: content, height: Math.round(H * 0.05) },
     {
       font: theme.eyebrow,
@@ -154,12 +170,12 @@ function headBox(frame: Frame, top: number, height: number) {
   return { left: frame.M, top: Math.round(top), width: frame.content, height: Math.round(height) }
 }
 
-function directionSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
+function directionSign(theme: Theme, frame: Frame, sign: PosterSign, ctx: Ctx): { layers: TdWidgetData[]; background: string } {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
   layers.push(rectWidget(0, 0, W, Math.round(H * 0.055), theme.accent))
 
-  const head = place(sign.head, headBox(frame, H * 0.2, H * 0.34), {
+  const head = place(ctx, 'head', sign.head, headBox(frame, H * 0.2, H * 0.34), {
     font: theme.display,
     size: Math.round(W * 0.19),
     minSize: Math.round(W * 0.07),
@@ -181,7 +197,7 @@ function directionSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill)
     top += Math.round(W * 0.22) + Math.round(H * 0.02)
   }
 
-  const sub = place(sign.sub, headBox(frame, top, H * 0.86 - top), {
+  const sub = place(ctx, 'sub', sign.sub, headBox(frame, top, H * 0.86 - top), {
     font: theme.body,
     size: Math.round(W * 0.05),
     minSize: Math.round(W * 0.028),
@@ -191,10 +207,10 @@ function directionSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill)
     role: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
+  return { layers: [...layers, ...furniture(ctx, theme, frame, sign, false)], background: theme.paper }
 }
 
-function iconSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
+function iconSign(theme: Theme, frame: Frame, sign: PosterSign, ctx: Ctx): { layers: TdWidgetData[]; background: string } {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
   const size = Math.round(W * 0.34)
@@ -206,7 +222,7 @@ function iconSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { l
     top += size + Math.round(H * 0.04)
   }
 
-  const head = place(sign.head, headBox(frame, top, H * 0.28), {
+  const head = place(ctx, 'head', sign.head, headBox(frame, top, H * 0.28), {
     font: theme.display,
     size: Math.round(W * 0.14),
     minSize: Math.round(W * 0.06),
@@ -221,7 +237,7 @@ function iconSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { l
     top = head.bottom + Math.round(H * 0.03)
   }
 
-  const sub = place(sign.sub, headBox(frame, top, H * 0.86 - top), {
+  const sub = place(ctx, 'sub', sign.sub, headBox(frame, top, H * 0.86 - top), {
     font: theme.body,
     size: Math.round(W * 0.045),
     minSize: Math.round(W * 0.026),
@@ -231,15 +247,15 @@ function iconSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { l
     role: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
+  return { layers: [...layers, ...furniture(ctx, theme, frame, sign, false)], background: theme.paper }
 }
 
 /** The one that is set on the school's colour rather than on paper. */
-function statementSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
+function statementSign(theme: Theme, frame: Frame, sign: PosterSign, ctx: Ctx): { layers: TdWidgetData[]; background: string } {
   const { W, H } = frame
   const layers: TdWidgetData[] = []
 
-  const head = place(sign.head, headBox(frame, H * 0.24, H * 0.4), {
+  const head = place(ctx, 'head', sign.head, headBox(frame, H * 0.24, H * 0.4), {
     font: theme.display,
     size: Math.round(W * 0.13),
     minSize: Math.round(W * 0.05),
@@ -254,7 +270,7 @@ function statementSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill)
     layers.push(head.widget)
     top = head.bottom + Math.round(H * 0.035)
   }
-  const sub = place(sign.sub, headBox(frame, top, H * 0.86 - top), {
+  const sub = place(ctx, 'sub', sign.sub, headBox(frame, top, H * 0.86 - top), {
     font: theme.body,
     size: Math.round(W * 0.042),
     minSize: Math.round(W * 0.026),
@@ -264,14 +280,14 @@ function statementSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill)
     role: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, true, fill)], background: theme.accent }
+  return { layers: [...layers, ...furniture(ctx, theme, frame, sign, true)], background: theme.accent }
 }
 
-function numberSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
+function numberSign(theme: Theme, frame: Frame, sign: PosterSign, ctx: Ctx): { layers: TdWidgetData[]; background: string } {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
 
-  const badge = place(sign.badge || sign.head, headBox(frame, H * 0.19, H * 0.3), {
+  const badge = place(ctx, sign.badge ? 'badge' : 'head', sign.badge || sign.head, headBox(frame, H * 0.19, H * 0.3), {
     font: theme.display,
     size: Math.round(W * 0.4),
     minSize: Math.round(W * 0.1),
@@ -290,7 +306,7 @@ function numberSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
   layers.push(rectWidget(M + Math.round(content * 0.35), top, Math.round(content * 0.3), 6, theme.rule))
   top += Math.round(H * 0.035)
 
-  const head = place(sign.badge ? sign.head : sign.sub, headBox(frame, top, H * 0.2), {
+  const head = place(ctx, sign.badge ? 'head' : 'sub', sign.badge ? sign.head : sign.sub, headBox(frame, top, H * 0.2), {
     font: theme.display,
     size: Math.round(W * 0.09),
     minSize: Math.round(W * 0.04),
@@ -304,7 +320,7 @@ function numberSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
     layers.push(head.widget)
     top = head.bottom + Math.round(H * 0.025)
   }
-  const sub = place(sign.badge ? sign.sub : null, headBox(frame, top, H * 0.86 - top), {
+  const sub = place(ctx, 'sub', sign.badge ? sign.sub : null, headBox(frame, top, H * 0.86 - top), {
     font: theme.body,
     size: Math.round(W * 0.04),
     minSize: Math.round(W * 0.025),
@@ -314,16 +330,16 @@ function numberSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
     role: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
+  return { layers: [...layers, ...furniture(ctx, theme, frame, sign, false)], background: theme.paper }
 }
 
 /** The one meant to be read standing still: left-aligned, and room for prose. */
-function noticeSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): { layers: TdWidgetData[]; background: string } {
+function noticeSign(theme: Theme, frame: Frame, sign: PosterSign, ctx: Ctx): { layers: TdWidgetData[]; background: string } {
   const { W, H, M, content } = frame
   const layers: TdWidgetData[] = []
   layers.push(rectWidget(M, Math.round(H * 0.135), Math.round(content * 0.18), 10, theme.accent))
 
-  const head = place(sign.head, headBox(frame, H * 0.18, H * 0.26), {
+  const head = place(ctx, 'head', sign.head, headBox(frame, H * 0.18, H * 0.26), {
     font: theme.display,
     size: Math.round(W * 0.11),
     minSize: Math.round(W * 0.05),
@@ -343,7 +359,7 @@ function noticeSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
   const icon = hasIcon(sign.icon) ? iconWidget(sign.icon as string, frame.W - M - Math.round(W * 0.14), Math.round(H * 0.17), Math.round(W * 0.14), theme.accentSoft) : null
   if (icon) layers.push(icon)
 
-  const sub = place(sign.sub, headBox(frame, top, H * 0.86 - top), {
+  const sub = place(ctx, 'sub', sign.sub, headBox(frame, top, H * 0.86 - top), {
     font: theme.body,
     size: Math.round(W * 0.04),
     minSize: Math.round(W * 0.024),
@@ -354,10 +370,10 @@ function noticeSign(theme: Theme, frame: Frame, sign: PosterSign, fill: Fill): {
     role: 'body',
   })
   if (sub) layers.push(sub.widget)
-  return { layers: [...layers, ...furniture(theme, frame, sign, false, fill)], background: theme.paper }
+  return { layers: [...layers, ...furniture(ctx, theme, frame, sign, false)], background: theme.paper }
 }
 
-const LAYOUTS: Record<PosterSign['layout'], (theme: Theme, frame: Frame, sign: PosterSign, fill: Fill) => { layers: TdWidgetData[]; background: string }> = {
+const LAYOUTS: Record<PosterSign['layout'], (theme: Theme, frame: Frame, sign: PosterSign, ctx: Ctx) => { layers: TdWidgetData[]; background: string }> = {
   direction: directionSign,
   icon: iconSign,
   statement: statementSign,
@@ -365,21 +381,49 @@ const LAYOUTS: Record<PosterSign['layout'], (theme: Theme, frame: Frame, sign: P
   notice: noticeSign,
 }
 
-/** One sign, as a page. Exported so `addPage` can make one. */
-export function composeSign(sign: PosterSign, theme: Theme, size: { width: number; height: number }, fill: Fill = (text) => text): TdLayout {
+/** One sign as a page, with its cuts written to `rec`. Shared by the poster and `addPage`. */
+export function composeSignPage(sign: PosterSign, theme: Theme, size: { width: number; height: number }, fill: Fill, rec: Recorder): TdLayout {
   const frame = frameOf(size.width, size.height)
   const draw = LAYOUTS[sign.layout] || noticeSign
-  const { layers, background } = draw(theme, frame, sign, fill)
+  const { layers, background } = draw(theme, frame, sign, { fill, rec })
   const name = sign.head?.trim() || sign.eyebrow?.trim() || 'Sign'
   return { global: page(name.slice(0, 60), size.width, size.height, background), layers }
 }
 
-export function composePoster(outline: PosterOutline, options: ComposeOptions = {}): DesignDocument {
-  const theme = posterPack(options.theme)
+/** One sign, as a page. Exported so `addPage` can make one. */
+export function composeSign(sign: PosterSign, theme: Theme, size: { width: number; height: number }, fill: Fill = (text) => text): TdLayout {
+  return composeSignPage(sign, theme, size, fill, silent())
+}
+
+/**
+ * Signs, and what had to give to make them: each sign is one page, so a sign
+ * is never continued, and what is cut is only ever the end of a line that
+ * would not fit at the smallest size its layout allows. Signs past `maxPages`
+ * are left out and reported.
+ */
+export function composePosterWithReport(outline: PosterOutline, options: ComposeOptions = {}): ComposeResult {
+  const theme = brandTheme(posterPack(options.theme), options.brand)
   const fill = fieldFiller(options.brand)
   const size = pageSize(outline || { orientation: 'PORTRAIT', size: 'letter' })
-  const signs = Array.isArray(outline?.signs) ? outline.signs : []
-  const layouts = (signs.length ? signs : [blankSign('notice')]).map((sign) => composeSign({ ...blankSign(sign?.layout || 'notice'), ...sign }, theme, size, fill))
-  const doc: DesignDocument = { format: 'design-studio/v1', title: signs[0]?.head?.trim() || 'Untitled sign', layouts }
-  return options.brand ? applyBrand(doc, options.brand) : doc
+  const cap = pageCap(options.maxPages, MAX_PAGES)
+  const rec = recorder()
+  const given = Array.isArray(outline?.signs) ? outline.signs : []
+  const signs = given.length ? given : [blankSign('notice')]
+  const layouts: TdLayout[] = []
+  signs.forEach((raw, index) => {
+    const sign = { ...blankSign(raw?.layout || 'notice'), ...raw }
+    rec.source = index
+    rec.page = layouts.length
+    if (layouts.length >= cap) {
+      for (const field of ['eyebrow', 'badge', 'head', 'sub', 'foot'] as const) rec.note(field, sign[field] ?? '', 'page-limit')
+      return
+    }
+    layouts.push(composeSignPage(sign, theme, size, fill, rec))
+  })
+  const doc: DesignDocument = { format: 'design-studio/v1', title: given[0]?.head?.trim() || 'Untitled sign', layouts }
+  return { document: options.brand ? applyBrand(doc, options.brand) : doc, report: rec.report }
+}
+
+export function composePoster(outline: PosterOutline, options: ComposeOptions = {}): DesignDocument {
+  return composePosterWithReport(outline, options).document
 }

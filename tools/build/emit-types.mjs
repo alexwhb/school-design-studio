@@ -46,7 +46,9 @@ export default function emitTypes() {
   let rewritten = 0
   for (const file of walk(TYPES)) {
     const before = fs.readFileSync(file, 'utf8')
-    const after = before.replace(/(from\s+|import\s*\()(['"])(@\/[^'"]+)\2/g, (_whole, lead, quote, specifier) => `${lead}${quote}${relativeToSrc(file, specifier)}${quote}`)
+    // `import '@/…'` too: a side-effect import of a stylesheet survives into a
+    // declaration, and one left on the alias is a module nobody can resolve.
+    const after = before.replace(/(from\s+|import\s*\(|import\s+)(['"])(@\/[^'"]+)\2/g, (_whole, lead, quote, specifier) => `${lead}${quote}${relativeToSrc(file, specifier)}${quote}`)
     if (after !== before) {
       fs.writeFileSync(file, after)
       rewritten++
@@ -57,6 +59,7 @@ export default function emitTypes() {
   // something short and readable rather than at a path inside the tree.
   fs.writeFileSync(path.join(OUT, 'index.d.ts'), "export * from './types/src/index'\n")
   fs.writeFileSync(path.join(OUT, 'compose.d.ts'), "export * from './types/src/compose/index'\n")
+  fs.writeFileSync(path.join(OUT, 'viewer.d.ts'), "export * from './types/src/viewer'\n")
 
   console.log(`types: ${walk(TYPES).length} declarations, ${rewritten} with aliases rewritten`)
 }

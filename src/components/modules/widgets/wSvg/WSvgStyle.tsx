@@ -8,6 +8,7 @@ import ColorSelect from '../../settings/ColorSelect'
 import OpacityRow from '../../settings/OpacityRow'
 import ShadowSelect from '../../settings/ShadowSelect'
 import TransformGrid from '../../settings/TransformGrid'
+import AltTextField from '../../settings/AltTextField'
 import './wSvgStyle.less'
 
 /**
@@ -51,6 +52,11 @@ export default function WSvgStyle() {
       </PanelSection>
       <PanelSection title="Effects">
         <ShadowSelect value={active.shadow} onChange={(value) => finish('shadow', value)} />
+      </PanelSection>
+      <PanelSection title="Alt text">
+        {/* Shapes and stickers are scenery until somebody says otherwise, so
+            this starts ticked; see `altTextOf`. */}
+        <AltTextField uuid={uuid} alt={active.alt} decorative={active.alt ? false : active.decorative ?? true} hint="Screen readers skip shapes unless you describe them." />
       </PanelSection>
     </div>
   )

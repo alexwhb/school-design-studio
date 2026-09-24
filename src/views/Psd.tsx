@@ -61,7 +61,6 @@ export default function Psd() {
       unwatchOverlayEscape()
       document.removeEventListener('keydown', onKeyDown, false)
       document.removeEventListener('keyup', onKeyUp, false)
-      document.oncontextmenu = null
     }
   }, [])
 

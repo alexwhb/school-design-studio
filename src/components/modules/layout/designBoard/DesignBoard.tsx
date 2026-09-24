@@ -6,6 +6,9 @@ import { setShowMoveable, setDraging } from '@/store/control'
 import { addGroup, addWidget } from '@/store/widget'
 import { setDropOver, setSelectItem, selectWidget } from '@/store/widget'
 import { getTarget } from '@/common/methods/target'
+import { getAppRoot } from '@/common/hooks/appRoot'
+import { recordHistory } from '@/common/hooks/history'
+import { fillPicture, pictureTargetOf } from '@/store/widget/fillPicture'
 import { pageBackgroundStyle } from '@/common/methods/pageBackground'
 import setWidgetData from '@/common/methods/DesignFeatures/setWidgetData'
 import getComponentsData from '@/common/methods/DesignFeatures/setComponents'
@@ -112,9 +115,6 @@ export default function DesignBoard({ pageDesignCanvasId, padding, renderDPage, 
   const dZoom = zoom ?? canvas.dZoom
   const { dPresetPadding, dPaddingTop } = canvas
 
-  const dropIn = useRef<string | null>('')
-  const srcCache = useRef<string | null>('')
-
   useEffect(() => {
     getScreen()
     const pageDesignEl = document.getElementById('page-design')
@@ -159,7 +159,11 @@ export default function DesignBoard({ pageDesignCanvasId, padding, renderDPage, 
     return zoom ?? canvasState.dZoom
   }
 
-  async function dropOver(event: React.MouseEvent) {
+  /**
+   * A picture from the panel, dragged over the page: the photo or the empty
+   * slot under the pointer is marked as where it will go. See fillPicture.ts.
+   */
+  function dropOver(event: React.MouseEvent) {
     const e = event.nativeEvent
     const active = widgetState.dActiveElement
     if (!active) return
@@ -168,29 +172,12 @@ export default function DesignBoard({ pageDesignCanvasId, padding, renderDPage, 
     }
     e.preventDefault()
     const { data, type } = widgetState.selectItem
-    if (!data) return
-    if (type !== 'image') {
-      return
-    }
-    if (!e || !e.target) return
-    const eventTarget = e.target as HTMLElement
-    const target = await getTarget(eventTarget)
-    if (!target) return
-    const uuid = target.getAttribute('data-uuid')
-
-    setDropOver(uuid ?? '-1')
-
-    const imgEl = target?.firstElementChild?.firstElementChild as HTMLImageElement
-    if (eventTarget.getAttribute('putIn')) {
-      dropIn.current = uuid
-      const imgUrl = (data as any).value.thumb || (data as any).value.url
-      !srcCache.current && (srcCache.current = imgEl.src)
-      imgEl.src = imgUrl
-    } else {
-      srcCache.current && imgEl && (imgEl.src = srcCache.current)
-      srcCache.current = ''
-      dropIn.current = ''
-    }
+    const target = data && type === 'image' && controlState.dDraging ? pictureTargetOf(e.target as Element) : null
+    const next = target ?? '-1'
+    if (widgetState.dDropOverUuid !== next) setDropOver(next)
+    // The picture following the pointer sits right over the frame it is about
+    // to fill; it fades while it is over one, so the frame's mark shows.
+    getAppRoot()?.classList.toggle('ds-drop-into', !!target)
   }
 
   async function drop(event: React.MouseEvent) {
@@ -203,10 +190,10 @@ export default function DesignBoard({ pageDesignCanvasId, padding, renderDPage, 
 
     setDraging(false)
 
-    const droppedIn = dropIn.current
-    dropIn.current = ''
-
+    // Read before anything waits: where the pointer was when it let go.
+    const droppedIn = widgetState.dDropOverUuid && widgetState.dDropOverUuid !== '-1' ? widgetState.dDropOverUuid : ''
     setDropOver('-1')
+    getAppRoot()?.classList.remove('ds-drop-into')
     setShowMoveable(false)
 
     const lost = eventTarget.className !== 'design-canvas'
@@ -223,12 +210,24 @@ export default function DesignBoard({ pageDesignCanvasId, padding, renderDPage, 
     // said why, so there is nothing to add here.
     if (!built) return
     setting = built
+
+    // Onto a photo, or the slot one goes in: the picture goes into that frame.
+    // The address is the one `setWidgetData` settled on, which for a stock
+    // photo is the host's own copy.
+    if (type === 'image' && droppedIn && fillPicture(droppedIn, { url: String(setting.imgUrl), width: Number(setting.width), height: Number(setting.height) })) {
+      setShowMoveable(true)
+      return
+    }
+
     const canvasEl = document.getElementById('page-design-canvas')
     if (!canvasEl) return
     const lostX = e.x - canvasEl.getBoundingClientRect().left
     const lostY = e.y - canvasEl.getBoundingClientRect().top
     const zoomValue = currentZoom()
 
+    // Each through recordHistory, because the widget is only added once the
+    // picture or the component has been fetched, which is long after the
+    // release that would otherwise have closed the undo step on nothing.
     if (type === 'group') {
       const parent: { width?: number; height?: number } = {}
       const componentItem = await getComponentsData(item)
@@ -246,7 +245,7 @@ export default function DesignBoard({ pageDesignCanvasId, padding, renderDPage, 
         element.left += (lost ? lostX - groupHalf.x : e.layerX - groupHalf.x) * (100 / zoomValue)
         element.top += (lost ? lostY - groupHalf.y : e.layerY - groupHalf.y) * (100 / zoomValue)
       })
-      addGroup(componentItem)
+      recordHistory(() => addGroup(componentItem))
     }
 
     const half = {
@@ -255,30 +254,8 @@ export default function DesignBoard({ pageDesignCanvasId, padding, renderDPage, 
     }
     setting.left = (lost ? lostX - half.x : e.layerX - half.x) * (100 / zoomValue)
     setting.top = (lost ? lostY - half.y : e.layerY - half.y) * (100 / zoomValue)
-    if (lost && type === 'image') {
-      const target = await getTarget(eventTarget)
-      if (!target) return
-      const targetType = target.getAttribute('data-type')
-      const uuid = target.getAttribute('data-uuid')
-      if (targetType === 'w-mask') {
-        setShowMoveable(true)
-        const widget = currentWidgets().find((w) => w.uuid === uuid)
-        if (!widget) return
-        widget.imgUrl = item.value.url
-      } else {
-        if (droppedIn) {
-          const widget = currentWidgets().find((w) => w.uuid == droppedIn)
-          if (!widget) return
-          widget.imgUrl = item.value.url
-          setShowMoveable(true)
-        } else {
-          addWidget(setting as TdWidgetData)
-        }
-      }
-    } else if (type === 'bg') {
-      // background image position
-    } else if (type !== 'group') {
-      addWidget(setting as TdWidgetData)
+    if (type !== 'group' && type !== 'bg') {
+      recordHistory(() => addWidget(setting as TdWidgetData))
     }
   }
 
