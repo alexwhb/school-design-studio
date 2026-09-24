@@ -51,15 +51,46 @@ const ENTITIES: Record<string, string> = {
   nbsp: ' ',
 }
 
-/** `&#37;` and `&amp;` back into the characters a reader sees. */
+/**
+ * Whether `code` names a character a string can hold on its own.
+ *
+ * `String.fromCodePoint` throws a RangeError above U+10FFFF, and a number
+ * reference can be as long as anybody cares to type — `&#99999999999;` parses
+ * to a finite number that is nothing of the sort. A lone surrogate does not
+ * throw, but it is half a character, and it is what turns a string into one
+ * that JSON and every encoder downstream handle differently. So both are left
+ * standing as the literal text they were, which is what a browser shows for
+ * the first and near enough for the second.
+ */
+function isScalarValue(code: number): boolean {
+  return Number.isInteger(code) && code > 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff)
+}
+
+/**
+ * `&#37;` and `&amp;` back into the characters a reader sees.
+ *
+ * Never throws. Three readers sit on this — `sanitizeMarkup`, the `setMarkup`
+ * op and `describeDocument` — and all three promise not to, and the planner
+ * runs the first inside a validator, where an exception is a 500 for a person
+ * who pasted an odd character. A reference that names no character is left as
+ * it was written.
+ */
 export function decodeEntities(text: string): string {
   return text.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (whole, body: string) => {
     if (body[0] === '#') {
-      const code = body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10)
-      return Number.isFinite(code) && code > 0 ? String.fromCodePoint(code) : whole
+      const hex = body[1] === 'x' || body[1] === 'X'
+      const digits = hex ? body.slice(2) : body.slice(1)
+      // Checked as digits first: `parseInt` reads `&#12ab;` as 12, and a
+      // decimal reference with hex letters in it is not a reference at all.
+      if (!digits || !(hex ? /^[0-9a-f]+$/i : /^[0-9]+$/).test(digits)) return whole
+      const code = parseInt(digits, hex ? 16 : 10)
+      return isScalarValue(code) ? String.fromCodePoint(code) : whole
     }
-    const named = ENTITIES[body.toLowerCase()]
-    return named ?? whole
+    // Own keys only. A plain object answers `constructor`, `toString` and the
+    // rest of Object.prototype too, so `&constructor;` decoded to the source
+    // text of a function.
+    const name = body.toLowerCase()
+    return Object.hasOwn(ENTITIES, name) ? ENTITIES[name] : whole
   })
 }
 
