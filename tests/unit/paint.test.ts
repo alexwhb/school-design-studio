@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isSafePaint } from '@/compose'
 
 describe('isSafePaint', () => {
-  it.each(['#fff', '#ffffffff', '#7c3aed', '#00000059', 'rgb(255, 0, 0)', 'rgba(0,0,0,0.5)', 'rgb(255 0 0 / 50%)', 'hsl(210, 50%, 40%)', 'hsla(210deg 50% 40% / .3)', 'red', 'RebeccaPurple', 'transparent', 'linear-gradient(90deg, #ff0000ff 0%,#0000ffff 100%)', 'linear-gradient(180deg, rgba(0, 0, 0, 1) 0%, rgba(255, 255, 255, 0.5) 33.33333333333333%, #fff 100%)', 'radial-gradient(circle at 50% 50%, #ffffffff 0%,#000000ff 100%)', 'linear-gradient(to right, red, blue)', 'linear-gradient(-45deg, #000 0%, #fff 5.551115123125783e-15%)', 'repeating-linear-gradient(45deg, #000 0 10px, #fff 10px 20px)', 'linear-gradient(#000 0%, #fff 100%), radial-gradient(circle, red, blue)'])('accepts %s', (value) => {
+  it.each(['#fff', '#ffffffff', '#7c3aed', '#00000059', 'rgb(255, 0, 0)', 'rgba(0,0,0,0.5)', 'rgb(255 0 0 / 50%)', 'hsl(210, 50%, 40%)', 'hsla(210deg 50% 40% / .3)', 'red', 'RebeccaPurple', 'transparent', 'none', 'currentColor', 'linear-gradient(90deg, #ff0000ff 0%,#0000ffff 100%)', 'linear-gradient(180deg, rgba(0, 0, 0, 1) 0%, rgba(255, 255, 255, 0.5) 33.33333333333333%, #fff 100%)', 'radial-gradient(circle at 50% 50%, #ffffffff 0%,#000000ff 100%)', 'linear-gradient(to right, red, blue)', 'linear-gradient(-45deg, #000 0%, #fff 5.551115123125783e-15%)', 'repeating-linear-gradient(45deg, #000 0 10px, #fff 10px 20px)', 'linear-gradient(#000 0%, #fff 100%), radial-gradient(circle, red, blue)'])('accepts %s', (value) => {
     expect(isSafePaint(value)).toBe(true)
   })
 
