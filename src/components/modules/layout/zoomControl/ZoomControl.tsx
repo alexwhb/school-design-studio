@@ -10,6 +10,7 @@ import { findClosestNumber } from '@/utils/utils'
 import { useEditorMode } from '@/common/hooks/useEditorMode'
 import { OtherList, ZoomList, type TZoomData } from './data'
 import * as zoomAnchor from './zoomAnchor'
+import { fitZoom, MAX_ZOOM, MIN_ZOOM } from './fitZoom'
 import './zoomControl.less'
 
 export type ZoomControlHandle = {
@@ -18,15 +19,6 @@ export type ZoomControlHandle = {
   sub: () => void
   fit: () => void
 }
-
-/**
- * How far the wheel and the pinch may go. The buttons stop at the ends of the
- * two preset lists; a continuous gesture has no list to stop at, so it stops
- * here. The floor is under the smallest preset because wheeling out to see a
- * whole poster at once is the reason to wheel out.
- */
-const MIN_ZOOM = 10
-const MAX_ZOOM = 500
 
 const local = proxy({
   hideControl: false,
@@ -39,12 +31,7 @@ let bestZoom = 0
 let curAction = ''
 
 function calcZoom() {
-  const presetPadding = canvasState.dPresetPadding
-  const diffHeight = presetPadding * 2 + 2 + canvasState.dBottomHeight
-  const diffWidth = presetPadding * 2 + 22
-  const widthZoom = ((canvasState.dScreen.width - diffWidth) * 100) / canvasState.dPage.width
-  const heightZoom = ((canvasState.dScreen.height - diffHeight) * 100) / canvasState.dPage.height
-  bestZoom = Math.min(widthZoom, heightZoom)
+  bestZoom = fitZoom({ screen: canvasState.dScreen, page: canvasState.dPage, padding: canvasState.dPresetPadding, bottom: canvasState.dBottomHeight })
   return bestZoom
 }
 

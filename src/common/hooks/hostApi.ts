@@ -98,8 +98,31 @@ export type DesignStudioHandle = {
   exportPptx(): Promise<Blob>
   /** `scale` 1 is the page's own pixel size. */
   exportPng(pageIndex: number, opts?: { scale?: number }): Promise<Blob>
+  /**
+   * Puts a page on the canvas. 0-based. A number off either end goes to the
+   * first or the last page, and one that is not a whole number is rounded;
+   * `NaN` goes to the first.
+   */
   goToPage(index: number): void
+  /** The 0-based index of the page on the canvas. */
+  getCurrentPage(): number
+  /** True when the design differs from the last save, the studio's or the host's. */
   isDirty(): boolean
+  /**
+   * Says the host has saved the design on its own account — outside the
+   * studio's Save button: filling a blank, turning motion on, saving before an
+   * AI refine, restoring an older version.
+   *
+   * `doc` is what the host saved; left out, it is the design on the canvas.
+   * Either becomes what "unsaved" is measured against, so `isDirty()` is false
+   * and the pill says Saved as long as the canvas matches it. Nothing is
+   * redrawn and the undo history is kept, which is the difference from
+   * `setDocument`. Undoing past the save makes the design unsaved again.
+   *
+   * Does nothing when the studio keeps the design itself, that is, when no
+   * `document` was handed in.
+   */
+  markSaved(doc?: DesignDocument): void
 }
 
 export type HostApi = {

@@ -163,7 +163,11 @@ export default function Index() {
         return dataUrlToBlob(dataUrl)
       },
       goToPage: (index) => showPage(index),
+      getCurrentPage: () => canvasState.dCurrentPage,
       isDirty: () => keeper.isDirty(),
+      markSaved: (doc) => {
+        if (host.hostsDocument) hostDocument.markSaved(doc)
+      },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [host.handleRef, keeper],
@@ -349,7 +353,7 @@ export default function Index() {
               </Tooltip>
             </div>
           </div>
-          <HeaderOptions ref={optionsRef} onHostSave={host.onSave ? () => hostDocument.saveNow() : undefined} isContinue={isContinue} onContinueChange={setIsContinue} onChange={optionsChange} onTitleChange={autosave.schedule}>
+          <HeaderOptions ref={optionsRef} onHostSave={host.onSave ? () => hostDocument.saveNow() : undefined} isContinue={isContinue} onContinueChange={setIsContinue} onChange={optionsChange} onTitleChange={keeper.schedule}>
             {/* A poster is read, not presented, and it has nobody to say
                 speaker notes to. */}
             {presentable ? (

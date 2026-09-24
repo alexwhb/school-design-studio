@@ -25,6 +25,7 @@ import type { DesignDocument } from '@/compose/types'
 import type { TdLayout } from '@/store/types'
 import { plainLayouts, TRANSIENT_FIELDS } from '@/store/transient'
 import { commitOpenEdit } from '@/common/methods/openEdit'
+import { sanitizeFields } from '@/compose/fields'
 
 /** Quiet time before the host is told, in ms. */
 const DEBOUNCE = 1000
@@ -42,6 +43,12 @@ export type HostDocument = {
   start: () => void
   /** After the host replaces the document wholesale, this is the new baseline. */
   rebase: () => void
+  /**
+   * The host saved a design on its own account. `doc` is what it saved, or the
+   * canvas when left out; either way it is now what "unsaved" measures
+   * against. The canvas and the undo history are not touched.
+   */
+  markSaved: (doc?: DesignDocument) => void
 }
 
 type Options = {
@@ -101,7 +108,8 @@ export function createHostDocument(options: { current: Options }): HostDocument 
    * double-clicking into a box and out again changes nothing.
    */
   const IGNORED = new Set(['record', 'tag', ...TRANSIENT_FIELDS])
-  const snapshot = () => JSON.stringify([options.current.getTitle(), widgetState.dLayouts], (key, value) => (IGNORED.has(key) ? undefined : value))
+  const snapshotOf = (title: string, layouts: unknown) => JSON.stringify([title, layouts], (key, value) => (IGNORED.has(key) ? undefined : value))
+  const snapshot = () => snapshotOf(options.current.getTitle(), widgetState.dLayouts)
 
   /**
    * The last answer, and what it was an answer about.
@@ -203,6 +211,31 @@ export function createHostDocument(options: { current: Options }): HostDocument 
     autosaveState.status = 'saved'
   }
 
+  /**
+   * A save the host made itself — filling a blank, turning motion on, saving
+   * before an AI refine, putting back an older version. The pill should say
+   * Saved and `isDirty()` should be false, without the canvas being redrawn or
+   * the undo history being lost, which is what `setDocument` would do.
+   *
+   * With a document, the baseline is that document, passed through the same
+   * checks the canvas's own copy went through on its way in, so that the two
+   * are compared like for like. If the canvas has moved on from it since, the
+   * design is still unsaved, which is the truth.
+   */
+  function markSaved(doc?: DesignDocument) {
+    clearTimeout(timer)
+    if (doc && Array.isArray(doc.layouts)) {
+      const { doc: safe } = sanitizeFields(doc)
+      setBaseline(snapshotOf(typeof safe.title === 'string' ? safe.title : options.current.getTitle(), safe.layouts))
+    } else {
+      commitOpenEdit()
+      setBaseline(snapshot())
+    }
+    const dirty = isDirty()
+    reportedDirty = dirty
+    if (autosaveState.status !== 'saving' || !dirty) autosaveState.status = dirty ? 'unsaved' : 'saved'
+  }
+
   function start() {
     if (watching) return
     rebase()
@@ -225,6 +258,7 @@ export function createHostDocument(options: { current: Options }): HostDocument 
     schedule,
     start,
     rebase,
+    markSaved,
     dispose() {
       if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onHide)
       unsubscribe?.()
