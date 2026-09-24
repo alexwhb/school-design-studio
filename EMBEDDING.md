@@ -221,6 +221,7 @@ const pdf = await studio.current.exportPdf()   // a Blob, not a download
 | `getCurrentPage()`                   | The 0-based index of the page on the canvas.                                                                                |
 | `isDirty()`                          | Whether the canvas has moved on from the last save.                                                                         |
 | `markSaved(doc?)`                    | You saved the design yourself. `doc`, or the canvas, becomes what "unsaved" is measured against. Undo and canvas untouched. |
+| `checkDesign()`                      | `Promise<DesignIssue[]>`: what to look at before a download. See below.                                                     |
 
 Everything on it is a whole-document operation on purpose. A host that could
 move one widget by ten pixels would, and a layout drawn for a school would
@@ -237,6 +238,34 @@ studio's Save: filling a blank, turning motion on, saving before an AI refine,
 restoring an old version. Without it the pill goes on saying "Unsaved changes"
 over a design you have just stored. `setDocument` would clear that too, but it
 redraws the canvas and throws the undo history away.
+
+`checkDesign()` lists what will not come out the way it looks, or will not
+reach somebody who cannot see it:
+
+```ts
+type DesignIssue = { page: number; widgetId: string; kind: 'overflow' | 'tiny-text' | 'low-contrast' | 'missing-alt'; message: string }
+```
+
+`page` is 0-based, so `goToPage(issue.page)` shows it. `message` is a sentence
+for the person, such as "This picture has no alt text. Describe it, or mark it
+decorative." The checks:
+
+- `overflow`: text off the page, a word wider than its box, or more text than
+  its box holds.
+- `tiny-text`: under 12pt on a page the shape of paper (25px at 150 DPI, the
+  RNIB Clear Print floor), and under 20px on a 1080-high slide (scaled with
+  the page). Presentation guides ask for 36px. The studio's own themes set
+  bullets at 26 to 32px, so this looks for text nobody can read at all.
+- `low-contrast`: WCAG's ratio for the text against what is behind it: 4.5:1,
+  or 3:1 for large text. Over a photo or a gradient there is no one colour to
+  measure against, so nothing is said. Text with an effect on it is skipped
+  too.
+- `missing-alt`: a photo with no alt text that is not marked decorative.
+
+The standalone editor runs the same check before its own Download and offers
+"Download anyway" and "Show me". Embedded it does not: you decide when to ask.
+`checkDocument(doc)` in the compose entry is the same check on a stored
+design, on the server.
 
 If your `uploads.remove(id)` rejects, the photo stays in the list and the
 rejection's message is shown to the person as it is. So write it for them:

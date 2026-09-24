@@ -34,6 +34,7 @@ import useAutosave from '@/common/hooks/autosave'
 import useHostDocument, { readDocument } from '@/common/hooks/hostDocument'
 import { useHostApi, type DesignStudioHandle } from '@/common/hooks/hostApi'
 import { buildPdf } from '@/common/methods/export/exportPdf'
+import { checkLayouts } from '@/common/methods/accessibility/checkDesign'
 import { buildPptx } from '@/common/methods/export/exportPptx'
 import { withPageRenderer } from '@/common/methods/export/renderPage'
 import { dataUrlToBlob } from '@/common/methods/export/utils'
@@ -170,6 +171,7 @@ export default function Index() {
       markSaved: (doc) => {
         if (host.hostsDocument) hostDocument.markSaved(doc)
       },
+      checkDesign: async () => checkLayouts(readDocument(optionsRef.current?.getTitle() || '').layouts),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [host.handleRef, keeper],

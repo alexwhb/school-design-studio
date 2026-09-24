@@ -13,6 +13,7 @@
  */
 import { createContext, useContext, type MutableRefObject, type ReactNode } from 'react'
 import type { ComposeReport, DesignDocument, DesignKind, DesignOp, RejectedOp } from '@/compose/types'
+import type { DesignIssue } from '@/common/methods/accessibility/checkDesign'
 
 export type { DesignDocument, DesignKind, DesignOp }
 
@@ -127,6 +128,15 @@ export type DesignStudioHandle = {
    * `document` was handed in.
    */
   markSaved(doc?: DesignDocument): void
+  /**
+   * What in the design will not come out the way it looks, or will not reach
+   * somebody who cannot see it: text off the page or too big for its box, text
+   * too small to read, text too faint against what is behind it, and photos
+   * with no alt text. Each issue names its page (0-based) and widget, and says
+   * what is wrong in a sentence meant for the person. Empty when there is
+   * nothing to say. Words being typed are checked as they are.
+   */
+  checkDesign(): Promise<DesignIssue[]>
 }
 
 export type HostApi = {

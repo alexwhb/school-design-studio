@@ -408,6 +408,18 @@ function pageSurface(page: TPageState): TSurface | null {
 }
 
 /**
+ * What each layer of a page is read against, as an opaque colour, or null when
+ * that cannot be known: over a photograph, a gradient, a page with a picture
+ * for a background, or anything else with no one colour. The same answer the
+ * readability guard below works from, for the check before a download.
+ */
+export function surfaceColors(layers: TdWidgetData[], page: TPageState): (index: number) => string | null {
+  const keys = stackKeys(layers)
+  const backdrop = pageSurface(page)
+  return (index) => surfaceUnder(index, layers, keys, backdrop)?.color ?? null
+}
+
+/**
  * How dark a neutral has to be before a design can be said to set text in it.
  * A pale grey caption is a neutral, and it is not the ink.
  */

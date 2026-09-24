@@ -213,6 +213,8 @@ export default function DesignStudio({ mode = 'home', apiUrl, homeUrl, appName, 
       getCurrentPage: () => (handleRef.current ?? notReady()).getCurrentPage(),
       isDirty: () => handleRef.current?.isDirty() ?? false,
       markSaved: (doc) => (handleRef.current ?? notReady()).markSaved(doc),
+      // A promise that rejects, rather than a throw, for a caller awaiting it.
+      checkDesign: async () => (handleRef.current ?? notReady()).checkDesign(),
     }),
     [],
   )
