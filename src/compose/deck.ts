@@ -21,7 +21,7 @@ import type { Theme } from './themes'
 import { slideTheme } from './themes'
 import { fitText, heightOf } from './textFit'
 import { imageWidget, markup, page, rectWidget, textWidget } from './widgets'
-import { applyBrand, fieldFiller } from './brand'
+import { applyBrand, brandTheme, fieldFiller } from './brand'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
 const M = 110
@@ -459,7 +459,9 @@ export function composeSlide(slide: DeckSlide, theme: Theme, fill: Fill = (text)
 }
 
 export function composeDeck(outline: DeckOutline, options: ComposeOptions = {}): DesignDocument {
-  const theme = slideTheme(options.theme)
+  // In the kit's fonts from the start, so every line is measured in the face
+  // it will be read in. See `brandTheme`.
+  const theme = brandTheme(slideTheme(options.theme), options.brand)
   const fill = fieldFiller(options.brand)
   const slides = Array.isArray(outline?.slides) ? outline.slides : []
   const layouts = (slides.length ? slides : [blankSlide('title')]).map((slide) => composeSlide({ ...blankSlide(slide?.layout || 'content'), ...slide }, theme, fill))

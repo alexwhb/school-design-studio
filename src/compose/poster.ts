@@ -16,7 +16,7 @@ import { posterPack } from './themes'
 import { fitText, heightOf } from './textFit'
 import { hasIcon, iconWidget } from './icons'
 import { markup, page, rectWidget, textWidget } from './widgets'
-import { applyBrand, fieldFiller } from './brand'
+import { applyBrand, brandTheme, fieldFiller } from './brand'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
 /**
@@ -375,7 +375,7 @@ export function composeSign(sign: PosterSign, theme: Theme, size: { width: numbe
 }
 
 export function composePoster(outline: PosterOutline, options: ComposeOptions = {}): DesignDocument {
-  const theme = posterPack(options.theme)
+  const theme = brandTheme(posterPack(options.theme), options.brand)
   const fill = fieldFiller(options.brand)
   const size = pageSize(outline || { orientation: 'PORTRAIT', size: 'letter' })
   const signs = Array.isArray(outline?.signs) ? outline.signs : []
