@@ -9,10 +9,16 @@ import type { WidgetProps } from '../types'
 import { widgetBorder } from '../widgetBorder'
 import { collectShapePaint, paintShape, type ShapePaint } from './shapePaint'
 import applySvgBorder from './svgBorder'
+import { takesPicture } from '@/store/widget/fillPicture'
+import '../dropTarget.less'
 import './wSvg.less'
 
 function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
   const p = useSnapshot(params) as any
+  // The grey slot a composed slide leaves for a photo, with one over it.
+  const dropOverUuid = useSnapshot(widgetState).dDropOverUuid
+  const zoom = useSnapshot(canvasState).dZoom
+  const dropTarget = dropOverUuid === params.uuid && takesPicture(p)
 
   const widgetRef = useRef<HTMLDivElement | null>(null)
   const shapePaint = useRef<ShapePaint | null>(null)
@@ -203,8 +209,9 @@ function WSvg({ params, parent, id, className, child, ...rest }: WidgetProps) {
       {...rest}
       id={id ?? params.uuid}
       ref={widgetRef}
-      className={cx('w-svg', className || '')}
+      className={cx('w-svg', { 'is-drop-target': dropTarget }, className || '')}
       style={{
+        ...(dropTarget ? { ['--ds-unzoom' as string]: 100 / (zoom || 100) } : null),
         position: 'absolute',
         left: p.left - parent.left + 'px',
         top: p.top - parent.top + 'px',

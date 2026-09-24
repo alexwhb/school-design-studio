@@ -15,11 +15,16 @@
  *
  * The whole screen is the target, not the page: what somebody aims at is "the
  * design", and a drop that lands two pixels outside the page edge should still
- * work. Where the pointer was decides where the picture goes — over the page,
+ * work. Where the pointer was decides where the picture goes — over a photo or
+ * an empty photo slot, into it (see fillPicture.ts); over the rest of the page,
  * under the pointer; anywhere else, the middle of the page.
  */
 import { useCallback, useRef, useState, type DragEventHandler } from 'react'
-import { IMAGE_UPLOAD_LABEL, pagePointAt, uploadAndPlaceImages } from '@/common/methods/placeImageFile'
+import { IMAGE_UPLOAD_LABEL, pagePointAt, uploadAndPlaceImages, uploadImageFile } from '@/common/methods/placeImageFile'
+import { fillPicture, pictureTargetOf } from '@/store/widget/fillPicture'
+import { setDropOver } from '@/store/widget/move'
+import { widgetState } from '@/store/state'
+import eventBus from '@/utils/plugins/eventBus'
 import { UploadArrowIcon } from '@/components/ui/icons'
 import './fileDrop.less'
 
@@ -45,10 +50,21 @@ export function useFileDrop(): { dropHandlers: FileDropHandlers; dropOverlay: Re
   // pairs is what makes it follow the drag rather than the DOM under it.
   const depth = useRef(0)
 
+  // The photo under the pointer, which the drop will go into instead. While
+  // there is one, the full-screen card gives way to the mark on that photo, so
+  // it is plain which of the two is going to happen.
+  const [target, setTarget] = useState<string | null>(null)
+
+  const aim = useCallback((uuid: string | null) => {
+    setTarget(uuid)
+    if ((widgetState.dDropOverUuid || '-1') !== (uuid ?? '-1')) setDropOver(uuid ?? '-1')
+  }, [])
+
   const reset = useCallback(() => {
     depth.current = 0
     setOver(false)
-  }, [])
+    aim(null)
+  }, [aim])
 
   const dropHandlers: FileDropHandlers = {
     onDragEnter: (e) => {
@@ -62,6 +78,8 @@ export function useFileDrop(): { dropHandlers: FileDropHandlers; dropOverlay: Re
       // handling of a dropped file is to navigate to it.
       e.preventDefault()
       e.dataTransfer.dropEffect = 'copy'
+      // The overlay takes no pointer events, so what is under it is the page.
+      aim(pictureTargetOf(document.elementFromPoint(e.clientX, e.clientY)))
     },
     onDragLeave: (e) => {
       if (!carriesFiles(e.dataTransfer)) return
@@ -85,19 +103,35 @@ export function useFileDrop(): { dropHandlers: FileDropHandlers; dropOverlay: Re
       // and the first upload can take seconds, in which somebody may have
       // scrolled or zoomed.
       const at = pagePointAt(e.clientX, e.clientY)
-      void uploadAndPlaceImages(files, at ?? undefined)
+      const into = pictureTargetOf(document.elementFromPoint(e.clientX, e.clientY))
+      if (!into) {
+        void uploadAndPlaceImages(files, at ?? undefined)
+        return
+      }
+      // The first file fills the photo it was dropped on; any others are laid
+      // on the page beside it, as a drop anywhere else would lay them.
+      void (async () => {
+        const [first, ...rest] = files
+        const saved = await uploadImageFile(first)
+        if (saved) {
+          eventBus.emit('refreshUserImages')
+          fillPicture(into, saved)
+        }
+        if (rest.length) await uploadAndPlaceImages(rest, at ?? undefined)
+      })()
     },
   }
 
-  const dropOverlay = over ? (
-    <div className="ds-file-drop__overlay" role="status">
-      <div className="ds-file-drop__card">
-        <UploadArrowIcon />
-        <b>Drop to add it to the page</b>
-        <span>{IMAGE_UPLOAD_LABEL}</span>
+  const dropOverlay =
+    over && !target ? (
+      <div className="ds-file-drop__overlay" role="status">
+        <div className="ds-file-drop__card">
+          <UploadArrowIcon />
+          <b>Drop to add it to the page</b>
+          <span>{IMAGE_UPLOAD_LABEL}</span>
+        </div>
       </div>
-    </div>
-  ) : null
+    ) : null
 
   return { dropHandlers, dropOverlay }
 }

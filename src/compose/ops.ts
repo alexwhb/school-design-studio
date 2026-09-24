@@ -22,7 +22,7 @@ import { composeSignPage, blankSign, SIGN_PAGE_KINDS } from './poster'
 import { recorder, type Recorder } from './report'
 import { slideTheme, posterPack } from './themes'
 import { kindOf } from './describe'
-import { markup } from './widgets'
+import { coverCrop, markup } from './widgets'
 import { sanitizeMarkup } from './markup'
 import { sanitizeFields } from './fields'
 import type { TBrandKit } from '@/common/methods/brandKitCore'
@@ -191,14 +191,11 @@ export function applyOps(doc: DesignDocument, ops: DesignOp[], options: { brand?
         // The frame stays where the layout put it and the picture is re-cropped
         // to fill it, so swapping a portrait for a landscape does not leave a
         // hole or push anything sideways.
-        const slot = widget.width / widget.height
-        const picture = op.width && op.height ? op.width / op.height : slot
+        const crop = coverCrop(widget, { width: Number(op.width) || 0, height: Number(op.height) || 0 })
         widget.imgUrl = op.url
-        const zoom = picture > slot ? picture / slot : 1
-        const zoomY = picture < slot ? slot / picture : 1
-        ;(widget as any).zoom = zoom
-        ;(widget as any).zoomY = zoomY
-        widget.transform = ` scale(${zoom}, ${zoomY}) translate(0px, 0px)`
+        ;(widget as any).zoom = crop.zoom
+        ;(widget as any).zoomY = crop.zoomY
+        widget.transform = crop.transform
         // The description was of the picture that has gone. A new one comes in
         // with the op, or the check before a download asks for one.
         if (typeof op.alt === 'string' && op.alt.trim()) widget.alt = op.alt.trim().slice(0, MAX_ALT_LENGTH)

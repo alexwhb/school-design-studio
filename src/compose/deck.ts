@@ -23,7 +23,7 @@ import { MAX_PAGES, SLIDE_PAGE } from './types'
 import type { Theme } from './themes'
 import { slideTheme } from './themes'
 import { fitText, heightOf } from './textFit'
-import { imageWidget, markup, page, rectWidget, textWidget } from './widgets'
+import { IMAGE_SLOT_ROLE, imageWidget, markup, page, rectWidget, textWidget } from './widgets'
 import { applyBrand, brandTheme, fieldFiller } from './brand'
 import { pageCap, recorder, silent, type Recorder } from './report'
 import type { TdLayout, TdWidgetData } from '@/store/types'
@@ -508,7 +508,8 @@ function mediaSlide(theme: Theme, slide: Working, ctx: Ctx): Drawn {
   if (slide.image?.url) {
     layers.push(imageWidget(slot.left, slot.top, slot.width, slot.height, slide.image))
   } else {
-    layers.push(rectWidget(slot.left, slot.top, slot.width, slot.height, theme.rule, 6))
+    // Marked, so a photo dropped on it in the editor takes its place.
+    layers.push({ ...rectWidget(slot.left, slot.top, slot.width, slot.height, theme.rule, 6), role: IMAGE_SLOT_ROLE })
   }
 
   const brow = eyebrow(ctx, theme, slide.kicker, 130, M, column)

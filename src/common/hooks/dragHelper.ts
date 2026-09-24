@@ -5,7 +5,7 @@
  * @LastEditTime: 2024-04-18 16:17:36
  */
 
-import { controlState } from '@/store/state'
+import { controlState, widgetState } from '@/store/state'
 import { setSelectItem } from '@/store/widget/select'
 import { getAppRoot } from './appRoot'
 
@@ -61,10 +61,15 @@ export default class DragHelper {
     window.addEventListener('mouseup', (e) => {
       const el = getAppRoot()
       if (!el || !e.target) return
-      el.classList.remove('drag_active')
+      el.classList.remove('drag_active', 'ds-drop-into')
+      // A drag let go of anywhere but the page never reaches the page's own
+      // drop, and the photo it was last over would go on saying "Drop to
+      // replace". The page's drop has read it by now: React's handler runs on
+      // the way up, before this one on the window.
+      if (widgetState.dDropOverUuid && widgetState.dDropOverUuid !== '-1') widgetState.dDropOverUuid = '-1'
       const target = e.target as HTMLElement
       const cl = target.classList
-      if (target.id === 'page-design-canvas' || cl.contains('target') || cl.contains('drop__mask') || cl.contains('edit-text')) {
+      if (target.id === 'page-design-canvas' || cl.contains('target') || cl.contains('edit-text')) {
         setTimeout(() => {
           this.finish(true)
         }, 10)
