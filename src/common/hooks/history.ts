@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import historyFactory from '@/utils/widgets/diffLayouts'
-import { changeHistory } from '@/store/history'
+import { changeHistory, clearHistory } from '@/store/history'
 import { widgetState } from '@/store/state'
 
 const blackClass: string[] = ['operation-item', 'icon-undo', 'icon-redo']
@@ -10,6 +10,31 @@ const diffLayouts = new historyFactory()
 
 let processing = false
 let historyTimer: any = null
+
+// Wired as the module loads rather than when the editor mounts, so a change
+// recorded through recordHistory is recorded whether or not the hook below has
+// run yet — a host's applyOps can arrive in the same tick the editor appears.
+diffLayouts.onmessage((changes: any) => {
+  changes.patches.length > 0 && changeHistory(changes)
+  processing = false
+})
+
+/**
+ * Starts the undo history again from nothing: the stack, and any press still
+ * waiting to be written down.
+ *
+ * For when the design underneath is replaced by a different one, and for when
+ * the editor mounts and unmounts. The stack lives in a module rather than in
+ * the component, so without this a second editor on the same page — or the
+ * same one opened again — inherited the last one's steps, and Ctrl+Z applied
+ * one design's patches to another.
+ */
+export function resetHistory() {
+  clearTimeout(historyTimer)
+  diffLayouts.reset()
+  processing = false
+  clearHistory()
+}
 
 function noPutHistory(target: any) {
   const classList = Array.from(target.classList || [])
@@ -51,10 +76,7 @@ export function recordHistory(change: () => void) {
 
 export default function useHistory() {
   useEffect(() => {
-    diffLayouts.onmessage((changes: any) => {
-      changes.patches.length > 0 && changeHistory(changes)
-      processing = false
-    })
+    resetHistory()
 
     const onMouseDown = (e: any) => {
       if (noPutHistory(e.target)) return
@@ -87,6 +109,7 @@ export default function useHistory() {
     document.addEventListener('keyup', onKeyUp, false)
 
     return () => {
+      resetHistory()
       document.removeEventListener('mousedown', onMouseDown, false)
       document.removeEventListener('mouseup', onMouseUp, false)
       document.removeEventListener('keydown', onKeyDown, false)

@@ -12,6 +12,16 @@ export function changeHistory({ patches, inversePatches }: { patches: any; inver
   stack.inverseChanges.length = pointer
   stack.changes[pointer] = patches
   stack.inverseChanges[pointer] = inversePatches
+  // The oldest step goes once there are more than the stack holds. A step is
+  // the patch between two states rather than a copy of either, so this is not
+  // about any one entry's size; it is about a morning's editing never being
+  // let off the leash.
+  const over = stack.changes.length - params.maxLength
+  if (over > 0) {
+    stack.changes.splice(0, over)
+    stack.inverseChanges.splice(0, over)
+    params.stackPointer -= over
+  }
 }
 
 /**

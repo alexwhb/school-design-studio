@@ -110,7 +110,10 @@ export const historyState = proxy<THistoryState>({
   dHistoryParams: {
     index: -1,
     length: 0,
-    maxLength: 20,
+    // How many steps of undo are kept. Declared at 20 upstream and never
+    // enforced, so in practice it was unlimited; 100 keeps an afternoon's work
+    // undoable without the stack growing for as long as the tab is open.
+    maxLength: 100,
     stackPointer: -1,
   },
   dHistoryStack: {

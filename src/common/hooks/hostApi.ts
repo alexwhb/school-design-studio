@@ -83,6 +83,15 @@ export type HostUploads = {
 export type DesignStudioHandle = {
   /** Plain JSON, safe to structured-clone or stringify. Never the live store. */
   getDocument(): DesignDocument
+  /**
+   * Replaces the design on the canvas.
+   *
+   * By default this is a different design being opened: undo history starts
+   * again from nothing, and the document becomes what "unsaved" is measured
+   * against. With `resetHistory: false` it is a change to the design that is
+   * open — one press of undo takes the whole swap back, and the design reads
+   * as unsaved until it is saved.
+   */
   setDocument(doc: DesignDocument, opts?: { resetHistory?: boolean }): void
   applyOps(ops: DesignOp[]): { applied: number; rejected: RejectedOp[] }
   exportPdf(): Promise<Blob>

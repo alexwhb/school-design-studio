@@ -76,3 +76,45 @@ describe('undo across pages', () => {
     expect(widgetState.dWidgets[0].uuid).toBe('p2-w')
   })
 })
+
+describe('the undo stack across documents', () => {
+  it('holds no more steps than maxLength, dropping the oldest', () => {
+    const cap = historyState.dHistoryParams.maxLength
+    for (let i = 0; i < cap + 5; i++) {
+      changeHistory({ patches: [{ op: 'replace', path: [0, 'global', 'name'], value: `n${i}` }], inversePatches: [{ op: 'replace', path: [0, 'global', 'name'], value: `o${i}` }] })
+    }
+    expect(historyState.dHistoryStack.changes).toHaveLength(cap)
+    expect(historyState.dHistoryStack.inverseChanges).toHaveLength(cap)
+    expect(historyState.dHistoryParams.stackPointer).toBe(cap - 1)
+    // The newest is still the one on top.
+    expect(historyState.dHistoryStack.changes[cap - 1][0].value).toBe(`n${cap + 4}`)
+  })
+
+  it('forgets every step, and a press still open, when the document is replaced', async () => {
+    const { beginHistory, recordHistory, resetHistory } = await import('@/common/hooks/history')
+    recordHistory(() => {
+      widgetState.dLayouts[0].global.name = 'renamed'
+    })
+    expect(historyState.dHistoryStack.changes).toHaveLength(1)
+
+    // A press that began on the old design and has not been written down yet.
+    beginHistory()
+    resetHistory()
+    setDLayouts(design(2))
+    expect(historyState.dHistoryStack.changes).toHaveLength(0)
+    expect(historyState.dHistoryParams.stackPointer).toBe(-1)
+
+    // Undo now has nothing to do, rather than old patches to misapply.
+    handleHistory('undo')
+    expect(names()).toEqual(['p1', 'p2'])
+  })
+
+  it('takes a swap that keeps its history back in one step', async () => {
+    const { recordHistory } = await import('@/common/hooks/history')
+    setDLayouts(design(2))
+    recordHistory(() => setDLayouts(design(4)))
+    expect(historyState.dHistoryStack.changes).toHaveLength(1)
+    handleHistory('undo')
+    expect(names()).toEqual(['p1', 'p2'])
+  })
+})

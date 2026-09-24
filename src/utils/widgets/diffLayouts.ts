@@ -23,6 +23,10 @@ export default class {
   public onmessage(cb: any) {
     this.notifi = cb
   }
+  /** Forgets a bracket that was opened and never closed. */
+  public reset() {
+    cloneData = ''
+  }
   public postMessage(e: any) {
     if (!e) return
     if (e.op === 'done') {

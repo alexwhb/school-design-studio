@@ -29,7 +29,7 @@ import Helper from './components/Helper'
 import Tooltip from '@/components/ui/Tooltip'
 import Button from '@/components/ui/Button'
 import { RedoIcon, UndoIcon } from '@/components/ui/icons'
-import useHistory, { recordHistory } from '@/common/hooks/history'
+import useHistory, { recordHistory, resetHistory } from '@/common/hooks/history'
 import useAutosave from '@/common/hooks/autosave'
 import useHostDocument, { readDocument } from '@/common/hooks/hostDocument'
 import { useHostApi, type DesignStudioHandle } from '@/common/hooks/hostApi'
@@ -110,11 +110,18 @@ export default function Index() {
     (): DesignStudioHandle => ({
       getDocument: () => readDocument(optionsRef.current?.getTitle() || ''),
       setDocument: (doc, opts) => {
-        optionsRef.current?.showDocument(doc)
         // One undo takes the whole swap back, unless the host says this is the
         // new starting point — which is what it means to open a different
-        // design rather than to change the one that is open.
-        if (opts?.resetHistory !== false) hostDocument.rebase()
+        // design rather than to change the one that is open. Then the old
+        // steps go too: they are patches against a design that is no longer
+        // on the canvas.
+        if (opts?.resetHistory === false) {
+          recordHistory(() => optionsRef.current?.showDocument(doc))
+        } else {
+          optionsRef.current?.showDocument(doc)
+          resetHistory()
+          hostDocument.rebase()
+        }
         setZoomScreenChange()
       },
       applyOps: (ops) => {
