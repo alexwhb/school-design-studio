@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { checkDocument, composeDeck, composePoster, POSTER_PACK_KEYS, SLIDE_THEME_KEYS, type DeckSlide, type DesignDocument, type PosterSign } from '@/compose'
 import { checkLayouts, minimumSize } from '@/common/methods/accessibility/checkDesign'
 import type { TdLayout, TdWidgetData } from '@/store/types'
 
@@ -82,5 +83,36 @@ describe('checkLayouts', () => {
   it('leaves hidden things alone, and names the page each issue is on', () => {
     const layouts = [...page([text({ text: 'Fine' })]), ...page([text({ uuid: 'x', text: 'Hidden', fontSize: 8, hidden: true }), text({ uuid: 'y', text: 'Tiny', fontSize: 8, height: 12 })])]
     expect(checkLayouts(layouts).map((issue) => [issue.page, issue.widgetId, issue.kind])).toEqual([[1, 'y', 'tiny-text']])
+  })
+})
+
+describe('what the composer makes', () => {
+  const slide = (over: Partial<DeckSlide> & Pick<DeckSlide, 'layout'>): DeckSlide => ({ title: null, kicker: null, sub: null, bullets: [], bulletsRight: [], columnHeads: [], callout: null, notes: null, image: null, ...over })
+  const sign = (layout: PosterSign['layout']): PosterSign => ({ layout, icon: 'bus', eyebrow: 'Please note', badge: '42', head: 'Gymnasium', sub: 'Past the library and through the double doors', foot: null })
+  const summary = (doc: DesignDocument) => checkDocument(doc).map((issue) => `${issue.page} ${issue.kind}: ${issue.message}`)
+
+  it('passes its own check, in every theme', () => {
+    const outline = {
+      title: 'Annual report',
+      slides: [
+        slide({ layout: 'title', kicker: 'Riverbend Academy', title: 'Annual report to families', sub: 'A review of the year' }),
+        slide({ layout: 'statement', title: 'Ninety-four per cent attendance', sub: 'Reported to the board in May' }),
+        slide({
+          layout: 'content',
+          kicker: 'Section two',
+          title: 'What changed',
+          sub: 'Three things families asked for',
+          bullets: [
+            { text: 'Two sections were added', sub: ['Class sizes fell'] },
+            { text: 'The library reopened', sub: [] },
+          ],
+          callout: 'The board votes on 12 June.',
+        }),
+        slide({ layout: 'two-column', title: 'Before and after', columnHeads: ['Then', 'Now'], bullets: [{ text: 'One counsellor', sub: ['For 842 students'] }], bulletsRight: [{ text: 'Two counsellors', sub: [] }] }),
+        slide({ layout: 'media', title: 'The library', sub: 'Open at lunch', image: { url: '/l.jpg', width: 800, height: 600, alt: 'New shelves' }, bullets: [{ text: 'New shelves', sub: ['From donations'] }] }),
+      ],
+    }
+    for (const theme of SLIDE_THEME_KEYS) expect(summary(composeDeck(outline, { theme })), theme).toEqual([])
+    for (const theme of POSTER_PACK_KEYS) expect(summary(composePoster({ orientation: 'PORTRAIT', size: 'letter', signs: (['direction', 'icon', 'statement', 'number', 'notice'] as const).map(sign) }, { theme })), theme).toEqual([])
   })
 })
